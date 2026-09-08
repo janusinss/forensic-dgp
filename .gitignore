@@ -4,9 +4,12 @@ error_log
 .agent/
 .agents/
 .codex
-.impeccable
-product.md
-design.md
+# Impeccable ephemeral review artifacts
+.impeccable/*.png
+.impeccable/live/
+# Playwright test traces
+test-results/
+playwright-report/
 .claude/
 skills-lock.json
 .env.example
