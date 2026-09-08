@@ -224,9 +224,9 @@ button {
 }
 
 .logo-text h1 {
-    font-size: 1.5rem; /* 24px: 1.33x ratio over H2 (18px) for clean type scale */
-    font-weight: 600;  /* Refined from 700 for dignified authority */
-    letter-spacing: 0.02em;
+    font-size: 1.125rem; /* Matched with H2 headers for uniform terminal aesthetic */
+    font-weight: 500;
+    letter-spacing: 0.03em;
     font-family: var(--font-mono);
     color: var(--color-foreground);
     line-height: 1.2;
@@ -389,6 +389,12 @@ button {
     background-color: var(--color-background);
     z-index: 10;
     border-radius: var(--radius-sm);
+}
+
+#preview-image.pixelated {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 .hidden {
@@ -574,81 +580,245 @@ button {
    -------------------------------------------------------------------------- */
 .results-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
     align-items: start;
+    width: 100%;
 }
 
 /* --------------------------------------------------------------------------
-   Empty Acquisition State
+   Calibrated Forensic Standby Workstation (State Before Output)
    -------------------------------------------------------------------------- */
-.empty-state {
+.empty-state-wrapper {
     grid-column: 1 / -1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 4rem 2rem;
-    border: 1px dashed var(--color-border);
-    border-radius: var(--radius-md);
-    background-color: rgba(10, 14, 26, 0.6);
-    gap: 1.5rem;
-    text-align: center;
+    gap: 1.25rem;
+    width: 100%;
 }
 
-.empty-state-crosshair {
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-muted);
-    font-size: 1.85rem;
-    color: var(--color-accent);
+.standby-split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    width: 100%;
+    align-items: stretch;
 }
 
-.empty-state-info {
+/* Left Column: Acquisition Viewport */
+.standby-viewport {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.45rem;
-    max-width: 500px;
+    justify-content: space-between;
+    text-align: center;
+    padding: 1.75rem 1.5rem;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    gap: 1.25rem;
+    box-sizing: border-box;
+    min-height: 280px;
 }
 
-.empty-state-subtext {
-    font-size: 0.86rem;
+.standby-reticle-graphic {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border-highlight);
+    background-color: var(--color-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--color-accent);
+}
+
+.standby-text-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 65ch;
+}
+
+.standby-heading {
+    font-family: var(--font-mono);
+    font-size: 1.125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--color-foreground);
+    margin: 0;
+}
+
+.standby-subtext {
+    font-size: 0.875rem;
     color: var(--color-muted-foreground);
     line-height: 1.5;
+    margin: 0;
 }
 
-.empty-spec-matrix {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1.25rem;
-    padding: 0.75rem 1.35rem;
-    background-color: var(--color-background);
+.standby-readiness-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    background-color: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
 }
 
-.spec-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
+.standby-readiness-pill .mono-label {
+    color: var(--color-muted-foreground);
+    font-size: 0.7rem;
 }
 
-.spec-key {
+/* Right Column: Telemetry & Calibration Box */
+.standby-telemetry-box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.75rem 1.5rem;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    gap: 1.25rem;
+    box-sizing: border-box;
+    min-height: 280px;
+}
+
+.telemetry-box-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.telemetry-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.telemetry-box-header .status-title {
+    color: var(--color-foreground);
+    font-weight: 500;
+}
+
+.telemetry-banner-desc {
+    font-size: 0.875rem;
+    color: var(--color-muted-foreground);
+    line-height: 1.5;
+    max-width: 65ch;
+    margin: 0;
+}
+
+.telemetry-specs-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+}
+
+.spec-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.spec-k {
     color: var(--color-muted-foreground);
 }
 
-.spec-val {
+.spec-v {
     color: var(--color-foreground);
-    font-weight: 400;
+}
+
+.standby-diagnostic-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 1rem 1.15rem;
+    background-color: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.diagnostic-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.diagnostic-cell .mono-label {
+    font-size: 0.66rem;
+    color: var(--color-muted-foreground);
+}
+
+.diagnostic-cell .val {
+    font-size: 0.75rem;
+    color: var(--color-foreground);
+    letter-spacing: 0.01em;
+}
+
+/* Bottom Methodology Pipeline Strip */
+.standby-pipeline-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+}
+
+.pipeline-step-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1rem 1.15rem;
+    background-color: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: border-color 150ms ease;
+}
+
+.pipeline-step-box:hover {
+    border-color: var(--color-border-highlight);
+}
+
+.step-num-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.step-tag {
+    font-size: 0.66rem;
+    color: var(--color-accent);
+}
+
+.step-status {
+    font-size: 0.66rem;
+    color: var(--color-muted-foreground);
+}
+
+.step-title {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-foreground);
+    letter-spacing: 0.02em;
+}
+
+.step-detail {
+    font-size: 0.75rem;
+    color: var(--color-muted-foreground);
+    line-height: 1.45;
+    margin: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -664,6 +834,10 @@ button {
     transition: border-color 150ms ease, box-shadow 150ms ease;
     position: relative;
     overflow: hidden;
+}
+
+.result-card.primary-card {
+    border-color: var(--color-border-highlight);
 }
 
 .result-card:hover {
@@ -682,7 +856,7 @@ button {
 
 .rank-pill {
     font-family: var(--font-mono);
-    font-size: 0.76rem;
+    font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.03em;
 }
@@ -703,6 +877,11 @@ button {
     border-bottom: 1px solid var(--color-border);
     position: relative;
     background-color: var(--color-background);
+    overflow: hidden;
+}
+
+.result-image-container:hover .reticle {
+    opacity: 1;
 }
 
 .result-image {
@@ -728,7 +907,7 @@ button {
 
 .data-value {
     font-family: var(--font-mono);
-    font-size: 1.15rem;
+    font-size: 1.125rem;
     color: var(--color-foreground);
     font-variant-numeric: tabular-nums;
     font-weight: 400;
@@ -754,7 +933,7 @@ button {
     border-top: 1px solid var(--color-border);
     color: var(--color-muted-foreground);
     font-family: var(--font-mono);
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 500;
     letter-spacing: 0.03em;
     cursor: pointer;
@@ -765,6 +944,11 @@ button {
 .download-action-btn:hover {
     background-color: var(--color-secondary);
     color: var(--color-foreground);
+}
+
+.download-action-btn:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: -2px;
 }
 
 .download-action-btn i {
@@ -883,15 +1067,25 @@ button {
         gap: 1.25rem;
     }
 
-    .empty-state {
-        padding: 2.5rem 1rem;
+    .standby-split-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
     }
 
-    .empty-spec-matrix {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
+    .telemetry-specs-strip {
         width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .standby-pipeline-strip {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .standby-diagnostic-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
     }
 
     .terminal-footer {
@@ -910,13 +1104,9 @@ button {
         padding: 0.75rem;
     }
     
-    .result-data {
+    .result-data, .standby-diagnostic-grid {
         grid-template-columns: 1fr;
         gap: 0.75rem;
-    }
-
-    .logo-text h1 {
-        font-size: 1.15rem;
     }
 }
 

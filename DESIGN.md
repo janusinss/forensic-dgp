@@ -26,10 +26,10 @@ colors:
 typography:
   display:
     fontFamily: "'Fira Code', monospace"
-    fontSize: "1.5rem"
-    fontWeight: 600
+    fontSize: "1.125rem"
+    fontWeight: 500
     lineHeight: 1.2
-    letterSpacing: "0.02em"
+    letterSpacing: "0.03em"
   heading:
     fontFamily: "'Fira Code', monospace"
     fontSize: "1.125rem"
@@ -171,7 +171,7 @@ The design philosophy fuses **Swiss International Typographic Style** with **Uti
 
 | Role | Font Stack | Size | Weight | Line Height | Case / Tracking |
 |---|---|---|---|---|---|
-| **Terminal Title (`h1`)** | Fira Code | `1.5rem` (24px) | `600` | 1.2 | Uppercase, `0.02em` |
+| **Terminal Title (`h1`)** | Fira Code | `1.125rem` (18px) | `500` | 1.2 | Uppercase, `0.03em` |
 | **Panel Header (`h2`)** | Fira Code | `1.125rem` (18px) | `500` | 1.2 | Uppercase, `0.03em` |
 | **Telemetry Label (`.mono-label`)** | Fira Code | `0.75rem` (12px) | `400` / `500` | 1.4 | Uppercase, `0.03em`, Tabular |
 | **Metric Value (`.data-value`)** | Fira Code | `1.15rem` (18.4px) | `400` / `500` | 1.2 | Tabular Numerals |

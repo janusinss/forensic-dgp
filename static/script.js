@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentFile = null;
     let originalImageDataUrl = null;
+    let simulatedSub32DataUrl = null;
     const inputStatusLabel = document.getElementById('input-status-label');
 
     // Drag and Drop & Keyboard Logic
@@ -50,6 +51,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function generateSub32Thumbnail(imgSrc, callback) {
+        const img = new Image();
+        img.onload = () => {
+            const width = img.naturalWidth || img.width;
+            const height = img.naturalHeight || img.height;
+            const minDim = Math.min(width, height);
+            const sx = Math.floor((width - minDim) / 2);
+            const sy = Math.floor((height - minDim) / 2);
+
+            // Step 1: Downscale to 32x32 standard CCTV resolution
+            const canvas32 = document.createElement('canvas');
+            canvas32.width = 32;
+            canvas32.height = 32;
+            const ctx32 = canvas32.getContext('2d');
+            ctx32.imageSmoothingEnabled = true;
+            ctx32.drawImage(img, sx, sy, minDim, minDim, 0, 0, 32, 32);
+
+            // Step 2: Upscale to 256x256 using nearest-neighbor (crisp pixelation)
+            const canvas256 = document.createElement('canvas');
+            canvas256.width = 256;
+            canvas256.height = 256;
+            const ctx256 = canvas256.getContext('2d');
+            ctx256.imageSmoothingEnabled = false;
+            ctx256.drawImage(canvas32, 0, 0, 32, 32, 0, 0, 256, 256);
+
+            callback(canvas256.toDataURL('image/png'));
+        };
+        img.src = imgSrc;
+    }
+
+    function updatePreviewImage() {
+        if (!originalImageDataUrl) return;
+
+        if (selectedMode === 'sub32') {
+            if (simulatedSub32DataUrl) {
+                previewImage.src = simulatedSub32DataUrl;
+                previewImage.classList.add('pixelated');
+                previewImage.classList.remove('hidden');
+                if (inputStatusLabel) {
+                    inputStatusLabel.textContent = 'INPUT: 32×32 PIXELATED CROP (SIMULATED)';
+                }
+            } else {
+                generateSub32Thumbnail(originalImageDataUrl, (thumb) => {
+                    simulatedSub32DataUrl = thumb;
+                    if (selectedMode === 'sub32') {
+                        previewImage.src = simulatedSub32DataUrl;
+                        previewImage.classList.add('pixelated');
+                        previewImage.classList.remove('hidden');
+                        if (inputStatusLabel) {
+                            inputStatusLabel.textContent = 'INPUT: 32×32 PIXELATED CROP (SIMULATED)';
+                        }
+                    }
+                });
+            }
+        } else {
+            previewImage.src = originalImageDataUrl;
+            previewImage.classList.remove('pixelated');
+            previewImage.classList.remove('hidden');
+            if (inputStatusLabel) {
+                inputStatusLabel.textContent = 'INPUT: DIRECT NATIVE SOURCE';
+            }
+        }
+    }
+
     function handleFile(file) {
         // Strict MIME validation
         if (!file || !ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
@@ -64,19 +129,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         currentFile = file;
+        simulatedSub32DataUrl = null;
         
         // Show preview
         const reader = new FileReader();
         reader.onload = (e) => {
             originalImageDataUrl = e.target.result;
-            previewImage.src = originalImageDataUrl;
-            previewImage.classList.remove('hidden');
             analyzeBtn.disabled = false;
-            if (inputStatusLabel) {
-                inputStatusLabel.textContent = (selectedMode === 'sub32') 
-                    ? 'CCTV_CROP_INPUT // SUB-32×32_BENCHMARK' 
-                    : 'CCTV_CROP_INPUT // DIRECT_NATIVE';
-            }
+            updatePreviewImage();
+            // Pre-calculate 32x32 simulated thumbnail
+            generateSub32Thumbnail(originalImageDataUrl, (thumb) => {
+                simulatedSub32DataUrl = thumb;
+                if (selectedMode === 'sub32') {
+                    updatePreviewImage();
+                }
+            });
         };
         reader.readAsDataURL(file);
     }
@@ -94,9 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
             modeSub32Btn.classList.remove('active');
             modeSub32Btn.setAttribute('aria-checked', 'false');
             if (originalImageDataUrl) {
-                previewImage.src = originalImageDataUrl;
-            }
-            if (inputStatusLabel) {
+                updatePreviewImage();
+            } else if (inputStatusLabel) {
                 inputStatusLabel.textContent = 'CCTV_CROP_INPUT // DIRECT_NATIVE';
             }
         } else {
@@ -104,7 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
             modeSub32Btn.setAttribute('aria-checked', 'true');
             modeDirectBtn.classList.remove('active');
             modeDirectBtn.setAttribute('aria-checked', 'false');
-            if (inputStatusLabel) {
+            if (originalImageDataUrl) {
+                updatePreviewImage();
+            } else if (inputStatusLabel) {
                 inputStatusLabel.textContent = 'CCTV_CROP_INPUT // SUB-32×32_BENCHMARK';
             }
         }
@@ -160,18 +228,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (data.error) throw new Error(data.error);
 
-            // Update preview to simulated 32x32 thumbnail if benchmark mode used
+            // Update preview to authoritative backend 32x32 thumbnail if provided
             if (selectedMode === 'sub32' && data.cctv_thumbnail) {
-                previewImage.src = data.cctv_thumbnail;
-                if (inputStatusLabel) {
-                    inputStatusLabel.textContent = 'INPUT: 32×32 PIXELATED CROP (SIMULATED)';
-                }
-            } else if (originalImageDataUrl) {
-                previewImage.src = originalImageDataUrl;
-                if (inputStatusLabel) {
-                    inputStatusLabel.textContent = 'INPUT: DIRECT NATIVE SOURCE';
-                }
+                simulatedSub32DataUrl = data.cctv_thumbnail;
             }
+            updatePreviewImage();
 
             // Render Results Safely
             renderResults(data.results, data.mode || selectedMode);
@@ -222,18 +283,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const modeDisplay = (mode === 'sub32') ? '32x32_BENCHMARK' : 'DIRECT_RESTORE';
 
+        // Candidate Cards
         results.forEach((result) => {
             const card = document.createElement('div');
             card.className = 'result-card';
+            if (result.rank === 1) {
+                card.classList.add('primary-card');
+            }
 
-            // 1. Forensic Card Header with distinct Rank designations
+            // Forensic Card Header with distinct Rank designations
             const cardHeader = document.createElement('div');
             cardHeader.className = 'result-card-header';
 
             const rankPill = document.createElement('span');
             rankPill.className = 'rank-pill';
 
-            // Distinct forensic characterization per rank (Quieter, restrained hierarchy)
             if (result.rank === 1) {
                 rankPill.textContent = 'RANK 01 // BEST_FIT';
                 rankPill.style.color = 'var(--color-accent)';
@@ -256,9 +320,16 @@ document.addEventListener('DOMContentLoaded', () => {
             cardHeader.appendChild(modePill);
             card.appendChild(cardHeader);
 
-            // 2. Reconstructed Image Container
+            // Reconstructed Image Container with Forensic Reticles
             const imageContainer = document.createElement('div');
             imageContainer.className = 'result-image-container';
+
+            ['reticle-tl', 'reticle-tr', 'reticle-bl', 'reticle-br'].forEach((cls) => {
+                const reticle = document.createElement('div');
+                reticle.className = `reticle ${cls}`;
+                reticle.setAttribute('aria-hidden', 'true');
+                imageContainer.appendChild(reticle);
+            });
 
             const img = document.createElement('img');
             img.className = 'result-image';
@@ -269,15 +340,16 @@ document.addEventListener('DOMContentLoaded', () => {
             imageContainer.appendChild(img);
             card.appendChild(imageContainer);
 
-            // 3. Grid Metrics
+            // Grid Metrics with Restrained Saturation
             const resultData = document.createElement('div');
             resultData.className = 'result-data';
 
             const scoreVal = isNaN(parseFloat(result.score)) ? 'N/A' : parseFloat(result.score).toFixed(4);
-            const scoreGroup = createDataGroup('FAN_LOSS', scoreVal, 'var(--color-accent)');
+            const isRank1 = (result.rank === 1);
+            const scoreGroup = createDataGroup('FAN_LOSS', scoreVal, isRank1 ? 'var(--color-accent)' : 'var(--color-foreground)');
             const resGroup = createDataGroup('RESOLUTION', '256x256');
             const confGroup = createDataGroup('IDENTITY_FIT', (1.0 - Math.min(0.99, parseFloat(scoreVal) || 0.15)).toFixed(3));
-            const statusGroup = createDataGroup('STATUS', 'VERIFIED', 'var(--color-accent)');
+            const statusGroup = createDataGroup('STATUS', isRank1 ? 'VERIFIED' : 'CANDIDATE', isRank1 ? 'var(--color-accent)' : 'var(--color-muted-foreground)');
 
             resultData.appendChild(scoreGroup);
             resultData.appendChild(resGroup);
@@ -285,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             resultData.appendChild(statusGroup);
             card.appendChild(resultData);
 
-            // 4. Export Action
+            // Export Action
             const downloadBtn = document.createElement('a');
             downloadBtn.className = 'download-action-btn';
             downloadBtn.href = result.image_data;

@@ -107,19 +107,102 @@
                 
                 <div class="panel-content scrollable">
                     <div id="results-grid" class="results-container">
-                        <!-- Polished Empty Acquisition State -->
-                        <div class="empty-state">
-                            <div class="empty-state-crosshair" aria-hidden="true">
-                                <i class="ph ph-crosshair-simple"></i>
+                        <!-- Calibrated Forensic Standby Workstation (Split 2-Column State) -->
+                        <div class="empty-state-wrapper">
+                            <!-- 2-Column Split Console -->
+                            <div class="standby-split-grid">
+                                <!-- Left Column: Target Acquisition Viewport -->
+                                <div class="standby-viewport">
+                                    <div class="reticle reticle-tl" aria-hidden="true"></div>
+                                    <div class="reticle reticle-tr" aria-hidden="true"></div>
+                                    <div class="reticle reticle-bl" aria-hidden="true"></div>
+                                    <div class="reticle reticle-br" aria-hidden="true"></div>
+
+                                    <div class="standby-reticle-graphic" aria-hidden="true">
+                                        <i class="ph-bold ph-scan"></i>
+                                    </div>
+
+                                    <div class="standby-text-block">
+                                        <h3 class="standby-heading">AWAITING_TARGET_ACQUISITION</h3>
+                                        <p class="standby-subtext">Ingest degraded CCTV face crop via Panel 01 and trigger reconstruction. The DGP synthesis engine will optimize identity-preserving generative priors to produce three probabilistic restorations.</p>
+                                    </div>
+
+                                    <div class="standby-readiness-pill">
+                                        <span class="mono-label">FEED_CHANNEL: STANDBY // READY_FOR_INGESTION</span>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Pipeline Telemetry & Diagnostics -->
+                                <div class="standby-telemetry-box">
+                                    <div class="reticle reticle-tl" aria-hidden="true"></div>
+                                    <div class="reticle reticle-tr" aria-hidden="true"></div>
+                                    <div class="reticle reticle-bl" aria-hidden="true"></div>
+                                    <div class="reticle reticle-br" aria-hidden="true"></div>
+
+                                    <div class="telemetry-box-header">
+                                        <div class="telemetry-status-badge">
+                                            <span class="status-indicator online" aria-hidden="true"></span>
+                                            <span class="mono-label status-title">PIPELINE_STATUS: STANDBY // CALIBRATION_OPTIMAL</span>
+                                        </div>
+                                        <p class="telemetry-banner-desc">Deep Generative Prior engine armed and awaiting surveillance input feed from Panel 01.</p>
+                                    </div>
+
+                                    <div class="telemetry-specs-strip">
+                                        <div class="spec-tag"><span class="spec-k">ARCH:</span> <span class="spec-v">MOBILENETV2+FPN</span></div>
+                                        <div class="spec-tag"><span class="spec-k">CKPT:</span> <span class="spec-v">EPOCH 10 (CONVERGED)</span></div>
+                                        <div class="spec-tag"><span class="spec-k">SPACE:</span> <span class="spec-v">256&times;256 CANONICAL</span></div>
+                                        <div class="spec-tag"><span class="spec-k">RUNTIME:</span> <span class="spec-v">TF_READY</span></div>
+                                    </div>
+
+                                    <div class="standby-diagnostic-grid">
+                                        <div class="diagnostic-cell">
+                                            <span class="mono-label">INPUT_TENSOR</span>
+                                            <span class="mono-label val">256&times;256 RGB CANONICAL</span>
+                                        </div>
+                                        <div class="diagnostic-cell">
+                                            <span class="mono-label">OPTIMIZER</span>
+                                            <span class="mono-label val">ADAM [LR=0.01] + REGULARIZER</span>
+                                        </div>
+                                        <div class="diagnostic-cell">
+                                            <span class="mono-label">LOSS_METRICS</span>
+                                            <span class="mono-label val">FAN IDENTITY + L1 LOSS</span>
+                                        </div>
+                                        <div class="diagnostic-cell">
+                                            <span class="mono-label">SYNTHESIS_MODE</span>
+                                            <span class="mono-label val">TOP-3 PROBABILISTIC SEEDS</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="empty-state-info">
-                                <span class="mono-label accent-text">AWAITING_TARGET_ACQUISITION</span>
-                                <p class="empty-state-subtext">Load a degraded CCTV face crop (PNG/JPG) to synthesize Top-3 probabilistic reconstructions.</p>
-                            </div>
-                            <div class="empty-spec-matrix">
-                                <div class="spec-cell"><span class="spec-key">MODEL:</span><span class="spec-val">MOBILENETV2 + FPN</span></div>
-                                <div class="spec-cell"><span class="spec-key">WEIGHTS:</span><span class="spec-val">EPOCH 10 (CONVERGED)</span></div>
-                                <div class="spec-cell"><span class="spec-key">RESOLUTION:</span><span class="spec-val">256x256 CANONICAL</span></div>
+
+                            <!-- Forensic Reconstruction Methodology Pipeline -->
+                            <div class="standby-pipeline-strip">
+                                <div class="pipeline-step-box">
+                                    <div class="step-num-row">
+                                        <span class="mono-label step-tag">STAGE 01</span>
+                                        <span class="mono-label step-status">CALIBRATED</span>
+                                    </div>
+                                    <span class="step-title">INPUT CROP INGESTION</span>
+                                    <p class="step-detail">32&times;32 surveillance downsampling and canonical 256&times;256 tensor alignment.</p>
+                                </div>
+
+                                <div class="pipeline-step-box">
+                                    <div class="step-num-row">
+                                        <span class="mono-label step-tag">STAGE 02</span>
+                                        <span class="mono-label step-status">STANDBY</span>
+                                    </div>
+                                    <span class="step-title">DGP LATENT SEARCH</span>
+                                    <p class="step-detail">MobileNetV2+FPN feature projection and multi-seed probabilistic exploration.</p>
+                                </div>
+
+                                <div class="pipeline-step-box">
+                                    <div class="step-num-row">
+                                        <span class="mono-label step-tag">STAGE 03</span>
+                                        <span class="mono-label step-status">STANDBY</span>
+                                    </div>
+                                    <span class="step-title">IDENTITY FIT RANKING</span>
+                                    <p class="step-detail">68-point FAN facial landmark loss minimization and Top-3 candidate output.</p>
+                                </div>
                             </div>
                         </div>
                         <!-- Results injected via JS -->
