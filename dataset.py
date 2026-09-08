@@ -21,17 +21,19 @@ class DegradedFacesDataset(Dataset):
     CCTV-like faces paired with high-resolution pristine targets and 68-point
     facial landmarks.
     """
-    def __init__(self, root_dir, transform=None, target_size=(24, 24), hr_size=(256, 256)):
+    def __init__(self, root_dir, transform=None, target_size=(24, 24), hr_size=(256, 256), curriculum=True):
         """
         :param root_dir: Path to directory containing high-res face images (e.g., FFHQ).
         :param transform: Optional torchvision transforms.
-        :param target_size: The degraded sub-32x32 target size.
+        :param target_size: The degraded sub-32x32 target size (used if curriculum=False).
         :param hr_size: The standardized high-res size for the pristine image.
+        :param curriculum: If True, dynamically samples across 24x24 to 256x256 scales.
         """
         self.root_dir = root_dir
         self.transform = transform
         self.target_size = target_size
         self.hr_size = hr_size
+        self.curriculum = curriculum
         
         # Load all valid image file paths
         valid_exts = {'.png', '.jpg', '.jpeg'}
@@ -67,26 +69,39 @@ class DegradedFacesDataset(Dataset):
 
     def apply_compound_degradation(self, image):
         """
-        Applies the four-stage compound degradation model from Chapter 3.
-        I_LR = C_H264( ((I_HR * K_M) down_s + N(mu, sigma^2)), Q_p )
+        Applies the multi-scale compound degradation model:
+        I_LR = C_H264( ((I_HR * K_M) down_s + N(0, sigma^2)), Q_p )
+        with scale-curriculum downsampling and probabilistic atmospheric haze.
         """
         # 1. Optical Motion Blur (K_M)
-        # Randomize displacement and angle for dynamic generation
         d = np.random.randint(2, 10)
         theta = np.random.uniform(0, 360)
         img_deg = apply_optical_motion_blur(image, d, theta)
         
-        # 2. Atmospheric Scattering Simulation
-        t = np.random.uniform(0.3, 0.8) # 0.3 is heavy fog, 0.8 is light
-        A = np.random.uniform(0.6, 1.0)
-        img_deg = apply_atmospheric_scattering(img_deg, t, A)
+        # 2. Atmospheric Scattering Simulation (Probabilistic: 40% haze, 60% clear)
+        if np.random.rand() < 0.40:
+            t = np.random.uniform(0.4, 0.9)
+            A = np.random.uniform(0.6, 1.0)
+            img_deg = apply_atmospheric_scattering(img_deg, t, A)
         
         # Convert back to uint8 for cv2 processing if needed
         if img_deg.dtype != np.uint8:
             img_deg = (np.clip(img_deg, 0.0, 1.0) * 255).astype(np.uint8)
             
-        # 3. Spatial Downsampling (down_s)
-        img_deg = apply_spatial_downsampling(img_deg, self.target_size)
+        # 3. Spatial Downsampling (Multi-Scale Curriculum)
+        if self.curriculum:
+            rand_p = np.random.rand()
+            if rand_p < 0.40:
+                scale = np.random.randint(24, 33)   # Sub-32x32 severe benchmark (Mode B)
+            elif rand_p < 0.70:
+                scale = np.random.randint(48, 65)   # Intermediate distance CCTV
+            else:
+                scale = np.random.randint(128, 257) # Native resolution CCTV crops (Mode A)
+            downsample_target = (scale, scale)
+        else:
+            downsample_target = self.target_size
+
+        img_deg = apply_spatial_downsampling(img_deg, downsample_target)
         
         # 4. Sensor Thermal Noise Injection (N(0, sigma^2))
         std = np.random.uniform(5, 25)
@@ -95,6 +110,10 @@ class DegradedFacesDataset(Dataset):
         # 5. Aggressive H.264 Quantization (Q_p >= 35)
         qp = np.random.randint(35, 51)
         img_deg = apply_h264_quantization(img_deg, qp=qp)
+        
+        # 6. Standardize degraded image to (256, 256) via bicubic interpolation
+        # Guarantees uniform batch tensor dimensions across variable degradation scales
+        img_deg = cv2.resize(img_deg, self.hr_size, interpolation=cv2.INTER_CUBIC)
         
         return img_deg
 

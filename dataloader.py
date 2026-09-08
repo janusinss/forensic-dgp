@@ -1,7 +1,7 @@
 from torch.utils.data import DataLoader
 from dataset import DegradedFacesDataset
 
-def get_dataloader(root_dir, batch_size=8, num_workers=2, shuffle=True):
+def get_dataloader(root_dir, batch_size=8, num_workers=2, shuffle=True, curriculum=True):
     """
     Returns a configured PyTorch DataLoader for the DegradedFacesDataset.
     Optimized for local edge hardware (<8GB VRAM). 
@@ -12,9 +12,10 @@ def get_dataloader(root_dir, batch_size=8, num_workers=2, shuffle=True):
     :param batch_size: Number of samples per batch.
     :param num_workers: Number of subprocesses for data loading.
     :param shuffle: Whether to shuffle the data at every epoch.
+    :param curriculum: Whether to enable multi-scale curriculum downsampling.
     :return: DataLoader instance
     """
-    dataset = DegradedFacesDataset(root_dir=root_dir)
+    dataset = DegradedFacesDataset(root_dir=root_dir, curriculum=curriculum)
     
     dataloader = DataLoader(
         dataset,

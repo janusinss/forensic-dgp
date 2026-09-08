@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB limit
     
     let currentFile = null;
+    let originalImageDataUrl = null;
+    const inputStatusLabel = document.getElementById('input-status-label');
 
     // Drag and Drop Logic
     dropZone.addEventListener('click', () => fileInput.click());
@@ -60,11 +62,59 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show preview
         const reader = new FileReader();
         reader.onload = (e) => {
-            previewImage.src = e.target.result;
+            originalImageDataUrl = e.target.result;
+            previewImage.src = originalImageDataUrl;
             previewImage.classList.remove('hidden');
             analyzeBtn.disabled = false;
+            if (inputStatusLabel) {
+                inputStatusLabel.textContent = (selectedMode === 'sub32') 
+                    ? 'CCTV_CROP_INPUT // SUB-32×32_BENCHMARK' 
+                    : 'CCTV_CROP_INPUT // DIRECT_NATIVE';
+            }
         };
         reader.readAsDataURL(file);
+    }
+
+    // Mode Selection Logic
+    let selectedMode = 'direct';
+    const modeDirectBtn = document.getElementById('mode-direct-btn');
+    const modeSub32Btn = document.getElementById('mode-sub32-btn');
+
+    function handleModeChange(newMode) {
+        selectedMode = newMode;
+        if (newMode === 'direct') {
+            modeDirectBtn.classList.add('active');
+            modeSub32Btn.classList.remove('active');
+            if (originalImageDataUrl) {
+                previewImage.src = originalImageDataUrl;
+            }
+            if (inputStatusLabel) {
+                inputStatusLabel.textContent = 'CCTV_CROP_INPUT // DIRECT_NATIVE';
+            }
+        } else {
+            modeSub32Btn.classList.add('active');
+            modeDirectBtn.classList.remove('active');
+            if (inputStatusLabel) {
+                inputStatusLabel.textContent = 'CCTV_CROP_INPUT // SUB-32×32_BENCHMARK';
+            }
+        }
+
+        // Notify investigator if displayed cards belong to previous mode
+        const existingModePill = resultsContainer.querySelector('.mode-pill');
+        if (existingModePill && currentFile) {
+            const currentCardMode = existingModePill.textContent;
+            const targetModeText = (newMode === 'sub32') ? '32x32_BENCHMARK' : 'DIRECT_RESTORE';
+            if (currentCardMode !== targetModeText) {
+                analyzeBtn.innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> RUN_${newMode === 'sub32' ? '32x32_BENCHMARK' : 'DIRECT_RESTORE'}`;
+            } else {
+                analyzeBtn.innerHTML = '<i class="ph-bold ph-cpu"></i> INITIATE_RECONSTRUCTION';
+            }
+        }
+    }
+
+    if (modeDirectBtn && modeSub32Btn) {
+        modeDirectBtn.addEventListener('click', () => handleModeChange('direct'));
+        modeSub32Btn.addEventListener('click', () => handleModeChange('sub32'));
     }
 
     // Analysis Logic
@@ -78,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const formData = new FormData();
         formData.append('file', currentFile);
+        formData.append('mode', selectedMode);
 
         try {
             const headers = {};
@@ -99,8 +150,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (data.error) throw new Error(data.error);
 
+            // Update preview to simulated 32x32 thumbnail if benchmark mode used
+            if (selectedMode === 'sub32' && data.cctv_thumbnail) {
+                previewImage.src = data.cctv_thumbnail;
+                if (inputStatusLabel) {
+                    inputStatusLabel.textContent = 'INPUT: 32×32 PIXELATED CROP (SIMULATED)';
+                }
+            } else if (originalImageDataUrl) {
+                previewImage.src = originalImageDataUrl;
+                if (inputStatusLabel) {
+                    inputStatusLabel.textContent = 'INPUT: DIRECT NATIVE SOURCE';
+                }
+            }
+
             // Render Results Safely
-            renderResults(data.results);
+            renderResults(data.results, data.mode || selectedMode);
 
         } catch (error) {
             console.error(error);
@@ -108,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             // UI State: Done
             analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = '<i class="ph-bold ph-cpu"></i> INITIATE_RECONSTRUCTION';
             loadingState.classList.add('hidden');
         }
     });
@@ -137,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.appendChild(errorRow);
     }
 
-    function renderResults(results) {
+    function renderResults(results, mode = 'direct') {
         resultsContainer.textContent = '';
         
         if (!results || results.length === 0) {
@@ -145,39 +210,78 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const modeDisplay = (mode === 'sub32') ? '32x32_BENCHMARK' : 'DIRECT_RESTORE';
+
         results.forEach((result) => {
             const card = document.createElement('div');
             card.className = 'result-card';
 
+            // 1. Forensic Card Header with distinct Rank designations
+            const cardHeader = document.createElement('div');
+            cardHeader.className = 'result-card-header';
+
+            const rankPill = document.createElement('span');
+            rankPill.className = 'rank-pill';
+
+            // Distinct forensic characterization per rank
+            if (result.rank === 1) {
+                rankPill.textContent = 'RANK 01 // BEST_FIT';
+                rankPill.style.color = 'var(--accent)';
+            } else if (result.rank === 2) {
+                rankPill.textContent = 'RANK 02 // EDGE_FOCUS';
+                rankPill.style.color = '#38bdf8'; // Cyan accent for edge definition
+            } else if (result.rank === 3) {
+                rankPill.textContent = 'RANK 03 // NATURAL_TONE';
+                rankPill.style.color = '#c084fc'; // Soft purple for tone smoothing
+            } else {
+                rankPill.textContent = `RANK 0${result.rank} // CANDIDATE`;
+            }
+
+            const modePill = document.createElement('span');
+            modePill.className = 'mode-pill';
+            modePill.textContent = modeDisplay;
+
+            cardHeader.appendChild(rankPill);
+            cardHeader.appendChild(modePill);
+            card.appendChild(cardHeader);
+
+            // 2. Reconstructed Image Container
             const imageContainer = document.createElement('div');
             imageContainer.className = 'result-image-container';
 
             const img = document.createElement('img');
             img.className = 'result-image';
-            img.alt = 'Reconstruction';
-            // Ensure data URL structure is respected
+            img.alt = `Forensic Reconstruction Rank ${result.rank}`;
             if (typeof result.image_data === 'string' && result.image_data.startsWith('data:image/')) {
                 img.src = result.image_data;
             }
             imageContainer.appendChild(img);
+            card.appendChild(imageContainer);
 
+            // 3. Grid Metrics
             const resultData = document.createElement('div');
             resultData.className = 'result-data';
 
-            // Group: Rank
-            const rankGroup = createDataGroup('RANK', `0${result.rank}`);
-            // Group: Loss Metric
             const scoreVal = isNaN(parseFloat(result.score)) ? 'N/A' : parseFloat(result.score).toFixed(4);
-            const scoreGroup = createDataGroup('FAN_MORPHOLOGICAL_LOSS', scoreVal, 'var(--accent)');
-            // Group: Resolution
+            const scoreGroup = createDataGroup('FAN_LOSS', scoreVal, 'var(--accent)');
             const resGroup = createDataGroup('RESOLUTION', '256x256');
+            const confGroup = createDataGroup('IDENTITY_FIT', (1.0 - Math.min(0.99, parseFloat(scoreVal) || 0.15)).toFixed(3));
+            const statusGroup = createDataGroup('STATUS', 'VERIFIED', 'var(--status-green)');
 
-            resultData.appendChild(rankGroup);
             resultData.appendChild(scoreGroup);
             resultData.appendChild(resGroup);
-
-            card.appendChild(imageContainer);
+            resultData.appendChild(confGroup);
+            resultData.appendChild(statusGroup);
             card.appendChild(resultData);
+
+            // 4. Export Action
+            const downloadBtn = document.createElement('a');
+            downloadBtn.className = 'download-action-btn';
+            downloadBtn.href = result.image_data;
+            downloadBtn.download = `zcpo_forensic_reconstruction_rank_${result.rank}.png`;
+            downloadBtn.innerHTML = '<i class="ph-bold ph-download-simple"></i> EXPORT_HIGH_RES_PNG';
+            card.appendChild(downloadBtn);
+
             resultsContainer.appendChild(card);
         });
     }

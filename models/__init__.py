@@ -1,7 +1,16 @@
 from .fpn_mobilenet import FPNMobileNet, FPN
 from .morphological_loss import MorphologicalFANLoss
 from .dgp_synthesizer import DGPSynthesizer
-from .losses import OptimalFaceRestorationLoss, CharbonnierLoss, ColorLoss, VGGPerceptualLoss
+from .losses import (
+    OptimalFaceRestorationLoss,
+    CharbonnierLoss,
+    ColorLoss,
+    MultiLayerVGGPerceptualLoss,
+    VGGPerceptualLoss,
+    SobelGradientLoss,
+    FocalFFTLoss,
+    FacialComponentAttentionLoss
+)
 
 __all__ = [
     'FPNMobileNet',
@@ -11,6 +20,10 @@ __all__ = [
     'OptimalFaceRestorationLoss',
     'CharbonnierLoss',
     'ColorLoss',
-    'VGGPerceptualLoss'
+    'MultiLayerVGGPerceptualLoss',
+    'VGGPerceptualLoss',
+    'SobelGradientLoss',
+    'FocalFFTLoss',
+    'FacialComponentAttentionLoss'
 ]
 

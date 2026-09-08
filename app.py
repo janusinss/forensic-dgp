@@ -14,7 +14,7 @@ import cv2
 import base64
 import torch
 import numpy as np
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -59,17 +59,24 @@ print("Optimal Face Restoration Engine ready.")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_ui():
-    """Serve the main UI HTML file."""
-    with open("templates/index.html", "r") as f:
+    """Serve the main UI HTML file with UTF-8 encoding and cache-invalidation."""
+    with open("templates/index.html", "r", encoding="utf-8") as f:
         html_content = f.read()
-    return HTMLResponse(content=html_content)
+    return HTMLResponse(
+        content=html_content,
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
 
 @app.post("/reconstruct")
-async def reconstruct_image(file: UploadFile = File(...)):
+async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("direct")):
     """
-    Receives an uploaded CCTV image crop, applies adaptive edge-preserving pre-denoising,
-    synthesizes high-resolution reconstructions via DeblurGAN-v2 multi-scale nearest fusion,
-    and returns razor-sharp Top-K candidates.
+    Dual-Mode CCTV Face Reconstruction:
+    - Mode 'direct': Direct Forensic Restoration (preserves full resolution, removes blur, maximizes facial sharpness).
+    - Mode 'sub32': Sub-32x32 Super-Resolution Simulation (Thesis Benchmark: downsamples to 32x32 and reconstructs).
     """
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
@@ -79,11 +86,9 @@ async def reconstruct_image(file: UploadFile = File(...)):
         return {"error": "Invalid image format."}
         
     # 1. Adaptive Edge-Preserving Pre-Denoising (Bilateral / Median)
-    # Eliminates high-frequency thermal sensor noise before super-resolution
     img_clean_bgr = adaptive_cctv_denoise(img_bgr)
     
-    # 2. Forensic Aspect-Ratio Preservation: Center-crop to 1:1 square
-    # Prevents wide/rectangular portrait photos from being squished horizontally
+    # 2. Forensic Target Extraction & Aspect-Ratio Preservation: Center-crop to 1:1 square
     h, w = img_clean_bgr.shape[:2]
     if h != w:
         min_dim = min(h, w)
@@ -91,13 +96,24 @@ async def reconstruct_image(file: UploadFile = File(...)):
         left = (w - min_dim) // 2
         img_clean_bgr = img_clean_bgr[top:top+min_dim, left:left+min_dim]
     
-    # Preprocess to standard sub-32x32 CCTV bounding box (24x24)
-    img_low_bgr = cv2.resize(img_clean_bgr, (24, 24), interpolation=cv2.INTER_AREA)
+    cctv_thumb_b64 = None
+    if mode == "sub32":
+        # Mode B: Sub-32x32 Super-Resolution Simulation (Thesis Benchmark)
+        # Downsamples to 32x32 CCTV standard and generates pixelated preview
+        img_low_bgr = cv2.resize(img_clean_bgr, (32, 32), interpolation=cv2.INTER_AREA)
+        thumb_display = cv2.resize(img_low_bgr, (256, 256), interpolation=cv2.INTER_NEAREST)
+        _, thumb_buf = cv2.imencode('.png', thumb_display)
+        cctv_thumb_b64 = f"data:image/png;base64,{base64.b64encode(thumb_buf).decode('utf-8')}"
+    else:
+        # Mode A: Direct Forensic Restoration (Deblur & Maximum Detail)
+        # Preserves full native resolution upscaled directly to 256x256 canonical space
+        img_low_bgr = cv2.resize(img_clean_bgr, (256, 256), interpolation=cv2.INTER_CUBIC)
+
     img_rgb = cv2.cvtColor(img_low_bgr, cv2.COLOR_BGR2RGB)
     
     # Normalize to [0, 1] tensor
     input_tensor = torch.from_numpy(img_rgb).permute(2, 0, 1).float() / 255.0
-    input_tensor = input_tensor.unsqueeze(0).to(device) # (1, 3, 24, 24)
+    input_tensor = input_tensor.unsqueeze(0).to(device)
     
     # 3. Generate Top-K reconstructions
     k = 3
@@ -112,23 +128,29 @@ async def reconstruct_image(file: UploadFile = File(...)):
 
     # 4. Convert output tensors to base64 strings with guided detail enhancement & illumination preservation
     result_images = []
+    clahe = cv2.createCLAHE(clipLimit=1.8, tileGridSize=(8, 8))
+    
     for idx, rec_tensor in enumerate(top_k_reconstructions):
         # tensor is (1, 3, 256, 256) in [0, 1] range
         rec_img_np = (rec_tensor[0].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8).copy()
         
         # Adaptive Forensic Illumination Calibration:
         # Prevents atmospheric dehazing offset from underexposing normal CCTV inputs
-        lab_rec = cv2.cvtColor(rec_img_np, cv2.COLOR_RGB2LAB).astype(np.float32)
+        lab_rec = cv2.cvtColor(rec_img_np, cv2.COLOR_RGB2LAB)
         l_rec_mean = float(lab_rec[:, :, 0].mean())
         l_rec_std = float(max(1e-5, lab_rec[:, :, 0].std()))
         
         if l_rec_mean < l_ref_mean:
-            lab_rec[:, :, 0] = np.clip((lab_rec[:, :, 0] - l_rec_mean) * (l_ref_std / l_rec_std) + l_ref_mean, 0, 255)
-            rec_img_np = cv2.cvtColor(lab_rec.astype(np.uint8), cv2.COLOR_LAB2RGB)
+            lab_rec[:, :, 0] = np.clip((lab_rec[:, :, 0] - l_rec_mean) * (l_ref_std / l_rec_std) + l_ref_mean, 0, 255).astype(np.uint8)
+            
+        # Apply CLAHE on L-channel to reveal sharp facial features (eyes, nose, lips)
+        lab_rec[:, :, 0] = clahe.apply(lab_rec[:, :, 0])
+        rec_img_np = cv2.cvtColor(lab_rec, cv2.COLOR_LAB2RGB)
 
-        # Subtle unsharp masking to enhance eye, iris, and facial edge definition
-        blurred = cv2.GaussianBlur(rec_img_np, (0, 0), 1.5)
-        rec_img_np = cv2.addWeighted(rec_img_np, 1.25, blurred, -0.25, 0)
+        # High-definition unsharp masking tailored per rank
+        blurred = cv2.GaussianBlur(rec_img_np, (0, 0), 1.2)
+        weight = 1.45 if idx == 1 else (1.35 if idx == 0 else 1.20)
+        rec_img_np = cv2.addWeighted(rec_img_np, weight, blurred, -(weight - 1.0), 0)
         rec_img_np = np.clip(rec_img_np, 0, 255).astype(np.uint8)
         
         # Encode back to PNG buffer
@@ -141,7 +163,11 @@ async def reconstruct_image(file: UploadFile = File(...)):
                 "image_data": f"data:image/png;base64,{base64_str}"
             })
             
-    return {"results": result_images}
+    response_data = {"results": result_images, "mode": mode}
+    if cctv_thumb_b64:
+        response_data["cctv_thumbnail"] = cctv_thumb_b64
+        
+    return response_data
 
 if __name__ == "__main__":
     import uvicorn
