@@ -86,7 +86,7 @@ def train(args):
         model.train()
         epoch_loss = 0.0
         
-        progress_bar = tqdm(dataloader, desc=f"Epoch {epoch}/{args.epochs}")
+        progress_bar = tqdm(dataloader, desc=f"Epoch {epoch}/{args.epochs}", dynamic_ncols=True)
         for batch_idx, (low_res, hr_target, landmarks) in enumerate(progress_bar):
             low_res = low_res.to(device)
             hr_target = hr_target.to(device)
@@ -137,6 +137,10 @@ def train(args):
         torch.save(model.state_dict(), checkpoint_path)
         print(f"Saved checkpoint: {checkpoint_path}\n")
         
+        # Log to file
+        with open("training_phase2_epochs_11_20.log", "a") as f:
+            f.write(f"Epoch {epoch}/{args.epochs} - Loss: {avg_loss:.4f} | PSNR: {metrics['PSNR']} | SSIM: {metrics['SSIM']} | ArcFace: {metrics['ArcFace_Sim']}\n")
+        
         if args.dry_run:
             break
 
@@ -144,7 +148,7 @@ if __name__ == "__main__":
     default_data_dir = "dataset/ffhq" if os.path.exists("dataset/ffhq") else "dataset/thumbnails128x128"
     parser = argparse.ArgumentParser(description="Train the Optimal Deep Generative Prior Face Restoration Model (Epochs 11-20)")
     parser.add_argument("--data_dir", type=str, default=default_data_dir, help="Path to FFHQ dataset")
-    parser.add_argument("--batch_size", type=int, default=2, help="Batch size (Keep small for <8GB VRAM)")
+    parser.add_argument("--batch_size", type=int, default=16, help="Batch size (16 produces 4,375 batches per epoch)")
     parser.add_argument("--epochs", type=int, default=20, help="Number of training epochs")
     parser.add_argument("--start_epoch", type=int, default=11, help="Epoch to start counting from")
     parser.add_argument("--resume_from", type=str, default="checkpoints/dgp_improved_epoch_10.pth", help="Path to checkpoint .pth file to resume from")

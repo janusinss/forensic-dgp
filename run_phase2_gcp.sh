@@ -58,10 +58,10 @@ echo "  - Multi-Loss Components: Component Attention, Multi-Layer VGG19, Color, 
 echo "  - Curriculum Degradation: Active (40% sub-32, 30% mid-range, 30% native)"
 echo "=========================================================="
 
-# Run training with tee for real-time console display and log persistence
+# Run training directly in TTY for steady in-place progress bar animation
 $PYTHON_CMD train.py \
     --data_dir "$DATA_DIR" \
-    --batch_size 8 \
+    --batch_size 16 \
     --start_epoch 11 \
     --epochs 20 \
     --resume_from "$CHECKPOINT_PATH" \
@@ -71,7 +71,7 @@ $PYTHON_CMD train.py \
     --lambda_color 0.05 \
     --lambda_fan 0.05 \
     --lambda_sobel 0.10 \
-    --lambda_fft 0.05 2>&1 | tee training_phase2_epochs_11_20.log
+    --lambda_fft 0.05
 
 echo "=== [4/5] Retraining Completed Successfully! ==="
 echo "Final weights saved in checkpoints/dgp_improved_epoch_20.pth"
