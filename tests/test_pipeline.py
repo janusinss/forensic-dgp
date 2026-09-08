@@ -1,4 +1,7 @@
 import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import cv2
 import numpy as np
 import torch
@@ -6,16 +9,19 @@ import matplotlib.pyplot as plt
 from dataloader import get_dataloader
 
 def test_pipeline():
-    # Make sure we have a sample directory
-    sample_dir = "dataset/ffhq"
-    os.makedirs(sample_dir, exist_ok=True)
+    # Detect available sample directory
+    sample_dir = None
+    for cand in ["dataset/ffhq", "dataset/thumbnails128x128", "test_images"]:
+        if os.path.exists(cand):
+            valid_exts = {'.png', '.jpg', '.jpeg'}
+            if any(os.path.splitext(f)[1].lower() in valid_exts for f in os.listdir(cand)):
+                sample_dir = cand
+                break
     
-    # Check if there are images, if not, print a message and exit
-    valid_exts = {'.png', '.jpg', '.jpeg'}
-    images_exist = any(os.path.splitext(f)[1].lower() in valid_exts for f in os.listdir(sample_dir))
-    
-    if not images_exist:
-        print(f"Please place at least one high-res face image in '{sample_dir}' to run this test.")
+    if sample_dir is None:
+        sample_dir = "dataset/ffhq"
+        os.makedirs(sample_dir, exist_ok=True)
+        print(f"Please place at least one high-res face image in '{sample_dir}' or 'dataset/thumbnails128x128' to run this test.")
         return
         
     print(f"Loading data from {sample_dir}...")
@@ -51,8 +57,10 @@ def test_pipeline():
         axes[1].axis('off')
         
         plt.tight_layout()
-        plt.savefig("test_output_visualization.png")
-        print("Test complete. Saved visualization to 'test_output_visualization.png'.")
+        os.makedirs("outputs", exist_ok=True)
+        out_path = os.path.join("outputs", "test_output_visualization.png")
+        plt.savefig(out_path)
+        print(f"Test complete. Saved visualization to '{out_path}'.")
         break # Only process one batch for the test
 
 if __name__ == "__main__":

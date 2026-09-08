@@ -42,14 +42,25 @@ def map_deblurgan_weights(input_pth, output_pth):
     print("Done! You can now use this file with train.py --resume_from and --transfer_learning")
 
 if __name__ == "__main__":
+    # Resolve default input from weights/ or root
+    default_input = "weights/fpn_mobilenet.h5"
+    if not os.path.exists(default_input):
+        for candidate in ["weights/best_fpn.pth", "fpn_mobilenet.h5", "best_fpn.pth"]:
+            if os.path.exists(candidate):
+                default_input = candidate
+                break
+
+    default_output = "weights/mapped_deblurgan.pth"
+    
     parser = argparse.ArgumentParser(description="Map DeblurGANv2 weights to Forensic DGP")
-    parser.add_argument("--input", type=str, default="best_fpn.pth", help="Path to downloaded DeblurGANv2 weights")
-    parser.add_argument("--output", type=str, default="mapped_deblurgan.pth", help="Output path for compatible weights")
+    parser.add_argument("--input", type=str, default=default_input, help="Path to downloaded DeblurGANv2 weights")
+    parser.add_argument("--output", type=str, default=default_output, help="Output path for compatible weights")
     
     args = parser.parse_args()
     
     if not os.path.exists(args.input):
         print(f"\n[!] WARNING: {args.input} not found.")
-        print("Please download the official fpn_mobilenet.h5 or best_fpn.pth from the DeblurGAN-v2 GitHub and place it here first.")
+        print("Please place the official fpn_mobilenet.h5 or best_fpn.pth in the weights/ folder first.")
     else:
+        os.makedirs(os.path.dirname(args.output) or ".", exist_ok=True)
         map_deblurgan_weights(args.input, args.output)

@@ -11,6 +11,7 @@ design.md
 skills-lock.json
 .env.example
 thesis.md
+docs/thesis.md
 
 # Python
 __pycache__/
@@ -23,13 +24,17 @@ env/
 # Project Specific Data & Outputs
 dataset/
 checkpoints/
+outputs/
 *.png
 *.jpg
 *.jpeg
 !static/*.png
 !static/*.jpg
+!test_images/*.png
+!test_images/*.jpg
 
 # ML Weights
+weights/
 *.pth
 *.pt
 *.h5

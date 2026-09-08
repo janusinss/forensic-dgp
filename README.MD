@@ -21,6 +21,35 @@ This repository contains the software implementation for a **Morphologically Con
 
 ---
 
+## 📁 Repository Structure
+
+```text
+├── checkpoints/             # Trained model checkpoints (.pth)
+├── weights/                 # Base and initialization weights (mapped_deblurgan.pth, fpn_mobilenet.h5)
+├── dataset/                 # FFHQ datasets and thumbnails
+├── test_images/             # Real & simulated CCTV test frames for evaluation
+├── outputs/                 # Restorations, Top-K candidates, and visualizations
+│   ├── reconstructions/     # High-resolution restored faces
+│   ├── top_k/               # Morphological ranked candidates
+│   └── direct_comparisons/  # Direct test comparisons
+├── tests/                   # Verification suite (test_model.py, test_pipeline.py)
+├── models/                  # PyTorch model definitions & composite loss functions
+├── scripts/                 # Utility scripts (transfer_weights.py, run_phase2_gcp.sh)
+├── docs/                    # Pipeline technical reports & thesis manuscript
+├── static/                  # Web UI frontend assets (CSS, JS)
+├── templates/               # Web UI frontend templates (HTML)
+├── app.py                   # FastAPI Forensic Web UI entrypoint
+├── train.py                 # Multi-loss curriculum training script
+├── dataloader.py            # PyTorch DataLoader pipeline
+├── dataset.py               # DegradedFacesDataset class
+├── degradation.py           # Multi-scale compound degradation engine
+├── evaluation.py            # PSNR, SSIM, ArcFace evaluation module
+├── install.bat              # One-click Windows setup
+└── start.bat                # One-click Windows Web UI launcher
+```
+
+---
+
 ##  Getting Started (Local Deployment)
 
 ### Prerequisites
@@ -82,6 +111,17 @@ Download the [FFHQ Dataset](https://github.com/NVlabs/ffhq-dataset) and place th
 python train.py --epochs 10 --batch_size 8 --lambda_fan 0.1
 ```
 During training, the model dynamically degrades the FFHQ images to sub-32x32 arrays and computes both Photometric (L1) and Morphological (FAN) losses.
+
+### Running Tests & Verification
+Verify model forward pass, memory footprint, and Top-K tensor shapes:
+```bash
+python tests/test_model.py
+```
+Verify dataset loading, degradation simulation, and landmark alignment:
+```bash
+python tests/test_pipeline.py
+```
+*(Generated test visualizations are stored in `outputs/test_output_visualization.png`)*
 
 ---
 
