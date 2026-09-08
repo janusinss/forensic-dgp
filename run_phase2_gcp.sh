@@ -37,6 +37,8 @@ DATA_DIR="dataset/ffhq"
 if [ ! -d "$DATA_DIR" ]; then
     if [ -d "dataset/thumbnails128x128" ]; then
         DATA_DIR="dataset/thumbnails128x128"
+    elif [ -d "thumbnails128x128" ]; then
+        DATA_DIR="thumbnails128x128"
     elif [ -d "/home/janus/ffhq" ]; then
         DATA_DIR="/home/janus/ffhq"
     elif [ -d "/mnt/disks/data/ffhq" ]; then
