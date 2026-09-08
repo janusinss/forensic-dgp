@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: blob:; connect-src 'self';">
     <meta name="referrer" content="no-referrer">
     <meta name="csrf-token" content="{{CSRF_TOKEN}}">
     <title>ZCPO // FORENSIC DGP TERMINAL</title>
     
-    <!-- Precision Monospace & Clean Industrial Sans -->
+    <!-- Authoritative Design Tokens Typography: Fira Code & Fira Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Phosphor Icons Core Stylesheets -->
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
@@ -19,618 +19,8 @@
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
     <script src="https://unpkg.com/@phosphor-icons/web@2.1.1" crossorigin="anonymous"></script>
 
-    <!-- Cache-busted Stylesheet -->
-    <style>
-/* 
- * ZCPO // FORENSIC DGP TERMINAL
- * Utilitarian / Swiss Precision High-Density Forensic Stylesheet
- * Strict grids, high contrast, calibrated typography, no arbitrary decorations.
- */
-
-:root {
-    --bg-base: #070709;
-    --bg-surface: #0f1013;
-    --bg-elevated: #15161b;
-    --bg-hover: #1c1e24;
-    
-    --border-color: #23252d;
-    --border-subtle: #191a21;
-    --border-highlight: #383a45;
-    
-    --text-primary: #f4f4f6;
-    --text-secondary: #9093a2;
-    --text-muted: #565969;
-    
-    --accent: #f59e0b; /* Forensic Amber Accent */
-    --accent-glow: rgba(245, 158, 11, 0.18);
-    --accent-hover: #d97706;
-    
-    --status-green: #10b981;
-    --status-red: #ef4444;
-    
-    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'IBM Plex Mono', monospace;
-}
-
-/* Universal Button & Box-Model Reset */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-button {
-    appearance: none;
-    -webkit-appearance: none;
-    background: transparent;
-    border: none;
-    color: inherit;
-    font: inherit;
-    cursor: pointer;
-    outline: none;
-}
-
-body {
-    background-color: var(--bg-base);
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Surfaces & Browser Craft */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-::-webkit-scrollbar-track {
-    background: var(--bg-base);
-}
-::-webkit-scrollbar-thumb {
-    background: #27272a;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #3f3f46;
-}
-
-::selection {
-    background: var(--accent);
-    color: #000000;
-}
-
-:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-}
-
-/* Typography Classes */
-.mono-label {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-secondary);
-    font-variant-numeric: tabular-nums;
-}
-
-.dimmed {
-    opacity: 0.6;
-}
-
-/* Border Utilities */
-.border-bottom { border-bottom: 1px solid var(--border-color); }
-.border-right { border-right: 1px solid var(--border-color); }
-.border-top { border-top: 1px solid var(--border-color); }
-.border-left { border-left: 1px solid var(--border-color); }
-
-/* Layout Grid */
-.terminal-layout {
-    width: 100%;
-    max-width: 1600px;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    border-left: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    background-color: var(--bg-surface);
-}
-
-/* Header */
-.terminal-header {
-    display: flex;
-    height: 64px;
-    background-color: var(--bg-base);
-    align-items: center;
-}
-
-.logo-block {
-    display: flex;
-    align-items: center;
-    padding: 0 0 0 1.5rem;
-    gap: 1rem;
-    width: 380px;
-    height: 100%;
-}
-
-.logo-block i {
-    font-size: 1.6rem;
-    color: var(--accent);
-}
-
-.logo-text h1 {
-    font-size: 0.98rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    font-family: var(--font-mono);
-}
-
-.status-block {
-    display: flex;
-    align-items: center;
-    padding: 0 1.5rem;
-    gap: 0.75rem;
-}
-
-.status-indicator {
-    width: 8px;
-    height: 8px;
-    background-color: var(--text-secondary);
-    border-radius: 0;
-}
-
-.status-indicator.online {
-    background-color: var(--status-green);
-}
-
-/* Main Body */
-.terminal-body {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-}
-
-/* Panels */
-.panel {
-    display: flex;
-    flex-direction: column;
-}
-
-.input-panel {
-    width: 380px;
-    flex-shrink: 0;
-    background-color: var(--bg-base);
-}
-
-.results-panel {
-    flex: 1;
-    background-color: var(--bg-surface);
-}
-
-.panel-header {
-    padding: 1rem 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    background-color: var(--bg-base);
-}
-
-.panel-header h2 {
-    font-size: 0.85rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    font-family: var(--font-mono);
-    color: var(--text-primary);
-}
-
-.panel-content {
-    padding: 1.15rem 1.25rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-}
-
-.scrollable {
-    overflow-y: auto;
-}
-
-.input-panel .panel-content {
-    overflow-y: auto;
-}
-
-/* Input Zone */
-.drop-zone {
-    width: 200px;
-    height: 200px;
-    align-self: center;
-    border: 1px dashed var(--border-color);
-    background-color: var(--bg-surface);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-    margin: 0.25rem auto;
-    flex-shrink: 0;
-}
-
-.drop-zone:hover, .drop-zone.dragover {
-    background-color: var(--bg-hover);
-    border-color: var(--text-secondary);
-}
-
-/* Reticles */
-.reticle {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    pointer-events: none;
-    z-index: 15;
-}
-.reticle-tl { top: 8px; left: 8px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
-.reticle-tr { top: 8px; right: 8px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); }
-.reticle-bl { bottom: 8px; left: 8px; border-bottom: 2px solid var(--accent); border-left: 2px solid var(--accent); }
-.reticle-br { bottom: 8px; right: 8px; border-bottom: 2px solid var(--accent); border-right: 2px solid var(--accent); }
-
-.drop-zone-ui {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    pointer-events: none;
-}
-
-.drop-zone-ui i {
-    font-size: 2rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.2rem;
-}
-
-#preview-image {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    background-color: var(--bg-base);
-    z-index: 10;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* Mode Selector */
-.mode-selector-block {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.mode-toggle-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-}
-
-.mode-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.65rem 0.85rem;
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    cursor: pointer;
-    transition: all 0.2s ease-out;
-    text-align: left;
-    width: 100%;
-    position: relative;
-}
-
-.mode-btn:hover {
-    border-color: var(--border-highlight);
-    color: var(--text-primary);
-    background-color: var(--bg-hover);
-}
-
-.mode-btn.active {
-    border-color: var(--accent);
-    background-color: var(--bg-elevated);
-    color: var(--text-primary);
-    box-shadow: inset 3px 0 0 var(--accent);
-}
-
-.mode-btn-title {
-    font-size: 0.8rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    letter-spacing: 0.04em;
-    color: var(--text-primary);
-}
-
-.mode-btn-title i {
-    font-size: 1rem;
-    color: var(--text-secondary);
-}
-
-.mode-btn.active .mode-btn-title i {
-    color: var(--accent);
-}
-
-.mode-subtext {
-    font-size: 0.65rem;
-    color: var(--text-secondary);
-    margin-top: 0.2rem;
-    letter-spacing: 0.03em;
-    line-height: 1.3;
-}
-
-.mode-btn.active .mode-subtext {
-    color: #a1a1aa;
-}
-
-/* Execute Button */
-.execute-btn {
-    width: 100%;
-    padding: 0.85rem;
-    background-color: var(--text-primary);
-    color: var(--bg-base);
-    border: 1px solid var(--text-primary);
-    font-family: var(--font-mono);
-    font-weight: 600;
-    font-size: 0.82rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.execute-btn:hover:not(:disabled) {
-    background-color: var(--accent);
-    border-color: var(--accent);
-    color: #000;
-}
-
-.execute-btn:disabled {
-    background-color: var(--bg-elevated);
-    border-color: var(--border-color);
-    color: var(--text-muted);
-    cursor: not-allowed;
-}
-
-/* Loading State */
-.loading-block {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 1rem;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-surface);
-}
-
-.spinner {
-    width: 22px;
-    height: 22px;
-    border: 2px solid var(--border-color);
-    border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { 100% { transform: rotate(360deg); } }
-.blink { animation: blink 1.2s infinite; }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-
-/* Results Grid */
-.results-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    align-items: start;
-}
-
-/* Empty State */
-.empty-state {
-    grid-column: 1 / -1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 3.5rem 2rem;
-    border: 1px dashed var(--border-color);
-    background-color: rgba(15, 16, 19, 0.7);
-    gap: 1.5rem;
-    text-align: center;
-}
-
-.empty-state-crosshair {
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-elevated);
-    font-size: 1.75rem;
-    color: var(--accent);
-}
-
-.empty-state-info {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    max-width: 480px;
-}
-
-.accent-text {
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 0.08em;
-}
-
-.empty-state-subtext {
-    font-size: 0.82rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-}
-
-.empty-spec-matrix {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.25rem;
-    padding: 0.75rem 1.25rem;
-    background-color: var(--bg-base);
-    border: 1px solid var(--border-color);
-}
-
-.spec-cell {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-}
-
-.spec-key {
-    color: var(--text-muted);
-}
-
-.spec-val {
-    color: var(--text-primary);
-    font-weight: 500;
-}
-
-/* Result Cards */
-.result-card {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-base);
-    transition: border-color 0.2s, box-shadow 0.2s;
-    position: relative;
-}
-
-.result-card:hover {
-    border-color: var(--border-highlight);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-}
-
-.result-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.65rem 1rem;
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border-color);
-}
-
-.rank-pill {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-}
-
-.mode-pill {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-elevated);
-    color: var(--text-secondary);
-}
-
-.result-image-container {
-    width: 100%;
-    aspect-ratio: 1;
-    border-bottom: 1px solid var(--border-color);
-    position: relative;
-    background-color: #000;
-}
-
-.result-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.result-data {
-    padding: 1rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.85rem;
-}
-
-.data-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.data-value {
-    font-family: var(--font-mono);
-    font-size: 1.15rem;
-    color: var(--text-primary);
-    font-variant-numeric: tabular-nums;
-}
-
-.download-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    padding: 0.75rem 1rem;
-    background-color: var(--bg-surface);
-    border-top: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-decoration: none;
-}
-
-.download-action-btn:hover {
-    background-color: var(--bg-hover);
-    color: var(--text-primary);
-    border-top-color: var(--accent);
-}
-
-.download-action-btn i {
-    font-size: 0.95rem;
-    color: var(--accent);
-}
-
-/* Footer */
-.terminal-footer {
-    height: 34px;
-    background-color: var(--bg-base);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 1.5rem;
-}
-
-    </style>
+    <!-- Authoritative Design System Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css?v=3.0.0">
 </head>
 <body>
     <div class="terminal-layout">
@@ -638,39 +28,39 @@ body {
         <!-- Header -->
         <header class="terminal-header border-bottom">
             <div class="logo-block border-right">
-                <i class="ph-fill ph-crosshair"></i>
+                <i class="ph-fill ph-crosshair" aria-hidden="true"></i>
                 <div class="logo-text">
                     <h1>ZCPO // FORENSICS</h1>
                     <span class="mono-label">SYS_ID: DGP_MATRIX_V1</span>
                 </div>
             </div>
             <div class="status-block">
-                <span class="status-indicator online"></span>
+                <span class="status-indicator online" aria-label="Status: Online" role="status"></span>
                 <span class="mono-label">ENGINE_STATUS: STANDBY</span>
             </div>
         </header>
 
         <main class="terminal-body">
             
-            <!-- Left Column: Input -->
-            <section class="panel input-panel border-right">
+            <!-- Left Column: Target Input & Calibration -->
+            <section class="panel input-panel border-right" aria-labelledby="input-panel-heading">
                 <div class="panel-header border-bottom">
-                    <h2>01 // TARGET_EXTRACTION</h2>
+                    <h2 id="input-panel-heading">01 // TARGET_EXTRACTION</h2>
                     <span class="mono-label" id="input-status-label">CCTV_CROP_INPUT // DIRECT_NATIVE</span>
                 </div>
                 
                 <div class="panel-content">
-                    <div id="drop-zone" class="drop-zone">
+                    <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Drop degraded CCTV face crop here or click to browse">
                         <input type="file" id="file-input" accept="image/png, image/jpeg, image/jpg" hidden>
                         
-                        <!-- Forensic Corner Reticles -->
-                        <div class="reticle reticle-tl"></div>
-                        <div class="reticle reticle-tr"></div>
-                        <div class="reticle reticle-bl"></div>
-                        <div class="reticle reticle-br"></div>
+                        <!-- Precision Forensic Reticles -->
+                        <div class="reticle reticle-tl" aria-hidden="true"></div>
+                        <div class="reticle reticle-tr" aria-hidden="true"></div>
+                        <div class="reticle reticle-bl" aria-hidden="true"></div>
+                        <div class="reticle reticle-br" aria-hidden="true"></div>
 
                         <div class="drop-zone-ui">
-                            <i class="ph ph-upload-simple"></i>
+                            <i class="ph ph-upload-simple" aria-hidden="true"></i>
                             <span class="mono-label">[ DRAG AND DROP FILE ]</span>
                             <span class="mono-label dimmed">OR CLICK TO BROWSE</span>
                         </div>
@@ -678,44 +68,48 @@ body {
                     </div>
 
                     <div class="mode-selector-block">
-                        <span class="mono-label">RECONSTRUCTION_MODE:</span>
-                        <div class="mode-toggle-group">
-                            <button type="button" class="mode-btn active" data-mode="direct" id="mode-direct-btn">
-                                <div class="mode-btn-title"><i class="ph-bold ph-sparkle"></i> DIRECT_RESTORATION</div>
+                        <span class="mono-label" id="mode-selector-label">RECONSTRUCTION_MODE:</span>
+                        <div class="mode-toggle-group" role="radiogroup" aria-labelledby="mode-selector-label">
+                            <button type="button" class="mode-btn active" data-mode="direct" id="mode-direct-btn" role="radio" aria-checked="true">
+                                <div class="mode-btn-title">
+                                    <i class="ph-bold ph-sparkle" aria-hidden="true"></i> DIRECT_RESTORATION
+                                </div>
                                 <span class="mode-subtext">NATIVE SCALE // MAXIMUM DETAIL &amp; SHARPNESS</span>
                             </button>
-                            <button type="button" class="mode-btn" data-mode="sub32" id="mode-sub32-btn">
-                                <div class="mode-btn-title"><i class="ph-bold ph-scan"></i> SUB-32&times;32_SUPER_RESOLUTION</div>
+                            <button type="button" class="mode-btn" data-mode="sub32" id="mode-sub32-btn" role="radio" aria-checked="false">
+                                <div class="mode-btn-title">
+                                    <i class="ph-bold ph-scan" aria-hidden="true"></i> SUB-32&times;32_SUPER_RESOLUTION
+                                </div>
                                 <span class="mode-subtext">THESIS BENCHMARK // SIMULATE DISTANT CCTV</span>
                             </button>
                         </div>
                     </div>
 
                     <div class="action-block">
-                        <button id="analyze-btn" class="execute-btn" disabled>
-                            <i class="ph-bold ph-cpu"></i> INITIATE_RECONSTRUCTION
+                        <button id="analyze-btn" class="execute-btn" disabled aria-label="Initiate Reconstruction">
+                            <i class="ph-bold ph-cpu" aria-hidden="true"></i> INITIATE_RECONSTRUCTION
                         </button>
                     </div>
 
-                    <div id="loading-state" class="loading-block hidden">
-                        <div class="spinner"></div>
+                    <div id="loading-state" class="loading-block hidden" role="status" aria-live="polite">
+                        <div class="spinner" aria-hidden="true"></div>
                         <span class="mono-label blink">COMPUTING_MORPHOLOGICAL_PRIOR...</span>
                     </div>
                 </div>
             </section>
 
-            <!-- Right Column: Results -->
-            <section class="panel results-panel">
+            <!-- Right Column: Results & Synthesized Candidates -->
+            <section class="panel results-panel" aria-labelledby="results-panel-heading">
                 <div class="panel-header border-bottom">
-                    <h2>02 // TOP_K_RESULTS</h2>
+                    <h2 id="results-panel-heading">02 // TOP_K_RESULTS</h2>
                     <span class="mono-label">SORTED_BY: FAN_LOSS_METRIC</span>
                 </div>
                 
                 <div class="panel-content scrollable">
                     <div id="results-grid" class="results-container">
-                        <!-- Polished Empty State -->
+                        <!-- Polished Empty Acquisition State -->
                         <div class="empty-state">
-                            <div class="empty-state-crosshair">
+                            <div class="empty-state-crosshair" aria-hidden="true">
                                 <i class="ph ph-crosshair-simple"></i>
                             </div>
                             <div class="empty-state-info">
@@ -735,13 +129,13 @@ body {
             
         </main>
         
-        <!-- Footer / Status Bar -->
+        <!-- Footer / Telemetry Status Bar -->
         <footer class="terminal-footer border-top">
             <span class="mono-label">ZCPO FORENSIC LAB // WMSU CS DEPT &copy; 2026</span>
             <span class="mono-label">MEM_LIMIT: 8192MB // LATENCY: &lt; 100MS // ARCH: DGP-V2</span>
         </footer>
     </div>
 
-    <script src="/static/script.js?v=2.4.0"></script>
+    <script src="/static/script.js?v=3.0.0"></script>
 </body>
 </html>

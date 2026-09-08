@@ -7,9 +7,13 @@ error_log
 # Impeccable ephemeral review artifacts
 .impeccable/*.png
 .impeccable/live/
-# Playwright test traces
+.impeccable/config.local.json
+# Playwright test traces & scratch files
+tests/screenshots/
 test-results/
 playwright-report/
+node_modules/
+scratch/
 .claude/
 skills-lock.json
 .env.example

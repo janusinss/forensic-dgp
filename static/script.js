@@ -17,8 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalImageDataUrl = null;
     const inputStatusLabel = document.getElementById('input-status-label');
 
-    // Drag and Drop Logic
+    // Drag and Drop & Keyboard Logic
     dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
     
     dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -84,7 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedMode = newMode;
         if (newMode === 'direct') {
             modeDirectBtn.classList.add('active');
+            modeDirectBtn.setAttribute('aria-checked', 'true');
             modeSub32Btn.classList.remove('active');
+            modeSub32Btn.setAttribute('aria-checked', 'false');
             if (originalImageDataUrl) {
                 previewImage.src = originalImageDataUrl;
             }
@@ -93,7 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             modeSub32Btn.classList.add('active');
+            modeSub32Btn.setAttribute('aria-checked', 'true');
             modeDirectBtn.classList.remove('active');
+            modeDirectBtn.setAttribute('aria-checked', 'false');
             if (inputStatusLabel) {
                 inputStatusLabel.textContent = 'CCTV_CROP_INPUT // SUB-32×32_BENCHMARK';
             }
@@ -105,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentCardMode = existingModePill.textContent;
             const targetModeText = (newMode === 'sub32') ? '32x32_BENCHMARK' : 'DIRECT_RESTORE';
             if (currentCardMode !== targetModeText) {
-                analyzeBtn.innerHTML = `<i class="ph-bold ph-arrows-clockwise"></i> RUN_${newMode === 'sub32' ? '32x32_BENCHMARK' : 'DIRECT_RESTORE'}`;
+                analyzeBtn.innerHTML = `<i class="ph-bold ph-arrows-clockwise" aria-hidden="true"></i> RUN_${newMode === 'sub32' ? '32x32_BENCHMARK' : 'DIRECT_RESTORE'}`;
             } else {
-                analyzeBtn.innerHTML = '<i class="ph-bold ph-cpu"></i> INITIATE_RECONSTRUCTION';
+                analyzeBtn.innerHTML = '<i class="ph-bold ph-cpu" aria-hidden="true"></i> INITIATE_RECONSTRUCTION';
             }
         }
     }
@@ -172,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             // UI State: Done
             analyzeBtn.disabled = false;
-            analyzeBtn.innerHTML = '<i class="ph-bold ph-cpu"></i> INITIATE_RECONSTRUCTION';
+            analyzeBtn.innerHTML = '<i class="ph-bold ph-cpu" aria-hidden="true"></i> INITIATE_RECONSTRUCTION';
             loadingState.classList.add('hidden');
         }
     });
@@ -182,14 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const errorRow = document.createElement('div');
         errorRow.className = 'result-row';
-        errorRow.style.borderColor = '#ef4444';
+        errorRow.style.borderColor = 'var(--color-destructive)';
 
         const errorData = document.createElement('div');
         errorData.className = 'result-data';
 
         const errorLabel = document.createElement('span');
         errorLabel.className = 'mono-label';
-        errorLabel.style.color = '#ef4444';
+        errorLabel.style.color = 'var(--color-destructive)';
         errorLabel.textContent = 'SYS_ERR // ANALYSIS_FAILED';
 
         const errorVal = document.createElement('span');
@@ -223,18 +233,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const rankPill = document.createElement('span');
             rankPill.className = 'rank-pill';
 
-            // Distinct forensic characterization per rank
+            // Distinct forensic characterization per rank (Quieter, restrained hierarchy)
             if (result.rank === 1) {
                 rankPill.textContent = 'RANK 01 // BEST_FIT';
-                rankPill.style.color = 'var(--accent)';
+                rankPill.style.color = 'var(--color-accent)';
             } else if (result.rank === 2) {
                 rankPill.textContent = 'RANK 02 // EDGE_FOCUS';
-                rankPill.style.color = '#38bdf8'; // Cyan accent for edge definition
+                rankPill.style.color = 'var(--color-foreground)';
             } else if (result.rank === 3) {
                 rankPill.textContent = 'RANK 03 // NATURAL_TONE';
-                rankPill.style.color = '#c084fc'; // Soft purple for tone smoothing
+                rankPill.style.color = 'var(--color-muted-foreground)';
             } else {
                 rankPill.textContent = `RANK 0${result.rank} // CANDIDATE`;
+                rankPill.style.color = 'var(--color-muted-foreground)';
             }
 
             const modePill = document.createElement('span');
@@ -263,10 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
             resultData.className = 'result-data';
 
             const scoreVal = isNaN(parseFloat(result.score)) ? 'N/A' : parseFloat(result.score).toFixed(4);
-            const scoreGroup = createDataGroup('FAN_LOSS', scoreVal, 'var(--accent)');
+            const scoreGroup = createDataGroup('FAN_LOSS', scoreVal, 'var(--color-accent)');
             const resGroup = createDataGroup('RESOLUTION', '256x256');
             const confGroup = createDataGroup('IDENTITY_FIT', (1.0 - Math.min(0.99, parseFloat(scoreVal) || 0.15)).toFixed(3));
-            const statusGroup = createDataGroup('STATUS', 'VERIFIED', 'var(--status-green)');
+            const statusGroup = createDataGroup('STATUS', 'VERIFIED', 'var(--color-accent)');
 
             resultData.appendChild(scoreGroup);
             resultData.appendChild(resGroup);
@@ -279,7 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadBtn.className = 'download-action-btn';
             downloadBtn.href = result.image_data;
             downloadBtn.download = `zcpo_forensic_reconstruction_rank_${result.rank}.png`;
-            downloadBtn.innerHTML = '<i class="ph-bold ph-download-simple"></i> EXPORT_HIGH_RES_PNG';
+            downloadBtn.setAttribute('aria-label', `Export Rank 0${result.rank} Reconstruction as PNG`);
+            downloadBtn.innerHTML = '<i class="ph-bold ph-download-simple" aria-hidden="true"></i> EXPORT_HIGH_RES_PNG';
             card.appendChild(downloadBtn);
 
             resultsContainer.appendChild(card);
