@@ -259,13 +259,14 @@ def align_canonical_face(image_bgr, target_size=(256, 256)):
     """
     h, w = image_bgr.shape[:2]
     
-    # FFHQ canonical 5-point reference coordinates for 256x256
+    # FFHQ canonical 5-point reference coordinates for 256x256 (True standard FFHQ distribution)
+    # Native eye-distance is ~66px, preserving forehead, chin, and generator receptive field
     dst_pts = np.array([
-        [76.8, 97.3],    # Left eye
-        [179.2, 97.3],   # Right eye
-        [128.0, 143.4],  # Nose tip
-        [92.2, 184.3],   # Left mouth corner
-        [163.8, 184.3]   # Right mouth corner
+        [95.0, 118.0],   # Left eye
+        [161.0, 118.0],  # Right eye
+        [128.0, 156.0],  # Nose tip
+        [102.0, 184.0],  # Left mouth corner
+        [154.0, 184.0]   # Right mouth corner
     ], dtype=np.float32)
 
     try:

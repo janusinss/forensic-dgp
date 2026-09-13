@@ -19,6 +19,8 @@ skills-lock.json
 .env.example
 thesis.md
 docs/thesis.md
+docs/outdatedThesis.md
+docs/
 
 # Python
 __pycache__/
