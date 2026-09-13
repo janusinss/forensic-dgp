@@ -62,9 +62,8 @@ Open **`http://127.0.0.1:8000`** in your browser.
 ## 🔬 How to Test the Reconstruction Pipeline
 
 1. In the Web UI, drag and drop any image from [`test_images/`](file:///test_images/):
-   - **`test_images/test_cctv_blurred_1.png`**: Real blurred CCTV face portrait.
-   - **`test_images/test_cctv_blurred_2.png`**: Motion-blurred, low-bitrate face crop.
-   - **`test_images/wild1.png` - `wild5.png`**: Full surveillance frames with real-world noise, interlacing, and compression.
+   - **`test_images/synthetic_data_1.png` - `synthetic_data_10.png`**: Database synthetic CCTV faces (motion blur, atmospheric haze, downsampling, thermal noise, H.264 compression).
+   - **`test_images/wild1.png` - `wild5.png`**: Real unconstrained municipal surveillance frames.
 2. Select your **Reconstruction Mode**:
    - **`DIRECT_RESTORATION`**: Native CCTV scale restoration with illumination calibration and edge enhancement.
    - **`SUB-32x32_SUPER_RESOLUTION`**: Sub-32×32 thesis benchmark simulation (simulates distant CCTV cameras).
@@ -115,7 +114,7 @@ Open **`http://127.0.0.1:8000`** in your browser.
 ├── checkpoints/             # Pre-trained model weights (dgp_improved_epoch_20.pth included)
 ├── weights/                 # Initialization weights (mapped_deblurgan.pth)
 ├── dataset/                 # FFHQ and Asian demographic datasets
-├── test_images/             # Real & simulated CCTV test frames (test_cctv_blurred_*.png, wild*.png)
+├── test_images/             # Synthetic CCTV test crops (synthetic_data_1-10.png) & real scenes (wild1-5.png)
 ├── outputs/                 # Restorations, comparison collages, and evaluation logs
 ├── tests/                   # Verification suite (test_model.py, test_pipeline.py)
 ├── models/                  # DGP Synthesizer, MobileNetV2 FPN, and FAN composite loss
