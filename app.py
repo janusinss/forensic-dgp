@@ -21,7 +21,14 @@ from pydantic import BaseModel
 from PIL import Image
 
 from models import DGPSynthesizer
-from degradation import adaptive_cctv_denoise
+from degradation import (
+    adaptive_cctv_denoise,
+    detect_and_deinterlace_cctv,
+    detect_and_smooth_mosaic,
+    align_canonical_face,
+    paste_back_canonical_face,
+    estimate_noise_sigma
+)
 
 app = FastAPI(title="Optimal Face Restoration Web UI")
 
@@ -83,9 +90,10 @@ async def serve_ui():
 @app.post("/reconstruct")
 async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("direct")):
     """
-    Dual-Mode CCTV Face Reconstruction:
-    - Mode 'direct': Direct Forensic Restoration (preserves full resolution, removes blur, maximizes facial sharpness).
-    - Mode 'sub32': Sub-32x32 Super-Resolution Simulation (Thesis Benchmark: downsamples to 32x32 and reconstructs).
+    Universal Blind Forensic CCTV Face Reconstruction:
+    - Automatically classifies and mitigates interlaced scanlines, mosaic censorship, and noise.
+    - Universally aligns face via 5-point canonical affine landmark registration.
+    - Generates Top-K forensic restorations and seamless in-context scene paste-back.
     """
     contents = await file.read()
     nparr = np.frombuffer(contents, np.uint8)
@@ -94,29 +102,33 @@ async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("dire
     if img_bgr is None:
         return {"error": "Invalid image format."}
         
-    # 1. Adaptive Edge-Preserving Pre-Denoising (Bilateral / Median)
-    img_clean_bgr = adaptive_cctv_denoise(img_bgr)
+    # 1. Blind Signal Pre-Conditioning (Universal Detection)
+    # A. Detect and dissolve analog CCTV comb scanlines (fixes interlaced surveillance)
+    img_clean_bgr, is_interlaced, _ = detect_and_deinterlace_cctv(img_bgr)
     
-    # 2. Forensic Target Extraction & Aspect-Ratio Preservation: Center-crop to 1:1 square
-    h, w = img_clean_bgr.shape[:2]
-    if h != w:
-        min_dim = min(h, w)
-        top = (h - min_dim) // 2
-        left = (w - min_dim) // 2
-        img_clean_bgr = img_clean_bgr[top:top+min_dim, left:left+min_dim]
+    # B. Detect and dissolve mosaic / pixelation step-edges (fixes censored/blocked CCTV)
+    img_clean_bgr, is_mosaic = detect_and_smooth_mosaic(img_clean_bgr)
+    
+    # C. Adaptive Edge-Preserving Denoising (impulse & sensor noise)
+    img_clean_bgr = adaptive_cctv_denoise(img_clean_bgr)
+    noise_sigma = estimate_noise_sigma(cv2.cvtColor(img_clean_bgr, cv2.COLOR_BGR2GRAY))
+    
+    # 2. Universal 3-Tier Canonical Face Registration
+    # Normalizes pupils and facial symmetry to standard FFHQ canonical coordinates
+    aligned_clean_bgr, affine_M, reg_method = align_canonical_face(img_clean_bgr, target_size=(256, 256))
     
     cctv_thumb_b64 = None
     if mode == "sub32":
         # Mode B: Sub-32x32 Super-Resolution Simulation (Thesis Benchmark)
-        # Downsamples to 32x32 CCTV standard and generates pixelated preview
-        img_low_bgr = cv2.resize(img_clean_bgr, (32, 32), interpolation=cv2.INTER_AREA)
+        img_low_bgr = cv2.resize(aligned_clean_bgr, (32, 32), interpolation=cv2.INTER_AREA)
         thumb_display = cv2.resize(img_low_bgr, (256, 256), interpolation=cv2.INTER_NEAREST)
         _, thumb_buf = cv2.imencode('.png', thumb_display)
         cctv_thumb_b64 = f"data:image/png;base64,{base64.b64encode(thumb_buf).decode('utf-8')}"
     else:
-        # Mode A: Direct Forensic Restoration (Deblur & Maximum Detail)
-        # Preserves full native resolution upscaled directly to 256x256 canonical space
-        img_low_bgr = cv2.resize(img_clean_bgr, (256, 256), interpolation=cv2.INTER_CUBIC)
+        # Mode A: Direct Forensic Restoration (Canonical Native Scale)
+        img_low_bgr = aligned_clean_bgr.copy()
+        _, thumb_buf = cv2.imencode('.png', aligned_clean_bgr)
+        cctv_thumb_b64 = f"data:image/png;base64,{base64.b64encode(thumb_buf).decode('utf-8')}"
 
     img_rgb = cv2.cvtColor(img_low_bgr, cv2.COLOR_BGR2RGB)
     
@@ -138,13 +150,12 @@ async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("dire
     # 4. Convert output tensors to base64 strings with guided detail enhancement & illumination preservation
     result_images = []
     clahe = cv2.createCLAHE(clipLimit=1.8, tileGridSize=(8, 8))
+    top1_rec_bgr = None
     
     for idx, rec_tensor in enumerate(top_k_reconstructions):
-        # tensor is (1, 3, 256, 256) in [0, 1] range
         rec_img_np = (rec_tensor[0].permute(1, 2, 0).cpu().numpy() * 255).astype(np.uint8).copy()
         
-        # Adaptive Forensic Illumination Calibration:
-        # Prevents atmospheric dehazing offset from underexposing normal CCTV inputs
+        # Adaptive Forensic Illumination Calibration
         lab_rec = cv2.cvtColor(rec_img_np, cv2.COLOR_RGB2LAB)
         l_rec_mean = float(lab_rec[:, :, 0].mean())
         l_rec_std = float(max(1e-5, lab_rec[:, :, 0].std()))
@@ -152,7 +163,7 @@ async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("dire
         if l_rec_mean < l_ref_mean:
             lab_rec[:, :, 0] = np.clip((lab_rec[:, :, 0] - l_rec_mean) * (l_ref_std / l_rec_std) + l_ref_mean, 0, 255).astype(np.uint8)
             
-        # Apply CLAHE on L-channel to reveal sharp facial features (eyes, nose, lips)
+        # Apply CLAHE on L-channel to reveal sharp facial features
         lab_rec[:, :, 0] = clahe.apply(lab_rec[:, :, 0])
         rec_img_np = cv2.cvtColor(lab_rec, cv2.COLOR_LAB2RGB)
 
@@ -161,9 +172,13 @@ async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("dire
         weight = 1.45 if idx == 1 else (1.35 if idx == 0 else 1.20)
         rec_img_np = cv2.addWeighted(rec_img_np, weight, blurred, -(weight - 1.0), 0)
         rec_img_np = np.clip(rec_img_np, 0, 255).astype(np.uint8)
+        rec_bgr = cv2.cvtColor(rec_img_np, cv2.COLOR_RGB2BGR)
+        
+        if idx == 0:
+            top1_rec_bgr = rec_bgr.copy()
         
         # Encode back to PNG buffer
-        success, encoded_img = cv2.imencode('.png', cv2.cvtColor(rec_img_np, cv2.COLOR_RGB2BGR))
+        success, encoded_img = cv2.imencode('.png', rec_bgr)
         if success:
             base64_str = base64.b64encode(encoded_img).decode('utf-8')
             result_images.append({
@@ -172,9 +187,25 @@ async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("dire
                 "image_data": f"data:image/png;base64,{base64_str}"
             })
             
-    response_data = {"results": result_images, "mode": mode}
-    if cctv_thumb_b64:
-        response_data["cctv_thumbnail"] = cctv_thumb_b64
+    # 5. Seamless Contextual Paste-Back (Invert Affine Transform to restore face in original surveillance context)
+    composite_scene_b64 = None
+    if top1_rec_bgr is not None and affine_M is not None:
+        composite_bgr = paste_back_canonical_face(img_bgr, top1_rec_bgr, affine_M)
+        _, comp_buf = cv2.imencode('.png', composite_bgr)
+        composite_scene_b64 = f"data:image/png;base64,{base64.b64encode(comp_buf).decode('utf-8')}"
+        
+    response_data = {
+        "results": result_images,
+        "mode": mode,
+        "cctv_thumbnail": cctv_thumb_b64,
+        "composite_scene": composite_scene_b64,
+        "diagnostics": {
+            "registration_method": reg_method,
+            "interlacing_detected": bool(is_interlaced),
+            "mosaic_detected": bool(is_mosaic),
+            "noise_sigma": round(noise_sigma, 2)
+        }
+    }
         
     return response_data
 

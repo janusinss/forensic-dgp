@@ -234,8 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updatePreviewImage();
 
-            // Render Results Safely
-            renderResults(data.results, data.mode || selectedMode);
+            // Render Results Safely with Telemetry & Scene Context
+            renderResults(data.results, data.mode || selectedMode, data.composite_scene, data.diagnostics);
 
         } catch (error) {
             console.error(error);
@@ -273,12 +273,44 @@ document.addEventListener('DOMContentLoaded', () => {
         resultsContainer.appendChild(errorRow);
     }
 
-    function renderResults(results, mode = 'direct') {
+    function renderResults(results, mode = 'direct', compositeScene = null, diagnostics = null) {
         resultsContainer.textContent = '';
         
         if (!results || results.length === 0) {
             displayError('ERR: NO_RECONSTRUCTIONS_GENERATED');
             return;
+        }
+
+        // Render Forensic Diagnostic Telemetry Strip
+        if (diagnostics) {
+            const diagBar = document.createElement('div');
+            diagBar.className = 'diagnostics-bar';
+
+            const regPill = document.createElement('span');
+            regPill.className = (diagnostics.registration_method === 'CANONICAL_5POINT') ? 'diag-pill' : 'diag-pill muted';
+            regPill.innerHTML = `<i class="ph-bold ph-crosshair" aria-hidden="true"></i> REG: ${diagnostics.registration_method}`;
+            diagBar.appendChild(regPill);
+
+            if (diagnostics.interlacing_detected) {
+                const intPill = document.createElement('span');
+                intPill.className = 'diag-pill active-warn';
+                intPill.innerHTML = `<i class="ph-bold ph-rows" aria-hidden="true"></i> DE-INTERLACE: ACTIVE`;
+                diagBar.appendChild(intPill);
+            }
+
+            if (diagnostics.mosaic_detected) {
+                const mosPill = document.createElement('span');
+                mosPill.className = 'diag-pill active-warn';
+                mosPill.innerHTML = `<i class="ph-bold ph-grid-four" aria-hidden="true"></i> DE-MOSAIC: ACTIVE`;
+                diagBar.appendChild(mosPill);
+            }
+
+            const noisePill = document.createElement('span');
+            noisePill.className = 'diag-pill muted';
+            noisePill.innerHTML = `<i class="ph-bold ph-waveform" aria-hidden="true"></i> NOISE_SIGMA: ${diagnostics.noise_sigma}`;
+            diagBar.appendChild(noisePill);
+
+            resultsContainer.appendChild(diagBar);
         }
 
         const modeDisplay = (mode === 'sub32') ? '32x32_BENCHMARK' : 'DIRECT_RESTORE';
@@ -368,6 +400,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
             resultsContainer.appendChild(card);
         });
+
+        // Optional In-Context Scene Frame Card
+        if (compositeScene && typeof compositeScene === 'string' && compositeScene.startsWith('data:image/')) {
+            const sceneCard = document.createElement('div');
+            sceneCard.className = 'result-card';
+
+            const sceneHeader = document.createElement('div');
+            sceneHeader.className = 'result-card-header';
+
+            const scenePill = document.createElement('span');
+            scenePill.className = 'rank-pill';
+            scenePill.textContent = 'SCENE // IN-CONTEXT';
+            scenePill.style.color = 'var(--color-accent)';
+
+            const sceneModePill = document.createElement('span');
+            sceneModePill.className = 'mode-pill';
+            sceneModePill.textContent = 'INVERSE_AFFINE_FRAME';
+
+            sceneHeader.appendChild(scenePill);
+            sceneHeader.appendChild(sceneModePill);
+            sceneCard.appendChild(sceneHeader);
+
+            const sceneImgContainer = document.createElement('div');
+            sceneImgContainer.className = 'result-image-container';
+
+            ['reticle-tl', 'reticle-tr', 'reticle-bl', 'reticle-br'].forEach((cls) => {
+                const reticle = document.createElement('div');
+                reticle.className = `reticle ${cls}`;
+                sceneImgContainer.appendChild(reticle);
+            });
+
+            const sceneImg = document.createElement('img');
+            sceneImg.className = 'result-image';
+            sceneImg.alt = 'In-Context Surveillance Scene Restoration';
+            sceneImg.src = compositeScene;
+            sceneImgContainer.appendChild(sceneImg);
+            sceneCard.appendChild(sceneImgContainer);
+
+            const sceneData = document.createElement('div');
+            sceneData.className = 'result-data';
+            sceneData.appendChild(createDataGroup('WARP_MODE', 'INVERSE_M'));
+            sceneData.appendChild(createDataGroup('FEATHERING', 'GAUSSIAN_15PX'));
+            sceneData.appendChild(createDataGroup('CONTEXT', 'SURVEILLANCE_FRAME', 'var(--color-accent)'));
+            sceneData.appendChild(createDataGroup('STATUS', 'COMPOSITED', 'var(--color-accent)'));
+            sceneCard.appendChild(sceneData);
+
+            const sceneDownload = document.createElement('a');
+            sceneDownload.className = 'download-action-btn';
+            sceneDownload.href = compositeScene;
+            sceneDownload.download = 'zcpo_forensic_scene_context_reconstruction.png';
+            sceneDownload.innerHTML = '<i class="ph-bold ph-download-simple" aria-hidden="true"></i> EXPORT_SCENE_FRAME';
+            sceneCard.appendChild(sceneDownload);
+
+            resultsContainer.appendChild(sceneCard);
+        }
     }
 
     function createDataGroup(label, value, valueColor = null) {
