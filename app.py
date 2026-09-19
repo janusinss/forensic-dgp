@@ -13,12 +13,16 @@ import io
 import cv2
 import base64
 import torch
+import warnings
 import numpy as np
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from PIL import Image
+
+# Suppress harmless PyTorch/FAN JIT compilation & detection warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 from models import DGPSynthesizer
 from degradation import (
@@ -92,6 +96,10 @@ async def serve_ui():
             "Expires": "0"
         }
     )
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
 
 @app.post("/reconstruct")
 async def reconstruct_image(file: UploadFile = File(...), mode: str = Form("direct")):
