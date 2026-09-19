@@ -8,7 +8,7 @@ DATA_DIR="${DATA_DIR:-dataset/thumbnails128x128}"
 if [ -d dataset/asian_faces ] && [ "$DATA_DIR" = dataset/thumbnails128x128 ]; then
     DATA_DIR="$DATA_DIR,dataset/asian_faces"
 fi
-"$PYTHON_CMD" train.py \
+"$PYTHON_CMD" -u train.py \
     --data_dir "$DATA_DIR" \
     --resume_from "${RESUME_FROM:-checkpoints/dgp_zamboanga_final.pth}" \
     --start_epoch 27 --epochs 31 \

@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torchmetrics.image import PeakSignalNoiseRatio, StructuralSimilarityIndexMeasure
 import numpy as np
+from tqdm import tqdm
 
 # We use InsightFace to extract ArcFace embeddings for the Cosine Similarity metric.
 # Note: In a production environment, you might need to build insightface from source or use onnx.
@@ -80,23 +81,30 @@ def validate_model(model, loader, evaluator, device, preview_path=None, max_batc
     totals = {'PSNR': 0.0, 'SSIM': 0.0, 'ArcFace_Sim': 0.0}
     counts = dict.fromkeys(totals, 0)
     samples = 0
-    for batch_idx, (inputs, targets, _) in enumerate(loader):
-        if max_batches is not None and batch_idx >= max_batches:
-            break
-        inputs, targets = inputs.to(device), targets.to(device)
-        outputs = model(inputs)
-        for i in range(len(inputs)):
-            metrics = evaluator.compute_metrics(outputs[i:i+1], targets[i:i+1])
-            for name in totals:
-                if metrics[name] is not None:
-                    totals[name] += metrics[name]
-                    counts[name] += 1
-            samples += 1
-        if batch_idx == 0 and preview_path:
-            from torchvision.utils import save_image
-            # Each row: degraded input, raw model output, reference target.
-            rows = torch.stack((inputs[:4], outputs[:4], targets[:4]), dim=1).flatten(0, 1)
-            save_image(rows, preview_path, nrow=3)
+    total_samples = len(loader.dataset)
+    if max_batches is not None and loader.batch_size is not None:
+        total_samples = min(total_samples, max_batches * loader.batch_size)
+    print('Validation starting: restoration and per-image quality metrics.', flush=True)
+    with tqdm(total=total_samples, desc='Validation', unit='image', dynamic_ncols=True) as progress:
+        for batch_idx, (inputs, targets, _) in enumerate(loader):
+            if max_batches is not None and batch_idx >= max_batches:
+                break
+            inputs, targets = inputs.to(device), targets.to(device)
+            outputs = model(inputs)
+            for i in range(len(inputs)):
+                metrics = evaluator.compute_metrics(outputs[i:i+1], targets[i:i+1])
+                for name in totals:
+                    if metrics[name] is not None:
+                        totals[name] += metrics[name]
+                        counts[name] += 1
+                samples += 1
+                progress.set_postfix(arcface_valid=counts['ArcFace_Sim'], refresh=False)
+                progress.update(1)
+            if batch_idx == 0 and preview_path:
+                from torchvision.utils import save_image
+                # Each row: degraded input, raw model output, reference target.
+                rows = torch.stack((inputs[:4], outputs[:4], targets[:4]), dim=1).flatten(0, 1)
+                save_image(rows, preview_path, nrow=3)
     if not samples:
         raise ValueError('Validation loader contains no samples')
     result = {name: totals[name] / counts[name] if counts[name] else None for name in totals}
