@@ -1,227 +1,188 @@
 ================================================================================
 FORENSIC DEEP GENERATIVE PRIOR (DGP) FACE RECONSTRUCTION FOR CCTV VIDEO
-COMPREHENSIVE PROJECT STATUS, ARCHITECTURAL UNDERSTANDING & IMPROVEMENT ROADMAP
+TECHNICAL UNDERSTANDING, ARCHITECTURAL FOUNDATION & SYSTEM IMPROVEMENTS
 ================================================================================
 
-Document Purpose: Complete architectural and technical reference to continue 
-development, testing, and retraining seamlessly on another workspace or VM.
-
-Author / Thesis Researchers:
-  - Janus R. Dominic
-  - Winston T. Tabotabo
-  - Roberto "RJ" B. Toribio III
+Target Environment:
+  - Training: Cloud GPU VM / Google Colab (PyTorch + CUDA)
+  - Inference: Local Forensic Air-Gapped Web Server (FastAPI + Uvicorn)
+Thesis Title: Forensic Deep Generative Prior Face Reconstruction for Degraded CCTV Video in Zamboanga City
 Institution: Western Mindanao State University (WMSU), College of Computing Studies
-Department: Department of Computer Science, Zamboanga City
-Repository: https://github.com/janusinss/forensic-dgp.git
-Primary Branch: main
-Local Directory: C:\xampp\htdocs\YEAR 4\Testing
-Target Checkpoint: checkpoints/dgp_zamboanga_final.pth
+Researchers: Janus R. Dominic, Winston T. Tabotabo, Roberto "RJ" B. Toribio III
 
 
 ================================================================================
-1. EXECUTIVE SUMMARY & FORENSIC PROBLEM STATEMENT
+1. CORE UNDERSTANDING: WHAT WE ARE DOING & WHY
 ================================================================================
 
-1.1 The Operational Problem
-Municipal CCTV cameras across Zamboanga City operate in high humidity, direct 
-tropical sunlight, high-angle pole mounts, and severe network bandwidth constraints. 
-Facial crops extracted from incident footage are typically:
-  - Extremely low resolution (often sub-32x32 pixels)
-  - Distorted by coarse H.264 / H.265 DCT block compression (macroblocking)
-  - Blurred by subject transit motion and optical lens defocus
-  - Corrupted by analog comb interlacing lines (NTSC/PAL 480i/576i coaxial feeds)
-  - Degraded by high-ISO sensor thermal noise in night footage
+1.1 The Municipal CCTV Problem in Zamboanga City
+Municipal surveillance cameras in Zamboanga City frequently capture critical 
+incidents under severe environmental and physical degradation:
+  - Low Optical Resolution: Suspect faces often occupy fewer than 32x32 pixels.
+  - Aggressive Compression: NVR feeds starved for bandwidth produce severe H.264 
+    block-edge macroblocking.
+  - Environmental Degradation: Tropical humidity, torrential rain scattering, and 
+    backlight glare reduce contrast.
+  - Hardware Motion & Defocus: Rapid subject transit causes directional motion blur, 
+    and fixed-focal lenses produce heavy optical defocus.
+  - Analog Interlacing: Coaxial CCTV signals exhibit comb scanlines (NTSC/PAL 480i/576i).
 
-1.2 The Forensic Admissibility Mandate (Philippine Rules on Electronic Evidence)
-Commercial super-resolution tools (e.g., standard ESRGAN, CodeFormer, Stable Diffusion) 
-invent new facial features ("AI hallucination"). Under A.M. No. 01-7-01-SC (Philippine 
-Rules on Electronic Evidence), synthetic fabrication destroys digital chain-of-custody 
-and invalidates surveillance evidence in court.
+1.2 The Forensic Non-Hallucination Constraint
+Generic super-resolution tools (e.g., standard ESRGAN, CodeFormer, Stable Diffusion) 
+generate visually pleasing results by hallucinating artificial biometric features. 
+Under the Philippine Rules on Electronic Evidence (A.M. No. 01-7-01-SC):
+  - Fabricating biometric details destroys the digital chain of custody.
+  - Hallucinated facial features render surveillance footage legally inadmissible in court.
+  - The reconstruction MUST remain mathematically anchored to the true Euclidean 
+    geometry of the suspect recorded by the camera sensor.
 
-1.3 The Technical Solution
-This project implements a Morphologically Constrained Deep Generative Prior (DGP):
-  1. Lightweight MobileNetV2 Feature Pyramid Network (FPN) Generator
-  2. 68-point Morphological FAN Loss ensuring generated outputs mathematically 
-     preserve the suspect's true Euclidean landmark coordinates
-  3. Top-K Probabilistic Sampling (Rank 1: Best Fit, Rank 2: Edge Focus, Rank 3: Natural Tone) 
-     to provide investigators with a statistical spread of possible facial structures
-  4. Local Air-Gapped FastAPI Web Application for on-premise forensic execution
-
-
-================================================================================
-2. COMPLETE CODEBASE & SYSTEM ARCHITECTURE
-================================================================================
-
-├── app.py                      FastAPI forensic server & API endpoints (/reconstruct, /)
-├── models/
-│   ├── dgp_synthesizer.py      DGPSynthesizer (MobileNetV2 FPN, Top-K generator)
-│   ├── fpn_mobilenet.py        Feature Pyramid Network with reflection padding
-│   └── loss.py                 Composite Forensic Loss (L1 + Perceptual VGG + Sobel + FFT + FAN)
-├── degradation.py              Universal blind pre-conditioning, de-interlacing, 
-│                               anti-mosaic filter, 3-tier canonical face alignment, 
-│                               and inverse affine scene paste-back (M^-1)
-├── dataset.py                  DegradedFacesDataset with 2nd-order compound CCTV simulator
-├── train.py                    Curriculum training loop with LR annealing and validation
-├── evaluation.py               Forensic evaluation metrics (PSNR, SSIM, ArcFace Cosine)
-├── dataloader.py               PyTorch DataLoader pipeline
-├── checkpoints/                Pre-trained weights (dgp_zamboanga_final.pth, epoch_20.pth)
-├── test_images/                Clean test suite:
-│   ├── synthetic_data_1-10.png 10 database-degraded CCTV test benchmarks
-│   └── wild1-5.png             5 real-world municipal surveillance frames
-├── static/                     Dark brutalist forensic UI (CSS, JS)
-├── templates/                  HTML layouts (index.html)
-├── install.bat                 One-click Windows environment installer
-└── start.bat                   One-click Windows server launcher with auto-port freeing
+1.3 Our Solution: Morphologically Constrained DGP
+We employ a Deep Generative Prior (DGP) conditioned by:
+  - A MobileNetV2 Feature Pyramid Network (FPN) generator.
+  - A 68-point Morphological FAN Loss (Euclidean distance on facial landmarks) 
+    that strictly penalizes biometric drift.
+  - Top-K Probabilistic Sampling: Instead of forcing a single deterministic guess, 
+    the system provides investigators with ranked candidates (Rank 1: Best Fit, 
+    Rank 2: Edge Focus, Rank 3: Natural Tone) with explicit loss metrics.
 
 
 ================================================================================
-3. COMPLETED TRAINING PHASES & CHECKPOINTS
+2. THE RECONSTRUCTION PIPELINE (HOW INFERENCE WORKS)
 ================================================================================
 
-Phase 1 (Epochs 1 -> 10):
-  - Dataset: FFHQ Thumbnails (128x128)
-  - Degradation: First-order Gaussian blur + 4x downsampling
-  - Primary Checkpoint: checkpoints/dgp_improved_epoch_10.pth
+When an investigator inputs an image into the system, it processes through 5 stages:
 
-Phase 2 (Epochs 11 -> 20):
-  - Dataset: FFHQ Thumbnails (128x128)
-  - Degradation: Photometric refinement & Annealed Learning Rate (1e-4 -> 1e-6)
-  - Checkpoint: checkpoints/dgp_improved_epoch_20.pth
-  - Peak Metrics: PSNR: 25.01 dB | SSIM: 0.7862 | ArcFace: 0.4896
+Stage 1: Blind Forensic Signal Pre-Conditioning (degradation.py)
+  - Interlacing Comb Detection: Measures vertical vs. horizontal high-frequency energy. 
+    If comb artifacts are detected, vertical field interpolation dissolves scanlines.
+  - Mosaic Anti-Aliasing: Detects zero-gradient block boundaries from pixelation / 
+    censorship and applies localized anti-aliasing.
+  - Sensor Denoising: Estimates Gaussian noise standard deviation (sigma) and applies 
+    edge-preserving bilateral filtering.
 
-Phase 3 (Epochs 21 -> 26) [COMPLETED ON GCP]:
-  - Datasets: FFHQ (128x128) + Asian Demographic Prior (10,000 faces from Hugging Face)
-  - Degradation: Second-order compound CCTV model (optical motion blur, sensor noise, 
-    atmospheric scattering haze, interlacing simulation, aggressive H.264 quantization)
-  - Training Loss: Annealed from 0.288 -> 0.282
-  - Output Checkpoint: checkpoints/dgp_zamboanga_final.pth (13.55 MB)
+Stage 2: 3-Tier Canonical Face Registration (degradation.py)
+  - Tier 1 (5-Point FAN Alignment): Detects eyes, nose tip, and mouth corners. Warps 
+    the face via cv2.estimateAffinePartial2D (uniform scale + rotation + translation) 
+    into standard FFHQ coordinates (inter-ocular distance = 66.0 px in a 256x256 frame).
+  - Tier 2 (Anti-Aliased Fallback): Runs landmark detection on smoothed gradients if 
+    pixelation prevents immediate detection.
+  - Tier 3 (Morphological Center-Crop): Square aspect-ratio crop for extreme blur.
 
+Stage 3: Generative Restoration (models/dgp_synthesizer.py)
+  - Normalized input tensor is processed through the MobileNetV2 FPN backbone.
+  - Generates enhanced 256x256 facial representations matching the learned prior.
 
-================================================================================
-4. CRITICAL RECENT FIXES (WHAT WAS SOLVED IN THIS SESSION)
-================================================================================
+Stage 4: Top-K Forensic Sampling & Illumination Calibration (app.py)
+  - Produces Rank 1 (Balanced Synthesis), Rank 2 (High-Definition Edge Focus), and 
+    Rank 3 (Soft Denoised Tone).
+  - Adaptive LAB illumination calibration: Matches the output luminance dynamic range 
+    to the source input, preventing shadow-cast luminance collapse.
 
-4.1 Canonical Alignment Template Bug (Fixed)
-  - Problem: Input faces appeared squinted, blurry, and over-zoomed in the Web UI, 
-    whereas offline scripts previously produced sharp irises.
-  - Root Cause: In degradation.py, dst_pts was set to an artificial 102.4px eye-distance 
-    template (1.6x over-zoom). This forced the eyes outside the convolutional receptive 
-    fields of the generator.
-  - Fix Applied: Re-anchored dst_pts to standard FFHQ proportions:
-      Left eye: [95.0, 118.0], Right eye: [161.0, 118.0] (66.0px eye distance).
-    Pupil clarity, iris definition, and head framing were immediately restored.
-
-4.2 Launcher Port 8000 Conflict / WinError 10013 (Fixed)
-  - Problem: start.bat failed with "[WinError 10013] access forbidden by permissions".
-  - Root Cause: A previous Python daemon process occupied port 8000 in TIME_WAIT.
-  - Fix Applied: start.bat now runs an automated netstat taskkiller before launch:
-      python -c "import subprocess, os; [os.system(f'taskkill /F /PID {line.strip().split()[-1]} >nul 2>&1') for line in subprocess.check_output('netstat -ano', shell=True).decode().splitlines() if ':8000' in line and 'LISTENING' in line]"
-
-4.3 Terminal Noise Suppression (Fixed)
-  - Handled GET /favicon.ico with a dedicated 204 No Content route in app.py.
-  - Suppressed harmless PyTorch/FAN JIT UserWarning ("Compiling face alignment model").
-
-4.4 Model Auto-Detection Priority (Fixed)
-  - app.py now searches for checkpoints in this exact priority order:
-      1. checkpoints/dgp_zamboanga_final.pth
-      2. checkpoints/dgp_improved_epoch_26.pth down to epoch_1.pth
-      3. weights/mapped_deblurgan.pth
-
-4.5 Test Suite Organization (Cleaned)
-  - Test images organized into:
-      test_images/synthetic_data_1.png through 10.png (database benchmarks)
-      test_images/wild1.png through 5.png (real CCTV scenes)
-  - Deleted obsolete intermediate test artifacts (debug_crop, test_naive, test_tight).
+Stage 5: Seamless In-Context Paste-Back (degradation.py)
+  - Computes the inverse affine matrix (M^-1) and seamlessly blends the restored 
+    face back into the original wide surveillance frame using elliptical feathering.
 
 
 ================================================================================
-5. QUALITY AUDIT: WHY `wild5.png` IS STILL SOFT
+3. TRAINING ENVIRONMENT & DATASET CURRICULUM (GOOGLE COLAB / VM)
+================================================================================
+
+All heavy model training is executed inside Google Colab / Cloud Compute Engine VMs 
+equipped with NVIDIA GPUs, while model checkpoints are transferred to the local 
+repository for testing and evaluation.
+
+3.1 Datasets Used in Google Colab / VM
+  1. FFHQ Dataset: 70,000 high-resolution diverse facial portraits downsampled to 128x128.
+  2. Asian Face Dataset: 10,000 real Asian face portraits extracted from Hugging Face 
+     (hiennguyen9874/face-age-gender-asian) to inject accurate demographic priors 
+     representative of the Zamboanga City population.
+
+3.2 Training Phases Completed
+  - Phase 1 (Epochs 1 -> 10):
+      First-order Gaussian blur and 4x downsampling on FFHQ thumbnails.
+      Checkpoint: checkpoints/dgp_improved_epoch_10.pth
+  - Phase 2 (Epochs 11 -> 20):
+      Photometric refinement with learning rate annealing (1e-4 -> 1e-6).
+      Checkpoint: checkpoints/dgp_improved_epoch_20.pth
+      Peak Metrics: 25.01 dB PSNR | 0.7862 SSIM | 0.4896 ArcFace
+  - Phase 3 (Epochs 21 -> 26) [Completed]:
+      Multi-directory training (FFHQ + 10,000 Asian faces) under second-order 
+      compound CCTV degradations (motion blur, thermal noise, atmospheric haze, 
+      interlacing comb injection, lossy H.264 codec quantization).
+      Output Checkpoint: checkpoints/dgp_zamboanga_final.pth
+
+
+================================================================================
+4. KEY DIAGNOSTICS & WHAT WAS RESOLVED
+================================================================================
+
+4.1 The Canonical Template Resolution Discrepancy (Fixed)
+  - Issue: Synthetic test images initially produced squashed, blurry pupils in the UI.
+  - Root Cause: degradation.py had an artificial 102.4 px eye-distance template 
+    (1.6x over-zoom). This forced facial landmarks outside the generator's learned 
+    convolutional receptive fields.
+  - Solution: Re-anchored dst_pts to standard FFHQ proportions (66.0 px eye distance). 
+    Sharp irises, round pupils, and natural facial framing were restored.
+
+4.2 Test Suite Modernization
+  - Synthetic Data (Database-Derived): test_images/synthetic_data_1.png through 10.png 
+    simulating specific municipal degradation profiles (motion, haze, sensor noise, 
+    sub-32 downsampling, NVR compression, analog interlacing).
+  - Wild Data (Real Surveillance): test_images/wild1.png through 5.png representing 
+    unconstrained real CCTV captures.
+
+
+================================================================================
+5. QUALITY AUDIT: WHY `wild5.png` APPEARS BLURRY
 ================================================================================
 
 5.1 The Diagnosis
-When testing test_images/wild5.png, the output is softer than synthetic_data_1.png.
-  - Cause: wild5.png was subjected to artificial censorship-level Gaussian blur 
-    (sigma approx 18 to 22 pixels), completely destroying high-frequency gradients.
-  - In dataset.py, training blur was bounded at sigma <= 3.0 and d <= 10.
-  - Under Charbonnier/L1 loss, when the network encounters out-of-distribution blur 
-    where no high-frequency signal remains, the mathematically optimal prediction is 
-    the smooth conditional average (conditional mean), avoiding risk of hallucination.
+When testing wild5.png, the output remains soft:
+  - wild5.png contains artificial censorship-level Gaussian blur (sigma approx 18 to 22 px), 
+    completely eliminating high-frequency phase and gradient information.
+  - In dataset.py, training blur was bounded at sigma <= 3.0 and displacement d <= 10.
+  - Under Charbonnier/L1 loss, when out-of-distribution blur with zero remaining gradient 
+    is fed into the network, the mathematically optimal loss minimization produces the 
+    smooth conditional average (conditional mean).
 
-5.2 The 2 Proven Improvement Paths:
-
-  PATH A: Test-Time Iterative Recurrent Pass (Immediate / In Web UI)
-    - Concept: Feed Pass 1's reconstructed output back into the model for a second pass:
-        Pass 1 -> Frequency Gradient Boost -> Pass 2 (Recurrent Refinement)
-    - Experimental Result: In scratch/wild5_iterative_solution.png, Pass 2 successfully 
-      resolves eye sockets, eyebrow ridges, nose bridge, and lip boundaries from the blob.
-    - Implementation Location: app.py / generate_top_k(). Zero cloud GPU cost needed.
-
-  PATH B: Phase 4 Retraining on GCP VM (Deep Defocus Inversion)
-    - Expand blur spectrum in dataset.py:
-        k_size: [3, 5, 7, 9, 11]
-        sigma: [1.0, 10.0]
-        displacement d: [4, 20]
-    - Re-weight training loss in train.py:
-        lambda_sobel: 0.5 -> 1.5 (heavily penalizes smooth/blurry edges)
-        lambda_fft: 0.1 -> 0.4 (enforces high-frequency frequency domain power)
-    - Resume from checkpoints/dgp_zamboanga_final.pth for 4-5 fine-tuning epochs (~12h).
+5.2 The Non-Hallucination Balance
+Under forensic admissibility rules, if the camera captured zero eye signal (pure blur), 
+an algorithm that draws sharp, detailed eyes from thin air is fabricating evidence. 
+However, the generative prior CAN be strengthened to recover structural contours 
+more assertively.
 
 
 ================================================================================
-6. HOW TO CONTINUE & RUN THIS IN A NEW WORKSPACE
+6. HOW WE ARE IMPROVING THE SYSTEM (CONCRETE ACTION PATHS)
 ================================================================================
 
-6.1 Setup on a New Windows Machine
-  1. Clone repository:
-       git clone https://github.com/janusinss/forensic-dgp.git
-       cd forensic-dgp
-  2. Install environment:
-       Double-click install.bat (or run: python -m venv venv; .\venv\Scripts\activate; pip install -r requirements.txt)
-  3. Verify weights:
-       Ensure checkpoints/dgp_zamboanga_final.pth exists (13.55 MB).
-  4. Launch Web UI:
-       Double-click start.bat
-       Navigate to http://127.0.0.1:8000
+We have two proven, complementary paths to achieve higher reconstruction quality:
 
-6.2 Setup on a Linux / GCP Compute Engine Instance
-  1. Clone and activate:
-       git clone https://github.com/janusinss/forensic-dgp.git
-       cd forensic-dgp
-       python3 -m venv venv && source venv/bin/activate
-       pip install -r requirements.txt
-  2. Launch Web Server or Headless Tests:
-       uvicorn app:app --host 0.0.0.0 --port 8000
-  3. Run Batch Wild Inference Script:
-       python scripts/test_wild_batch.py
-
-6.3 How to Launch Phase 4 Retraining (If Chosen)
-  1. Modify dataset.py (broaden blur) and train.py (increase lambda_sobel).
-  2. Start tmux session:
-       tmux new -s phase4
-  3. Run training command:
-       python train.py \
-         --data_dir "dataset/thumbnails128x128,dataset/asian_faces" \
-         --epochs 31 \
-         --resume checkpoints/dgp_zamboanga_final.pth \
-         --batch_size 16 \
-         --lambda_sobel 1.5 \
-         --lambda_fft 0.4
-  4. Detach with Ctrl+B then D. Monitor with: tmux attach -t phase4.
-
-
-================================================================================
-7. VERIFICATION MATRIX
-================================================================================
-
-Component               Status      Validation Command
 --------------------------------------------------------------------------------
-Model Backbone          READY       python tests/test_model.py
-Pipeline & FAN Loss     READY       python tests/test_pipeline.py
-Synthetic Test Suite    READY       10 images in test_images/synthetic_data_*.png
-Wild Surveillance Suite READY       5 images in test_images/wild*.png
-Live Web Server         READY       http://127.0.0.1:8000 via start.bat
-Checkpoints Synchronized YES        checkpoints/dgp_zamboanga_final.pth active
+PATH A: Test-Time Iterative Recurrent Pass (Immediate / In Web UI)
+--------------------------------------------------------------------------------
+  - Concept: When an input has severe degradation (Laplacian variance < 40), feed the 
+    output of Pass 1 back into the generator for a second refinement pass:
+        Pass 1 -> Latent Frequency Boost -> Pass 2 (Recurrent Refinement)
+  - Experimental Result: Tested in scratch/wild5_iterative_solution.png. Pass 2 successfully 
+    separated the eye sockets, formed pupil contours, and defined the nose bridge 
+    and lips without hallucinating fake identity.
+  - Implementation: Built directly into app.py / generate_top_k(). Zero cloud GPU cost.
+
+--------------------------------------------------------------------------------
+PATH B: Phase 4 Fine-Tuning in Google Colab / Cloud VM (Defocus Inversion)
+--------------------------------------------------------------------------------
+  - Goal: Train the model to invert heavy optical defocus and heavy blur explicitly.
+  - Changes to dataset.py:
+      Expand Gaussian blur sigma from [0.8, 3.0] -> [1.0, 10.0]
+      Expand motion blur displacement d from [2, 10] -> [4, 20]
+  - Changes to train.py:
+      Increase lambda_sobel (edge gradient loss) from 0.5 -> 1.5 (forces sharp edges)
+      Increase lambda_fft (frequency domain loss) from 0.1 -> 0.4 (penalizes blur)
+  - Google Colab / VM Execution:
+      Resume from checkpoints/dgp_zamboanga_final.pth for 4-5 epochs (~12 hours).
+      Export the new weights as checkpoints/dgp_zamboanga_v2.pth.
 
 ================================================================================
-END OF SUMMARY - SAVED IN WORKSPACE ROOT FOR SEAMLESS CONTINUATION
+END OF UNDERSTANDING & IMPROVEMENTS SUMMARY
 ================================================================================
