@@ -177,11 +177,19 @@ PATH B: Phase 4 Fine-Tuning in Google Colab / Cloud VM (Defocus Inversion)
       Expand Gaussian blur sigma from [0.8, 3.0] -> [1.0, 10.0]
       Expand motion blur displacement d from [2, 10] -> [4, 20]
   - Changes to train.py:
-      Increase lambda_sobel (edge gradient loss) from 0.5 -> 1.5 (forces sharp edges)
-      Increase lambda_fft (frequency domain loss) from 0.1 -> 0.4 (penalizes blur)
-  - Google Colab / VM Execution:
-      Resume from checkpoints/dgp_zamboanga_final.pth for 4-5 epochs (~12 hours).
-      Export the new weights as checkpoints/dgp_zamboanga_v2.pth.
+  - Google Colab / VM Execution Command:
+      Resume from checkpoints/dgp_zamboanga_final.pth and start directly at Epoch 27:
+        python train.py \
+          --data_dir "dataset/thumbnails128x128,dataset/asian_faces" \
+          --start_epoch 27 \
+          --epochs 31 \
+          --resume_from checkpoints/dgp_zamboanga_final.pth \
+          --batch_size 16 \
+          --lambda_sobel 1.5 \
+          --lambda_fft 0.4
+  - Saved Checkpoints:
+      Generates checkpoints/dgp_improved_epoch_27.pth, epoch_28.pth, up to epoch_31.pth.
+      Whitelisted automatically in .gitignore so future epochs sync seamlessly.
 
 ================================================================================
 END OF UNDERSTANDING & IMPROVEMENTS SUMMARY
