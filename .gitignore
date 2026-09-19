@@ -32,7 +32,9 @@ env/
 
 # Project Specific Data & Outputs
 dataset/
-checkpoints/
+checkpoints/*
+!checkpoints/dgp_improved_epoch_20.pth
+!checkpoints/dgp_zamboanga_final.pth
 outputs/
 *.png
 *.jpg
@@ -45,5 +47,7 @@ outputs/
 # ML Weights
 weights/
 *.pth
+!checkpoints/dgp_improved_epoch_20.pth
+!checkpoints/dgp_zamboanga_final.pth
 *.pt
 *.h5
