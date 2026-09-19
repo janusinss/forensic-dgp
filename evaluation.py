@@ -13,13 +13,13 @@ except ImportError:
     print("WARNING: InsightFace not installed properly. ArcFace Cosine Similarity will be skipped.")
 
 class Evaluator:
-    def __init__(self, device='cpu'):
+    def __init__(self, device='cpu', use_arcface=True):
         self.device = device
         self.psnr_metric = PeakSignalNoiseRatio(data_range=1.0).to(device)
         self.ssim_metric = StructuralSimilarityIndexMeasure(data_range=1.0).to(device)
         
         self.face_app = None
-        if INSIGHTFACE_AVAILABLE:
+        if INSIGHTFACE_AVAILABLE and use_arcface:
             # Initialize ArcFace model via InsightFace for 512-d embeddings
             self.face_app = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
             self.face_app.prepare(ctx_id=0, det_size=(256, 256))
@@ -36,7 +36,7 @@ class Evaluator:
         psnr_val = self.psnr_metric(reconstructed, hr_target).item()
         ssim_val = self.ssim_metric(reconstructed, hr_target).item()
         
-        cosine_sim = 0.0
+        cosine_sim = None
         
         # 2. ArcFace Cosine Similarity (Identity Loss)
         if self.face_app is not None:
@@ -69,5 +69,36 @@ class Evaluator:
         return {
             "PSNR": round(psnr_val, 2),
             "SSIM": round(ssim_val, 4),
-            "ArcFace_Sim": round(cosine_sim, 4)
+            "ArcFace_Sim": round(cosine_sim, 4) if cosine_sim is not None else None
         }
+
+
+@torch.no_grad()
+def validate_model(model, loader, evaluator, device, preview_path=None, max_batches=None):
+    """Mean per-image metrics on a fixed held-out set, including detection coverage."""
+    model.eval()
+    totals = {'PSNR': 0.0, 'SSIM': 0.0, 'ArcFace_Sim': 0.0}
+    counts = dict.fromkeys(totals, 0)
+    samples = 0
+    for batch_idx, (inputs, targets, _) in enumerate(loader):
+        if max_batches is not None and batch_idx >= max_batches:
+            break
+        inputs, targets = inputs.to(device), targets.to(device)
+        outputs = model(inputs)
+        for i in range(len(inputs)):
+            metrics = evaluator.compute_metrics(outputs[i:i+1], targets[i:i+1])
+            for name in totals:
+                if metrics[name] is not None:
+                    totals[name] += metrics[name]
+                    counts[name] += 1
+            samples += 1
+        if batch_idx == 0 and preview_path:
+            from torchvision.utils import save_image
+            # Each row: degraded input, raw model output, reference target.
+            rows = torch.stack((inputs[:4], outputs[:4], targets[:4]), dim=1).flatten(0, 1)
+            save_image(rows, preview_path, nrow=3)
+    if not samples:
+        raise ValueError('Validation loader contains no samples')
+    result = {name: totals[name] / counts[name] if counts[name] else None for name in totals}
+    result.update(samples=samples, arcface_valid=counts['ArcFace_Sim'])
+    return result

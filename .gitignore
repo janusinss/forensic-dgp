@@ -4,6 +4,8 @@ error_log
 .agent/
 .agents/
 .codex
+skills/
+AGENTS.MD
 # Impeccable ephemeral review artifacts
 .impeccable/*.png
 .impeccable/live/

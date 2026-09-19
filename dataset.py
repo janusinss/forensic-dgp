@@ -21,7 +21,8 @@ class DegradedFacesDataset(Dataset):
     CCTV-like faces paired with high-resolution pristine targets and 68-point
     facial landmarks.
     """
-    def __init__(self, root_dir, transform=None, target_size=(24, 24), hr_size=(256, 256), curriculum=True):
+    def __init__(self, root_dir, transform=None, target_size=(24, 24), hr_size=(256, 256), curriculum=True,
+                 heavy_blur_probability=0.0, seed=None, extract_landmarks=True):
         """
         :param root_dir: Path to directory containing high-res face images (e.g., FFHQ).
         :param transform: Optional torchvision transforms.
@@ -34,6 +35,12 @@ class DegradedFacesDataset(Dataset):
         self.target_size = target_size
         self.hr_size = hr_size
         self.curriculum = curriculum
+        if not 0 <= heavy_blur_probability <= 1:
+            raise ValueError('heavy_blur_probability must be between 0 and 1')
+        self.heavy_blur_probability = heavy_blur_probability
+        self.seed = seed
+        self.epoch = 0
+        self.extract_landmarks = extract_landmarks
         
         # Load all valid image file paths from one or more directories (supports comma-separated paths)
         valid_exts = {'.png', '.jpg', '.jpeg'}
@@ -50,7 +57,8 @@ class DegradedFacesDataset(Dataset):
         # Initialize face-alignment network (FAN)
         # Using CPU by default for the dataloader to avoid GPU memory conflicts, 
         # but can be switched to 'cuda' if sufficient VRAM is available.
-        self.fa = face_alignment.FaceAlignment(face_alignment.LandmarksType.TWO_D, flip_input=False, device='cpu')
+        self.image_paths = sorted(set(self.image_paths))
+        self.fa = None
 
     def __len__(self):
         return len(self.image_paths)
@@ -61,11 +69,35 @@ class DegradedFacesDataset(Dataset):
         :param image: numpy array of the image (RGB format expected for face-alignment)
         :return: numpy array of shape (68, 2)
         """
+        if not self.extract_landmarks:
+            return np.zeros((68, 2), dtype=np.float32)
+        if self.fa is None:
+            self.fa = face_alignment.FaceAlignment(face_alignment.LandmarksType.TWO_D, flip_input=False, device='cpu')
         preds = self.fa.get_landmarks(image)
         if preds is None or len(preds) == 0:
             return np.zeros((68, 2), dtype=np.float32)
         coords = preds[0].astype(np.float32)
         return coords
+
+    def apply_primary_blur(self, image):
+        heavy = np.random.rand() < self.heavy_blur_probability
+        if np.random.rand() < 0.60:
+            d = np.random.randint(4, 21) if heavy else np.random.randint(2, 10)
+            return apply_optical_motion_blur(image, d, np.random.uniform(0, 360))
+        sigma = float(np.random.uniform(3.0, 10.0) if heavy else np.random.uniform(0.8, 3.0))
+        # Three standard deviations on each side; a 7px kernel truncates heavy blur.
+        kernel = 2 * int(np.ceil(3 * sigma)) + 1 if heavy else int(np.random.choice([3, 5, 7]))
+        return cv2.GaussianBlur(image, (kernel, kernel), sigma)
+
+    def degrade_seeded(self, image, idx):
+        if self.seed is None:
+            return self.apply_compound_degradation(image)
+        state = np.random.get_state()
+        try:
+            np.random.seed(np.random.SeedSequence([self.seed, self.epoch, idx]).generate_state(1)[0])
+            return self.apply_compound_degradation(image)
+        finally:
+            np.random.set_state(state)
 
     def apply_compound_degradation(self, image):
         """
@@ -76,14 +108,7 @@ class DegradedFacesDataset(Dataset):
         """
         # --- STAGE 1: Primary Optical Capture & Sensor Degradation ---
         # 1. Primary Blur: 60% Optical Motion Blur, 40% Gaussian Blur
-        if np.random.rand() < 0.60:
-            d = np.random.randint(2, 10)
-            theta = np.random.uniform(0, 360)
-            img_deg = apply_optical_motion_blur(image, d, theta)
-        else:
-            k_size = int(np.random.choice([3, 5, 7]))
-            sigma = float(np.random.uniform(0.8, 3.0))
-            img_deg = cv2.GaussianBlur(image, (k_size, k_size), sigma)
+        img_deg = self.apply_primary_blur(image)
         
         # 2. Primary Downsampling (Multi-Scale Curriculum)
         if self.curriculum:
@@ -152,7 +177,7 @@ class DegradedFacesDataset(Dataset):
         landmarks = self._get_landmarks(i_hr_rgb)
         
         # Generate I_LR (Degraded) from BGR (for opencv operations)
-        i_lr_bgr = self.apply_compound_degradation(i_hr_bgr)
+        i_lr_bgr = self.degrade_seeded(i_hr_bgr, idx)
         i_lr_rgb = cv2.cvtColor(i_lr_bgr, cv2.COLOR_BGR2RGB)
         
         # Convert to torch Tensors (C, H, W format)
