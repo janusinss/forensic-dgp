@@ -42,13 +42,19 @@ print("Loading Optimal Generative Face Restoration Synthesizer...")
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = DGPSynthesizer().to(device)
 
-# Auto-detect best model weights (searches highest improved epoch first, then weights/, then root)
+# Auto-detect best model weights (prioritizes final Zamboanga model, then highest improved epoch, then base weights)
 checkpoint_path = None
-for ep in range(30, 0, -1):
-    cand = f"checkpoints/dgp_improved_epoch_{ep}.pth"
+for cand in ["checkpoints/dgp_zamboanga_final.pth", "weights/dgp_zamboanga_final.pth", "dgp_zamboanga_final.pth"]:
     if os.path.exists(cand):
         checkpoint_path = cand
         break
+
+if checkpoint_path is None:
+    for ep in range(30, 0, -1):
+        cand = f"checkpoints/dgp_improved_epoch_{ep}.pth"
+        if os.path.exists(cand):
+            checkpoint_path = cand
+            break
 
 if checkpoint_path is None:
     for cand in ["weights/mapped_deblurgan.pth", "checkpoints/mapped_deblurgan.pth", "mapped_deblurgan.pth"]:
