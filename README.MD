@@ -98,13 +98,40 @@ Open **`http://127.0.0.1:8000`** in your browser.
 
 ---
 
+## 🗃️ Training Datasets & Demographic Calibration
+
+The model is trained in cloud GPU environments (Google Colab / Compute Engine) using two complementary datasets:
+
+1. **GREATGAMEDOTA FFHQ Face Dataset**
+   - **Repository**: [Kaggle: greatgamedota/ffhq-face-data-set](https://www.kaggle.com/datasets/greatgamedota/ffhq-face-data-set)
+   - **Directory**: `dataset/thumbnails128x128/`
+   - **Volume**: 70,000 high-quality facial portraits ($128\times 128$ PNG thumbnails, ~1.8 GB).
+   - **Role**: Baseline facial geometry, structural features, lighting variations, and diverse global facial priors.
+   - **Acquisition Command**:
+     ```bash
+     python scripts/download_ffhq.py dataset/thumbnails128x128
+     # Or via Kaggle CLI: kaggle datasets download -d greatgamedota/ffhq-face-data-set --unzip -p dataset/thumbnails128x128
+     ```
+
+2. **Asian Face Demographic Prior Dataset**
+   - **Repository**: [Hugging Face: hiennguyen9874/face-age-gender-asian](https://huggingface.co/datasets/hiennguyen9874/face-age-gender-asian)
+   - **Directory**: `dataset/asian_faces/`
+   - **Volume**: 10,000 real Asian face portrait crops (~125 MB).
+   - **Role**: Injects Southeast Asian and Filipino morphological priors specific to the Zamboanga City population, preventing ethnic bias and unnatural Caucasian feature drift.
+   - **Acquisition Command**:
+     ```bash
+     python scripts/download_asian_faces.py dataset/asian_faces
+     ```
+
+---
+
 ## 📊 Training Curriculum & Checkpoints
 
 | Phase | Epochs | Dataset | Degradation Model | Primary Checkpoint |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | 1 – 10 | FFHQ Thumbnails ($128\times 128$) | First-order Gaussian blur + $4\times$ downsampling | `checkpoints/dgp_improved_epoch_10.pth` |
-| **Phase 2** | 11 – 20 | FFHQ Thumbnails ($128\times 128$) | Photometric refinement & Annealed LR | **`checkpoints/dgp_improved_epoch_20.pth`** *(Peak: 25.01 dB PSNR, 0.7862 SSIM)* |
-| **Phase 3** | 21 – 26 | FFHQ + Asian Faces (10,000 images) | Second-order compound CCTV (haze, noise, compression, interlacing) | `checkpoints/dgp_improved_epoch_26.pth` |
+| **Phase 1** | 1 – 10 | GREATGAMEDOTA FFHQ ($128\times 128$) | First-order Gaussian blur + $4\times$ downsampling | `checkpoints/dgp_improved_epoch_10.pth` |
+| **Phase 2** | 11 – 20 | GREATGAMEDOTA FFHQ ($128\times 128$) | Photometric refinement & Annealed LR | **`checkpoints/dgp_improved_epoch_20.pth`** *(Peak: 25.01 dB PSNR, 0.7862 SSIM)* |
+| **Phase 3** | 21 – 26 | GREATGAMEDOTA FFHQ + Asian Faces (10,000) | Second-order compound CCTV (haze, noise, compression, interlacing) | **`checkpoints/dgp_zamboanga_final.pth`** |
 
 ---
 

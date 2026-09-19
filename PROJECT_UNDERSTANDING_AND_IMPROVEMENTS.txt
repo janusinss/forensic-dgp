@@ -92,10 +92,33 @@ equipped with NVIDIA GPUs, while model checkpoints are transferred to the local
 repository for testing and evaluation.
 
 3.1 Datasets Used in Google Colab / VM
-  1. FFHQ Dataset: 70,000 high-resolution diverse facial portraits downsampled to 128x128.
-  2. Asian Face Dataset: 10,000 real Asian face portraits extracted from Hugging Face 
-     (hiennguyen9874/face-age-gender-asian) to inject accurate demographic priors 
-     representative of the Zamboanga City population.
+  1. GREATGAMEDOTA FFHQ Face Dataset:
+     - Source: Kaggle (https://www.kaggle.com/datasets/greatgamedota/ffhq-face-data-set)
+     - Local Target Directory: dataset/thumbnails128x128/
+     - Content: 70,000 Flickr-Faces-HQ portraits standardized to 128x128 PNG thumbnails (~1.8 GB).
+     - Forensic Role: Establishes broad generative priors across diverse ages, lighting, 
+       skin tones, and facial geometries.
+     - Acquisition in Google Colab / Cloud VM:
+         Option A (Automated Python script):
+           python scripts/download_ffhq.py dataset/thumbnails128x128
+         Option B (Kaggle CLI):
+           kaggle datasets download -d greatgamedota/ffhq-face-data-set --unzip -p dataset/thumbnails128x128
+
+  2. Asian Face Demographic Prior Dataset:
+     - Source: Hugging Face (https://huggingface.co/datasets/hiennguyen9874/face-age-gender-asian)
+     - Local Target Directory: dataset/asian_faces/
+     - Content: 10,000 real Asian face portrait crops extracted from parquet format (~125 MB).
+     - Forensic Role: Calibrates generative morphology specifically for the 
+       Zamboanga City population (Filipino / Southeast Asian facial priors), 
+       preventing ethnic bias and unnatural Caucasian feature drift.
+     - Acquisition in Google Colab / Cloud VM:
+         python scripts/download_asian_faces.py dataset/asian_faces
+
+  3. Combined Multi-Dataset DataLoader Configuration:
+     - In train.py and dataloader.py, multi-dataset training is activated by passing:
+         --data_dir "dataset/thumbnails128x128,dataset/asian_faces"
+     - The custom DegradedFacesDataset recursively walks both directories, concatenates 
+       all 80,000 face images, and applies synthetic CCTV degradation on-the-fly.
 
 3.2 Training Phases Completed
   - Phase 1 (Epochs 1 -> 10):

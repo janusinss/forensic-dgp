@@ -34,7 +34,9 @@ env/
 dataset/
 checkpoints/*
 !checkpoints/dgp_zamboanga_final.pth
-!checkpoints/dgp_improved_epoch_*.pth
+!checkpoints/dgp_improved_epoch_20.pth
+!checkpoints/dgp_improved_epoch_2[7-9].pth
+!checkpoints/dgp_improved_epoch_[3-9]*.pth
 outputs/
 *.png
 *.jpg
@@ -48,6 +50,8 @@ outputs/
 weights/
 *.pth
 !checkpoints/dgp_zamboanga_final.pth
-!checkpoints/dgp_improved_epoch_*.pth
+!checkpoints/dgp_improved_epoch_20.pth
+!checkpoints/dgp_improved_epoch_2[7-9].pth
+!checkpoints/dgp_improved_epoch_[3-9]*.pth
 *.pt
 *.h5
