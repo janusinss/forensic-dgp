@@ -6,6 +6,8 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset
 import face_alignment
+import hashlib
+from pathlib import Path
 
 from degradation import (
     apply_optical_motion_blur,
@@ -22,7 +24,7 @@ class DegradedFacesDataset(Dataset):
     facial landmarks.
     """
     def __init__(self, root_dir, transform=None, target_size=(24, 24), hr_size=(256, 256), curriculum=True,
-                 heavy_blur_probability=0.0, seed=None, extract_landmarks=True):
+                 heavy_blur_probability=0.0, seed=None, extract_landmarks=True, landmark_cache_dir=None):
         """
         :param root_dir: Path to directory containing high-res face images (e.g., FFHQ).
         :param transform: Optional torchvision transforms.
@@ -41,6 +43,7 @@ class DegradedFacesDataset(Dataset):
         self.seed = seed
         self.epoch = 0
         self.extract_landmarks = extract_landmarks
+        self.landmark_cache_dir = Path(landmark_cache_dir) if landmark_cache_dir else None
         
         # Load all valid image file paths from one or more directories (supports comma-separated paths)
         valid_exts = {'.png', '.jpg', '.jpeg'}
@@ -48,11 +51,16 @@ class DegradedFacesDataset(Dataset):
         dirs = root_dir.split(",") if isinstance(root_dir, str) else list(root_dir)
         for d in dirs:
             d = d.strip()
+            if not os.path.isdir(d):
+                raise FileNotFoundError(f'Dataset directory missing: {d}')
+            before = len(self.image_paths)
             if os.path.exists(d):
                 for root, _, fnames in os.walk(d):
                     for fname in fnames:
                         if os.path.splitext(fname)[1].lower() in valid_exts:
                             self.image_paths.append(os.path.join(root, fname))
+            if len(self.image_paths) == before:
+                raise ValueError(f'No supported images in dataset directory: {d}')
                     
         # Initialize face-alignment network (FAN)
         # Using CPU by default for the dataloader to avoid GPU memory conflicts, 
@@ -77,6 +85,25 @@ class DegradedFacesDataset(Dataset):
         if preds is None or len(preds) == 0:
             return np.zeros((68, 2), dtype=np.float32)
         coords = preds[0].astype(np.float32)
+        return coords
+
+    def cached_landmarks(self, image):
+        if self.landmark_cache_dir is None or not self.extract_landmarks:
+            return self._get_landmarks(image)
+        version = f'fan-two-d-v1:{getattr(face_alignment, "__version__", "unknown")}:{image.shape}'
+        key = hashlib.sha256(version.encode()+image.tobytes()).hexdigest()
+        path = self.landmark_cache_dir / key[:2] / f'{key}.npy'
+        if path.is_file():
+            cached = np.load(path, allow_pickle=False)
+            if cached.shape != (68,2) or not np.isfinite(cached).all():
+                raise ValueError(f'Invalid landmark cache: {path}')
+            return cached.astype(np.float32)
+        coords = self._get_landmarks(image)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix(f'.{os.getpid()}.tmp')
+        with open(temporary, 'wb') as handle:
+            np.save(handle, coords, allow_pickle=False)
+        os.replace(temporary, path)
         return coords
 
     def apply_primary_blur(self, image):
@@ -174,7 +201,7 @@ class DegradedFacesDataset(Dataset):
         i_hr_rgb = cv2.cvtColor(i_hr_bgr, cv2.COLOR_BGR2RGB)
         
         # Get 68-point landmarks from I_HR
-        landmarks = self._get_landmarks(i_hr_rgb)
+        landmarks = self.cached_landmarks(i_hr_rgb)
         
         # Generate I_LR (Degraded) from BGR (for opencv operations)
         i_lr_bgr = self.degrade_seeded(i_hr_bgr, idx)

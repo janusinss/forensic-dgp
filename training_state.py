@@ -5,13 +5,15 @@ import numpy as np
 import torch
 
 
-def save_training_state(path, model, optimizer, scheduler, epoch, best_psnr, config):
+def save_training_state(path, model, optimizer, scheduler, epoch, best_psnr, config, extra=None):
     numpy_state = np.random.get_state()
     state = dict(model=model.state_dict(), optimizer=optimizer.state_dict(),
                  scheduler=scheduler.state_dict(), epoch=epoch, best_psnr=best_psnr,
                  config=config, torch_rng=torch.get_rng_state(), python_rng=random.getstate(),
                  numpy_rng=(numpy_state[0], numpy_state[1].tolist(), *numpy_state[2:]),
                  cuda_rng=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [])
+    if extra is not None:
+        state['extra'] = extra
     temporary = str(path) + '.tmp'
     torch.save(state, temporary)
     os.replace(temporary, path)

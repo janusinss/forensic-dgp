@@ -1,0 +1,2 @@
+# Adds conversion support without changing the installed PyTorch/CUDA build.
+onnx2torch==1.5.15
