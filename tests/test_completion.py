@@ -80,6 +80,25 @@ class CompletionTests(unittest.TestCase):
         self.assertTrue(torch.all(alpha[:,:,:15]==0))
         self.assertTrue(torch.all((alpha>=0)&(alpha<=1)))
 
+    def test_default_blending_never_modifies_pixels_outside_the_mask(self):
+        from completion import blend_mask, compose
+        x = torch.rand(1,3,64,64)
+        m = torch.zeros(1,1,64,64)
+        m[:,:,20:40,20:40] = 1
+        result = compose(x,torch.zeros_like(x),blend_mask(m))
+        outside = (m==0).expand_as(x)
+        self.assertTrue(torch.equal(result[outside],x[outside]))
+
+    def test_default_inference_preserves_visible_pixels_with_supplied_mask(self):
+        from completion import CompletionNet
+        from completion_inference import predict
+        x = torch.rand(1,3,64,64)
+        m = torch.zeros(1,1,64,64)
+        m[:,:,20:40,20:40] = 1
+        result = predict(CompletionNet(8).eval(),x,mask=m)
+        outside = (m==0).expand_as(x)
+        self.assertTrue(torch.equal(result['output'][outside],x[outside]))
+
     def test_dataset_covers_before_degrading_and_validation_is_fixed(self):
         self.assertIsNotNone(importlib.util.find_spec('completion_data'))
         from completion_data import CompletionDataset
@@ -149,6 +168,31 @@ class CompletionTests(unittest.TestCase):
             self.assertEqual(report['expected'],10)
             self.assertEqual(report['failures'],10)
             self.assertIsNone(report['hole_mae'])
+
+    def test_balanced_benchmark_samples_each_dataset_and_rejects_shortfall(self):
+        import completion_benchmark as benchmark
+        self.assertTrue(hasattr(benchmark,'balanced_sample'))
+        paths=[f'dataset/ffhq/{i}.png' for i in range(10)]+[f'dataset/asian/{i}.png' for i in range(3)]
+        roots=['dataset/ffhq','dataset/asian']
+        a=benchmark.balanced_sample(paths,roots,2,42)
+        self.assertEqual(a,benchmark.balanced_sample(list(reversed(paths)),roots,2,42))
+        self.assertEqual(sum('/asian/' in p for p in a),2)
+        self.assertEqual(sum('/ffhq/' in p for p in a),2)
+        with self.assertRaisesRegex(ValueError,'Insufficient'):
+            benchmark.balanced_sample(paths,roots,4,42)
+
+    def test_benchmark_source_reports_keep_failures(self):
+        import json
+        from completion_benchmark import score
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            (root/'manifest.json').write_text(json.dumps({'cases':[
+                {'file':'a.png','source':'dataset/asian/a.png','kind':'lower','degraded':False},
+                {'file':'b.png','source':'dataset/ffhq/b.png','kind':'eyes','degraded':True}]}))
+            result=score(root,root/'missing')
+            self.assertIn('sources',result)
+            self.assertEqual(result['sources']['asian']['failures'],1)
+            self.assertFalse(result['sources']['ffhq']['complete'])
 
     def test_web_inference_preserves_clear_input_with_explicit_empty_region(self):
         from unittest.mock import patch

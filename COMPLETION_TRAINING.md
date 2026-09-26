@@ -1,5 +1,11 @@
 # Face completion: current implementation and training
 
+## 26 September update: pretrained completion benchmark
+
+The two-epoch custom pilot completed but generated smooth patches rather than convincing hidden anatomy. Do not repeat that run unchanged. See [PRETRAINED_COMPLETION.md](PRETRAINED_COMPLETION.md) for the implemented CodeFormer inpainting adapter, reproducible benchmark and local interface commands.
+
+Default composition now replaces only pixels inside the selected mask. External feathering is opt-in, and selection tolerances have not been relaxed. New custom training runs record `compositing_policy=mask-only-v1`; old training states must not be resumed under this changed policy. Old inference checkpoints remain loadable for comparison. Historical metrics used the old feathering behavior and must not be compared as though only the weights changed.
+
 25 September 2026. Work continues in this workspace; the planned workspace handoff is canceled.
 
 ## What is implemented
@@ -22,7 +28,7 @@ The implemented synthetic coverings are lower-face polygons, eye bars, rectangul
 
 The new completion model starts from random weights. The visible-region restorer remains frozen. Training uses area-normalized hole reconstruction, auxiliary visible-context reconstruction, segmentation BCE/Dice and optional VGG perceptual supervision. It does not yet include adversarial training, a pretrained generative face prior or an independent identity metric. Phase 5 ArcFace was not silently carried over as proof of completion fidelity. This baseline may produce smooth average features; compare it with pretrained candidates before making quality claims.
 
-The research priorities in [FACE_COMPLETION_RESEARCH.md](FACE_COMPLETION_RESEARCH.md) remain applicable. Benchmark export/scoring is implemented; external CodeFormer/LaMa environments and pretrained comparisons have not been run in this workspace. Their outputs must be evaluated before declaring a winner.
+The research priorities in [FACE_COMPLETION_RESEARCH.md](FACE_COMPLETION_RESEARCH.md) remain applicable. CodeFormer inference and a local synthetic pilot comparison are now implemented; LaMa has not been evaluated. This does not establish a best model for real occlusions or Philippine school images.
 
 ## Data behavior
 
@@ -30,7 +36,7 @@ Training samples each aligned face once per epoch, selecting one of five coverag
 
 Validation uses ten fixed cases per reference face: all five coverage kinds, each clear and degraded. With the old 4,000-image validation membership, that means **40,000 validation cases per pass**, not 4,000. Validation seeds are unchanged by training epoch. Content hashes detect modified images on resume; startup reads the dataset to compute these hashes.
 
-Masks use white/1 for generation. For degraded images the synthetic geometric mask is dilated to approximate blur contamination; this is a conservative heuristic, not an exact physical support calculation. An additional bounded blend band is exported as part of the generated region. Outside that band the completion stage copies the visible-region image exactly. If visible restoration is enabled, that image is the restorer output, not the original input.
+Masks use white/1 for generation. For degraded images the synthetic geometric mask is dilated to approximate blur contamination; this is a conservative heuristic, not an exact physical support calculation. By default the completion stage copies pixels outside the selected mask exactly. If visible restoration is enabled, that image is the restorer output, not the original input. Crop/resizing still changes pixel sampling before model inference.
 
 The default training resolution is 256. Original 128px targets remain a data limitation. The current split is image-disjoint, not proven identity-disjoint or unseen by historical phases. Do not report it as an independent Filipino completion benchmark.
 

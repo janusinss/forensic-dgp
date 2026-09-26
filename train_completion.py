@@ -95,6 +95,8 @@ def evaluate(model,loader,restorer,device,prefix,baseline=False):
 
 
 def train(args):
+    # Prevent resuming older runs under a different training/compositing policy.
+    args.compositing_policy = 'mask-only-v1'
     if args.epochs<1 or args.batch_size<1 or args.num_workers<0 or args.lr<=0 or args.lambda_perceptual<0:
         raise ValueError('Invalid training configuration')
     device = 'cuda' if torch.cuda.is_available() else 'cpu'

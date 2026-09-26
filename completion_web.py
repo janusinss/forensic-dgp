@@ -11,7 +11,8 @@ from PIL import Image, ImageOps
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse
 from starlette.concurrency import run_in_threadpool
-from completion_inference import load_completion, load_restorer, predict
+from completion_inference import load_completion, load_restorer, predict, visible_base
+from pretrained_completion import load_codeformer
 
 app = FastAPI(title='Face restoration and completion experiment')
 ROOT = Path(__file__).resolve().parent
@@ -54,13 +55,24 @@ def encoded(tensor):
 def get_engine():
     global engine
     if engine is None:
+        backend = os.environ.get('COMPLETION_BACKEND','custom')
         path = os.environ.get('COMPLETION_CHECKPOINT','')
-        if not path:
+        if backend not in ('custom','codeformer'):
+            raise HTTPException(503,'Unknown completion backend configuration.')
+        if not path and backend=='custom':
             raise HTTPException(503,'Select a trained completion checkpoint before using this experiment.')
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         try:
-            model,state = load_completion(path,device)
-            engine = {'model':model,'state':state,'device':device,'restorer':None}
+            if backend=='codeformer':
+                generator,provenance = load_codeformer(os.environ.get('CODEFORMER_CHECKPOINT',
+                    str(ROOT/'checkpoints/codeformer_inpainting.pth')),device)
+                model,detector_state = load_completion(path,device) if path else (None,None)
+                engine = {'backend':backend,'generator':generator,'provenance':provenance,
+                          'model':model,'detector_state':detector_state,'state':{'size':512,'epoch':None},
+                          'device':device,'restorer':None}
+            else:
+                model,state = load_completion(path,device)
+                engine = {'backend':backend,'model':model,'state':state,'device':device,'restorer':None}
         except Exception:
             logging.exception('Completion checkpoint failed to load')
             raise HTTPException(503,'The completion checkpoint is missing, incompatible, or a smoke test.')
@@ -75,12 +87,22 @@ def execute(contents,mask_contents,restore,only_mask=False):
         h,w = rgb.shape[:2]
         if h != w:
             raise ValueError('Select a square face crop first')
-        size = e['state']['size']
+        # The pretrained adapter must see the native crop/mask together before
+        # any interpolation, otherwise covered colors leak into context.
+        size = h if e.get('backend')=='codeformer' else e['state']['size']
         rgb = np.array(Image.fromarray(rgb).resize((size,size),Image.Resampling.BILINEAR))
         x = torch.from_numpy(rgb.copy()).permute(2,0,1).float()[None].to(e['device'])/255
-        if only_mask:
+        def estimated_mask():
+            if e['model'] is None:
+                raise HTTPException(503,'Paint the covered region or configure a trained region detector.')
+            detector_size = (e.get('detector_state') or e['state'])['size']
             with torch.no_grad():
-                mask = (e['model'].detect(x).sigmoid()>=.5).float()
+                detector_input = torch.nn.functional.interpolate(x,size=(detector_size,detector_size),mode='bilinear',align_corners=False)
+                probability = e['model'].detect(detector_input).sigmoid()
+                probability = torch.nn.functional.interpolate(probability,size=(size,size),mode='bilinear',align_corners=False)
+                return (probability>=.5).float()
+        if only_mask:
+            mask = estimated_mask()
             return {'mask':encoded(mask),'message':'Review and correct this estimated region.'}
         mask = None
         if mask_contents is not None:
@@ -94,9 +116,18 @@ def execute(contents,mask_contents,restore,only_mask=False):
             except Exception:
                 logging.exception('Restoration checkpoint failed to load')
                 raise HTTPException(503,'The visible-region restoration model is unavailable.')
-        result = predict(e['model'],x,mask,restore,e['restorer'])
+        if e.get('backend')=='codeformer':
+            supplied = mask is not None
+            if mask is None:
+                mask = estimated_mask()
+            base = visible_base(x,[restore],e['restorer'])
+            result = {'output':e['generator'](base,mask),'alpha':mask,
+                      'mask_source':'supplied' if supplied else 'predicted'}
+        else:
+            result = predict(e['model'],x,mask,restore,e['restorer'])
         return {'output':encoded(result['output']),'generated_region':encoded(result['alpha']),
                 'mask_source':result['mask_source'],'epoch':e['state']['epoch'],
+                'backend':e.get('backend','custom'),
                 'message':'Hidden facial features are generated estimates. Review the marked region.'}
 
 

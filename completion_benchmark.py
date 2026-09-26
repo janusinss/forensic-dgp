@@ -16,7 +16,28 @@ def save_rgb(tensor,path):
     Image.fromarray(array).save(path)
 
 
-def prepare(paths,output,size=512,seed=42):
+def balanced_sample(paths,roots,per_source,seed=42):
+    """Sample validation paths equally by dataset root, never silently underfill."""
+    if per_source<1 or not roots:
+        raise ValueError('Positive per-source count and dataset roots required')
+    groups={str(Path(root).resolve()):[] for root in roots}
+    if len(groups)!=len(roots):
+        raise ValueError('Dataset roots must be unique')
+    for path in sorted(paths):
+        matches=[root for root in groups if Path(path).resolve().is_relative_to(root)]
+        if len(matches)!=1:
+            raise ValueError('Each validation image must belong to exactly one dataset root')
+        groups[matches[0]].append(path)
+    selected=[]
+    rng=random.Random(seed)
+    for root,items in groups.items():
+        if len(items)<per_source:
+            raise ValueError(f'Insufficient validation images in {root}: {len(items)} < {per_source}')
+        selected.extend(rng.sample(items,per_source))
+    return selected
+
+
+def prepare(paths,output,size=512,seed=42,source_roots=None):
     output = Path(output)
     if (output/'manifest.json').exists():
         raise ValueError('Benchmark already exists; choose a new directory')
@@ -33,7 +54,13 @@ def prepare(paths,output,size=512,seed=42):
         # CodeFormer convention: white holes. Explicit masks remain authoritative.
         white = item['input']*(1-item['mask'])+item['mask']
         save_rgb(white,output/'codeformer_input'/name)
-        records.append({'file':name,'source':item['path'],'source_sha256':hashlib.sha256(Path(item['path']).read_bytes()).hexdigest(),
+        dataset_source=Path(item['path']).parent.name
+        if source_roots:
+            matches=[str(Path(root)) for root in source_roots if Path(item['path']).resolve().is_relative_to(Path(root).resolve())]
+            if len(matches)!=1:
+                raise ValueError('Ambiguous dataset source')
+            dataset_source=matches[0]
+        records.append({'file':name,'source':item['path'],'dataset_source':dataset_source,'source_sha256':hashlib.sha256(Path(item['path']).read_bytes()).hexdigest(),
                         'kind':item['kind'],'degraded':item['degraded'],'seed':item['seed']})
     (output/'manifest.json').write_text(json.dumps({'size':size,'seed':seed,'cases':records},indent=2),encoding='utf-8')
     return records
@@ -61,11 +88,19 @@ def score(benchmark,predictions):
         except (OSError,ValueError) as exc:
             row.update(error=type(exc).__name__,hole_mae=None,visible_mae=None)
         rows.append(row)
-    report = {'expected':len(rows),'failures':sum(r['error'] is not None for r in rows),'rows':rows}
-    for key in ('hole_mae','visible_mae'):
-        values = [r[key] for r in rows if r[key] is not None]
-        report[key] = sum(values)/len(values) if values else None
-    report['complete'] = report['failures']==0
+    def aggregate(items):
+        result={'expected':len(items),'failures':sum(r['error'] is not None for r in items)}
+        for key in ('hole_mae','visible_mae'):
+            values=[r[key] for r in items if r[key] is not None]
+            result[key]=sum(values)/len(values) if values else None
+        result['complete']=bool(items) and result['failures']==0
+        return result
+    report=aggregate(rows)
+    report['rows']=rows
+    def source(row): return row.get('dataset_source',Path(row['source']).parent.name)
+    report['sources']={s:aggregate([r for r in rows if source(r)==s]) for s in sorted({source(r) for r in rows})}
+    report['groups']={f'{kind}/{degraded}':aggregate([r for r in rows if r['kind']==kind and r['degraded']==degraded])
+                      for kind,degraded in sorted({(r['kind'],r['degraded']) for r in rows})}
     return report
 
 
@@ -77,6 +112,7 @@ if __name__ == '__main__':
     export.add_argument('--split_file',required=True,help='Use validation paths only')
     export.add_argument('--output_dir',required=True)
     export.add_argument('--images',type=int,default=20)
+    export.add_argument('--images_per_source',type=int,help='Equal validation image count from each data_dir root; overrides --images')
     export.add_argument('--size',type=int,default=512)
     export.add_argument('--seed',type=int,default=42)
     evaluate = sub.add_parser('score')
@@ -92,9 +128,14 @@ if __name__ == '__main__':
         validation = {str(Path(p).resolve()) for p in paths}
         if not validation or len(validation)!=len(paths) or train&validation or not validation<=available or args.images<1:
             raise ValueError('Invalid validation membership or sample count')
-        random.Random(args.seed).shuffle(paths)
-        records = prepare(paths[:args.images],args.output_dir,args.size,args.seed)
-        print(f'Exported {len(records)} cases. CodeFormer requires size 512 and aligned faces.')
+        roots=[root.strip() for root in args.data_dir.split(',')]
+        if args.images_per_source is not None:
+            paths=balanced_sample(paths,roots,args.images_per_source,args.seed)
+        else:
+            random.Random(args.seed).shuffle(paths)
+            paths=paths[:args.images]
+        records = prepare(paths,args.output_dir,args.size,args.seed,source_roots=roots)
+        print(f'Exported {len(records)} cases from {len(paths)} validation images. Use aligned face crops.')
     else:
         report = score(args.benchmark,args.predictions)
         Path(args.report).write_text(json.dumps(report,indent=2),encoding='utf-8')

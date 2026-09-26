@@ -28,8 +28,8 @@ def compose(visible, generated, alpha):
     return visible*(1-alpha) + generated*alpha
 
 
-def blend_mask(mask, radius=3):
-    """One inside the hole, feathered only in a bounded external band."""
+def blend_mask(mask, radius=0):
+    """Preserve visible pixels by default; external feathering is opt-in."""
     if radius < 0:
         raise ValueError('Blend radius must be nonnegative')
     if radius == 0:

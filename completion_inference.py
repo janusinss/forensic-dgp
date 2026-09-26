@@ -38,7 +38,7 @@ def visible_base(image,degraded,restorer):
 
 
 @torch.no_grad()
-def predict(model,image,mask=None,restore_visible=False,restorer=None,threshold=.5,radius=3):
+def predict(model,image,mask=None,restore_visible=False,restorer=None,threshold=.5,radius=0):
     if not 0 < threshold < 1:
         raise ValueError('Threshold must be between zero and one')
     if not torch.isfinite(image).all() or image.min()<0 or image.max()>1:
