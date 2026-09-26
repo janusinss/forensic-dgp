@@ -2,6 +2,10 @@
 
 Prepared 23 September 2026. Covers both an existing Google Cloud VM and a fresh VM.
 
+**25 September: workspace handoff canceled by the user.** Continue implementation and training here. This file remains a historical setup reference. Current completion implementation and commands are in [COMPLETION_TRAINING.md](COMPLETION_TRAINING.md).
+
+**Scope update, 25 September 2026:** the user confirmed single-image restoration plus completion of facial regions hidden by masks or other objects. Hidden features are plausible estimates; visible degraded regions may also be restored. Read [FACE_COMPLETION_RESEARCH.md](FACE_COMPLETION_RESEARCH.md) for the researched plan and benchmark sequence, and the current runbook linked above for the implemented baseline. The Phase 5 launcher below remains restoration-only. Historical results and VM instructions below remain relevant.
+
 ## 1. Start here
 
 The goal is better face-restoration output for a Philippine school setting, especially fidelity to the actual person. Higher sharpness or PSNR alone is insufficient. The user wants to train again after reviewing and implementing improvements.
