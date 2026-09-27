@@ -58,6 +58,7 @@ def main():
     p.add_argument('--backend',choices=['custom','codeformer'],required=True)
     p.add_argument('--checkpoint',required=True)
     p.add_argument('--mask_mode',choices=['oracle','predicted'],default='oracle')
+    p.add_argument('--mask_policy',choices=['baseline','boundary035'],default='baseline')
     p.add_argument('--detector',help='Trained custom checkpoint for predicted masks')
     p.add_argument('--restorer',help='Optional restoration for degraded cases only')
     p.add_argument('--device',default='cuda' if torch.cuda.is_available() else 'cpu')
@@ -65,6 +66,8 @@ def main():
     p.add_argument('--experimental_alignment',action='store_true',help='Research-only selective eye alignment')
     p.add_argument('--eye_detector',default=str(Path.home()/'.insightface/models/buffalo_l/det_10g.onnx'))
     args=p.parse_args()
+    if args.mask_policy!='baseline' and args.mask_mode!='predicted':
+        p.error('Mask correction requires predicted masks')
     if args.experimental_alignment and (args.backend!='codeformer' or args.restorer):
         p.error('Experimental alignment requires CodeFormer without --restorer')
     torch.set_num_threads(args.threads)
@@ -82,6 +85,7 @@ def main():
         provenance['detector_sha256']=hashlib.sha256(Path(args.detector).read_bytes()).hexdigest()
     restorer=load_restorer(args.restorer,args.device) if args.restorer else None
     provenance.update(mask_mode=args.mask_mode,compositing_policy='mask-only-v1',device=args.device,
+                      mask_policy=args.mask_policy,
                       restorer_sha256=hashlib.sha256(Path(args.restorer).read_bytes()).hexdigest() if args.restorer else None)
     if args.experimental_alignment:
         from completion_alignment import SelectiveEyeAlignment,load_eye_detector
@@ -92,7 +96,8 @@ def main():
     def predictor(x,known,degraded):
         if args.experimental_alignment:
             model.events.clear()
-        m=(detector.detect(x).sigmoid()>=.5).float() if detector is not None else known
+        from completion_masks import completion_mask
+        m=completion_mask(detector.detect(x).sigmoid(),args.mask_policy) if detector is not None else known
         if (m.mean((1,2,3))>=.85).any():
             raise ValueError('Too little visible face remains')
         base=visible_base(x,[degraded and restorer is not None],restorer)
