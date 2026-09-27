@@ -40,7 +40,10 @@ def run_cases(benchmark,output,predictor,provenance,device):
             error=None
         except (ValueError,RuntimeError,OSError) as exc:
             error=f'{type(exc).__name__}: {exc}'
-        rows.append({'file':case['file'],'seconds':time.perf_counter()-start,'error':error})
+        row={'file':case['file'],'seconds':time.perf_counter()-start,'error':error}
+        if hasattr(predictor,'alignment_events'):
+            row['alignment']=list(predictor.alignment_events())
+        rows.append(row)
         print(f'{i+1}/{len(names)} {case["file"]}: {error or "ok"}',flush=True)
     report={'provenance':provenance,'manifest_sha256':hashlib.sha256((benchmark/'manifest.json').read_bytes()).hexdigest(),
             'rows':rows,'failures':sum(r['error'] is not None for r in rows)}
@@ -59,7 +62,11 @@ def main():
     p.add_argument('--restorer',help='Optional restoration for degraded cases only')
     p.add_argument('--device',default='cuda' if torch.cuda.is_available() else 'cpu')
     p.add_argument('--threads',type=int,default=4)
+    p.add_argument('--experimental_alignment',action='store_true',help='Research-only selective eye alignment')
+    p.add_argument('--eye_detector',default=str(Path.home()/'.insightface/models/buffalo_l/det_10g.onnx'))
     args=p.parse_args()
+    if args.experimental_alignment and (args.backend!='codeformer' or args.restorer):
+        p.error('Experimental alignment requires CodeFormer without --restorer')
     torch.set_num_threads(args.threads)
     if args.backend=='codeformer':
         model,provenance=load_codeformer(args.checkpoint,args.device)
@@ -76,13 +83,23 @@ def main():
     restorer=load_restorer(args.restorer,args.device) if args.restorer else None
     provenance.update(mask_mode=args.mask_mode,compositing_policy='mask-only-v1',device=args.device,
                       restorer_sha256=hashlib.sha256(Path(args.restorer).read_bytes()).hexdigest() if args.restorer else None)
+    if args.experimental_alignment:
+        from completion_alignment import SelectiveEyeAlignment,load_eye_detector
+        model=SelectiveEyeAlignment(model,load_eye_detector(args.eye_detector))
+        provenance.update(alignment_policy='experimental-visible-eyes-v1',
+                          eye_detector_sha256=hashlib.sha256(Path(args.eye_detector).read_bytes()).hexdigest(),
+                          alignment_gate={'eye_distance_fraction':[.32,.5],'max_roll_degrees':20,'min_detection_confidence':.6})
     def predictor(x,known,degraded):
+        if args.experimental_alignment:
+            model.events.clear()
         m=(detector.detect(x).sigmoid()>=.5).float() if detector is not None else known
         if (m.mean((1,2,3))>=.85).any():
             raise ValueError('Too little visible face remains')
         base=visible_base(x,[degraded and restorer is not None],restorer)
         if args.backend=='codeformer': return model(base,m)
         return compose(base,model.complete(base,m),m)
+    if args.experimental_alignment:
+        predictor.alignment_events=lambda: model.events
     run=run_cases(args.benchmark,args.output_dir,predictor,provenance,args.device)
     metrics=score(args.benchmark,args.output_dir)
     Path(args.output_dir,'metrics.json').write_text(json.dumps(metrics,indent=2),encoding='utf-8')

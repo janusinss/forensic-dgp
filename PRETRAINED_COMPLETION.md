@@ -56,6 +56,31 @@ Sampling is balanced by dataset root: 20 validation images per source by default
 
 ## Interpretation and next training decision
 
+### Current next step: preprocessing comparison (September 27)
+
+The balanced VM diagnostic and local ablation supersede the eight-image pilot below. On 200 degraded cases with known masks, bypassing DGP reduced hole MAE from 0.082546 to 0.065037. This preserves degraded visible input, so it does not solve visible restoration. Two-eye alignment helped 13 eligible Asian-source clear lower-face cases but hurt 19 eligible FFHQ cases. Full investigation: `outputs/completion_restoration_ablation/REPORT.md` (local artifact).
+
+`completion_alignment.py` now provides an **opt-in experimental** gate based on input crop geometry, never dataset labels. It requires one confident face, two visible eyes, eye separation between 32% and 50% of crop width and roll below 20 degrees. Other cases fall back to ordinary completion. These provisional thresholds need independent validation; landmark confidence does not guarantee correct anatomy. The application default is unchanged.
+
+After committing/pushing these changes, run in the existing VM's tmux session:
+
+```bash
+cd ~/forensic-dgp
+git pull origin main
+if [ -d venv ]; then source venv/bin/activate; fi
+bash scripts/run_completion_preprocessing_gcp.sh
+```
+
+This reuses `outputs/completion_pretrained_vm` and compares unaligned/selective completion with known/predicted masks, all without DGP preprocessing: 1,600 inferences on the same diagnostic cases. No training occurs. It needs the existing InsightFace detector at `~/.insightface/models/buffalo_l/det_10g.onnx` and completion detector at `outputs/completion_pilot/epoch_2.pth`. Override `BENCHMARK`, `OUTPUT`, `EYE_DETECTOR` or `DETECTOR` if needed. Existing output directories are refused. Every case logs alignment or fallback in `run.json`; detector execution errors count as failures rather than silently bypassing alignment.
+
+Download the comparison after completion:
+
+```bash
+tar -czf completion-preprocessing-results.tar.gz outputs/completion_preprocessing_vm
+```
+
+Review per-source clear/degraded results, alignment/fallback counts and outputs before selecting a candidate. Then confirm on new held-out sources and real coverings; this reused diagnostic set cannot establish generalization. Only then choose whether the detector, generator or visible-restoration stage needs training. Local verification: 31 focused tests, Bash syntax check and four actual predicted-mask inference cases passed. The four-case run is a functionality check, not quality evidence.
+
 The completed local pilot used the same eight FFHQ validation images (80 synthetic cases) for all four pipelines, with no inference failures. Covered-region MAE changed from 0.091788 to 0.068397 with known masks (25.5% lower) and from 0.096025 to 0.076386 with predicted masks (20.5% lower). Clear known-mask visible error is exactly zero. Corrected pretrained outputs contain recognizable facial structure instead of smooth patches. These results support further evaluation of this candidate, not deployment: the split was reused, only eight source images were tested, and real masks/Asian-source images were not tested locally. Full local artifacts are in `outputs/completion_pretrained_benchmark/REPORT.md`.
 
 Inspect clear and degraded cases separately, and oracle versus predicted masks. Compare reference, input, old generator and pretrained output. Region MAE rewards smooth averages; realistic-looking anatomy may have worse MAE and still be wrong for the person. Neither metric improvement nor a convincing mouth proves the true hidden appearance.
