@@ -2,6 +2,8 @@
 import argparse
 import hashlib
 import json
+import copy
+import math
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +12,26 @@ from PIL import Image
 from completion_data import CompletionDataset
 from completion_inference import load_completion
 from detector_training import load_manifest, ReviewedMasks, evaluate, detector_optimizer, segmentation_loss
+
+
+def replay_consistency(student,teacher,is_synthetic):
+    """Bernoulli KL from frozen teacher, on synthetic replay only."""
+    if not is_synthetic.any():return student.sum()*0
+    logits=student[is_synthetic];reference=teacher[is_synthetic].detach()
+    p=reference.sigmoid()
+    log_p=torch.nn.functional.logsigmoid(reference)
+    log_not_p=torch.nn.functional.logsigmoid(-reference)
+    return (p*(log_p-torch.nn.functional.logsigmoid(logits))+
+            (1-p)*(log_not_p-torch.nn.functional.logsigmoid(-logits))).mean()
+
+
+class TaggedReplay(torch.utils.data.Dataset):
+    def __init__(self,real,synthetic):self.real,self.synthetic=real,synthetic
+    def __len__(self):return len(self.real)+len(self.synthetic)
+    def __getitem__(self,index):
+        synthetic=index>=len(self.real)
+        x,m=self.synthetic[index-len(self.real)] if synthetic else self.real[index]
+        return x,m,synthetic
 
 
 def sha(path):
@@ -83,14 +105,18 @@ def main():
     p.add_argument('--sources',type=int,default=200);p.add_argument('--epochs',type=int,default=10)
     p.add_argument('--steps',type=int,default=21);p.add_argument('--batch_size',type=int,default=8)
     p.add_argument('--seed',type=int,default=42);p.add_argument('--lr',type=float,default=1e-5)
+    p.add_argument('--consistency_weight',type=float,default=0.)
+    p.add_argument('--dry_run',action='store_true',help='One update/epoch; exports marked smoke-only')
     args=p.parse_args()
     if min(args.sources,args.epochs,args.steps)<1 or not 0<args.lr<1:p.error('Invalid training budget')
+    if not math.isfinite(args.consistency_weight) or args.consistency_weight<0:p.error('Invalid consistency weight')
     out=Path(args.output_dir)
     if out.exists():raise ValueError('Choose a new output directory')
     torch.set_num_threads(4);torch.manual_seed(args.seed)
     device='cuda' if torch.cuda.is_available() else 'cpu'
     rows=load_manifest(args.manifest)
     model,state=load_completion(args.checkpoint,device)
+    teacher=copy.deepcopy(model.segmenter).requires_grad_(False).eval() if args.consistency_weight else None
     benchmark=BenchmarkMasks(args.benchmark,state['size'])
     split=json.loads(Path(args.split).read_text())
     if not split.get('train') or not split.get('validation'):raise ValueError('Original train/validation split required')
@@ -105,10 +131,10 @@ def main():
     sources=select_sources(hashes(split['train']),excluded,args.sources,args.seed)
     real=ReviewedMasks([r for r in rows if r['split']=='train'],state['size'])
     synthetic=SyntheticMasks([path for path,_ in sources],state['size'],args.seed)
-    train=torch.utils.data.ConcatDataset([real,synthetic])
+    train=TaggedReplay(real,synthetic)
     groups=[[i for i,r in enumerate(real.rows) if r['kind']==kind] for kind in ('covered','uncovered')]
     groups.extend([[len(real)+i for i in range(len(synthetic)) if (i%5!=0)==covered] for covered in (True,False)])
-    sampler=MixedBatches(groups,args.batch_size,args.steps,args.seed)
+    sampler=MixedBatches(groups,args.batch_size,1 if args.dry_run else args.steps,args.seed)
     loader=torch.utils.data.DataLoader(train,batch_sampler=sampler)
     validations={'real':ReviewedMasks([r for r in rows if r['split']=='validation'],state['size']), 'synthetic':benchmark}
     val_loaders={k:torch.utils.data.DataLoader(v,batch_size=args.batch_size) for k,v in validations.items()}
@@ -123,9 +149,16 @@ def main():
     out.mkdir(parents=True);(out/'run.json').write_text(json.dumps(metadata,indent=2))
     optimizer=detector_optimizer(model,args.lr);best=baseline['real']['iou']
     for epoch in range(1,args.epochs+1):
-        sampler.epoch=epoch-1;model.segmenter.train();total=0.
-        for x,m in loader:
-            loss=segmentation_loss(model.detect(x.to(device)),m.to(device),.25,.1)
+        sampler.epoch=epoch-1;model.segmenter.train();total=consistency_total=0.
+        for x,m,is_synthetic in loader:
+            x,m,is_synthetic=x.to(device),m.to(device),is_synthetic.to(device)
+            logits=model.detect(x)
+            loss=segmentation_loss(logits,m,.25,.1)
+            if teacher is not None:
+                with torch.no_grad():reference=teacher(x[is_synthetic])
+                drift=replay_consistency(logits[is_synthetic],reference,torch.ones_like(is_synthetic[is_synthetic]))
+                loss=loss+args.consistency_weight*drift
+                consistency_total+=float(drift.detach())
             if not torch.isfinite(loss):raise FloatingPointError('Nonfinite loss')
             optimizer.zero_grad(set_to_none=True);loss.backward()
             torch.nn.utils.clip_grad_norm_(model.segmenter.parameters(),1.,error_if_nonfinite=True)
@@ -134,12 +167,12 @@ def main():
         real_ok=metrics['real']['iou']>best and all(metrics['real'][k]<=baseline['real'][k] for k in
                  ('visible_false_positive','empty_mask_cases','negative_false_positive_cases'))
         synthetic_ok=retention_passes(metrics['synthetic'],baseline['synthetic'])
-        selected=real_ok and synthetic_ok
+        selected=real_ok and synthetic_ok and not args.dry_run
         assert all(torch.equal(v.detach().cpu(),original[k]) for k,v in model.generator.state_dict().items()),'Generator changed'
-        export={**state,'model':model.state_dict(),'detector_only':True,'detector_finetune_epoch':epoch,'detector_training':metadata}
+        export={**state,'model':model.state_dict(),'dry_run':args.dry_run,'detector_only':True,'detector_finetune_epoch':epoch,'detector_training':metadata}
         torch.save(export,out/f'detector_epoch_{epoch}.pth')
         if selected:best=metrics['real']['iou'];torch.save(export,out/'best_detector.pth')
-        report={'epoch':epoch,'loss':total/args.steps,'selected':selected,'real_gate':real_ok,'synthetic_gate':synthetic_ok,**metrics}
+        report={'epoch':epoch,'loss':total/len(loader),'consistency_kl':consistency_total/len(loader),'selected':selected,'real_gate':real_ok,'synthetic_gate':synthetic_ok,**metrics}
         with (out/'metrics.jsonl').open('a') as f:f.write(json.dumps(report)+'\n')
         print(json.dumps(report),flush=True)
     print('Complete. Review both validation sets and images before promotion.',flush=True)

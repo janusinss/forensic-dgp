@@ -1,8 +1,223 @@
 # Forensic DGP: workspace handoff and training runbook
 
-Prepared 23 September 2026. Covers both an existing Google Cloud VM and a fresh VM.
+## Latest update — 28 September 2026: continue in this workspace
 
-**25 September: workspace handoff canceled by the user.** Continue implementation and training here. This file remains a historical setup reference. Current completion implementation and commands are in [COMPLETION_TRAINING.md](COMPLETION_TRAINING.md).
+**Follow-up implementation:** audited all 42 covered training labels and 14 covered validation labels. `new_covered_03.png` validation polygon includes exposed cheek through a mask cutout; `new_covered_40.png` is a mannequin. Original labels/splits remain fixed for comparability. See `~/forensic-dgp/DETECTOR_LABEL_AUDIT.md` ↔ `c:\xampp\htdocs\YEAR 4\Testing\DETECTOR_LABEL_AUDIT.md` for limitations and commands.
+
+Prepared a single-change consistency experiment: a frozen original detector supervises synthetic training replay with Bernoulli KL (weight 1); real samples retain the existing supervised objective, and the generator remains frozen. Same initialization, seed, sources, training budget and validation gates. This is implemented but not yet a completed GPU experiment. Fifty focused tests and Bash launcher syntax passed; local smoke exports are explicitly marked `dry_run` and cannot qualify as best. Next VM command after pushing/pulling: `bash scripts/run_detector_consistency_gcp.sh` from `~/forensic-dgp/`. Output `~/forensic-dgp/outputs/detector_consistency_vm/` maps to local `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_consistency_vm\` after transfer. Do not restart the completed plain replay run.
+
+The user confirmed work continues here at `c:\xampp\htdocs\YEAR 4\Testing\`, with GPU training at `~/forensic-dgp/`. Maintain this document at meaningful implementation, training and review milestones; no workspace transfer is currently required. The older handoff instructions below remain available as a runbook, not an instruction to move work.
+
+The mixed detector replay GPU run is complete. Received archive: `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector-replay-results.tar.gz`, SHA-256 `75b1584b0debdbb96001e7979c2cf47f0db59f03adbc98cb4563e6bb6254afdd`. VM run `~/forensic-dgp/outputs/detector_replay_vm/` was safely extracted to `c:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_detector_replay\outputs\detector_replay_vm\`.
+
+| VM validation metric | Initial detector | Replay epoch 10 |
+|---|---:|---:|
+| Real mask IoU | 0.06039 | 0.31997 |
+| Real covered pixels missed | 93.18% | 64.82% |
+| Real visible-pixel false-positive rate | 1.814% | 1.404% |
+| Synthetic mask IoU | 0.97469 | 0.95141 |
+| Synthetic uncovered cases with false masks | 0/80 | 0/80 |
+
+All ten epochs completed on CUDA (21 updates/epoch, batch 8, learning rate 1e-5). **No epoch passed strict synthetic retention; no best_detector.pth was selected.** Epoch 10 is a diagnostic candidate, not an approved replacement. Replay reduced forgetting relative to the earlier real-only epoch 9 (synthetic IoU 0.91828, false masks 9/80), but does not solve real-mask coverage.
+
+Local checks verified the recorded initial checkpoint, reviewed-label manifest and synthetic benchmark hashes; all ten checkpoints preserve generator tensors exactly. All 200 unique replay source byte hashes match local files and do not overlap the known benchmark or reviewed-real source/crop hashes. Full original-split membership is recorded by the VM split hash and was not independently revalidated locally in this review. The seven previously inspected real test cases were not reused for this run's selection.
+
+Review artifacts: `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_replay_review\` (audit JSON and ten-row validation mask comparison); VM equivalent `~/forensic-dgp/outputs/detector_replay_review/` exists only if explicitly transferred. Phase 3 remains the restoration baseline; Phase 5 full GPU results are still not supplied.
+
+**Next step:** inspect real-validation label consistency and incomplete predicted-mask coverage, then design a bounded detector experiment that addresses those errors while preserving synthetic behavior. Do not repeat the same run, relax selection thresholds merely to obtain a best file, or train the completion generator on raw masked images as clean targets. A frozen-original-detector consistency term on training-only synthetic replay is a candidate to test, not an implemented or proven improvement. Completion quality and a fresh independent holdout remain required before deployment.
+
+**Historical snapshot: 27 September 2026; superseded where noted by the latest update above.** Local workspace: `c:\xampp\htdocs\YEAR 4\Testing\`; training VM: `~/forensic-dgp/`. The following execution section remains a reference; do not repeat the now-completed replay run.
+
+**Work continues here per the latest user instruction.** Keep this handoff current for future use. Read the latest update before running older pilot commands. Use Playwright whenever inspecting or testing the web interface.
+
+## September 27 workspace state and dataset inventory
+
+| Track | Implementation and current decision | VM path ↔ Windows local path |
+|---|---|---|
+| 1: Restoration | Phase 3 baseline retained. Phase 4 epoch 27 improved PSNR but reduced identity similarity. Phase 5 differentiable ArcFace identity loss and EMA are implemented; full GPU pilot and output review remain pending. | `~/forensic-dgp/checkpoints/dgp_zamboanga_final.pth` ↔ `c:\xampp\htdocs\YEAR 4\Testing\checkpoints\dgp_zamboanga_final.pth` |
+| 2: Completion/inpainting | Separate gated U-Net generator and covering detector; custom two-epoch pilot completed without a selected best model. CodeFormer inpainting benchmark completed. Real-mask detection remains the immediate bottleneck; train the detector with real + synthetic replay while freezing the generator. | `~/forensic-dgp/COMPLETION_TRAINING.md` ↔ `c:\xampp\htdocs\YEAR 4\Testing\COMPLETION_TRAINING.md` |
+| Current detector recipe | Implemented replay trainer, 47 focused tests passed, one-update local mechanics run and Bash syntax check passed. Full replay VM run remains pending. No production checkpoint replacement. | `~/forensic-dgp/DETECTOR_REPLAY_TRAINING.md` ↔ `c:\xampp\htdocs\YEAR 4\Testing\DETECTOR_REPLAY_TRAINING.md` |
+
+All repository-relative paths in commands and historical sections resolve against these two roots: Linux `~/forensic-dgp/`, Windows `c:\xampp\htdocs\YEAR 4\Testing\`. Slash-separated suffixes have the same meaning on both machines; do not pass Windows paths to Linux. Git transfers code/docs, not ignored datasets, weights or run artifacts. Verify `git status --short` and `git rev-parse HEAD` on each machine; an old revision elsewhere in this document is historical, not the current commit.
+
+| Dataset | Verified local inventory | VM directory | Windows local directory | Source/use |
+|---|---:|---|---|---|
+| GREATGAMEDOTA FFHQ | 70,000 files | `~/forensic-dgp/dataset/thumbnails128x128/` | `c:\xampp\htdocs\YEAR 4\Testing\dataset\thumbnails128x128\` | Kaggle `greatgamedota/ffhq-face-data-set`; clean-face baseline |
+| Asian Demographic Prior | 10,000 JPG images | `~/forensic-dgp/dataset/asian_faces/` | `c:\xampp\htdocs\YEAR 4\Testing\dataset\asian_faces\` | Hugging Face `hiennguyen9874/face-age-gender-asian`; demographic-prior source, not proof of Filipino representativeness |
+| Real Occlusion Review | 1,510 JPG images; zero TXT files remaining | `~/forensic-dgp/dataset/real_occlusion_review/` | `c:\xampp\htdocs\YEAR 4\Testing\dataset\real_occlusion_review\` | YOLO TXT annotations purged; raw photos alone are not pixel masks or clean reconstruction targets |
+| Face Mask Dataset Candidate | Source designation; not an additional verified image count | Same real-occlusion review directory above | Same real-occlusion review directory above | [Kaggle hughiephan/face-mask](https://www.kaggle.com/datasets/hughiephan/face-mask/data), user-provided provenance; designated for real-world occlusion training/evaluation to bridge the synthetic-to-real gap |
+
+Counts above were rechecked locally during the handoff update; VM inventory must pass Stage 0. Do not count the candidate source as a second independent dataset. License/consent suitability and identity-disjointness are not established by these counts.
+
+Reviewed detector labels: `~/forensic-dgp/dataset/detector_expanded_review/manifest.json` ↔ `c:\xampp\htdocs\YEAR 4\Testing\dataset\detector_expanded_review\manifest.json`. There are 100 images: train 68 (42 covered/26 uncovered), validation 25 (14/11), earlier test 7 (4/3). Polygon annotations are approximate assistant-reviewed labels. The seven test images have now been inspected; do not call them untouched or reuse them for checkpoint selection.
+
+Measured completion status:
+
+- Initial custom pilot: epoch 2 predicted-mask hole MAE 0.0867; neither epoch selected. Do not repeat unchanged.
+- CodeFormer benchmark: 400 cases, zero failures, hole MAE 0.07355 and visible MAE 0.02413. Preprocessing comparison reported 0.06344 and 0.00886 respectively; inspect its specific arm/configuration before attributing the gain to weights.
+- Real-only detector: visible-penalty epoch 9 selected on real validation, IoU about 0.337. Synthetic IoU fell from 0.97469 to 0.91828, with false masks on 9/80 uncovered cases. Not promoted.
+- Next controlled experiment: 10 epochs × 21 updates, batch 8, two examples from each real-covered/real-uncovered/synthetic-covered/synthetic-uncovered group. Starts from original completion epoch 2, not the forgetting-prone epoch 9. Synthetic replay uses 200 original-training source images, excluding known benchmark, validation/test and reviewed-real hashes.
+
+Review evidence lives locally at `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_balanced_review\REPORT.md`; its VM counterpart would be `~/forensic-dgp/outputs/detector_balanced_review/REPORT.md` **only after explicit artifact transfer**. The VM run is `~/forensic-dgp/outputs/real_detector_balanced_vm/`; its downloaded local counterpart is `c:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_detector_balanced\outputs\real_detector_balanced_vm\`.
+
+## Autonomous `/goal` execution specification
+
+Copy the following specification into the receiving agent. This is a proposed goal, not a claim that a goal or cloud job has been started. VM access is currently through user-pasted SSH commands; if the receiving agent has no configured VM connection, provide the relevant block for the user rather than pretending it ran remotely.
+
+```text
+/goal Continue Forensic DGP from the September 27 snapshot in PROJECT_HANDOFF.md.
+Local workspace: c:\xampp\htdocs\YEAR 4\Testing\; VM workspace: ~/forensic-dgp/.
+Execute the four stages below sequentially and record commands, revision, hashes,
+metrics and failures. Stage 0: verify GPU, dependencies, datasets and preserved
+split; run isolated one-batch smoke checks. Stage 1: run the bounded Phase 5
+restoration pilot and mixed real/synthetic detector replay pilot sequentially
+inside tmux, preserving the generator and existing baseline. Stage 2: apply each
+track's selection gates and inspect fixed previews; no automatic deployment or
+extra epochs when a candidate fails. Stage 3: export artifacts with checksums,
+update evidence-based docs and synchronize the receiving local workspace.
+Do not train on real validation/test images or treat masked photos as clean face
+targets. Hidden facial structure is a plausible estimate. Use Playwright for web
+testing. Report the concrete next step at each stopping point.
+```
+
+### Stage 0: pre-flight verification
+
+Run in VM SSH (local equivalent root is `c:\xampp\htdocs\YEAR 4\Testing\`). Push reviewed local code first; stop on Git conflicts, missing artifacts or failed checks.
+
+```bash
+cd ~/forensic-dgp
+git status --short
+git pull --ff-only origin main
+if [ -d venv ]; then source venv/bin/activate; fi
+python3 -m pip check
+nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv
+python3 - <<'PY'
+import json
+from pathlib import Path
+import torch
+assert torch.cuda.is_available(), 'CUDA unavailable'
+print('PyTorch', torch.__version__, 'GPU', torch.cuda.get_device_name(0))
+free,total=torch.cuda.mem_get_info()
+print('VRAM free/total GiB:', free/2**30, total/2**30)
+roots={'dataset/thumbnails128x128':70000,'dataset/asian_faces':10000,
+       'dataset/real_occlusion_review':1510}
+for folder,expected in roots.items():
+    root=Path(folder)
+    assert root.is_dir(), folder
+    count=sum(p.suffix.lower() in ('.jpg','.jpeg','.png') for p in root.rglob('*') if p.is_file())
+    assert count==expected,(folder,count,expected)
+assert not list(Path('dataset/real_occlusion_review').rglob('*.txt'))
+split=json.loads(Path('outputs/phase4_with_progress/split.json').read_text())
+a,b=split['train'],split['validation']
+assert len(a)==76000 and len(b)==4000, 'Wrong split; do not substitute smoke split'
+norm=lambda paths: {str(Path(p.replace('\\','/')).resolve()) for p in paths}
+ta,tb=norm(a),norm(b)
+assert len(ta)==len(a) and len(tb)==len(b) and not ta & tb
+assert all(Path(p).is_file() for p in ta|tb), 'Missing split source files'
+for p in ('checkpoints/dgp_zamboanga_final.pth','outputs/completion_pilot/epoch_2.pth',
+          'dataset/detector_expanded_review/manifest.json',
+          'outputs/completion_pretrained_vm/manifest.json'):
+    assert Path(p).is_file(),p
+print('Preflight passed. Replay additionally excludes content hashes across known held-out data.')
+PY
+tmux new-session -A -s dgp_training
+```
+
+Inside tmux, run the isolated dry runs below. Their outputs map to local `c:\xampp\htdocs\YEAR 4\Testing\outputs\handoff_phase5_smoke\` and `...\outputs\handoff_completion_smoke\` after transfer. Use fresh names if they already exist. Phase 5 launcher prepares the landmark cache before training; this can scan all 80,000 images even for a one-batch smoke. A one-batch run does not establish full-batch VRAM capacity or output quality.
+
+```bash
+cd ~/forensic-dgp
+if [ -d venv ]; then source venv/bin/activate; fi
+OUTPUT_DIR=outputs/handoff_phase5_smoke bash scripts/run_phase5_gcp.sh --dry_run --batch_size 1 --num_workers 0
+OUTPUT_DIR=outputs/handoff_completion_smoke bash scripts/run_completion_gcp.sh --dry_run --batch_size 1 --num_workers 0
+```
+
+### Stage 1: training execution
+
+Use `tmux new-session -A -s dgp_training` to enter the session. Run one GPU job at a time. If a named full run already exists, inspect it first; do not overwrite it or silently repeat training. Track 1 outputs map from `~/forensic-dgp/outputs/phase5_identity/` to `c:\xampp\htdocs\YEAR 4\Testing\outputs\phase5_identity\` when transferred.
+
+```bash
+cd ~/forensic-dgp
+if [ -d venv ]; then source venv/bin/activate; fi
+DATA_DIR="dataset/thumbnails128x128,dataset/asian_faces" OUTPUT_DIR=outputs/phase5_identity bash scripts/run_phase5_gcp.sh
+```
+
+Track 2's actionable pilot is **real-mask integration into the detector**, with synthetic replay and the completion generator frozen. It uses the already-uploaded reviewed 100-image package and existing CodeFormer benchmark. The generic completion launcher does not accept real-mask supervision; do not append the raw masked-photo directory to its clean-target data. The original full custom generator pilot is already complete and should not be repeated unchanged.
+
+```bash
+cd ~/forensic-dgp
+if [ -d venv ]; then source venv/bin/activate; fi
+bash scripts/run_detector_replay_gcp.sh
+```
+
+Track 2 exports `~/forensic-dgp/outputs/detector_replay_vm/` ↔ `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_replay_vm\` after transfer. The recipe and prerequisite paths are in `~/forensic-dgp/DETECTOR_REPLAY_TRAINING.md` ↔ `c:\xampp\htdocs\YEAR 4\Testing\DETECTOR_REPLAY_TRAINING.md`. Detach with Ctrl+B then D; reattach with `tmux attach -t dgp_training`.
+
+### Stage 2: validation and guardrails
+
+| Candidate | Selection and review criteria |
+|---|---|
+| Track 1 `outputs/phase5_identity/best.pth` | Higher PSNR than selected best; overall SSIM and fixed-alignment ArcFace at least baseline; unchanged nonzero eligible identity-pair count; no per-source PSNR/SSIM/identity regression. Check `best_selection.json`: epoch 0 means retained baseline, not trained success. |
+| Original Track 2 `outputs/completion_pilot/best.pth` | Lower predicted-mask hole MAE; no baseline visible-error regression, no aggregate segmentation IoU regression, no >85% predicted-coverage cases, and no reported source/condition visible-error regression. No best file was selected in the completed pilot. |
+| Replay `outputs/detector_replay_vm/best_detector.pth` | Real IoU improves without worse real visible FP, empty detections or negative-case FP; synthetic IoU, missed fraction, visible FP, empty detections and negative-case FP retain baseline. Missing best file is a valid rejection, not a crash. This detector gate does not measure completion hole MAE. |
+| Completion output acceptance | Re-run the identical fixed completion benchmark with the selected detector/configuration; require hole MAE reduction without visible-region error regression before claiming completion improvement. Inspect ten fixed rows: input, known/edited mask, known-mask completion, predicted-mask completion, target where available. Real masks without uncovered references cannot provide hidden-face MAE. |
+
+Every output suffix above uses both root mappings defined at the top of this document. Inspect the full ten-row completion preview grid, including lower-face, eyes, irregular/object and uncovered controls under clear/degraded conditions; smoke previews alone are insufficient. Check seams, remaining mask material, generated anatomy and changes to visible features. Detector replay does not automatically produce a ten-row completion grid: generate/review it using the existing completion benchmark flow after selection. Keep the prior baseline if either metrics or visual review fails. Do not relabel the previously inspected seven images as a fresh final test; collect a separate reviewed holdout for final claims.
+
+### Stage 3: workspace sync protocol
+
+On the VM, package complete runs including metrics, configuration and selection records, rather than only a file called best. Include every epoch when no candidate qualifies. The commands below assume both Stage 1 runs finished; omit a missing run explicitly rather than archiving unrelated smoke output.
+
+```bash
+cd ~/forensic-dgp
+mkdir -p outputs/handoff_environment
+git rev-parse HEAD > outputs/handoff_environment/git-revision.txt
+python3 -m pip freeze > outputs/handoff_environment/pip-freeze.txt
+nvidia-smi > outputs/handoff_environment/nvidia-smi.txt
+tar -czf ~/dgp-handoff-results.tar.gz outputs/phase5_identity outputs/detector_replay_vm outputs/handoff_environment
+sha256sum ~/dgp-handoff-results.tar.gz > ~/dgp-handoff-results.tar.gz.sha256
+printf '%s\n' "$HOME/dgp-handoff-results.tar.gz" "$HOME/dgp-handoff-results.tar.gz.sha256"
+```
+
+Download both printed paths through Google Cloud SSH's Download File action to `c:\xampp\htdocs\YEAR 4\Testing\outputs\`. Do not put weights/datasets into Git. Review archive member paths before extraction; use a fresh staging directory to preserve local outputs. In receiving Windows PowerShell:
+
+```powershell
+Set-Location 'c:\xampp\htdocs\YEAR 4\Testing'
+Get-FileHash 'outputs/dgp-handoff-results.tar.gz' -Algorithm SHA256
+Get-Content 'outputs/dgp-handoff-results.tar.gz.sha256'
+tar -tzf outputs/dgp-handoff-results.tar.gz
+New-Item -ItemType Directory -Path outputs/downloaded_handoff_20260927
+tar -xzf outputs/dgp-handoff-results.tar.gz -C outputs/downloaded_handoff_20260927
+```
+
+Compare the checksum strings before extracting; stop on a mismatch or unexpected absolute/parent-traversal archive paths. Extracted VM `outputs/phase5_identity/` maps to `c:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_handoff_20260927\outputs\phase5_identity\`; replay has the analogous suffix. Record actual evidence in this document without overwriting the September 27 historical snapshot.
+
+On the workspace that owns the reviewed documentation changes (Windows commands below; VM equivalent begins `cd ~/forensic-dgp`), explicitly stage docs, review the diff and publish:
+
+```powershell
+Set-Location 'c:\xampp\htdocs\YEAR 4\Testing'
+git status --short
+git add PROJECT_HANDOFF.md DETECTOR_REPLAY_TRAINING.md
+git diff --cached --check
+git diff --cached --stat
+git commit -m "docs: update September 27 training handoff"
+git push origin HEAD
+```
+
+Confirm the pushed branch is `main` before the receiving workspace runs `git pull --ff-only origin main`; otherwise merge the reviewed branch through the normal project workflow first. This documentation edit itself does not execute commit/push. If Antigravity opens the same local directory, files are already shared; do not reclone. In its terminal:
+
+```powershell
+Set-Location 'c:\xampp\htdocs\YEAR 4\Testing'
+git status --short
+git pull --ff-only origin main
+git rev-parse HEAD
+venv/Scripts/python.exe -m unittest tests.test_detector_replay tests.test_detector_training
+```
+
+Preserve uncommitted work and resolve conflicts explicitly; never reset/clean to force a pull. **Next action at handoff:** publish any unpushed code/docs, run VM Stage 0, then the bounded pilots. Quality review precedes any further generator training or deployment.
+
+---
+
+## Historical setup and restoration evidence (23–25 September)
 
 **Scope update, 25 September 2026:** the user confirmed single-image restoration plus completion of facial regions hidden by masks or other objects. Hidden features are plausible estimates; visible degraded regions may also be restored. Read [FACE_COMPLETION_RESEARCH.md](FACE_COMPLETION_RESEARCH.md) for the researched plan and benchmark sequence, and the current runbook linked above for the implemented baseline. The Phase 5 launcher below remains restoration-only. Historical results and VM instructions below remain relevant.
 

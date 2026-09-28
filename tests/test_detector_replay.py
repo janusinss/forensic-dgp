@@ -1,8 +1,31 @@
 import unittest
-from detector_replay import MixedBatches, select_sources, retention_passes
+import torch
+from detector_replay import MixedBatches, select_sources, retention_passes, replay_consistency, TaggedReplay
 
 
 class ReplayTests(unittest.TestCase):
+    def test_consistency_only_updates_synthetic_student(self):
+        student=torch.zeros(4,1,2,2,requires_grad=True)
+        teacher=torch.full_like(student,2.,requires_grad=True)
+        loss=replay_consistency(student,teacher,torch.tensor([False,False,True,True]))
+        loss.backward()
+        self.assertEqual(student.grad[:2].abs().sum(),0)
+        self.assertGreater(student.grad[2:].abs().sum(),0)
+        self.assertIsNone(teacher.grad)
+
+    def test_consistency_is_zero_when_identical_or_no_replay(self):
+        x=torch.randn(4,1,2,2,requires_grad=True)
+        self.assertAlmostEqual(float(replay_consistency(x,x,torch.ones(4,dtype=torch.bool)).detach()),0.,places=6)
+        loss=replay_consistency(x,x,torch.zeros(4,dtype=torch.bool))
+        loss.backward();self.assertEqual(x.grad.abs().sum(),0)
+
+    def test_tagged_replay_preserves_source_boundary(self):
+        real=[(torch.tensor(1),torch.tensor(0))]*2
+        synthetic=[(torch.tensor(2),torch.tensor(1))]*3
+        data=TaggedReplay(real,synthetic)
+        self.assertEqual(len(data),5)
+        self.assertFalse(data[1][2]);self.assertTrue(data[2][2])
+
     def test_every_batch_contains_four_groups(self):
         groups=[[0,1,2],[3],[4,5,6],[7,8]]
         sampler=MixedBatches(groups,4,21,42)
