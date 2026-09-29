@@ -1,5 +1,60 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest pixel audit — 29 September 2026
+
+`PIXEL_BOUNDARY_AUDIT.md` and `outputs/pixel_boundary_audit/results.json` document
+570 cases: 68 real training, 77 verified partial synthetic training, and all 425
+validation cases. Local inference only. Synthetic validation missed pixels are
+81.85% near a fixed four-pixel boundary band; 60.28% of false positives are far
+from boundaries. Errors are not solved by simply expanding masks. Training
+evidence supports testing local context in the pointwise pixel head.
+Next: implement an initialization-matched 1x1 versus 3x3 pixel-head VM comparison,
+with unchanged loss/data/budget and frozen spatial presence gate. Architecture
+implementation, GPU execution and quality improvement remain unproven. Existing
+model/application defaults remain unchanged; all fitting must use the VM.
+
+## Latest validation — 29 September 2026: spatial presence improves, deployment still rejected
+
+Presence comparison archive returned. Both 20-epoch final heads evaluated on
+25 real + 400 synthetic cases with unchanged pixel predictions and threshold 0.5.
+Spatial lowers synthetic misses from 52/320 to 5/320 and raises composed-mask IoU
+0.76566 to 0.87321. Independent recount verified all 850 masks. Both still fail
+synthetic retention and reject the sole real glare validation case. No deployment.
+See `PRESENCE_COMPARISON_RESULTS.md` and `outputs/presence_comparison_validation/`.
+Next: analyze raw pixel boundary/region errors before specifying VM-only pixel
+training. Spatial remains a research component; no further global-gate repeat.
+All local work was inference/testing, with no local optimizer updates.
+
+## Latest preparation — 29 September 2026: matched presence comparison ready
+
+`scripts/compare_presence_heads_vm.py` is ready to upload and run on the existing
+VM bundle; exact commands are in `PRESENCE_COMPARISON_VM.md`. Global 1x1 versus
+spatial 4x4 pooled linear heads, fresh initialization, identical fixed training
+recipe and 468 examples. Parameter counts differ (257 versus 4097), so this is
+an architecture comparison rather than a capacity-controlled causal test.
+Encoder and pixel detector unchanged; all training VM-only. Three tests pass,
+Python compilation passes, no local optimizer updates. GPU run remains pending.
+Return `~/forensic-dgp/feature_vm_bundle/presence-comparison-results.tar.gz` to
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\` for evaluation. Existing raw segmentation
+still fails retention; this experiment alone cannot qualify the full pipeline.
+
+## Latest diagnostic — 29 September 2026: gate failure confirmed
+
+VM audit received and verified; see `FEATURE_GATE_AUDIT_RESULTS.md`.
+400 synthetic training cases: gate misses 32/320 covered, concentrated in object
+(18/80) and irregular (11/80) coverings. Five classifier false positives on clear
+images correspond to three nonempty composed masks, consistent with training.
+CPU/GPU encoder parity on 20 variants from two source images: zero presence
+decision flips, maximum probability delta 0.0003445, at most two changed mask pixels.
+Saved/fresh GPU embeddings match on those samples. No optimizer updates in audit.
+
+Next: implement a matched VM comparison of spatial versus global presence heads,
+with frozen pixel/encoder weights, identical training data and fixed thresholds.
+The current raw segmentation also fails synthetic retention; improving presence
+alone cannot qualify this candidate. No application promotion or local training.
+Evidence under `C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_feature_mixed_audit\`;
+VM original evidence under `~/forensic-dgp/feature_vm_bundle/outputs/feature_mixed_audit/`.
+
 ## Latest result — 29 September 2026: VM pilot evaluated, candidate rejected
 
 Read-only next diagnostic prepared: `scripts/audit_feature_mixed_vm.py`.
