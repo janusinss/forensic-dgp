@@ -1,5 +1,38 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest preparation — 30 September 2026: matched border experiment ready
+
+`scripts/train_expanded_border_vm.py` implements the specified control versus
+border-weight-2 comparison, original targets, fixed parent, frozen gate/encoder,
+800 updates per arm and final-only checkpoints. Three local loss/guard tests pass;
+the schedule independently covers all 3,540 cases. Zero local optimizer updates.
+VM GPU preflight and actual training are pending. Follow `EXPANDED_BORDER_VM.md`.
+
+Upload from `C:\xampp\htdocs\YEAR 4\Testing\scripts\train_expanded_border_vm.py`
+to VM home; run inside `~/forensic-dgp/expanded_feature_bundle/`. Return
+`~/forensic-dgp/expanded_feature_bundle/expanded-border-results.tar.gz` to local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded-border-results.tar.gz`.
+This isolates segmentation, not full qualification: known frozen-gate validation
+rejections remain and must be addressed separately before promotion. Next: verify
+both returned arms and compare original validation/visual safeguards. No baseline
+replacement. The older region-report note saying code is not prepared is superseded.
+
+## Latest result — 30 September 2026: region errors verified
+
+Region audit archive received; the missing-mask blocker is resolved. Independently
+recounted all 5,632 masks from 1,408 cases; counts and provenance match earlier
+audits. Added borders account for 96.58% fixed / 95.21% anatomical missed degraded-
+irregular target pixels; core miss rates are only 0.586% / 1.011%. Six predetermined
+previews inspected, including background false positives. No blanket dilation fix.
+See `EXPANDED_REGIONS_AUDIT_RESULTS.md` and local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_expanded_regions_audit\`.
+
+Next: implement a matched VM-only border-weighted BCE experiment versus equal-
+budget unchanged-loss control, same fixed parent, frozen presence gate and original
+targets/retention safeguards. The report specifies the bounded recipe; execution
+code is not prepared yet. No model promoted; generator/application unchanged.
+Existing VM caches remain in `~/forensic-dgp/expanded_feature_bundle/`.
+
 ## Latest preparation — 30 September 2026: region audit ready for VM
 
 Upload local `C:\xampp\htdocs\YEAR 4\Testing\scripts\audit_expanded_regions_vm.py`
