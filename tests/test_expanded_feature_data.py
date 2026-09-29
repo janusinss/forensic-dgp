@@ -66,14 +66,20 @@ class ExpandedDataTests(unittest.TestCase):
             fixed=api.ExpandedCoveringDataset(m,root,placement='fixed')
             self.assertEqual(anatomy.cases,fixed.cases)
             self.assertEqual(anatomy.rejections,fixed.rejections)
-            changed=0
+            changed=0;shared_pixels=0
             for i in range(len(anatomy)):
                 a,b=anatomy[i],fixed[i]
                 self.assertTrue(torch.equal(a['target'],b['target']))
                 if a['kind'] in ('none','object','irregular'):
                     for key in ('input','geometry','mask'):self.assertTrue(torch.equal(a[key],b[key]))
-                else:changed+=int(not torch.equal(a['geometry'],b['geometry']))
+                else:
+                    changed+=int(not torch.equal(a['geometry'],b['geometry']))
+                    if not a['degraded']:
+                        shared=(a['geometry'][0]>0)&(b['geometry'][0]>0)
+                        shared_pixels+=int(shared.sum())
+                        self.assertTrue(torch.equal(a['input'][:,shared],b['input'][:,shared]))
             self.assertEqual(changed,4)
+            self.assertGreater(shared_pixels,0)
             m['sources'][0]['landmarks']=None
             anatomy=api.ExpandedCoveringDataset(m,root)
             fixed=api.ExpandedCoveringDataset(m,root,placement='fixed')

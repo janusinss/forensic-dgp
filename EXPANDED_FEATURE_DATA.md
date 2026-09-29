@@ -1,6 +1,7 @@
 # Expanded detector data — 29 September 2026
 
-Data checks passed; GPU runner and package are still pending. This is detector
+Data checks passed; GPU runner and package are implemented. VM preflight remains
+pending; use `EXPANDED_FEATURE_VM.md` for upload/run commands. This is detector
 data preparation, not a trained improvement or verified clean completion targets.
 All fitting remains on the VM.
 
@@ -61,3 +62,48 @@ evaluation before launching. An augmentation comparison must use identical sourc
 and variant membership in both arms. Keep existing real/synthetic gates and report
 mannequin/glare separately. No validation/test fitting, threshold adjustment or
 generator/application promotion. End-to-end completion improvement is still unproven.
+
+## Matched experiment design and storage implementation
+
+Both arms use the same 352 sources, 3,472 variant identities and 48 rejection
+records. `placement='fixed'` uses legacy eye/lower geometry with the anatomical
+arm's texture RNG. This avoids confounding placement with a different color/noise
+draw. Generic and clear cases retain exact legacy behavior. Camera RNG and source
+targets match across arms. Geometry changes naturally change degraded boundaries.
+
+The planned architecture is the existing 3x3 context pixel head and 4x4 spatial
+presence head, with SAM2 frozen. Both trainable heads start from identical states
+in both arms: center-expanded mixed pixel weights (checkpoint SHA
+`eaa16229f88d416ad09d813a6f08ca0ae72bba214cb8266648bed382603864a4`) and spatial
+presence weights (SHA `b7af5b8568fc1fd1a6be289a6599794c6c2976e162a351be90a53344997b40c4`).
+AdamW LR .001, weight decay .0001, gradient norm cap 1, seed 42,
+20 x 80 updates, batch 12. Loss: all-image pixel BCE plus nonempty per-image Dice
+averaged over the whole batch, plus presence BCE. No hard-visible penalty in this
+feature-head experiment. Thresholds remain .5; save final epoch only.
+
+This isolates geometry between these two expanded-data arms. Comparisons against
+earlier runs cannot attribute gains solely to added sources: presence is now
+trainable, and the source mix differs. Real glare training coverage remains sparse.
+No threshold/epoch sweep or repeated unchanged run is planned.
+
+`feature_disk_cache.py` implements float32 feature / uint8 target memory maps,
+row checksums including metadata, copied batch reads, atomic progress metadata and
+explicit completion. Partial caches are preserved and refused for training rather
+than automatically resumed or overwritten. Unit tests inject truncated files,
+changed feature bytes, wrong provenance, nonfinite features and invalid masks.
+The runner must reserve about 28 GiB for both arms' feature caches plus overhead;
+use at least 35 GiB free disk in its preflight. Batch reads do not load the entire
+cache into RAM. No actual feature extraction or fitting has run in this update.
+
+The historical data manifest retains its original implementation hashes. The
+matched check records the current code hashes separately; the future bundle must
+pin those hashes rather than treating the historical loader hash as current.
+Runner and packaging are implemented in `scripts/train_expanded_feature_vm.py`
+and `scripts/build_expanded_feature_bundle.py`. GPU preflight remains pending.
+
+Full matched replay subsequently passed: 3,472 cases per arm, 1,360 anatomical
+variants per arm, identical 48 rejected variants and 2,112 legacy-equal generic
+cases. The 2,954,499 pixels covered by both clean anatomical/fixed masks have
+identical texture values. See `outputs/expanded_feature_data_v1/matched_check.json`
+for current code hashes. Eighteen targeted tests pass. These checks establish
+data/storage behavior only; no GPU run or improved detector/completion claim.

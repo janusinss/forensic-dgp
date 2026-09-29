@@ -33,7 +33,9 @@ class ExpandedCoveringDataset(Dataset):
     documented limitation. This dataset is for detector fitting, not a claim that
     provisional source photos are verified uncovered reconstruction ground truth.
     """
-    def __init__(self,manifest,root='.'):
+    def __init__(self,manifest,root='.',*,placement='anatomical'):
+        if placement not in ('anatomical','fixed'):raise ValueError('Unknown placement arm')
+        self.placement=placement
         self.manifest=copy.deepcopy(manifest);self.root=Path(root).resolve()
         if manifest.get('format')!=FORMAT or manifest.get('partition')!='train':
             raise ValueError('Expected expanded training manifest')
@@ -84,12 +86,19 @@ class ExpandedCoveringDataset(Dataset):
     def __getitem__(self,index):
         case=self.cases[index];r=self.sources[case['source_index']]
         rgb=self._read(case['source_index']);seed=self._seed(r);kind=case['kind']
-        if kind in ('lower','eyes'):
+        if kind in ('lower','eyes') and self.placement=='anatomical':
             covered,geometry,event=anatomical_covering(rgb,r['landmarks'],kind,seed+case['variant']%5,boundary_policy='clip')
             if event['status']!='generated':raise ValueError('Previously accepted geometry changed')
         else:
             covered,geometry=synthetic_covering(rgb,seed+case['variant']%5,kind)
             event={'version':'legacy-generic','status':'generated','kind':kind}
+            if kind in ('lower','eyes'):
+                # The legacy function consumes RNG for geometry before texture.
+                # Reset texture RNG to match the anatomical arm, isolating shape.
+                rng=np.random.default_rng(seed+case['variant']%5)
+                texture=np.clip(rng.uniform(25,230,(1,1,3))+rng.normal(0,8,rgb.shape),0,255).astype(np.uint8)
+                covered=np.where(geometry[...,None].astype(bool),texture,rgb)
+                event={'version':'fixed-geometry-matched-texture-v1','status':'generated','kind':kind}
         mask=geometry.copy()
         if case['degraded']:
             # Identical camera recipe and RNG ordering to fixed CompletionDataset.

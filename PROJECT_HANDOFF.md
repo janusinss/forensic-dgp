@@ -1,5 +1,60 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest milestone — 29 September 2026: expanded VM experiment packaged
+
+`scripts/train_expanded_feature_vm.py` now implements the predeclared matched
+fixed/anatomical comparison: frozen SAM2, trainable context pixel and spatial
+presence heads, identical initialization/schedule and 1,600 updates per arm.
+GPU guard precedes workspace access. Preflight requires 6 GiB free VRAM and
+35 GiB free disk, verifies hashes/splits and performs a forward without updates.
+Disk-backed caches preserve partial state and refuse incomplete/corrupt reads.
+Only final checkpoints and final training-fit metrics are produced; no selection
+or application promotion happens on the VM. Training has not started.
+
+22 tests pass (no optimizer steps), including CPU refusal, matched initialization,
+gradient isolation, cache corruption and matched data. Real parent-state loading
+was also checked separately. Bash syntax and
+Python 3.10 parsing for 36 bundled Python files pass. Actual initial head digest:
+`4c2012f4fd91c13b1d43e36debad50ce5db03480be8f030a615384d5d55d0575`.
+CUDA compatibility remains unverified until VM preflight.
+
+Upload local `C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded-feature-vm-bundle.tar.gz`
+and its `.sha256` file. Archive: 161,735,438 bytes, 624 verified members,
+SHA256 `8eb07308ca85a5f52f7068f32313f8e840ea78362c2a68f220358896af62f2d7`.
+Checksum has LF line endings. The failed path-verification archive and pre-runbook
+archive remain preserved separately; upload only the filename above.
+
+Runbook: `EXPANDED_FEATURE_VM.md`. Extract into a new
+`~/forensic-dgp/expanded_feature_bundle/`, activate the existing
+`~/forensic-dgp/feature_vm_bundle/.venv/`, run `scripts/run_expanded_feature_vm.sh`
+inside tmux. No new VM connection is configured here; user executes SSH commands.
+Return VM `~/forensic-dgp/expanded_feature_bundle/expanded-feature-results.tar.gz`
+to local `C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded-feature-results.tar.gz`.
+Next: user runs preflight/training; inspect returned fixed validation, mannequin,
+glare and completion previews before considering promotion. Goal remains unmet.
+
+## Latest implementation — 29 September 2026: matched arms and disk-backed cache
+
+`feature_disk_cache.py` added: float32/uint8 memory maps, per-row checksums,
+provenance checking, atomic progress and refusal of incomplete/changed caches.
+18 targeted tests pass, including corruption, partial-write, ordering, matched
+membership and shared-texture checks. No optimizer or GPU work ran locally.
+
+Full paired replay passed for 3,472 cases per arm from the same 352 sources;
+48 rejected variants are identical. All 2,112 generic/clear variants still match
+legacy exactly. Fixed and anatomical eye/lower arms use identical texture RNG;
+2,954,499 shared clean covering pixels match. Evidence:
+local `C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded_feature_data_v1\matched_check.json`;
+intended VM mirror `~/forensic-dgp/feature_vm_bundle/outputs/expanded_feature_data_v1/`.
+Historical manifest implementation hashes are retained; matched-check hashes pin
+the revised loader/cache. Benchmark, thresholds and application remain unchanged.
+
+`EXPANDED_FEATURE_DATA.md` predeclares identical initialization, trainable context
+pixel/spatial presence heads, frozen SAM2 and 1,600 updates per arm. Differences
+against older experiments are not attributable solely to added data. Next:
+implement GPU-only runner/preflight, package it, provide exact SSH commands.
+The VM experiment is not launch-ready; no output-quality improvement claimed.
+
 ## Latest implementation — 29 September 2026: expanded loader and fixed-budget sampler
 
 `expanded_feature_data.py` and `scripts/prepare_expanded_feature_data.py` added.
