@@ -1,5 +1,47 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest preparation — 30 September 2026: region audit ready for VM
+
+Upload local `C:\xampp\htdocs\YEAR 4\Testing\scripts\audit_expanded_regions_vm.py`
+to VM home and follow `EXPANDED_REGIONS_AUDIT_VM.md`. It uses existing caches and
+heads in `~/forensic-dgp/expanded_feature_bundle/`, performs zero optimizer updates,
+and checks input/target provenance plus previous per-case prediction counts.
+Two local tests pass; GPU execution remains pending. It exports raw/gated/core/
+target masks for 704 irregular training cases per arm and six input previews.
+Return `~/forensic-dgp/expanded_feature_bundle/expanded-regions-audit-results.tar.gz`
+to local `C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded-regions-audit-results.tar.gz`.
+Next: independently recount and inspect region errors before selecting training.
+
+## Latest diagnostic — 30 September 2026: target geometry inspected
+
+Training-only regeneration of 704 irregular cases completed without model fitting.
+Added dilation border comprises 46.83% of degraded target pixels. Target-derived
+64x64 roundtrip IoU is 0.99235 degraded / 0.98305 clean; grid shape preservation
+alone does not explain learned-head fit. Six deterministic preview rows inspected.
+See `EXPANDED_TARGET_GEOMETRY.md` and `outputs/expanded_target_geometry/`.
+This does not prove a target defect or localize prediction errors. Next: existing
+VM-head inference to separate core/border/outside errors and inspect predictions
+on those same examples before choosing training changes. No gate/label changes.
+
+## Latest result — 30 September 2026: grouped VM audit received
+
+`outputs/expanded-fit-audit-results.tar.gz` is now present and checked; the missing
+audit-result blocker is resolved. See `EXPANDED_FIT_AUDIT_RESULTS.md` and
+`outputs/downloaded_expanded_fit_audit/verification.json`. All 7,080 case records,
+group sums, original fit counts, protocol and checkpoint hashes match. The returned
+execution script matches the prepared inference-only script. No training occurred
+in this audit; feature arrays/predicted training masks still remain on VM.
+
+Degraded irregular training IoU: fixed 0.90155 / anatomical 0.88405; raw scores
+0.90177 / 0.88515 show that presence gating alone is not the main problem.
+Next: training-only target core/border and spatial-resolution diagnostic before
+choosing another VM training recipe. Investigate the 17x17 degraded-target dilation
+and 64x64 prediction grid without changing labels, thresholds or retention gates.
+Both candidates still fail original synthetic safeguards; no app/generator promotion.
+
+Local evidence root: `C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_expanded_fit_audit\`.
+VM cache root: `~/forensic-dgp/expanded_feature_bundle/outputs/expanded_feature_training/`.
+
 ## Latest preparation — 29 September 2026: grouped VM fit audit ready
 
 `scripts/audit_expanded_fit_vm.py` added for inference-only per-kind/degradation
