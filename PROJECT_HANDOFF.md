@@ -1,5 +1,255 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest update — 29 September 2026: mixed detector pilot packaged for VM
+
+**Ready for VM preflight, not yet GPU-tested or trained.** Portable package:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\feature-mixed-vm-bundle.tar.gz`
+(155,184,930 bytes, 299 archive members), SHA256
+`8033ea88f353a182a96d9b1e85c64120b4bd3868eb40aae0382e043222ab766a`.
+Extract into `~/forensic-dgp/feature_vm_bundle/`. Exact upload, setup, tmux,
+training and result-return instructions are in `FEATURE_VM_RUN.md` in this
+Windows workspace and the VM bundle. No git pull is required for this isolated
+package, and no commit/push was performed.
+
+Four runtime tests passed (CPU refusal, low VRAM refusal, balanced complete
+sampling, runner refusal before data reads). Both Bash scripts passed syntax
+checks; Python compilation passed. All packaged file hashes were checked after
+archiving. No local optimizer updates were run. VM preflight verifies CUDA,
+bundle/source/split integrity and one forward pass. Full GPU execution is pending.
+The run recomputes all 468 embeddings on CUDA, trains only two heads for 20 epochs,
+and exports `feature-mixed-vm-results.tar.gz`. Local evaluation follows after the
+user returns that archive; original validation safeguards and application baseline
+remain unchanged. This is not yet evidence of better completed faces.
+
+**User execution constraint: training must run on the Google Cloud VM, not locally.**
+Stopped local mixed-feature session during feature caching, before optimizer
+updates. No training results or final checkpoint were produced. Preserve partial
+cache for provenance; do not resume this training runner locally. Local work may
+prepare code/data and evaluate results. Next: package a portable VM runner and
+preflight instructions for `~/forensic-dgp/`; user pastes SSH commands because
+this workspace has no configured VM connection. Earlier running notes below are
+historical and superseded. The user requested continuation; the goal tool currently
+reports paused, and agents cannot change that tool status to active.
+
+**Historical, stopped local attempt — not currently running:**40 verified training sources
+(20Asian/20FFHQ),4196 excluded hashes,400 fixed training variants plus68 V3 real
+examples. Frozen encoder; train pixel/presence heads for20epochs/1600updates,
+six balanced groups per batch. No validation feature reads or threshold tuning.
+Recipe/provenance `FEATURE_MIXED_TRAINING.md`; local artifacts
+`c:\xampp\htdocs\YEAR 4\Testing\outputs\feature_mixed_training\`, VM counterpart
+`~/forensic-dgp/outputs/feature_mixed_training/` after transfer only. Check live
+process before restarting. Next: finish fixed budget, evaluate final checkpoint
+against unchanged real/synthetic safeguards; glare and completion still unproven.
+
+**Presence synthetic benchmark completed; candidate rejected:** all400 cases
+independently verified. Raw IoU0.63395; gated0.41404,empty139/320,negativeFP12/80;
+all five original synthetic safeguards fail. Gated Asian-source IoU0.26179 versus
+FFHQ0.56408. No model promoted. Real gate success does not establish overall
+success or glare handling. No job remains live. Details `FEATURE_PRESENCE_PROBE.md`;
+local `outputs/feature_presence_synthetic/verification.json`, VM mapping after
+transfer. Next: prepare one bounded, source-balanced mixed TRAINING-data recipe
+for both feature heads; verify no validation-source/cache leakage first.
+
+**Frozen presence synthetic benchmark running:**400 original validation cases,
+same encoder/pixel/presence weights and thresholds0.5; hashes verified. Local
+artifacts `c:\xampp\htdocs\YEAR 4\Testing\outputs\feature_presence_synthetic\`
+(VM `~/forensic-dgp/outputs/feature_presence_synthetic/` only after transfer).
+Exact cached features are VALIDATION ONLY, never training/replay inputs. Check the
+live session before restarting; no duplicate launch. See `FEATURE_PRESENCE_PROBE.md`.
+Glare remains unresolved despite real aggregate gate passing; no promotion.
+
+**Presence-gated real validation passed, scope still incomplete:**25 V3 cases
+finished; IoU0.84645,visible FP0.9657%,empty1/15,negativeFP0/10; mannequin-excluded
+IoU0.84399. Ten-row preview inspected. The single glare case is incorrectly
+rejected (presence0.0518), so this is not completion of the glare requirement.
+Next: frozen400-case synthetic retention; address glare using training evidence,
+not validation-specific threshold changes. No job currently running, no promotion.
+Report `FEATURE_PRESENCE_PROBE.md`, artifacts `outputs/feature_presence_validation/`.
+
+**Presence-gate feasibility passed; frozen real validation running:** V3 cached
+image hashes verified; previous pixel heads still failed. A separate linear
+image-level classifier trained on68 V3 training embeddings removes9 negative
+false-mask cases with no covered case rejected; training IoU0.86307. Pixel head
+and encoder unchanged. This is training fit, not generalization. One frozen25-case
+V3 validation launched; no threshold tuning. Details `FEATURE_PRESENCE_PROBE.md`,
+local `outputs/feature_presence_validation/` under `c:\xampp\htdocs\YEAR 4\Testing\`;
+VM equivalent under `~/forensic-dgp/` after transfer. Synthetic retention and
+completion-output comparison remain required; no promotion.
+
+**V3 finalized and original baseline re-evaluated:** user accepted all4 marked
+reflection types. Manifest SHA256
+`e36ce5cf04c858d61885c2a0187d0182099ada9852eb03d21d645f5bdbb3ea18`;
+standard manifest checks passed. Train43/25 covered/uncovered, validation15/10,
+test4/3. Original detector V3 validation IoU0.060648, empty6/15, negativeFP1/10;
+single glare-validation image missed. No model training or promotion. Pending notes
+below are historical. Next: re-evaluate saved feature heads with V3 targets before
+choosing another experiment; reuse embeddings only after verifying image hashes.
+Local `outputs/glare_policy_review/v3_baseline.json`, VM equivalent under
+`~/forensic-dgp/` after transfer. Full policy/provenance: `OCCLUSION_POLICY_V3.md`.
+
+**V3 full source review complete:**100 crops inspected,14 glasses cases enlarged;
+96 unchanged proposals and4 glare additions (2train/1validation/1previously-seen
+test). All hashes, split assignments, binary masks and preservation of V2 masked
+pixels checked. Preview `outputs/glare_policy_review/proposals.jpg` under local
+`c:\xampp\htdocs\YEAR 4\Testing\` (VM `~/forensic-dgp/` after transfer).
+User clarification pending on dark scene reflections/blue glare versus white glare;
+proposal labels remain disabled for training. See `OCCLUSION_POLICY_V3.md`.
+
+**User policy decision — strong lens glare included:** estimate facial regions
+obscured by strong lens glare; preserve transparent areas and visible detail.
+`OCCLUSION_POLICY_V3.md` defines the version transition. Created a separate100-case
+pending review queue at local `dataset/detector_glare_review_v3/audit_queue.json`
+(VM `~/forensic-dgp/` mapping after transfer). Training is disabled for this queue;
+V2 labels/splits are unchanged. Next: consistent full-dataset glare review and
+proposed masks, then versioned baseline reevaluation. Do not retroactively count
+V2 false positives as successes or relabel only failed examples.
+
+**Uncovered-case audit complete:** all26 training negatives checked for both
+feature heads; verified4/10 false-mask cases. Treatment areas1–737 pixels/65536,
+including high-confidence eyeglass reflections plus teeth/chin/clothing/background.
+All10 treatment failures visually inspected. V2 labels unchanged. The user
+clarification is resolved by the V3 decision above; full review remains pending.
+Details/artifacts in `FROZEN_FEATURE_PROBE.md`.
+
+**Matched loss comparison completed:** control training IoU0.79353/negativeFP4,
+nonempty-Dice treatment IoU0.86296/negativeFP10 (26 uncovered cases). Both fail
+fixed training-fit criteria. Coverage improves at the cost of more false masks;
+no promotion or validation run. Next: inspect uncovered-face error locations,
+areas and confidence before another model change. No diagnostic job remains live.
+
+**Loss audit and comparison setup (historical):** frozen-head covered/uncovered
+gradients oppose in6/6 balanced batches; empty-target Dice dominates uncovered BCE.
+Testing one change with identical cached features, initial weights, batches and
+20epoch budgets: all-image Dice versus zero Dice on empty targets (BCE retained).
+No validation/test fitting. Local artifacts `outputs/feature_empty_dice_comparison/`
+under `c:\xampp\htdocs\YEAR 4\Testing\`; VM counterpart `~/forensic-dgp/` requires
+transfer. Do not relaunch a live process. See `FROZEN_FEATURE_PROBE.md` for evidence
+and protocol; this diagnostic does not change application models or selection gates.
+
+**Frozen-feature diagnostic completed:** final training IoU0.73410, missed
+pixels24.949%, visible FP0.3217%, zero empty masks/42 covered and3 false masks/26
+uncovered. Failed the predeclared IoU>=0.80 and negativeFP<=2 training-fit criteria.
+All68 saved masks independently re-scored; fixed10-row preview inspected. No
+validation or deployment. Next: training-only loss-component audit of late recall
+decline while loss decreased; no immediate repeat training. Details in
+`FROZEN_FEATURE_PROBE.md`. Process exited successfully; no feature job remains live.
+
+**Diagnostic setup (historical):** frozen SAM2 image embeddings with a small prompt-free
+occlusion head on all68 V2 training images only.20 fixed epochs/220updates; encoder
+and application models unchanged. Three head tests passed. Protocol, hashes and
+predeclared training-fit criteria are in `FROZEN_FEATURE_PROBE.md`. Artifacts under
+local `c:\xampp\htdocs\YEAR 4\Testing\outputs\frozen_feature_probe\`; VM counterpart
+`~/forensic-dgp/outputs/frozen_feature_probe/` exists only after transfer. Check the
+live process before relaunching. Validation/test fitting is excluded; even a
+successful training fit does not establish retention or completion-output gains.
+
+**Final SAM2 result:** all400 synthetic cases completed, zero execution failures;
+IDs, strata and pixel counts verified. Refined synthetic IoU0.74929 versus original
+baseline0.97469, missed pixels17.243% versus1.648%, visible FP1.5362% versus0.1333%,
+uncovered false masks1/80 versus0/80. Four of five synthetic safeguards fail.
+Real V2 IoU improved to0.43854, but combined selection fails. Inspection confirms
+both missed blur margins and whole-face/person selections. No promotion, no app
+change, no generator training. Goal remains active. Detailed evidence and next
+training-only pretrained-feature feasibility hypothesis: `SAM2_DETECTOR_BENCHMARK.md`.
+Local `c:\xampp\htdocs\YEAR 4\Testing\outputs\sam2_synthetic_validation\summary.json`;
+VM equivalent `~/forensic-dgp/outputs/sam2_synthetic_validation/summary.json` requires
+transfer. The earlier progress notes below are historical; the process exited0.
+
+**SAM2 benchmark setup (historical):** implemented and tested image/detector-only prompt
+adapter `detector_refinement.py` (not connected to app);20 focused tests passed.
+Official SAM2.1 tiny source/weights are pinned by revision/hash in
+`SAM2_DETECTOR_BENCHMARK.md`. Isolated CPU dependencies under outputs; no project
+PyTorch replacement. Real V2 validation25: raw consistency IoU0.31568 -> refined
+0.43854, visible FP1.398% ->1.141%, empty masks2/14 unchanged, uncovered FP1/11
+unchanged. Wrong-object prompts remain serious failures; no promotion. Frozen
+400-case synthetic validation launched locally and saves per-case progress under
+`c:\xampp\htdocs\YEAR 4\Testing\outputs\sam2_synthetic_validation\` (VM equivalent
+`~/forensic-dgp/outputs/sam2_synthetic_validation/` only after transfer). Check its
+live process/session before resuming; no duplicate launch. Goal stays active;
+synthetic retention and completion-output review are outstanding.
+Prepared `outputs/summarize_sam2_validation.py` to require all400 unique expected
+case IDs, matching strata and valid pixel counts before writing `summary.json`.
+It uses pooled confusion counts (the same metrics as detector training), reports
+each occlusion/degradation group and applies the original synthetic baseline gates.
+Run it only after the live benchmark writes `results.json`; partial cases are not
+selection evidence. Script and artifacts currently exist locally only.
+
+**Probability audit complete:**99 thresholds on all68 real training images only,
+no validation tuning. Best unconstrained training IoUs: initial0.10300,
+no-penalty-epoch4 0.33929, consistency-epoch10 0.43505; corresponding visible FP
+rates2.963%,10.883%,5.901%. Under initial training FP/empty-case constraints,
+no-penalty has no qualifying grid threshold and consistency reaches only0.35682.
+No deployed threshold changed. This supersedes the pending probability audit below.
+See `DETECTOR_PROBABILITY_AUDIT_RESULTS.md` in local
+`c:\xampp\htdocs\YEAR 4\Testing\` / VM `~/forensic-dgp/`; local evidence under
+`outputs/detector_probability_audit/`. Next distinct candidate: pretrained SAM2
+boundary refinement using input/detector-derived prompts only, with abstention and
+unchanged validation safeguards (now in progress as reported above). Manual or
+ground-truth-derived prompts must not be presented as automatic performance.
+Goal stays active; no detector or completion model has been promoted.
+
+**Active-goal penalty ablation complete:** mixed replay at lr1e-5, penalty0 versus
+verified0.25 control, same four-epoch/84update budget and source membership.
+Penalty0 final real-validation IoU0.28058 versus0.20196 control, but visible false
+positives3.146% versus1.377%; synthetic IoU0.96869 versus0.97244. All four new
+epochs failed both gates; no promotion. Saved four diagnostic checkpoints locally
+and verified generator tensors unchanged. Application baseline retained. See
+`DETECTOR_PENALTY_COMPARISON_RESULTS.md` at both repository-root mappings and local
+`c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_penalty_comparison\` (VM counterpart
+`~/forensic-dgp/outputs/detector_penalty_comparison/` only after transfer).
+Next bounded work: training-only probability separation/precision-recall audit,
+without validation threshold tuning, to distinguish calibration from representation
+failure before further training. Goal remains active; end-to-end improvement is
+not yet demonstrated. This supersedes the pending penalty comparison below.
+
+**Loss audit now complete:** evaluated output-logit gradients on all68 training
+images and parameter gradients on six balanced training batches at initial and
+consistency-epoch10 checkpoints, without optimizer steps. Weighted visible penalty
+opposed combined BCE/Dice gradients in4/6 initial and3/6 trained batches; median
+relative gradient norms were1.536 and0.343. Uncovered examples did not consistently
+dominate. This is a loss-balance hypothesis, not proof of the bottleneck. Details:
+`DETECTOR_LOSS_AUDIT_RESULTS.md` in both repository-root mappings. Local artifacts:
+`c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_loss_audit\`; VM counterpart
+`~/forensic-dgp/outputs/detector_loss_audit/` only after explicit transfer.
+Next proposed bounded test: mixed replay at lr1e-5 with hard-visible weight0 versus
+0.25, same data/seed/budget and unchanged real/synthetic validation gates. No new
+VM training or production-model change. This supersedes the pending audit below.
+
+**Follow-up real-only comparison also complete:** matched lr1e-4,84updates and exact
+real-image batch subsequences against the completed mixed replay control. Final
+training/real-validation/synthetic IoUs were0.33008/0.23944/0.60377 real-only versus
+0.38737/0.26627/0.85874 replay. All real-only epochs failed synthetic retention;
+generator tensors were unchanged and no weights were saved. Starting checkpoint,
+V2 manifest and baseline metrics matched. Removing replay also increases the real
+contribution to the batch-averaged loss, so this does not isolate gradient conflict.
+See `DETECTOR_REAL_ONLY_COMPARISON_RESULTS.md` at the local/VM repository roots.
+Local evidence: `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_real_only_comparison\`;
+VM counterpart `~/forensic-dgp/outputs/detector_real_only_comparison/` requires
+explicit transfer. Keep replay; no further unchanged VM run. Next proposed step:
+training-only loss/gradient contribution audit before changing the objective.
+This supersedes the pending real-only comparison below.
+
+The local comparison continued after the interrupted conversation and completed
+both four-epoch arms; it was not restarted. All 68 real training examples were
+seen each epoch, with identical synthetic replay sources, initialization, seed and
+update budget. Original Phase 4 split hash and replay-source membership were now
+independently checked locally. Corrected V2 validation and separate mannequin
+reporting were used; test cases were not used.
+
+Final lr 1e-5: training IoU 0.24240, real-validation IoU 0.20196, synthetic IoU
+0.97244. Final lr 1e-4: 0.38737 / 0.26627 / 0.85874 respectively. The higher-rate
+real-validation peak was epoch 2 at 0.35362, but synthetic IoU was only 0.86137.
+All eight candidates failed synthetic retention. Generator integrity checks passed;
+no model weights were saved or deployed. Do not send either recipe to the VM as a
+proven improvement. This supersedes the earlier pending-learning-rate comparison.
+
+Details: `DETECTOR_LR_COMPARISON_RESULTS.md` in local
+`c:\xampp\htdocs\YEAR 4\Testing\` (VM counterpart `~/forensic-dgp/`). Local evidence:
+`outputs/detector_lr_comparison/results.json`, `PROTOCOL.md`, and
+`validation_masks.jpg`; VM copies exist only after explicit transfer. Next proposed
+diagnostic: a matched real-only versus replay comparison to isolate training-fit
+limitations; no further GPU launch yet. Current production baseline is retained.
+
 ## Latest update — 28 September 2026: continue in this workspace
 
 **Training-only overfit diagnostic completed locally:** two 80-update runs on three covered training examples plus one uncovered training control, native 256px, original completion epoch 2 initialization. Current lr 1e-5 reached training IoU 0.89130; diagnostic lr 1e-4 reached 0.98975 (initial 0.17920). Higher-rate final missed coverage was 1.00%, visible false positives 0.0046%, uncovered false masks 0/1. Generator tensors stayed unchanged; no weights saved, validation/test images used, or deployment performed. This proves fit capability on these examples only, not generalization or synthetic retention. Details in `DETECTOR_OVERFIT_RESULTS.md`; local artifacts `c:\xampp\htdocs\YEAR 4\Testing\outputs\detector_overfit_diagnostic\` (VM counterpart `~/forensic-dgp/outputs/detector_overfit_diagnostic/` only after transfer). Next: a bounded full-training-split learning-rate comparison with replay, training-fit monitoring, corrected validation and unchanged retention gates; do not simply adopt the higher rate for production. This supersedes the pending-overfit recommendation below.
