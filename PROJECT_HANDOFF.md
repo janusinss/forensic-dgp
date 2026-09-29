@@ -1,5 +1,35 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest result — 29 September 2026: VM pilot evaluated, candidate rejected
+
+Read-only next diagnostic prepared: `scripts/audit_feature_mixed_vm.py`.
+Upload this one file to the VM home directory and run with the bundle's `.venv`
+Python and `--root ~/forensic-dgp/feature_vm_bundle`. It audits all 400 saved
+synthetic training features at the unchanged 0.5 gate threshold, grouping errors
+by source, covering kind, degradation and mask area. It also compares CPU/CUDA
+encoder paths for 20 cases selected by source/kind/degradation before inspecting
+predictions, including saved-GPU versus fresh-GPU reproducibility. No fitting.
+Two arithmetic tests passed; Python compilation passed. GPU run pending.
+Return `~/forensic-dgp/feature_vm_bundle/feature-mixed-audit-results.tar.gz`.
+The real 68 feature embeddings were not persisted by the training runner, so
+this cached training audit is explicitly synthetic-only, not a full real audit.
+
+The returned `outputs/feature-mixed-vm-results.tar.gz` completed 20 epochs on an
+NVIDIA L4. Extracted into `outputs/downloaded_feature_mixed_vm/`; sent/returned
+bundle inventories match. Fixed local inference evaluated 25 real + 400 synthetic
+cases; independent saved-mask recount verified all 425 cases. No local training.
+Gated real IoU 0.83710 passes aggregate safeguards, but glare still fails.
+Gated synthetic IoU 0.72867, 69/320 covered masks empty, 14/80 clear cases falsely
+marked: synthetic retention fails. Raw predictions also fail retention. Do not
+promote this checkpoint or change application/generator defaults.
+
+Evidence: `FEATURE_MIXED_VM_RESULTS.md`,
+`outputs/feature_mixed_validation/results.json`, `verification.json`, and
+`diagnostic_preview.png`. Next: VM training-feature error audit plus a small
+CPU/GPU inference parity check before specifying another training experiment.
+VM remains `~/forensic-dgp/feature_vm_bundle/`; local remains
+`C:\xampp\htdocs\YEAR 4\Testing\`. Earlier pending-training notes below are history.
+
 ## Latest update — 29 September 2026: mixed detector pilot packaged for VM
 
 **Ready for VM preflight, not yet GPU-tested or trained.** Portable package:
