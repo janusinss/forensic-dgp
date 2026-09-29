@@ -1,5 +1,133 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest implementation — 29 September 2026: expanded loader and fixed-budget sampler
+
+`expanded_feature_data.py` and `scripts/prepare_expanded_feature_data.py` added.
+14 targeted tests pass. All 3,472 synthetic cases checked; 2,112 generic/clear
+variants exactly reproduce the legacy recipe. 352 source hashes and membership
+verified; 48 rejected anatomical variants recorded explicitly. Six balanced groups
+use a fixed 1,600-update schedule with cross-epoch coverage, not a larger budget.
+Original benchmark and application remain unchanged; no training ran.
+
+Artifacts: local `C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded_feature_data_v1\`;
+intended VM mirror `~/forensic-dgp/feature_vm_bundle/outputs/expanded_feature_data_v1/`.
+See `EXPANDED_FEATURE_DATA.md` for counts, hashes, tests and limitations.
+Next: implement disk-backed GPU-only runner and predeclare the matched experiment,
+then package it. The data checks are complete; the VM run is not launch-ready yet.
+
+## Latest implementation — 29 September 2026: explicit crop-aware augmentation
+
+Reviewed 47 rejected sources, 12 accepted pose extremes and all 35 newly clipped
+lower-face outlines. Border-only rejection affected 35 Asian-source crops and zero
+FFHQ crops. `anatomical_augmentation.py` now supports explicit
+`boundary_policy='clip'` (`anatomical-covering-v2-clip`); default V1 remains strict.
+Full-polygon rasterization followed by cropping preserves pixel labels; six tests
+pass, including crop equivalence and invalid geometry rejection. Replayed all
+352 cached sources: default V1 events unchanged; V2 generates both anatomical
+kinds for 164/170 Asian and 176/182 FFHQ sources. Twelve sources remain rejected.
+No benchmark, model, validation threshold or source file changed. No training ran.
+
+Evidence under local `C:\xampp\htdocs\YEAR 4\Testing\outputs\training_diversity_audit\landmark_trial_v1\`:
+`acceptance_review/visual_review.json` and `clipping_v2/results.json`.
+This is source-data preparation only; partial procedural coverings do not certify
+whole-region coverage, photorealism or improved completed faces. Source cleanliness,
+square-resize distortion and sparse real glare remain limitations.
+Next: version the expanded loader and source-balanced sampler, then package the
+bounded VM experiment for `~/forensic-dgp/feature_vm_bundle/`. Not launch-ready yet.
+
+## Latest verification — 29 September 2026: returned archive and detector dimensions
+
+Newest returned archive found locally: `outputs/pixel-comparison-results.tar.gz`.
+All five archive files match the extracted evaluation inputs byte-for-byte;
+SHA256 `67f31eebbe8a57d8a1acf2b1ace5543878d2f0c1227cfe862bc78fd28aab5e3f`.
+The existing 1,700-mask verification and failed retention decision still apply.
+No new qualifying model or training run is claimed.
+
+The anatomical trial's ONNX warning has a verified dimensional explanation:
+dynamic input, fixed output metadata for 640, actual outputs consistent with
+stride/anchor decoding at both 256 and 640. Installed InsightFace routes this
+model to SCRFD, whose decoder builds anchors from actual input dimensions.
+This clears the dimensional concern, not landmark accuracy or profile coverage.
+Evidence: `outputs/training_diversity_audit/detector_shape_audit.json`.
+Next: review rejected/profile cases and source acceptance before packaging the
+expanded training data. Training remains VM-only and is not ready to launch.
+Local root: `C:\xampp\htdocs\YEAR 4\Testing\`; VM bundle root:
+`~/forensic-dgp/feature_vm_bundle/`. See `ANATOMICAL_AUGMENTATION.md`.
+
+## Latest implementation — 29 September 2026: anatomical augmentation prototype
+
+`anatomical_augmentation.py` added, four tests passed. Separate training-only
+five-landmark eye/lower polygons with explicit failure reasons; no existing
+benchmark or inference integration. 352 source-only landmark inferences completed:
+340 eye / 305 lower masks generated; failures recorded. First 12 jointly accepted
+previews reviewed, profile reliability still limited. ONNX dynamic output-size
+warnings at 256 need configuration verification before using the landmark cache.
+See `ANATOMICAL_AUGMENTATION.md` and `outputs/training_diversity_audit/landmark_trial_v1/`.
+No training ran. Next: verify detector configuration and review acceptance/profile
+failures before versioning the expanded VM data pipeline. No model promotion.
+
+## Latest anatomy review — 29 September 2026: 363 source outlines inspected
+
+All eye/lower outline previews reviewed for 363 candidate clean sources.
+Fixed eye bands often miss eyes across both sources; pixel geometry labels are
+still correct for pasted objects, but anatomical simulation coverage is weak.
+Eleven additional source-cleanliness flags recorded. See
+`outputs/training_diversity_audit/anatomy_review/{results,source_status}.json`.
+Next: implement versioned landmark-conditioned training augmentation with explicit
+failure/review records, preserving generic occlusions and existing benchmarks.
+Source landmarks are training synthesis inputs only, never an inference reference
+requirement. Expanded-data training remains not ready; no local fitting occurred.
+
+## Latest detailed review — 29 September 2026: source roles separated
+
+All 59 flagged sources inspected at enlarged/native-content scale. Recorded in
+`outputs/training_diversity_audit/source_roles_v2.json`: 22 clean candidates pending
+geometry checks, 25 real-occlusion cases needing masks, five geometry holds, six
+text-overlay exclusions, one unusable-image exclusion. Remaining 341 sources are
+still thumbnail-provisional. No originals removed, no inferred hidden-face targets.
+`real_occlusion_annotation_queue.json` is training-disabled pending masks/grouping.
+Next: inspect source cleanliness and anatomical covering placement across 363
+candidate clean sources before versioning the augmentation pipeline. No local
+training, new VM launch, or application promotion.
+
+## Latest source review — 29 September 2026: all 400 thumbnails triaged
+
+`outputs/training_diversity_audit/source_triage_v1.json` covers all 400 images:
+341 provisional passes, 59 quarantined for full-resolution/geometry review.
+Six flagged images were in the prior 40-source pool. Pre-existing eyewear/objects
+can conflict with synthetic empty-mask labels and clean reconstruction targets.
+Separate provisional V2 manifest has 163 Asian-source and 178 FFHQ entries;
+`training_ready` is false. No images deleted or validation labels changed.
+Next: inspect flagged occlusions in detail, separate clean-target and real-occlusion
+roles, then review generated placement before a balanced VM recipe. See
+`TRAINING_DIVERSITY_AUDIT.md`. No local training or application changes.
+
+## Latest screening — 29 September 2026: data geometry needs correction before expansion
+
+400-source candidate screen versus 4200 reference paths found zero decoded-RGB
+duplicates / DCT-hash flags at distance <=6. This does not certify identity splits.
+Ten-source visual preview revealed a mostly black, tiny rotated face in
+`asian_face_07207.jpg`, and fixed eye masks below actual eyes in other Asian-source
+portraits. Candidate expansion is explicitly not training-ready. Preserve it;
+review source quality and augmentation placement before creating a new version.
+See updated `TRAINING_DIVERSITY_AUDIT.md` and
+`outputs/training_diversity_audit/{duplicate_screen,geometry_review}.json` plus
+`geometry_preview.png`. No model fitting, label changes or application promotion.
+
+## Latest data preparation — 29 September 2026
+
+`TRAINING_DIVERSITY_AUDIT.md` and
+`outputs/training_diversity_audit/candidate_sources.json` now record a 400-source
+candidate pool (200 Asian/200 FFHQ, retains previous 40), original training
+membership, successful decode and exact-byte exclusions against 4196 held-out /
+reviewed hashes. One duplicate skipped. Near-duplicate/identity screening pending.
+All 76000 original training paths exist locally; only selected images decoded.
+Real training still has only two strong-glare cases. Synthetic loader stretches
+non-square portraits to squares; effect unmeasured, benchmark unchanged.
+Next: duplicate screening and stratified source/covering geometry review before
+implementing any expanded-data VM recipe. The old fixed-size sampler cannot be
+used unchanged for this larger manifest. No local training or deployment changes.
+
 ## Latest pixel result — 29 September 2026: context helps synthetic, fails full retention
 
 Both pixel-head VM runs completed. Fixed validation and independent recount of
