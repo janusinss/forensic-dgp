@@ -1,5 +1,28 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest pixel result — 29 September 2026: context helps synthetic, fails full retention
+
+Both pixel-head VM runs completed. Fixed validation and independent recount of
+1700 saved masks complete; ten-row diagnostic grid inspected. Context gated
+synthetic IoU 0.92223 versus pointwise 0.88015, but real IoU falls to 0.81811
+versus 0.82858. Both fail original synthetic safeguards; glare and five synthetic
+gate misses persist. No application promotion. See `PIXEL_COMPARISON_RESULTS.md`.
+Next: audit and expand training diversity with fixed architecture/thresholds,
+not another architecture change or repeat on the same 40 source images. Preserve
+all validation/test membership; real glare coverage and independent final
+evaluation remain unresolved. All fitting must stay on the VM.
+
+## Latest preparation — 29 September 2026: pixel-head VM comparison ready
+
+Upload `scripts/compare_pixel_heads_vm.py`; see `PIXEL_COMPARISON_VM.md` for SSH
+commands. Pointwise and 3x3-context arms have matched initial functions, identical
+468 training examples, loss, batch order and 1600-update budgets. Frozen encoder
+and frozen spatial presence gate; final-only checkpoints. Two local tests pass
+(initial equivalence/feature isolation and CPU refusal), Python syntax passes,
+no local optimizer updates. GPU run and quality results remain pending.
+Result path: `~/forensic-dgp/feature_vm_bundle/pixel-comparison-results.tar.gz`;
+return to `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. No application changes.
+
 ## Latest pixel audit — 29 September 2026
 
 `PIXEL_BOUNDARY_AUDIT.md` and `outputs/pixel_boundary_audit/results.json` document
