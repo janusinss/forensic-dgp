@@ -1,5 +1,120 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Latest preparation — 29 September 2026: grouped VM fit audit ready
+
+`scripts/audit_expanded_fit_vm.py` added for inference-only per-kind/degradation
+training-fit analysis of existing checkpoints/caches. No optimizer, encoder rerun,
+validation fitting or threshold search. Two local tests and Python syntax pass;
+GPU execution pending. Full feature arrays are absent locally and remain on VM.
+
+Upload `C:\xampp\htdocs\YEAR 4\Testing\scripts\audit_expanded_fit_vm.py` to VM home;
+run from `~/forensic-dgp/expanded_feature_bundle/` with existing feature-bundle
+venv. See `EXPANDED_FIT_AUDIT_VM.md` for exact commands. Script checks provenance,
+row hashes, unchanged weights and exact aggregate agreement with original fit.
+Return VM `~/forensic-dgp/expanded_feature_bundle/expanded-fit-audit-results.tar.gz`
+to local `C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded-fit-audit-results.tar.gz`.
+Next: inspect grouped fit to separate degraded-irregular learning from transfer.
+No new training or promotion. Tiny-highlight scope question remains pending.
+
+## Latest independent diagnostic — 29 September 2026: segmentation limits retention
+
+While glare-scope clarification is pending, audited the saved synthetic validation
+counts. A label-informed perfect presence gate would still fail retention:
+IoU 0.95218 fixed / 0.93899 anatomical versus baseline 0.97469. This is diagnostic
+only, never a deployable oracle. All actual positive gate misses are irregular
+coverings; about 92% of raw missed target pixels occur in degraded cases.
+No threshold changes, fitting, new inference or promotion.
+
+See `EXPANDED_RETENTION_AUDIT.md`; local evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded_retention_audit\results.json`.
+VM parent remains `~/forensic-dgp/expanded_feature_bundle/outputs/expanded_feature_training/`.
+Next independent task: existing training-fit breakdown by covering/degradation,
+particularly irregular coverings, using final heads/caches where available.
+Pending glare-scope question remains unanswered; ambiguous proposals stay disabled.
+
+## Latest annotation review — 29 September 2026: three proposals remain ambiguous
+
+Native-resolution proposals prepared for glare-search indices 62, 127 and 141
+(52 / 65 / 25 pixels). Binary dimensions, source hashes and counts verified;
+three-row overlay inspected. These tiny spots overlap pupils/frame regions and
+may be ordinary catchlights, not strong lens glare. Earlier thumbnail candidacy
+is insufficient to assign occlusion truth. All proposals remain disabled and no
+reviewed dataset labels changed. No training or model promotion.
+
+Local preview: `C:\xampp\htdocs\YEAR 4\Testing\outputs\glare_source_search_v1\boundary_proposals\review.png`.
+See `GLARE_SOURCE_SEARCH.md`; nothing new was uploaded to `~/forensic-dgp/`.
+User clarification requested on tiny-highlight scope; recommendation is exclusion
+under the existing strong-glare policy. Next: resolve this narrow policy question
+and obtain clearer real-glare examples before adding labels or spending VM time.
+
+## Latest source search — 29 September 2026: three localized-reflection candidates
+
+Bounded source-only search reviewed 200 new original-training images (100 per
+dataset), excluding prior pool/held-out content against 4,600 reference paths.
+Two perceptual matches excluded. All five thumbnail sheets and 14 enlarged
+eyewear cases reviewed: three localized-reflection candidates, five ambiguous
+holds, six proposed clear controls, five opaque-eyewear thumbnails. The remaining
+181 are not shortlisted, not verified negatives. No masks, training or promotion.
+
+See `GLARE_SOURCE_SEARCH.md`; local artifacts:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\glare_source_search_v1\`.
+No VM files changed; prospective mirror `~/forensic-dgp/outputs/glare_source_search_v1/`.
+Next: native-resolution reflection boundary proposals for search indices 62, 127,
+141, with visible eyes preserved and overlay review before dataset inclusion.
+
+## Latest data review — 29 September 2026: 27 eyewear candidates triaged
+
+Prepared and reviewed a training-only eyewear queue after original split/hash and
+held-out content exclusions. Twelve dark/mirrored-eyewear candidates, eleven clear
+eyeglass control candidates and four ambiguous/non-glare/other-occlusion holds.
+No new confirmed localized clear-lens glare set emerged; sunglasses must not be
+counted as equivalent glare coverage. No masks assigned, fitting or promotion.
+
+See `EYEWEAR_REVIEW_QUEUE.md`. Local evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\eyewear_review_v1\`.
+No VM package was changed; future reviewed-data mirror would be
+`~/forensic-dgp/outputs/eyewear_review_v1/` after packaging.
+Next: bounded deterministic search of additional original-training sources for
+localized lens reflections, with duplicate/held-out exclusions before review.
+Do not move validation glare into training or weaken synthetic retention gates.
+
+## Latest diagnostic — 29 September 2026: glare training fit versus transfer
+
+Inference-only audit completed on all 68 reviewed training cases using verified
+cached source features and current V3 targets. All 272 saved masks independently
+recounted; six-row preview reviewed. Fixed recovers 80.30% / 73.91% of added glare
+pixels in the two training examples; anatomical recovers 82.38% / 43.88%. Both
+still recover zero validation glare pixels. All 25 clear training controls remain
+empty after gating. Whole-image scores include a large medical mask in one glare
+example and must not be presented as glare-only IoU.
+
+See `EXPANDED_TRAINING_GLARE.md`; local evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded_training_glare\`.
+VM parent: `~/forensic-dgp/expanded_feature_bundle/outputs/expanded_feature_training/`.
+Next: prepare additional training-only reflection candidates and clear-eyeglass
+controls from existing reviewed source queues, with overlap exclusions and explicit
+annotation review. No automatic labels or held-out-to-training transfer. Synthetic
+retention remains failed; no new VM training or baseline promotion is justified yet.
+
+## Latest result — 29 September 2026: expanded VM arms evaluated; neither qualifies
+
+The returned `expanded-feature-results.tar.gz` contains both completed 20-epoch
+runs. Protocol/parent/inventory/source/checkpoint checks and reconstructed schedule
+pass; 7,080 cache records reviewed. Fixed development validation completed on
+425 cases per arm; 1,700 saved masks independently recounted; ten preview rows
+visually reviewed. Fixed/anatomical gated real IoU: 0.82150 / 0.81148; synthetic
+IoU: 0.94662 / 0.93227. Both pass original real aggregate safeguards but fail
+unchanged synthetic retention. Both miss all labeled validation glare pixels even
+before gating. No application or generator promotion; no local training.
+
+See `EXPANDED_FEATURE_RESULTS.md`. Local evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded_feature_validation\`.
+VM evidence: `~/forensic-dgp/expanded_feature_bundle/outputs/expanded_feature_training/`.
+Next: inference-only diagnostic on the two reviewed training glare cases and
+clear controls; distinguish failure to fit from limited real glare coverage.
+Do not repeat the same VM run or lower validation gates. Independent final
+evaluation and measured/visual end-to-end completion improvement remain unmet.
+
 ## Latest milestone — 29 September 2026: expanded VM experiment packaged
 
 `scripts/train_expanded_feature_vm.py` now implements the predeclared matched
