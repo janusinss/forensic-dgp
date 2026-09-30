@@ -1,11 +1,67 @@
 # Forensic DGP: workspace handoff and training runbook
 
-## Current status — 30 September 2026: continuation return pending; local audit ready
+## Current result — 1 October 2026: continuation audited; synthetic guard still fails
 
-The expected continuation archive is not present at
+The continuation archive is received and both audit passes completed. The fixed
+420 additional updates reach630 cumulative model updates. Epoch30 synthetic IoU
+is0.92039, improving source10's0.84378 but below original parent0.97469. Real IoU
+is0.81739 versus source0.82283; human-only0.81997 and mannequin0.79113. Every
+candidate passes the original real gate and fails synthetic retention. No
+`best_detector.pth` is selected and no application/generator/restoration baseline
+is promoted. Full report:`FACE_OCCLUSION_CONTINUATION_RESULTS.md`.
+
+Executed source, package/inventories, all420 batches, counters and selection
+match. All2,915 masks independently recount. Strict loading verifies four model
+states and92 unchanged frozen tensors each. Final AdamW snapshot has92 correct
+parameter states covering14,328,209 elements, step420 and epoch30 hash binding.
+CPU reproduces2,915 masks with three pixel differences and identical selection;
+epoch30 masks are all exact. Remote parent invariance remains an executed-code
+check/log claim; its VM tensors were not returned. No local optimizer updates.
+
+Training replay diagnostic:638 pinned cached cases, batch8, unchanged model state.
+Epoch30 training IoU0.93217 versus parent0.96904; weighted exposure0.93427.
+Degraded irregular training/validation IoU0.84717/0.81573. Final real training
+IoU0.91719. Original/source10 replay counts reused after integrity/count checks.
+The fixed training failure grid and clear-error sources were visually inspected.
+Fit still limits the detector; no causal capacity/loss/dose conclusion is proven.
+
+Reflection-only recount excludes the large mouth mask in one training image.
+Source10/epoch30 training reflection recall is34.86%/59.48% over2,031 reviewed
+V3-minus-V2 pixels. Per-case final recall is60.97% and56.56%, after27/30 cumulative
+exposures. The491-pixel validation reflection remains entirely missed at every
+checkpoint. Whole-mask glare-image IoU0.84064 must not be presented as lens-only
+quality. The three-row reflection zoom was inspected; six new diagnostic tests
+pass. Original labels/splits and selection thresholds are unchanged; no test
+predictions were scored.
+
+Windows archive:
 `C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-continuation-results.tar.gz`.
-There is no configured SSH connection and no evidence here that the new VM run
-has started or finished. Actual training remains VM-only. The already sent
+VM source:
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-continuation-results.tar.gz`.
+Archive SHA256:`035777e5aa22ca97c12b07ce96fa2abb076eea5806c408dd7f8d6d6f2bf84028`;
+373,872,188 bytes. Model/optimizer root on VM:
+`~/forensic-dgp/coverage_vm_bundle/outputs/face_occlusion_continuation_vm/`;
+local extracted counterpart:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_face_occlusion_continuation\outputs\face_occlusion_continuation_vm\`.
+Audits:`outputs/face_occlusion_continuation_validation/{results,reproduction}.json`.
+Diagnostics:`outputs/face_occlusion_continuation_fit/` and
+`outputs/face_occlusion_continuation_glare/`. All diagnostic outputs are local.
+L4 reports99.16 seconds,1,047,887,872 peak allocated CUDA bytes for the run.
+
+Next: prepare a single-change matched VM experiment for small reflection/irregular
+fit and clear-face specificity, using equally verified model/optimizer starts.
+Pre-register its control, budget, checks and stopping point; a new training
+recipe/package is not ready yet. Only an eligible detector advances to reviewed
+end-to-end completion. Track1 Phase3 baseline is retained; full Phase5 identity
+training remains pending. External FFHQ overlap and final generalization remain
+unverified. The full goal is active and unmet. Earlier entries are historical.
+
+## Preparation record — 30 September 2026: local audit ready while awaiting return
+
+At this preparation milestone, the expected continuation archive was absent at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-continuation-results.tar.gz`.
+No configured SSH connection or VM execution evidence was available at that
+milestone. Actual training remains VM-only. The already sent
 seven-member continuation package was reverified, with unchanged SHA256
 `93bab8a34d23a48cd8f9232dcbe1cd65c91bd024b2cd6e8480d76e863f82e3f7`.
 Use `FACE_OCCLUSION_CONTINUATION_VM.md` for its exact SSH commands; those source

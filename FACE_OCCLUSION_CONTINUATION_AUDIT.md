@@ -1,10 +1,16 @@
-# Continuation return verification — 30 September 2026
+# Continuation return verification — 1 October 2026
 
-The return checker is ready. The continuation result archive is **absent** locally;
-no new VM execution, model-quality result or promotion is claimed. Actual training
-uses the Linux CUDA runner already packaged in `FACE_OCCLUSION_CONTINUATION_VM.md`.
-This checker performs read-only CPU inference after return, with zero local
-optimizer updates. It does not retry or extend the VM training budget.
+The VM archive has returned and both audit passes completed. Exactly420 fresh
+updates/630 cumulative model updates and all2,915 saved masks were verified.
+CPU inference differs in three pixels, with matching selection decisions; all
+epoch30 masks are exact. Final optimizer states/moments and checkpoint metadata
+passed. No candidate satisfies the unchanged synthetic guard and no promotion
+occurred. Detailed results:`FACE_OCCLUSION_CONTINUATION_RESULTS.md`.
+
+The procedure below records completed work. Existing audit/extraction outputs are
+preserved, so its default commands cannot overwrite those outputs. Actual training
+used the Linux CUDA runner in`FACE_OCCLUSION_CONTINUATION_VM.md`; local verification
+performed zero optimizer updates. The next training recipe is still to be defined.
 
 ## 1. Return the VM artifact
 
@@ -107,8 +113,9 @@ model-quality or CUDA-training result.
 The already sent seven-member package was reverified without modification:
 11,145 bytes, SHA256
 `93bab8a34d23a48cd8f9232dcbe1cd65c91bd024b2cd6e8480d76e863f82e3f7`.
-Its source files and checksum remain unchanged. This new local auditor/document
-is separate from the immutable VM package and has not been pushed.
+Its source files and checksum remain unchanged. The local auditor/document is
+separate from the immutable VM package. Current result documentation is updated
+independently; the original completed runner and its package are preserved.
 
 Read-only package check:
 
