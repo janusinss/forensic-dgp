@@ -1,5 +1,629 @@
 # Forensic DGP: workspace handoff and training runbook
 
+## Current status — 30 September 2026: continuation return pending; local audit ready
+
+The expected continuation archive is not present at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-continuation-results.tar.gz`.
+There is no configured SSH connection and no evidence here that the new VM run
+has started or finished. Actual training remains VM-only. The already sent
+seven-member continuation package was reverified, with unchanged SHA256
+`93bab8a34d23a48cd8f9232dcbe1cd65c91bd024b2cd6e8480d76e863f82e3f7`.
+Use `FACE_OCCLUSION_CONTINUATION_VM.md` for its exact SSH commands; those source
+files remain immutable and have not been pushed.
+
+Local return checker:`scripts/audit_face_occlusion_continuation_results.py`.
+Seventeen checker tests pass;25 pass with previous return-audit/runner tests.
+Small archive fixtures validate safe extraction and member hashes. No new model
+inference or optimizer update occurred during this preparation; model-quality
+evidence awaits the actual return. Full local instructions and proof limits are
+in`FACE_OCCLUSION_CONTINUATION_AUDIT.md`.
+
+The checker verifies420 additional steps/630 cumulative model updates, source
+bytes, global checkpoints11/15/20/30, all2,915 saved masks and unchanged gates.
+Its second pass verifies frozen tensors, preserved original pilot metadata,
+new continuation metadata, final optimizer moments/epoch30 binding and CPU
+checkpoint-to-mask reproduction. It records CPU/VM differences explicitly.
+The ten-row preview includes glare and the mannequin. The expected optimizer
+snapshot exceeds the earlier auditor's64 MiB file bound; the new checker permits
+128 MiB for that file and64 MiB for model checkpoints.
+
+Next: return
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-continuation-results.tar.gz`
+to the Windows path above. Run the local archive audit, then its`--reproduce`
+pass, inspect the grid/glare, and advance only an eligible detector to reviewed
+end-to-end completion. Current restoration/generator/application baselines are
+retained. External FFHQ overlap/generalization remains unresolved; the full goal
+is open. No automatic extra training or promotion.
+
+## Preparation record — 30 September 2026: bounded pretrained weight continuation ready
+
+Replay diagnostic completed without optimization. Pretrained epoch10 training
+IoU0.84827 versus validation0.84378; original parent0.96904/0.97469. Schedule
+weighting still gives0.84747, so the deficit exists on seen examples. Both source
+pools/all covered types regress; degraded irregular training/validation IoU
+is0.73761/0.71069. Three diagnostic tests pass. Parent confusion counts reused
+after cache/source/target checks; both trained detectors inferred on638 cases,
+states unchanged. Failure-ranked training preview inspected. Evidence:
+`FACE_OCCLUSION_REPLAY_RESULTS.md`, `outputs/face_occlusion_replay_fit/results.json`.
+
+One fixed VM follow-up is packaged:20 additional epochs/420 fresh AdamW updates
+from pretrained epoch10 SHA256
+`cdd1752bce8e4a087ce2aac5af73ba81b6316ac9118e47f12acd7a24fcb62669`.
+Architecture/data/masks/source membership/loss/rates/balance/gates are unchanged.
+This is weight continuation with an optimizer reset; original optimizer moments
+were unavailable. Two independent copies of the existing ten-epoch schedule;
+candidate global epochs11,15,20,30 (231,315,420,630 cumulative model updates).
+Four runner tests pass: Linux CUDA guard before work, correct source, independent
+schedule copies and distinct new/cumulative counters. Actual new GPU execution
+remains unverified. Source metrics must reproduce before optimization.
+
+Windows upload files:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-continuation-code.tar.gz`
+and its`.sha256` file. Seven members verified;11,145 bytes; LF checksum; SHA256:
+`93bab8a34d23a48cd8f9232dcbe1cd65c91bd024b2cd6e8480d76e863f82e3f7`.
+These new files are not pushed. `FACE_OCCLUSION_CONTINUATION_VM.md` has exact
+SSH/tmux/preflight/run/download commands for`~/forensic-dgp/coverage_vm_bundle/`.
+Reuse existing dependencies and source/cache; no package reinstall or new
+weight upload is required. `FACE_OCCLUSION_CONTINUATION.md` fixes the hypothesis,
+budget and stopping/selection/export policy.
+
+Next: run the bounded VM experiment and return
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-continuation-results.tar.gz`
+to`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-continuation-results.tar.gz`.
+Audit420 new steps, source/parent/candidate state and masks, all original gates
+and final optimizer binding. Only an eligible detector advances to reviewed
+end-to-end completion. Glare is still missed and must be addressed explicitly;
+external FFHQ pretraining overlap is unknown. Track1 Phase3/Track2 generator and
+application baseline remain unchanged. No automatic extra epoch or promotion.
+The full goal remains open; earlier entries below are historical milestones.
+
+## Current result — 30 September 2026: pretrained detector learns real masks
+
+The returned direct-occlusion pilot is audited. Pretrained epoch10 real IoU
+is0.82283 versus original parent0.06065 and matched random control0.59269;
+real clear false-positive cases are0/10 versus1/10 and10/10 respectively.
+Human-only pretrained IoU0.82201; mannequin reported separately at0.83106.
+Pretrained real training IoU0.85042. Both pretrained epochs5/10 pass the real
+gate, but every candidate fails synthetic retention. Pretrained epoch10 synthetic
+IoU0.84378 versus parent0.97469; missed fraction0.10060 versus0.01648. The one
+validation glare case remains missed. No `best_detector.pth` is selected and no
+restoration/generator/application baseline is promoted.
+
+Independent checks: executed source equals the sent package; both210-update
+logs match the exact fixed schedule; all3,413 saved masks recount to logged
+scores and unchanged gates. Six checkpoint states/metadata are inspected;
+92 frozen head/BatchNorm tensors per state are unchanged and encoder/decoder/
+new-head tensors change. Initial heads match. CPU inference compares all3,413
+masks: every real validation and pretrained synthetic validation mask is exact;
+five pixels differ in other synthetic/training predictions, without changing
+selection. No local optimization. The ten-row mask grid is inspected. Actual
+end-to-end completion improvement remains unverified.
+
+Returned local archive:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-results.tar.gz`;
+Linux VM source:
+`~/forensic-dgp/coverage_vm_bundle/face-occlusion-results.tar.gz`.
+SHA256:`6a27d1685717e941f691235e3ee4489f3ecd304712ce39fce046b0663567b3c7`.
+Extracted states:`outputs/downloaded_face_occlusion/outputs/face_occlusion_pilot_vm/`.
+Audits:`outputs/face_occlusion_validation/{results,reproduction}.json`.
+Full report:`FACE_OCCLUSION_RESULTS.md`; checker:`scripts/audit_face_occlusion_results.py`
+(four tests pass). L4 reports112.13 seconds, approximately1.11GB peak allocated
+CUDA memory for this420-update pilot. Remote parent invariance is an executed
+check/log claim; its tensors were not returned. External FFHQ pretraining overlap
+remains unresolved, so these reused development results are not final accuracy.
+
+Next: diagnose synthetic error strata and638-case replay training fit before
+specifying a bounded VM follow-up using the promising pretrained representation.
+Keep unchanged real/synthetic guards and require reviewed end-to-end completion
+before promotion. Track1 Phase3 restoration remains retained; full Phase5 identity
+run is pending. Entries below are historical preparation/results.
+
+## Preparation record — 30 September 2026: direct occlusion pilot packaged
+
+Track 1 restoration still retains `checkpoints/dgp_zamboanga_final.pth` as the
+Phase 3 application baseline; Phase 5 identity loss awaits its full GPU run.
+Track 2 now has a separate ResNet18 U-Net with a new explicit covered-region
+head. The published FaceExtraction encoder/decoder and a matched random control
+are fully trainable; their new heads are identical. This is an unproven
+initialization experiment, not a promoted completion model. Existing completion
+parent/generator, labels, cached replay, validation/test membership and gates
+are preserved. External FaceExtraction FFHQ pretraining overlap is unresolved.
+
+Twelve local adapter/VM-guard/runtime/package tests pass; CPU initialization and
+reload forwards, five pinned imports and Bash syntax are verified. Zero local
+model optimizer updates. CUDA compatibility and quality improvements remain
+unverified. The fixed pilot uses73 real training labels and638 cached replay
+inputs,210 updates per arm,420 total. Candidates are evaluated only at
+epochs1,5,10 against the same original parent. BatchNorm statistics/reference
+heads stay fixed; both real and synthetic gates are required for metric eligibility.
+No automatic deployment follows a selected `best_detector.pth`.
+
+Ready upload files under the Windows root
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\`:
+`face-occlusion-vm-code.tar.gz` and `face-occlusion-vm-code.tar.gz.sha256`.
+Archive size106,196,726 bytes;16 members independently hash-verified after build;
+checksum uses LF. SHA256:
+`3af2f1b1fd72dd4506c4d1ca4634ab5d5721d1445c043987989522ef421ffea0`.
+The new inventory is `outputs/face_occlusion_bundle_v1/inventory.json`.
+These files have not been committed/pushed; upload the package for this run.
+
+Use the existing Linux VM workspace `~/forensic-dgp/coverage_vm_bundle/`.
+`FACE_OCCLUSION_VM.md` contains exact upload/extraction/tmux/setup/preflight/run
+commands; `FACE_OCCLUSION_PILOT.md` defines the immutable comparison. Setup reuses
+CUDA Torch and installs only five pinned packages into a separate target with
+`--no-deps`. Original coverage inventory and replay cache must still exist.
+The runner refuses existing outputs, verifies old/new input hashes, records
+all batch indices and candidate masks, and exports elapsed time/peak CUDA memory.
+Three checkpoints per arm total approximately345MB before compression.
+
+Next: run the CUDA preflight and bounded comparison on the VM, then return
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-results.tar.gz`
+to `C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-results.tar.gz`.
+Independently audit420 updates and six candidates, recount real/synthetic masks,
+reproduce checkpoint inference, verify frozen state/parent invariance and review
+human/mannequin/glare cases. Only a candidate passing both unchanged gates
+advances to the ten-row end-to-end completion review. The overall goal remains
+open. This preparation record is superseded by the audited result above.
+
+## Latest compatibility result — 30 September 2026: FaceExtraction loads strictly
+
+Full author checkpoint loads with SMP0.5.0, known module-prefix removal only.
+Eight fixed training-only images inferred on CPU, finite256px visible-face outputs;
+preview inspected. No model training. `FACE_EXTRACTION_PROBE.md` records dependencies,
+limitations and evidence. Upper-face/mask separation is visible, but background
+and glasses are excluded too; complement is not a valid direct occlusion mask.
+Next: separate pretrained encoder/decoder adapter with a new explicit occlusion
+head and matched initialization control, before any bounded VM fitting. FFHQ
+pretraining overlap remains unresolved. No application/generator promotion.
+
+## Latest asset audit — 30 September 2026: FaceExtraction weights available
+
+Author source pinned at e75d4a83a696bd7379128319244ef6e5e7885fc8;57.4MB checkpoint
+downloaded and tensor-only inspected, all tensors finite. See
+`FACE_EXTRACTION_ASSET_AUDIT.md` for hashes and exact labels. Source confirms
+visible-face target=parsed support minus occluder alpha; simple inversion is
+invalid. FFHQ pretraining overlap remains unresolved. No datasets imported.
+Next: isolated strict-load inference adapter and fixed training-only visible-face
+diagnostic, before any direct-occlusion adaptation proposal. Required segmentation
+library is absent locally; no dependencies installed and no training occurred.
+
+## Latest research — 30 September 2026: face-specific pretraining target audit
+
+Reviewed author sources for FaceOcc/FaceExtraction, NatOcc/RandOcc, S3POT and
+SegFormer. `DETECTOR_PRETRAINING_REVIEW.md` records evidence and next steps.
+FaceExtraction publishes a pretrained ResNet18 U-Net but predicts visible face;
+inversion would incorrectly include background. NatOcc labels include transparent
+glasses, requiring mapping to our glare policy. S3POT is distinct from prior
+frozen SAM2 heads but its trained adapter availability is not yet verified.
+Next: pin and inspect FaceExtraction code/checkpoint/label construction and
+source overlap before deciding direct-occlusion adaptation. No training/package,
+new model promotion, split changes or automatic external dataset import.
+
+## Latest decision — 30 September 2026: close constrained-pilot branch
+
+Ordinary epoch1 inferred on identical73 real training inputs: IoU0.07567 versus
+parent0.07121 and constrained0.06605. Both adapted candidates miss over91% of
+covered pixels. Ordinary takes21 full-rate updates; constrained takes18 accepted
+updates, six at reduced rates. Not matched accepted dose/compute. Ordinary
+epoch1 still fails synthetic missed-fraction guard; no model qualifies.
+See `RETENTION_EPOCH1_COMPARISON.md`. No additional constrained training proposed.
+Next: consolidate already tested representations/data recipes and research a
+materially different segmentation initialization/pretraining strategy using
+primary sources, without repeating SAM2 frozen-head or optimizer sweeps. Keep
+automatic detection and end-to-end completion requirements intact. No promotion.
+
+## Latest diagnostic — 30 September 2026: constrained pilot lacks training fit
+
+Parent/retained inference on all73 real training images completed, zero updates.
+Training IoU0.07121 ->0.06605; empty covered cases14/47 ->16/47 despite supervised
+loss2.90742 ->2.77760. The62 images present in accepted batches also regress.
+All25 real validation masks reproduced exactly from the returned checkpoint.
+See `RETENTION_FIT_RESULTS.md` and `outputs/retention_fit/results.json`.
+Next: inference-only comparison with archived ordinary epoch1 on identical73
+training inputs to separate short-budget behavior from constraint effects;
+explicitly report21 ordinary versus18 retained accepted updates. No VM rerun,
+promotion, automatic extension or gate change.
+
+## Latest result — 30 September 2026: retention pilot rejected
+
+VM archive received.21 scheduled batches,18 accepted updates,42 trials; source,
+schedule, trial acceptance/counters and final hash verified. All425 masks and
+human/mannequin/glare metrics independently recounted. Initial tensors equal
+parent; generator unchanged. Real IoU0.06065 ->0.05875, synthetic0.97469 ->0.97464;
+both gates fail. Ten-row preview shows omitted/fragmented coverings. No promotion.
+See `RETENTION_RESULTS.md` and `outputs/retention_validation/results.json`.
+Next: inference-only final-checkpoint reproduction on25 real validation inputs
+and parent-versus-final real training fit to distinguish absent adaptation from
+poor transfer. No automatic longer run or weakened gates. Local result:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\retention-results.tar.gz`; VM source:
+`~/forensic-dgp/coverage_vm_bundle/outputs/retention_training_vm/`.
+
+## Latest preparation — 30 September 2026: return-log audit ready
+
+`scripts/audit_retention_logs.py` reads the returned tar without extraction or
+checkpoint deserialization. It checks executed source against the sent bundle,
+source/checkpoint hashes, fixed schedule, separate class ceilings, trial order,
+counters and stopping rule. Three log-fixture tests pass, including deliberately
+invalid acceptance and cross-class compensation. Actual archive validation is
+pending: `outputs/retention-results.tar.gz` is not present locally. This checker
+does not prove optimizer rollback, reproduce replay inference or recount masks;
+those remain return-artifact checks. The sent VM bundle is unchanged.
+Next: receive VM results, run the checker, independently verify final masks and
+checkpoint state, then inspect completion only if the candidate qualifies.
+
+## Latest VM preparation — 30 September 2026: bounded retention pilot ready
+
+`scripts/train_retention_vm.py`, `coverage_retention.py` and fixed protocol are
+packaged in `outputs/retention-code.tar.gz` with an LF checksum. Nine local tests
+pass: rollback, scaled retry equivalence, guard, weighted group losses, frozen
+replay membership and rejection-streak reset. No model fitting locally; GPU
+execution remains unverified. `RETENTION_VM.md` contains exact upload/tmux/SSH
+commands for `~/forensic-dgp/coverage_vm_bundle/`. No git push has occurred.
+Pilot stops at21 scheduled batches or3 fully rejected batches; outputs are
+preserved and archived even on a constraint-driven early stop. Await
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\retention-results.tar.gz` for recount,
+acceptance/state audit and visual review. No baseline/application promotion.
+
+## Latest implementation — 30 September 2026: transactional retention helper
+
+`coverage_retention.py` adds bounded LR trials with full AdamW rollback on
+rejection/exception. Five scalar-fixture tests pass, including half-rate equivalence
+and exact restoration of moments, buffers, gradients, modes and Torch RNG.
+No local model training. `COVERAGE_RETENTION_PROTOCOL.md` fixes a21-batch VM-only
+feasibility pilot, all638 training replay cases per trial, separate covered/clear
+parent ceilings plus1e-6 tolerance, four LR factors and stop after3 fully rejected
+batches. Validation gates remain unchanged. Runner/package not yet ready.
+Next: integrate/test/package the VM runner and provide SSH commands. No promotion.
+
+## Latest result — 30 September 2026: aggregate loss hides replay regression
+
+Completed inference-only loss audit of parent/ordinary/projected checkpoints on
+73 real plus638 cached replay cases, weighted by all1,680 scheduled exposures.
+Mixed loss1.22272 ->0.47252/0.47222, but replay supervised loss0.03797
+->0.07758/0.06859. Both covered and clear replay groups worsen. This is an
+objective tradeoff, not solely a binary-threshold discrepancy. No candidate is
+promoted. See `REPLAY_LOSS_RESULTS.md` and `outputs/replay_loss_audit/summary.json`.
+The model-free summary verifies all711 indices, exposure counts, protocol and
+real-manifest hashes; all three inference arms completed. Zero optimizer updates.
+
+Next: specify/test one VM-only pilot with explicit, separate training-replay
+retention constraints on actual candidate updates and correct optimizer rollback.
+Fix its tolerances, retry limit and compute budget before execution; unchanged
+validation gates still apply. This pilot is proposed, not packaged or started.
+No further identical ordinary/projection run, local training or gate relaxation.
+Local root `C:\xampp\htdocs\YEAR 4\Testing\`; VM root
+`~/forensic-dgp/coverage_vm_bundle/`. Earlier entries below record historical steps.
+
+## Latest diagnostic — 30 September 2026: forgetting on seen replay cases
+
+All638 cached training replay inputs inferred under parent/ordinary/projected.
+IoU0.96904/0.94926/0.95078; clear false-positive cases2/262,11/262,9/262.
+All eight covered type/degradation groups regress relative to parent, so the
+failure is not solely unseen synthetic variations. See `REPLAY_FIT_RESULTS.md`.
+No fitting. Next: inference-only supervised/teacher loss decomposition on the
+same inputs to check surrogate-objective versus binary-metric tradeoffs before
+any new training proposal. No model/application changes.
+
+## Latest analysis — 30 September 2026: step magnitudes weaken simple conflict claim
+
+All420 logged steps summarized in `PROJECTION_STEP_MAGNITUDES.md`. Positive
+first-order replay-change share3.09% ordinary versus1.59% projected; projection
+removed median14.86% real-gradient norm on113 active steps. These are changing-
+batch derivative aggregates, not cumulative replay loss. Do not escalate to
+actual-step projection based on sign counts alone. Next: inference-only fit on
+638 cached replay training cases versus synthetic validation, by covering type
+and degradation, before choosing another training hypothesis. Baselines unchanged.
+
+## Latest result — 30 September 2026: projection rejected
+
+Projection archive received. All8,500 masks and subgroup metrics recounted;
+420 batch identities, script/inventory hashes, parent initialization and all20
+frozen generators verified. No selected epoch. RealIoU ordinary0.32442 versus
+projected0.31973; synthetic0.95082 versus0.95268, both below0.97469 baseline.
+Projection active113 steps;36 of those still oppose replay after AdamW. Ten-row
+preview remains fragmented. See `PROJECTION_RESULTS.md`. Next: quantify logged
+step magnitudes/removed real components before choosing a materially distinct
+intervention. No new training or model promotion.
+
+## Latest VM preparation — 30 September 2026: matched projection runner
+
+`scripts/train_projection_vm.py` and `coverage_projection.py` packaged as
+`outputs/projection-code.tar.gz` plus LF checksum.23 local tests pass; no local
+model training. `PROJECTION_VM.md` provides existing-coverage-workspace commands.
+Forward-only GPU preflight precedes ordinary/projected210-update arms with shared
+initialization/data/cache/schedule, unchanged losses/optimizer/gates and actual
+step alignment logs. GPU execution pending. Next return artifact:
+`outputs/projection-results.tar.gz`. No baseline/application promotion.
+
+## Latest implementation — 30 September 2026: projection helper tested
+
+`coverage_projection.py` implements one-sided real-gradient projection against
+replay plus actual-parameter-step alignment reporting. Seven combined numerical
+tests pass on synthetic tensors; no local model/optimizer run. Fixed treatment
+defined in `COVERAGE_PROJECTION_PROTOCOL.md`; not symmetric PCGrad, no validation
+tuned weight. Next: integrate separate VM-only matched ordinary/projected runner
+on extended73 dataset with identical210-update schedules and frozen replay cache.
+No new VM package ready yet and no baseline replacement.
+
+## Latest result — 30 September 2026: mixed-gradient interaction verified
+
+`coverage-gradient-results.tar.gz` received. Script/helper/protocol hashes and
+six-batch identities verified; zero updates, reported model state unchanged.
+Real/replay gradients oppose in5/6 batches at both final checkpoints (median
+cosines control-0.1488, extended-0.1132); initial3/6. Decomposition error<=1.209e-6.
+Teacher gradient is smaller than covered-real components, not uniformly dominant.
+See `COVERAGE_GRADIENT_RESULTS.md`. Next: implement/test one fixed projection
+comparison with actual AdamW-step alignment logging, preserving the same recipe
+and gates. No new training package yet; no model promotion.
+
+## Latest diagnostic package — 30 September 2026: mixed gradients, no updates
+
+`outputs/coverage-gradient-code.tar.gz` plus LF checksum prepared for existing
+`~/forensic-dgp/coverage_vm_bundle/`. Follow `COVERAGE_GRADIENT_VM.md`. First six
+fixed extended training batches at three checkpoints; full objective decomposed
+with actual weights, gradient sum checked and model state unchanged asserted.
+Two small-tensor tests pass; no local model audit/training and no CUDA execution
+yet. Next external artifact: `outputs/coverage-gradient-results.tar.gz`. This is
+a zero-optimizer diagnostic, not another training run or promotion.
+
+## Latest reconciliation — 30 September 2026: avoid repeating prior negatives
+
+Original overfit/LR/real-only/penalty JSONs inspected; common parent and reused
+control hash links verified. Higher LR, no replay and no penalty already failed
+retention at tested settings. Historical V2/no-teacher/84-update runs are not
+matched controls for current V3/teacher/210-update comparison. See
+`COVERAGE_HISTORY_RECONCILIATION.md`. Remaining diagnostic gap: actual mixed
+real/replay/teacher parameter-gradient interaction; prior gradient audit was
+real-only. Next prepare fixed-batch VM zero-update audit; no new fitting yet.
+
+## Latest diagnostic — 30 September 2026: broad real-training underfit
+
+All73 real training images checked under parent/control/extended (219 inference
+masks, zero optimizer updates). Original41 covered-image IoU control0.38258 versus
+extended0.36032, extended misses60.7% of target pixels. New eyewear still nearly
+unfitted; failure is broader than new categories. Clear false-positive cases8/26
+versus9/26. See `COVERAGE_FULL_FIT.md`. Next: reconcile historical real-only/high-LR
+fit diagnostics before another VM hypothesis; no unchanged rerun or promotion.
+
+## Latest diagnostic — 30 September 2026: added examples not fitted
+
+Inference-only parent/control/extended check on five added train images complete.
+Opaque-lens IoUs <0.001 after7/9 exposures; profile/hand improve modestly but stay
+fragmented. Clear control stays empty in all models. Five-row preview inspected.
+See `COVERAGE_ADDED_FIT.md` and `outputs/coverage_added_fit/`. No optimizer updates.
+Next: all73-real training fit/exposure breakdown before choosing another VM
+intervention. Do not infer generalization or promote from these training metrics.
+
+## Latest result — 30 September 2026: coverage experiment rejected
+
+`coverage-results.tar.gz` received and verified. Both210-update arms completed;
+no epoch meets unchanged gates. Final realIoU control0.32773 / extended0.32442;
+synthetic0.94796 /0.95082 versus baseline0.97469. GlareIoU0 both. All8,500 masks
+recounted; initial state equals parent;638 replay cases reproduce exactly;
+all20 generators unchanged; final25 real masks/arm reproduced exactly on CPU.
+Ten-row preview still shows fragmented/missed coverings. See `COVERAGE_RESULTS.md`.
+No promotion or unchanged rerun. Next: local inference-only fit diagnostic on the
+five added training images under parent/control/extended; no new VM training yet.
+
+## Result checker prepared — 30 September 2026
+
+`scripts/evaluate_coverage_results.py` prepared for 8,500 saved masks across both
+arms/ten epochs. Validates inventory and returned tensor hashes, recounts metrics,
+checks selection decisions and builds a ten-row preview. Two count/error tests
+pass. No actual coverage result archive is present locally yet; GPU run status
+is unknown without the user's SSH output. VM bundle unchanged. Next: user runs
+the commands in `COVERAGE_VM.md` and returns `coverage-results.tar.gz`; then run
+recount plus independent checkpoint/baseline inference before considering promotion.
+
+## Latest VM package — 30 September 2026: coverage comparison ready for preflight
+
+`outputs/coverage-vm-bundle.tar.gz` (60.8MB,1,425 verified files) and LF checksum
+prepared. See `COVERAGE_VM.md` for upload, tmux, CUDA-forward preflight and two-arm
+training commands. Fourteen local tests pass; zero local optimizer updates.
+Runner uses original segmenter with existing consistency1/background0.25 recipe,
+frozen generator, exact shared initialization/replay pixels and pinned schedules.
+GPU execution remains unverified until user runs VM preflight. No VM connection
+configured. Next external input: `outputs/coverage-results.tar.gz` after complete;
+then recount masks, compare arms and inspect completion before promotion.
+
+## Latest protocol — 30 September 2026: matched coverage schedules
+
+Replay-source audit found the added clear control in the prior candidate pool;
+excluded it from both arms. Shared200 sources and schedules frozen in
+`outputs/coverage_protocol_v1/protocol.json`. Both arms210 updates,840 real/840
+synthetic slots; exact synthetic case order and batch positions match; every real
+train image sampled. Separate `coverage_protocol.CoverageBatches` avoids legacy
+shared-RNG confound; three tests pass. Existing runner unchanged. See
+`COVERAGE_COMPARISON_PROTOCOL.md`. Next: VM-only runner consuming fixed sources,
+schedules, archived initial state and common replay tensors. No training yet.
+
+## Latest package — 30 September 2026: mixed training extension V2
+
+`dataset/detector_training_extension_v2/` loads 105 reviewed records: 73 train,
+25 validation, 7 test. All 100 original V3 records unchanged. Five total train
+additions: two opaque eyewear, one clear control, profile respirator, hand/mask.
+Patterned-mask proposal remains excluded. See `TRAINING_EXTENSION_V2.md` for
+manifest hash, screening and limitations. No actual training or app change.
+Next: fixed-budget original/extended-data protocol and replay source exclusion
+verification before packaging VM commands. No new VM run currently due.
+
+## Latest package — 30 September 2026: reviewed training extension V1
+
+`dataset/detector_training_extension_v1/manifest.json` packages all 100 original
+V3 records unchanged plus three reviewed eyewear training additions. Actual
+`detector_training.load_manifest` validation passes: train71 / validation25 /
+test7. All copied file hashes verified. See `TRAINING_EXTENSION_V1.md` for hash,
+provenance and limitations. Local only; no defaults switched or training run.
+Readiness metadata is documentary, not enforced by existing runners. Next:
+broader mixed-covering annotations before a bounded VM data-coverage comparison.
+
+## Latest annotation work — 30 September 2026: eyewear sources
+
+Update: corrected `outputs/eyewear_annotation_proposals_v2/` overlays inspected;
+two opaque-lens labels plus clear control accepted as approximate assistant pilot
+labels, all training-disabled pending integration. Native/resized images screened
+against 4,200 frozen reference paths: no exact or DCT<=6 flags. Three nearest
+reference images visually distinct; identity separation remains unverified.
+`overlap_audit.json` records reference hashes and is hash-bound by review manifest.
+Next: versioned training-source extension, followed by remaining mixed-covering
+annotations before any VM training recipe. Original V3 remains unchanged.
+
+Four native sources inspected; two opaque-lens polygon proposals and one empty
+transparent-glasses control exported to `outputs/eyewear_annotation_proposals_v1/`.
+The control is assistant-reviewed; opaque contours need rim/outer-edge correction.
+One tinted-lens case remains held because eyes are partly visible. All training
+disabled. Source hashes, original training membership and binary masks verified.
+See `EYEWEAR_ANNOTATION_PROGRESS.md`. Next: contour and crop review before merging
+a training-only extension; no VM run yet. Local artifacts not synced to VM.
+
+## Latest preparation — 30 September 2026: real-source coverage screening
+
+Follow-up: three manual crop/mask proposals exported to local
+`outputs/real_expansion_proposals_v2/` with native polygons, source hashes,
+nearest-V3-crop screening and inspected three-row overlay. Initial proposals
+retained in `real_expansion_proposals_v1/`. One contour correction pass completed;
+remaining thin-edge/strap/hand-boundary uncertainty is recorded. None accepted
+or assigned to training. Binary shapes, source hashes and unchanged V3 verified.
+Next: complete boundary review and non-mask/eyewear annotation coverage; no VM
+training yet. Reproducible exporter: `scripts/prepare_real_expansion_proposals.py`.
+
+Screened 1,510 real-occlusion source JPGs against 4,200 unique reference paths:
+123 reference-flagged sources, 195 within-pool pairs, 1,100 unflagged candidates.
+Reverified the existing 25-source queue. Reviewed 24 new source images; four have
+digitally drawn mask appearance and are unsuitable for an unqualified real-mask
+claim. Three native-reviewed candidates cover side-profile respirator, patterned
+respirator and hand-over-mask. All remain training-disabled, without pixel labels
+or split assignment. Whole-image screening does not prove identity/crop separation.
+See `REAL_SOURCE_POOL_AUDIT.md` and `outputs/real_source_pool_audit/` under local
+`C:\xampp\htdocs\YEAR 4\Testing\`; these artifacts have not been synced to
+VM `~/forensic-dgp/`. Next: source-grouped crop/annotation proposals and overlap
+review, preserving V3 validation/test membership. No new training command yet;
+all actual training remains VM-only. Generator/application baseline unchanged.
+
+## Latest reconciliation — 30 September 2026: legacy consistency already tested
+
+Verified replay/consistency reported parent, 200 sources, recipe and final
+checkpoint hashes against V2 evaluation. Consistency synthetic IoU 0.95705 versus
+replay 0.95141, both fail retention; real IoU slightly worse. V2 correction does
+not reverse ranking. V3 adds glare targets in two train/one validation/one test
+images, so no direct matched comparison with modern V3 feature heads. See
+`LEGACY_REPLAY_RECONCILIATION.md` and `outputs/detector_decision_review/legacy_reconciliation.json`.
+Next: audit available real-source coverage and duplicates for a broader reviewed
+training annotation queue, preserving held-out membership and strong-glare scope.
+No unchanged recipe rerun, prediction-derived ground truth or new training yet.
+
+## Latest decision — 30 September 2026: stop extending failed head series
+
+Consolidated six final candidates from saved validation counts. Even label-informed
+presence correction leaves best synthetic IoU 0.96284 below original 0.97469;
+quality failure is not solely gating. Matched anatomical/border/RGB interventions
+do not beat their controls. See `DETECTOR_ARCHITECTURE_DECISION.md` and local
+`outputs/detector_decision_review/results.json`. No new fitting or promotion.
+Teacher preservation was researched, but `detector_replay.py` already implements
+synthetic Bernoulli-KL consistency and earlier results exist. Next: reconcile those
+original-segmenter results, checkpoint ancestry and label versions before another
+architectural proposal; avoid rebranding a failed recipe. No VM run currently due.
+
+## Latest audit — 30 September 2026: initialization discrepancy explained
+
+`refinement-initial-audit.tar.gz` received. Exported recreated tensors independently
+reproduce the original reported VM digest. Parent/gate match originals, residual
+output layer is zero. Local reconstruction differs only in four refinement tensors
+by at most 7.45e-9, explaining the byte-hash mismatch. Underlying runtime/kernel
+cause not isolated; historical initial tensors were never saved. See
+`REFINEMENT_INITIAL_AUDIT.md` and local `outputs/downloaded_refinement_initial/`.
+No training occurred. This removes the reconstruction blocker but does not alter
+the quality failure or justify rerunning refinement. Next: consolidate matched
+experiments into an architecture decision before another bounded hypothesis;
+future runs must save actual initial states before optimization. Original quality
+gates and application/generator baselines remain unchanged.
+
+## Latest result — 30 September 2026: refinement rejected; provenance audit pending
+
+Refinement archive evaluated: semantic synthetic IoU 0.95683 / RGB 0.95501;
+both fail original retention, RGB increases FP, glare still absent. All 1,700
+validation masks recounted and ten-row preview inspected. Parent and gate tensors
+match originals exactly. No baseline/generator promotion. See `REFINEMENT_RESULTS.md`.
+Local seeded initialization digest differs from reported VM digest across PyTorch
+versions; cause unproven. Executed script asserts matched initialization, but initial
+tensors were not archived. This remains a limitation, not a verified equality.
+Next: upload `scripts/export_refinement_initial_vm.py` and run inference-free,
+optimizer-free reconstruction on original VM; commands in result report. Return
+`~/forensic-dgp/expanded_feature_bundle/refinement-initial-audit.tar.gz` to local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\refinement-initial-audit.tar.gz`.
+No additional training recipe until provenance and failed assumptions are reviewed.
+
+## Latest preparation — 30 September 2026: refinement VM bundle ready
+
+VM-only runner `scripts/train_refinement_vm.py` and input-binding/CPU-guard checks
+completed; six combined tests pass. Two-member code archive verified at local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\refinement-vm-code.tar.gz` plus LF checksum.
+Follow `REFINEMENT_VM.md`: extract under `~/forensic-dgp/expanded_feature_bundle/`
+and use existing venv. No git pull required for this standalone code bundle.
+GPU preflight/optimization pending; no local optimizer updates. Both arms receive
+800 updates at LR 0.001, same data/order/initial tensors, original loss, frozen
+parent/gate. RGB binding checks every cached input, both real and synthetic.
+Return VM `~/forensic-dgp/expanded_feature_bundle/refinement-results.tar.gz` to
+local `C:\xampp\htdocs\YEAR 4\Testing\outputs\refinement-results.tar.gz`.
+Next: unchanged validation/visual comparison. Known frozen-gate failure is still
+unresolved; do not promote from training metrics. Earlier runner-not-ready notes
+are superseded by this entry.
+
+## Latest implementation — 30 September 2026: residual refinement head
+
+`refinement_head.py` and four passing tests added. Frozen unweighted control parent,
+128x128 refinement, RGB-enabled versus zero-input semantic control, zero-initialized
+residual output. Both arms preserve actual parent logits exactly at initialization
+on a cached training probe; identical initial state, 14,545 trainable parameters.
+No local optimization, deployment or quality claim. See `REFINEMENT_EXPERIMENT.md`
+and local `outputs/refinement_preparation.json`.
+Next: implement VM-only runner and verify regenerated RGB against each cache row,
+including real images, before issuing training commands. Runner and GPU preflight
+are not ready. Parent VM path is `~/forensic-dgp/expanded_feature_bundle/outputs/expanded_border_training/control_epoch_10.pth`.
+
+## Latest diagnostic — 30 September 2026: synthetic subset localization
+
+Verified 46 exact expanded-input matches in incomplete 77-row local synthetic
+cache; regenerated input/target checks pass. Local inference only, 184 saved masks
+independently recounted. Six degraded failure examples inspected. Distant false
+positives affect background/skin; border weighting increases them (degraded
+irregular far FP 986 -> 1,221 across seven cases). Limited subset excludes revised
+eye/lower inputs and is not full-training evidence. See
+`BORDER_SYNTHETIC_LOCALIZATION.md`, local `outputs/border_synthetic_local/`.
+Next: prepare a bounded image-conditioned residual refinement comparison with a
+semantic-only control, verifying exact parent preservation at initialization.
+No further loss-weight sweep, new local training, threshold change or promotion.
+
+## Latest diagnostic — 30 September 2026: real-training FP localization
+
+Local inference on 68 reviewed training images completed; 272 saved masks
+independently recounted and all real raw/gated counts reproduce VM totals exactly.
+Gated near-boundary FP (within 8 pixels): control 8,128 / border2 8,893; distant
+FP 31 / 68. All 25 clear training images remain empty after gating. Six largest
+treatment-FP rows inspected; boundary and strap discrepancies dominate. Coarse
+polygon targets require caution, not automatic relabeling. No training occurred.
+See `BORDER_TRAINING_LOCALIZATION.md` and local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\border_training_localization\`.
+Next: verify available synthetic training-cache provenance and localize its FP
+separately; do not extrapolate this real-only result to synthetic retention.
+
+## Latest result — 30 September 2026: border weighting rejected
+
+`outputs/expanded-border-results.tar.gz` received and evaluated. Both VM arms ran
+800 matched updates; script, protocol, parent/initial state, schedule and frozen
+gate tensors verified. Local inference on 25 real / 400 synthetic cases per arm;
+all 1,700 saved masks recounted and ten preview rows inspected.
+Synthetic IoU: control 0.95096 / border2 0.94910. Border2 reduces misses but increases
+visible FP (0.00283 -> 0.00367). Neither passes original synthetic retention; glare
+still missed. Raw scores also fail, so presence alone is not the solution.
+See `EXPANDED_BORDER_RESULTS.md`; evidence under local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\expanded_border_validation\`.
+
+Next: training-only false-positive localization on existing local feature caches
+before considering a representation/head change. No weight sweep or unchanged
+rerun. No local training or model promotion. VM results remain at
+`~/forensic-dgp/expanded_feature_bundle/outputs/expanded_border_training/`.
+
 ## Latest preparation — 30 September 2026: matched border experiment ready
 
 `scripts/train_expanded_border_vm.py` implements the specified control versus
