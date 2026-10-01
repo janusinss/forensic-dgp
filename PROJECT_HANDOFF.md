@@ -1,6 +1,229 @@
 # Forensic DGP: workspace handoff and training runbook
 
-## Current status — 1 October 2026: reflection-coverage VM pilot packaged; GPU run pending
+## Current status — 2 October 2026: supported real-mask dataset independently verified
+
+The explicit supported reader and separate 115-record registry are complete.
+Training contains83 images (51 covered/32 clear), validation25 (15/10), test7
+(4/3). All105 previous image/mask bytes, active metadata and split order remain
+unchanged. All73 original training tensor pairs exactly equal `ReviewedMasks`.
+The ten reviewed native annotations add only training data; fourteen pending
+sources remain unlabelled and absent. Labels are approximate assistant annotations.
+
+All252 portable dataset files and raw source hashes pass an independent audit.
+Every original record retains full support, including all validation/test pixels.
+The mannequin keeps validation index8 and basename `new_covered_40.png` for
+separate reporting. Native polygons, affine geometry, masks and support reconstruct;
+source171's unknown lower band remains observed RGB context without supervision.
+The new schema has `supported_records` and no `records` key: the actual legacy
+loader rejects it. Future consumers must explicitly use image/mask/valid triples.
+Seven reader/support and independent audit tests pass. Zero model forwards,
+held-out forwards, optimizer updates or actual training occurred.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\SUPPORTED_REAL_DATA.md`.
+Local registry: `C:\xampp\htdocs\YEAR 4\Testing\dataset\detector_supported_review_v1\manifest.json`,
+SHA256 `860ea1dfba8fa442cab19bf3ab41f6a678109dcdb067c38ec0bd79ce43b51ace`.
+Independent evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\supported_real_dataset_validation_v1\verification.json`,
+SHA256 `308e5ca5b00bf8c52b36eba78605e41d188b754044307fd54d4f39edf16cbfe9`.
+Tools: `supported_real_data.py`, `scripts/build_supported_real_dataset.py`,
+`scripts/audit_supported_real_dataset.py` under the same Windows root.
+The intended future repository counterpart is
+`~/forensic-dgp/dataset/detector_supported_review_v1/`; no new VM copy/upload exists.
+The executed VM bundle remains `~/forensic-dgp/coverage_vm_bundle/`.
+
+Prior teacher/replay, projection, post-update retention and feature-head result
+reports were reviewed. They do not justify another unchanged adaptation run.
+Next: specify one materially different bounded repair with a training-only
+feasibility check before fitting. This dataset is verified; a new GPU recipe is still
+pending. No unchanged teacher/projection/retention run or weakened gate is
+justified. Original gates, generator/application and Phase3 restoration remain
+unchanged. Training remains VM-only. No commit/push occurred; the full goal remains
+active and unmet. Hidden facial features remain plausible estimates.
+
+## Verified milestone — 2 October 2026: ten native annotations reviewed
+
+Four covering annotations and six transparent controls are now reviewed for a
+future supported detector dataset. Fourteen sources remain unlabelled, not empty
+clear targets. The sources retain original Phase4 training membership and prior
+4,210-reference overlap checks. Native source/overlay inspection uses no model
+scores. These are approximate assistant pilot labels, not expert ground truth.
+
+Uniform pixel-center geometry preserves source aspect ratio. Source171's unresolved
+lower helmet/strap band excludes7,268 native pixels from supervision while retaining
+their observed RGB as input context; only padding is neutral. All known positive
+targets remain inside valid support. The first source374 boundary included cheek
+skin; a native-grid refinement reduced1,174→1,011 native pixels in a separate
+preserved version. Nine other proposals and all14 pending records remain unchanged.
+
+Three new native-geometry contracts and two independent support-audit counterexamples
+pass. The independent auditor checks all ten RGB inputs, native rasters, binary masks,
+geometry, source/loss support and hashes; it confirms pending sources remain
+unlabelled and unknown RGB is preserved. The final overlays and all six controls
+were inspected. No model forward, optimizer update or actual training occurred.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\REAL_REFLECTION_PROPOSALS.md`.
+Initial draft: `outputs/real_reflection_proposals_v4/`.
+Reviewed version: `outputs/real_reflection_proposals_v4_refined/`, containing
+`manifest.json`, `verification.json`, `annotation_decisions.json` and two previews.
+These resolve under the Windows root above. Refined manifest SHA256:
+`4d75620863314e7ff26e9c3a4abf3e28a99be46744f7f08730e9af697b9ffe91`;
+annotation decisions SHA256:
+`e6eef67417fa9a152cf7277969a5cae83b8949f5f1038cdadb8bd140c08186ea`.
+The proposal/audit preserve their pre-acceptance flags; the later decision sidecar
+records ten reviewed annotations. No original accepted dataset or held-out row is
+edited. There is no new VM copy/upload; repository remains `~/forensic-dgp/` and
+executed bundle `~/forensic-dgp/coverage_vm_bundle/`.
+
+The explicit valid-support reader and separate opt-in registry are now verified;
+see the current status and `SUPPORTED_REAL_DATA.md` above.
+Legacy `ReviewedMasks` ignores valid support, and its manifest reader does not
+enforce format/readiness metadata; existing runners must not consume these partial
+annotations. After data checks, retention repair still needs a distinct hypothesis
+before a bounded VM pilot. No new GPU recipe is ready.
+Original gates, generator/application and Phase3 restoration remain unchanged.
+Training remains VM-only; no commit/push occurred. The full goal remains active
+and unmet; hidden features remain plausible estimates.
+
+## Verified milestone — 2 October 2026: real reflection sources qualified
+
+The newly supplied `outputs/reflection-coverage-results.tar.gz.sha256` was rechecked
+against the649,143,021-byte archive: SHA256
+`a5714641943da67137a51866e4614b2b2841b2447145c816a51a39e7c52b032b` matches
+the LF checksum and existing full audit/CPU reproduction. No repeat download or
+unchanged training run is required.
+
+The old27-source eyewear queue is now checked against the current105 reviewed
+examples. Already-used sources13/46/49 were excluded. The remaining24 retain their
+original Phase4 training membership. Fresh byte/decoded/DCT screening against
+4,210 reviewed-source/crop, original-validation and benchmark references finds
+zero overlap flags or flagged candidate pairs. Three new leakage counterexample
+tests pass; native/input/artifact hashes verify after execution. Whole-image
+screening does not certify identity separation or exclude every alternate crop.
+
+All five native-aspect pages were inspected: eight covering proposals, ten
+transparent-control proposals and six deferred boundaries. Source119 contains a
+background face;106 includes foreground food;218 retains eye detail through tint;
+310 has tinted lenses and a hand. Several proposed controls contain small glints
+or tint that need close inspection. No new masks or empty labels are approved.
+There were no model forwards, optimizer updates, split changes or VM uploads.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\REAL_REFLECTION_REVIEW.md`.
+Local artifacts: `outputs/real_reflection_review_v4/{manifest,reference_signatures,visual_review}.json`
+plus24 native review images and five pages. Manifest SHA256:
+`76bcfe8061b331f09eaa78ae8f2c2e6a372e9da1042d5b4723454526b81d846c`.
+These resolve under the Windows root above; no new VM counterpart exists.
+VM repository remains `~/forensic-dgp/`, executed bundle `~/forensic-dgp/coverage_vm_bundle/`.
+
+The subsequent ten native annotations are now reviewed; see the current status
+above and `REAL_REFLECTION_PROPOSALS.md`. Fourteen sources remain unlabelled.
+The explicit supported reader and separate opt-in registry are now verified. Preserve
+original gates, held-out membership and baseline generator/application. Synthetic
+retention still needs a distinct repair hypothesis; opaque lenses alone cannot
+resolve small/partial glare transfer. No new VM training recipe is ready. Training
+remains VM-only; the goal remains active and unmet. No commit/push occurred.
+
+## Verified milestone — 2 October 2026: fixed crop diagnostic rejected
+
+The fixed input-only face-crop diagnostic is complete. It used all73 real training
+examples and280 reflection fixtures with two frozen CPU model states; no optimizer
+updates or held-out forward passes occurred. There are171 crops,181 no-zoom
+fallbacks and one invalid/missing-face fallback. The independent saved-mask audit
+recounts all706 masks and353 source/target/affine mappings, checks original mask
+hashes, exact fallback and outside-ROI preservation, and reproduces the logged
+metrics and predeclared failed decision. Two new counterexample tests pass; the
+eight geometry/inference and three protocol tests passed before execution.
+
+Final reflective42 training IoU drops0.92536→0.90770; fixture IoU drops
+0.80937→0.78964. Lens-only recovery drops1,369/2,031(67.41%)→1,018/2,031(50.12%).
+Visible false positives increase; all26 real/56 fixture clear examples remain
+empty. The fixed six-row preview was inspected. The two real lens crops enlarge
+only about1.054×/1.032×; interpolation adds no native detail. SCRFD emitted static
+output-shape metadata warnings at256 input; box correctness and warning cause
+were not independently established. The executed runner checks unchanged model
+state; the independent saved-mask auditor performs no model execution.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\FACE_CROP_RESULTS.md`.
+Immutable specification: `C:\xampp\htdocs\YEAR 4\Testing\FACE_CROP_DIAGNOSTIC.md`.
+Local protocol: `outputs/face_crop_protocol_v1/protocol.json`, SHA256
+`de64663b607f34f65f105029d4862d29cc78e799c8b993ff10ad36d9280c31a3`.
+Local evidence: `outputs/face_crop_diagnostic_v1/{results,cases,verification}.json`
+and `preview.png`; verification SHA256:
+`c670613b4830daa150f716ef35dad37ac2802f57237abeb285906f6365116261`.
+Relative paths resolve under the Windows root above. Frozen model origins remain
+`~/forensic-dgp/coverage_vm_bundle/outputs/reflection_coverage_vm/`; these CPU
+artifacts have no new VM counterpart. No training, dependency reinstall, commit,
+push or new VM upload occurred. Executed recipes/protocols stay unchanged.
+
+Next: stop this crop line without another margin/confidence/threshold/epoch sweep.
+Review additional real reflection sources and native covering boundaries in a new
+training-only dataset version. The existing27-source eyewear queue has proposals,
+not accepted pixel labels; exclude already-used reviewed sources before additions.
+Preserve held-out membership and original real/synthetic gates. Retention repair
+needs a distinct hypothesis. No new VM training recipe is ready; actual training
+remains VM-only. Baseline generator/application and Phase3 restoration are retained.
+The subsequent real-source qualification is complete; see the current status
+above. Ten later native annotations are accepted for the separate supported
+dataset, not for generator training. The goal remains active and unmet; hidden
+features remain plausible estimates.
+
+## Verified milestone — 2 October 2026: reflection return; no eligible checkpoint
+
+The649,143,021-byte reflection archive is now present locally:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\reflection-coverage-results.tar.gz`.
+VM origin:
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/reflection-coverage-results.tar.gz`.
+Local SHA256:`a5714641943da67137a51866e4614b2b2841b2447145c816a51a39e7c52b032b`.
+The downloaded VM-generated LF checksum now matches. No further checksum download
+is required. Safe extraction verifies 4,517 file hashes and all 179 sent input/
+provenance members. All 504 logged updates, exposures, losses, counters and original
+selection decisions reconstruct. All 4,315 masks independently recount. Source/
+final model and moment tensors, frozen statistics and expected steps verify:
+each arm adds 252 updates, ending at model update 882 and optimizer step 672.
+
+CPU reproduction compares all 4,315 masks. One pixel differs in reflective 36
+synthetic case 359; all other saved masks match. All CPU/VM selection decisions
+agree. Its numerical cause was not independently isolated. No local optimizer is
+constructed or updated. Remote parent invariance remains an executed-code/log
+claim because its VM tensors were not returned.
+
+Both arms have zero eligible checkpoints. Control 42/reflective 42 real IoU is
+0.81207/0.81462 and synthetic 0.93134/0.93292 versus required at least 0.97469.
+Reflective 36 real IoU 0.83172 is also ineligible. Source 30 already fails retention.
+Reflection training-fixture IoU rises to 0.80937, but every candidate misses all
+491 real validation lens pixels. Two real training reflections have final
+reflective lens-only recall 67.41% versus source 59.48%; this is training fit.
+
+The fixed ten real rows, lens zoom, clean/degraded fixtures and fixed synthetic
+sheets were inspected. Medical masks are fuller and clear rows stay empty, while
+degraded irregular boundaries lose coverage. Final reflective loses 145,010 parent
+true-positive pixels and recovers 20,268 parent misses. No end-to-end completion
+improvement is established. Generator/application and Phase 3 baselines are retained.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\REFLECTION_COVERAGE_RESULTS.md`.
+Extraction: `C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_reflection_coverage\outputs\reflection_coverage_vm\`;
+VM source: `~/forensic-dgp/coverage_vm_bundle/outputs/reflection_coverage_vm/`.
+Local audits: `outputs/reflection_coverage_validation/{results,reproduction,members}.json`;
+diagnosis/review: `outputs/reflection_coverage_analysis_v1/{results,visual_review}.json`.
+These relative artifacts resolve under the Windows root above. Preliminary
+inspection/readiness artifacts retain historical pending flags. Do not rerun
+completed tools over their preserved outputs.
+
+The local CPU reproduction and error analysis tools have five and four passing
+contract tests respectively. Actual checkpoints were also executed on CPU.
+Existing pinned modules were read through the authorized unsandboxed rerun after
+the initial sandbox dependency read failed. No dependency reinstall, training,
+git commit/push or new VM upload occurred. The sent/executed recipe is unchanged.
+
+The subsequent fixed face-size diagnostic is now complete and rejected; see the
+current status above and `FACE_CROP_RESULTS.md`. Additional real reflections need
+a separate training-only dataset version and native mask review. Retention repair
+needs a distinct predeclared hypothesis; another identical run or renamed teacher/
+projection experiment is not justified. No new training recipe is ready. Actual
+training stays on the VM. The goal still requires both original safeguards and
+reviewed end-to-end improvement; it remains active and unmet. Hidden features
+remain plausible estimates.
+
+## Prepared milestone — 1 October 2026: reflection-coverage VM pilot packaged
 
 The independent local return checker is also prepared:
 `scripts/audit_reflection_coverage_results.py`. Nine counterexample/fixture tests
