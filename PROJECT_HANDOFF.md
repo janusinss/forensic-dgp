@@ -1,6 +1,142 @@
 # Forensic DGP: workspace handoff and training runbook
 
-## Current result — 1 October 2026: continuation audited; synthetic guard still fails
+## Current result — 1 October 2026: matched loss return audited; no eligible detector
+
+The matched VM archive is present and both independent audit passes are complete.
+Both arms execute210 new updates from the same epoch30 model/AdamW moments.
+All420 logged steps, loss terms, counters, code hashes and gates reconstruct;
+all2,915 saved masks recount. Strict CPU loading verifies all four states and92
+frozen tensors each. Source moments are step420; both final snapshots bind to
+their respective epoch40 model at step630/840 lifetime model updates. CPU
+compares all2,915 masks with one different pixel (control35, synthetic case394),
+and identical selection. Both final states' saved masks are exact. No local
+optimizer updates and no generator/application/restoration promotion.
+
+Global40 control/focus real IoU is0.81345/0.82323 and synthetic0.93892/0.92839,
+below original synthetic0.97469. Each has1/80 false-positive clear synthetic
+cases versus required0. Human-only IoU is0.81562/0.82248; mannequin separately
+0.79109/0.83089. Every candidate passes the original real gate and fails retention;
+neither arm has`best_detector.pth`. Training reflection recall improves to84.93%
+control and90.50% focus from source30's59.48%, but the491-pixel validation
+reflection is entirely missed. Full result:`FACE_OCCLUSION_FOCUS_RESULTS.md`.
+
+Both final states were inferred on638 pinned training replay cases, batch8,
+tensors unchanged. Control/focus training IoU0.95688/0.94281 versus source30
+0.93217 and original parent0.96904. Source counts reused after provenance,
+target/summary and saved-mask checks. Weighting reduces visible false pixels
+but misses more synthetic covered pixels; it does not establish a global benefit.
+Thirteen new checker/reproduction/review tests pass;30 with previous audit tests.
+
+The declared ten-row visual cohort is reused, including mannequin8 and glare23:
+`[0,1,5,6,2,3,4,17,8,23]`. The first recount grid's assumed mannequin index22
+was a clear case; it remains preserved. The corrected review grid, reflection
+zoom and fixed training failure grid were inspected. Scores were unaffected.
+
+All180 unique source photos used for262 clear training replay cases were
+contact-screened in source-ID order; eight also at native resolution. Two likely
+intrinsic occlusions (source160 dark lenses and177 scene reflection) have
+procedural zero masks; they need source-only mask review. Four other eyewear
+cases remain ambiguous. A source33 thumbnail suspicion was native skin
+highlights, not lens glare. No annotation, source, cache, split, teacher or gate
+changed. The90 Asian-source photos include52 nonsquare images; the90 FFHQ
+photos are square. `CompletionDataset` currently resizes them directly to a
+square, changing nonsquare geometry. This is a measured training subset,
+not a whole-dataset count or proven causal explanation.
+
+Windows archive:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-focus-results.tar.gz`.
+VM source:
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-focus-results.tar.gz`.
+586,330,604 bytes; SHA256:
+`1cc12eec33ec30bc97acb483f9c1806a20fb353b817a04938738b6cf365f3bdd`.
+Local extracted model root:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_face_occlusion_focus\outputs\face_occlusion_focus_vm\`;
+VM models:`~/forensic-dgp/coverage_vm_bundle/outputs/face_occlusion_focus_vm/`.
+Audits:`outputs/face_occlusion_focus_validation/{results,reproduction,members}.json`;
+review:`outputs/face_occlusion_focus_review/`; fit:`outputs/face_occlusion_focus_fit/`;
+source screen:`outputs/clear_replay_scope_v1/`. These diagnostic outputs are local.
+The L4 reports103.03 seconds and1,163,518,976 peak allocated CUDA bytes.
+The executed package/runner/specification and previous inputs remain immutable;
+default output directories cannot be rerun or overwritten.
+
+Next: implement versioned clean-source qualification, geometry preservation and
+targeted reflection coverage before another matched VM recipe. Separate paired
+uncovered completion bases from unpaired real occlusion images; review proposed
+masks and source-only augmentation previews first. Existing benchmarks/gates
+remain unchanged. No new GPU package is ready and another identical run is
+unjustified. Only an eligible detector advances to reviewed end-to-end completion.
+Track1 Phase3 baseline remains`checkpoints/dgp_zamboanga_final.pth`; full Phase5
+identity training is pending. Track2 generator/application baselines are retained.
+External pretraining overlap, label adjudication and final generalization remain
+unresolved; the full improvement goal is active and unmet. Older sections are
+historical milestones, not instructions to repeat completed runs.
+
+## Preparation record — 1 October 2026: matched loss pilot ready for VM execution
+
+The next bounded detector experiment is packaged and locally verified. New CUDA
+execution and improved output are not established. Actual training remains
+VM-only. Local Windows root:`C:\xampp\htdocs\YEAR 4\Testing\`; VM repository:
+`~/forensic-dgp/`; experiment execution root:`~/forensic-dgp/coverage_vm_bundle/`.
+
+The audited epoch30 detector and its exact saved AdamW moments initialize both
+arms independently. Compare the unchanged loss (`control`) with the same loss
+plus0.25 region-balanced BCE (`component_focus`). Each arm has10 additional
+epochs/210 updates,420 total. Check global epochs35/40:735/840 cumulative model
+updates and525/630 optimizer lifetime steps. Architecture, data, batch order,
+rates, consistency teacher, original real/synthetic gates and probability
+threshold0.5 are fixed. No optimizer reset, adaptive budget or automatic promotion.
+
+Training targets remain73 reviewed real cases and638 frozen replay cases.
+The accepted V3-minus-V2 reflection additions in training cases15/46 are separated
+from remaining foreground for auxiliary weighting only. One686-pixel glare touches
+an11,381-pixel medical mask; this separation stops its weight being absorbed by
+the larger region. The other two reflection regions contain822/523 pixels.
+No label union, image, split or held-out training membership changes.
+
+Seventeen new fixture tests and six relevant previous tests pass (23 total).
+Three runbook Bash blocks pass syntax checking; Python modules compile.
+All711 target maps and92 saved optimizer states /14,328,209 parameter elements
+are verified. One read-only CPU source batch produces finite supervised/auxiliary
+loss0.03546993/0.05711475 with every tensor unchanged and zero local optimizer
+updates. Linux/CUDA preflight additionally restores exact moments with zero
+steps; full VM execution requires audited source/baseline metrics to reproduce.
+
+Upload these two Windows files to VM home:
+
+- `C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-focus-code.tar.gz`
+- `C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-focus-code.tar.gz.sha256`
+
+The11-member package is75,230 bytes, all members verified, checksumLF.
+Archive SHA256:`3c0834de0c89b5189170a9327a6bfb3112a8c11f03100229122733e73036892c`.
+Inventory SHA256:`91b23aaa05c06c377a5c50c3c0bf53a5008e7ec7bd0d5ae657684d81b0b05471`.
+New map registration:`outputs/face_occlusion_focus_bundle_v1/target_maps_v2.json`,
+SHA256:`7f5144e1d9f80ba9aa92a78d4dac40f20a6a9521581dfd721dcf44c40e7ac1f1`.
+Priority registration:`outputs/face_occlusion_focus_bundle_v1/priority_regions.json`,
+SHA256:`c3f67d52406f9334a602b915e3852f1059f965dffb6a526746282a1b9e78aea6`.
+All registration paths are relative to each workspace/bundle root above.
+The earlier local`target_maps.json` is an unpackaged draft; it remains preserved.
+Every previous executed input/inventory is preserved. New code/docs are
+uncommitted and unpushed; a repository`git pull` does not install this isolated
+bundle. No new weight/data upload or dependency installation is needed.
+
+Recipe:`FACE_OCCLUSION_FOCUS.md`; exact SSH/tmux/preflight/run/download commands:
+`FACE_OCCLUSION_FOCUS_VM.md`, at Windows root and in the new VM bundle.
+Candidate directories are`outputs/face_occlusion_focus_vm/{control,component_focus}/`.
+`best_detector.pth` is saved within an arm only when both unchanged gates pass.
+
+Next: execute the matched VM pilot and return
+`/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-focus-results.tar.gz`
+and its`.sha256` to`C:\xampp\htdocs\YEAR 4\Testing\outputs\`.
+Audit420 step logs,2,915 masks, source/moment/final bindings, frozen states and
+unchanged selection. Compare matched checkpoints and inspect the ten-row grid
+and reflection zoom before an eligible detector advances to end-to-end completion.
+Track1 Phase3`checkpoints/dgp_zamboanga_final.pth` is retained; full Phase5 identity
+training remains pending. Track2 completion generator/application remain at their
+current baselines. External pretraining overlap, approximate polygons and tiny
+reflection sample size limit generalization claims; the broader improvement goal
+remains unmet. Earlier sections are historical milestones.
+
+## Audit record — 1 October 2026: continuation audited; synthetic guard still fails
 
 The continuation archive is received and both audit passes completed. The fixed
 420 additional updates reach630 cumulative model updates. Epoch30 synthetic IoU

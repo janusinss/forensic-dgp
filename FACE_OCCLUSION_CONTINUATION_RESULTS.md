@@ -147,14 +147,18 @@ Checkers:`scripts/audit_face_occlusion_continuation_results.py`,
 The VM runner/specification/package remain immutable and previously completed;
 its default output cannot be rerun into the existing directory.
 
-Next: prepare one matched, bounded VM intervention targeting underfitted small
+Follow-up: one matched, bounded VM intervention targets underfitted small
 reflection regions and degraded irregular boundaries while retaining clear-face
-specificity. Use the verified final model/optimizer for equal starting conditions
-if exact optimizer continuation is chosen. Keep the existing real/synthetic
-guards, source membership and held-out exclusions. Pre-register the single
-change, matched control, budget, checks and stopping point before execution.
-A new VM recipe/package is not yet ready. Do not replace the failed pilot with
-another identical run or promote a checkpoint from training fit.
+specificity. The verified final model/optimizer give equal starting conditions.
+The existing real/synthetic guards, source membership and held-out exclusions
+remain fixed. Its single change, matched control, budget, checks and stopping
+point are registered before execution.
+The follow-up is now prepared as the matched region-weighting pilot in
+`FACE_OCCLUSION_FOCUS.md`; `FACE_OCCLUSION_FOCUS_VM.md` has exact VM commands.
+It starts both arms from verified epoch30 weights and saved optimizer moments,
+with210 new updates per arm and unchanged gates. Local tests, source forward and
+all training-only maps pass; new CUDA execution/output quality remain unverified.
+Do not promote a checkpoint from training fit.
 
 Only an eligible detector advances to reviewed end-to-end restoration/completion.
 Track1 retains`checkpoints/dgp_zamboanga_final.pth`; full Phase5 identity training

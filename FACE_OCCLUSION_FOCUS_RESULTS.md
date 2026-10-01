@@ -1,0 +1,165 @@
+# Matched region-weighting results — 1 October 2026
+
+Both VM arms completed their fixed 210 additional updates from identical
+epoch30 weights and saved AdamW moments. All four candidates pass the original
+real gate and fail synthetic retention. No `best_detector.pth` exists in either
+arm. The application, completion generator and Phase3 restoration baseline are
+retained; reviewed end-to-end improvement is not established.
+
+## Verified comparison
+
+| Detector | Real validation IoU | Synthetic validation IoU | Real training IoU | Training reflection recall |
+| --- | ---: | ---: | ---: | ---: |
+| Source30 | 0.81739 | 0.92039 | 0.91719 | 59.48% |
+| Control35 | 0.83001 | 0.93340 | 0.93590 | 83.55% |
+| Focus35 | 0.80394 | 0.92484 | 0.90744 | 67.26% |
+| Control40 | 0.81345 | 0.93892 | 0.93954 | 84.93% |
+| Focus40 | 0.82323 | 0.92839 | 0.93433 | 90.50% |
+
+Real validation has25 cases, real training73 and synthetic validation400.
+Reflection recall uses only the2,031 accepted V3-minus-V2 pixels in two training
+examples, excluding the medical mask in case46. The single491-pixel validation
+reflection is entirely missed by every checkpoint. The training improvement
+does not demonstrate transfer to that case or to a population.
+
+At global40, human-only real IoU is0.81562 for control and0.82248 for focus;
+the known mannequin is separate at0.79109/0.83089. Real clear false-positive
+cases remain0/10. Passing the real gate compares against the original common
+parent's0.06065 IoU; it does not imply consistent improvement over source30.
+
+| Global40 synthetic measure | Original required reference | Control | Focus |
+| --- | ---: | ---: | ---: |
+| IoU, minimum | 0.97469 | 0.93892 | 0.92839 |
+| Missed fraction, maximum | 0.01648 | 0.03790 | 0.06164 |
+| Visible false-positive fraction, maximum | 0.001333 | 0.003631 | 0.001581 |
+| Empty covered cases, maximum | 1 | 1 | 0 |
+| Clear false-positive cases, maximum | 0 | 1/80 | 1/80 |
+
+The auxiliary improves final training reflection fit and reduces visible false
+pixels relative to control. It also misses more synthetic covered pixels and
+has lower synthetic IoU. This one seed/budget supports neither promotion nor
+a claim that region weighting is globally better. No gate or threshold changed.
+
+## Independent return verification
+
+Archive: `C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-focus-results.tar.gz`.
+VM source: `/home/janusdominic0/forensic-dgp/coverage_vm_bundle/face-occlusion-focus-results.tar.gz`.
+Size586,330,604 bytes; SHA256
+`1cc12eec33ec30bc97acb483f9c1806a20fb353b817a04938738b6cf365f3bdd`.
+
+The sent11-member package and every executed new member match their hashes.
+All previous inventoried inputs are unchanged. Safe extraction verifies2,944
+files against a fixed whitelist. All420 logged steps match the declared order,
+arm weights and separate supervised/teacher/auxiliary loss arithmetic. Candidate
+means, new/model/optimizer counters and original gate decisions independently
+reconstruct. All2,915 saved binary masks recount against verified targets.
+
+Both copied source files match their exact model/optimizer SHA256. The saved
+optimizer has92 finite, correctly shaped parameter states covering14,328,209
+elements at step420. The executed runner asserts exact independent restoration
+before each arm; its restoration logs match. Both final snapshots bind to their
+own epoch40 model, have92 changed moment states, unchanged settings and step630.
+Each final model has840 lifetime model updates. The two arms are separate
+continuations; their updates are not merged into one model.
+
+Strict CPU loading verifies all four candidate architectures and preserved
+pilot/continuation metadata. Each has92 unchanged reference-head/BatchNorm
+tensors, with60 encoder,30 decoder and2 new-head tensors changed. CPU comparison
+of all2,915 saved masks differs by **one pixel** in control35 synthetic case394.
+Every other saved mask is exact, including both final states. The runtime cause
+of that pixel difference is unproven. CPU selection agrees with the VM for every
+candidate. All local model states remain unchanged; no optimizer was constructed
+in the inference checks and no local training updates occurred.
+
+Remote original-parent/generator invariance remains an executed-code/log claim;
+its VM tensors were not returned. Local parent inference is separately checked
+for unchanged tensors. Per-arm starting optimizer objects and intermediate/best
+optimizer snapshots were not returned independently.
+
+The L4/PyTorch2.9.1+cu129 run reports103.03 seconds excluding archive compression,
+peak allocated CUDA memory1,163,518,976 bytes and reserved1,254,096,896 bytes.
+
+## Cached training fit
+
+Both final detectors were inferred on all638 frozen training replay cases in
+CPU batches of8; model state remained unchanged. Source30 counts were reused
+after checkpoint/cache/protocol provenance, target metadata, aggregate and every
+saved source-mask recount check. They were not regenerated by another inference.
+
+| State | Unique training replay IoU | Missed fraction | Visible false-positive fraction | Clear errors /262 |
+| --- | ---: | ---: | ---: | ---: |
+| Source30 | 0.93217 | 0.05735 | 0.001151 | 2 |
+| Control40 | 0.95688 | 0.02650 | 0.001778 | 0 |
+| Focus40 | 0.94281 | 0.05254 | 0.000504 | 2 |
+
+The original parent previously scored0.96904 on these training cases. Both
+new states remain below it. The control improves training and validation
+synthetic IoU more than the auxiliary arm; the auxiliary's conservative tradeoff
+also appears on seen examples. Fit and transfer both remain relevant, without
+a proven causal explanation or a justified new loss-weight sweep.
+
+## Visual and source-scope review
+
+The prior declared ten validation rows are reused unchanged:
+`[0,1,5,6,2,3,4,17,8,23]`. Index8 is the mannequin and23 the reflection case.
+The first recount grid mistakenly included clear case22 instead of the mannequin;
+that preparation image is preserved. `review_preview.png` corrects the visual
+cohort without changing any score. The fixed grid, reflection-only zoom and
+prior fixed ten-row training failure grid were inspected. Medical-mask bodies
+are generally detected; straps, patterned cloth and degraded irregular shapes
+remain inconsistent. No candidate detects the validation reflection.
+
+A separate source-only screen examines **all180 unique photos** used for262
+cached training-clear cases, sorted by source ID and without error ranking or
+validation/test input. Both source pools contribute90 photos. Eight suspected
+examples were also viewed at native resolution. Source160 (`55926.png`, dark
+lenses) and177 (`39379.png`, scene reflection) are **likely** intrinsic occlusions
+despite procedural clear targets. Their three cached clear cases have six
+negative exposures per existing ten-epoch schedule. These are assistant screening
+candidates, not independently adjudicated masks or proof of the whole failure's
+cause. Four other eyewear examples need boundary/tint review. Source33 was a
+thumbnail false alarm: native skin highlights, without eyeglass frames.
+
+Among the90 Asian-source photos in this screen,52 are nonsquare; all90 FFHQ
+sources are square. `CompletionDataset` directly resizes native images to a
+square at`completion_data.py:53`. This changes nonsquare geometry before
+synthetic covering and also uses the resized photo as the completion target.
+The measured subset does not establish counts for the whole10,000-image pool
+or prove that geometry caused the observed detector errors.
+
+The source screen shows why "no added synthetic covering" cannot automatically
+mean "unoccluded, clean ground truth." No source, accepted label, cache, split,
+teacher, threshold or benchmark was changed. Unflagged thumbnails are not
+certified clean targets. The two likely conflicts need source-only mask review;
+intrinsically obscured photos belong in unpaired detector data rather than
+uncovered completion ground truth.
+
+## Evidence and next action
+
+Windows root:`C:\xampp\htdocs\YEAR 4\Testing\`; VM root:
+`~/forensic-dgp/coverage_vm_bundle/`. Local extraction:
+`outputs/downloaded_face_occlusion_focus/outputs/face_occlusion_focus_vm/`.
+Audits:`outputs/face_occlusion_focus_validation/{results,reproduction,members}.json`.
+Visual/reflection review:`outputs/face_occlusion_focus_review/`.
+Training fit:`outputs/face_occlusion_focus_fit/`.
+Source screen:`outputs/clear_replay_scope_v1/{cohort,source_screening}.json`.
+These diagnostic outputs are local, relative to the Windows root.
+
+Checkers:`scripts/audit_face_occlusion_focus_results.py`,
+`scripts/reproduce_face_occlusion_focus_results.py`,
+`scripts/review_face_occlusion_focus_results.py`.
+Thirteen new audit/reproduction/review fixture tests pass;30 pass including
+the17 previous continuation-audit fixtures. All sent VM files remain immutable.
+
+Next: implement a versioned source-qualification path separating clean paired
+bases from intrinsically obscured detector examples, preserving nonsquare
+geometry, and covering the admitted partial/colored/scene reflection types.
+Review source masks and augmentation previews before a new matched VM recipe.
+Keep the original benchmark and selection safeguards; no identical rerun or
+extra epoch is currently justified. A new training package is not ready.
+
+Only an eligible detector advances to reviewed end-to-end completion. Track1
+retains`checkpoints/dgp_zamboanga_final.pth`; full Phase5 identity training is
+pending. External pretraining overlap, identity separation and generalization
+remain unresolved. Hidden facial features are plausible estimates. The full
+improvement goal remains unmet.
