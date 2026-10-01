@@ -1,6 +1,135 @@
 # Forensic DGP: workspace handoff and training runbook
 
-## Current result — 1 October 2026: matched loss return audited; no eligible detector
+## Current status — 1 October 2026: reflection-coverage VM pilot packaged; GPU run pending
+
+The independent local return checker is also prepared:
+`scripts/audit_reflection_coverage_results.py`. Nine counterexample/fixture tests
+pass, and the sent179-file package independently verifies. Report:
+`REFLECTION_COVERAGE_RETURN_AUDIT.md`. The result archive and checksum are not
+present locally; there is no new GPU/model-quality evidence or live VM job handle.
+This checker was added after packaging and requires no new VM upload. It does
+not change the sent runner, code/data inventory or selection decisions. After
+return, it audits504 updates and4,315 masks, creates the fixed ten-row grid and
+records CPU prediction reproduction/visual review as still pending. Do not
+infer eligibility or improvement from checker tests alone.
+
+A bounded matched Track2 **detector** pilot is ready for the existing VM bundle.
+It forks the audited epoch30 detector and exact step420 AdamW moments into clear
+control and reflective arms,252 updates each. Both share the same sanitized core
+replay, real training examples and original-parent consistency term. Only the
+supplemental reflection slot differs. Original real/synthetic selection gates,
+the400-case benchmark, generator and application baselines remain unchanged.
+This is a prepared experiment, not a trained improvement or eligible checkpoint.
+
+The additional fixed44 native-aspect source proposals were inspected;24 additions
+join the original four. There are28 reviewed low-resolution uncovered bases,
+14 per source pool, and280 immutable clean/degraded camera fixtures:224 partial
+reflections plus56 clear controls. Uniform affine scaling preserves aspect ratio;
+padding contributes no supervised loss. Degraded targets use declared conservative
+effect/padding morphology. All280 cases hash/recount and all five lens/camera
+sheets were inspected. Frames/textures remain simplified and real transfer is
+unproven. Registry counts are28 paired,149 pending and3 unpaired candidates.
+
+Eight uncertain sources `[67,78,107,118,121,122,160,177]` are excluded from both
+arms' core exposures using49 registered replacements matching covered/clear and
+camera strata. No cached image/target, source split or accepted real mask changed.
+The two arms preserve safe/core real positions. The fixed twelve-epoch schedule
+uses the old ten epochs followed by its first two as a declared tail. Every224
+positive fixture and56 clear fixture appears; supplemental weight is0.25 and new
+fixtures receive no parent teacher labels. Training metrics never select models.
+
+The read-only CPU source forward validates finite core/control/reflective/padded
+losses, unchanged model/parent tensors and92 exact optimizer states at step420.
+No local optimizer was created or updated. Seventeen new tests plus37 existing
+completion/geometry contracts pass:54 total. `source_check.json` binds executed
+code and data. New CUDA execution is unverified; the VM preflight must pass first.
+
+| Current file/artifact | Windows local | Linux VM |
+| --- | --- | --- |
+| Fixed recipe | `C:\xampp\htdocs\YEAR 4\Testing\REFLECTION_COVERAGE.md` | `~/forensic-dgp/coverage_vm_bundle/REFLECTION_COVERAGE.md` |
+| Exact launch/download commands | `C:\xampp\htdocs\YEAR 4\Testing\REFLECTION_COVERAGE_VM.md` | `~/forensic-dgp/coverage_vm_bundle/REFLECTION_COVERAGE_VM.md` |
+| Frozen data | `C:\xampp\htdocs\YEAR 4\Testing\outputs\reflection_coverage_data_v1\` | `~/forensic-dgp/coverage_vm_bundle/outputs/reflection_coverage_data_v1/` |
+| Verified code archive | `C:\xampp\htdocs\YEAR 4\Testing\outputs\reflection-coverage-code.tar.gz` | Upload to `~/reflection-coverage-code.tar.gz` |
+| Return archive | `C:\xampp\htdocs\YEAR 4\Testing\outputs\reflection-coverage-results.tar.gz` | `/home/janusdominic0/forensic-dgp/coverage_vm_bundle/reflection-coverage-results.tar.gz` |
+
+The archive has179 files,62,664,483 compressed bytes; exact membership/bytes were
+verified and the checksum uses LF. SHA256:
+`4574929a1c54729ad078f4456dc4bf44cda65cc207ef28c1f83b5e1bbfebdf1a`.
+The package preserves all four prior inventories. The initial private packaging
+draft is retained in `outputs/reflection_coverage_package_draft1/`; a real-gate
+description was corrected before release. The unchanged real gate checks IoU
+improvement, visible false positives, empty masks and clear-case errors; real
+missed fraction is reported without a separate gate. Synthetic missed fraction
+remains constrained. The current archive contains the corrected specification.
+
+Data manifest SHA256:
+`6696cee3a3acf48049f2f121a2a6328625c4351f558deabb5475da7fe948baf9`.
+Independent data audit SHA256:
+`21a77f47d2cdea74b4d04e0aef7433664422a5c8a923d4ac05e5f9468016fbb8`.
+Read-only source check SHA256:
+`46265f573a72a19d853875e0bad9b2fd14b7eb45dc771614787beacf5e98ac8b`.
+Preparation-stage `training_ready:false` stays preserved; later bounded recipe
+readiness lives in the separate source check/inventory, not a quality claim.
+
+Next: upload the archive and its `.sha256` to VM home, extract new files with
+`tar --keep-old-files` into the existing bundle, run `--preflight`, then the fixed
+VM pilot inside `tmux`. Source weights, saved moments, replay and pinned CUDA
+packages already exist there; no new install is needed. These new files are not
+pushed, and `git pull` alone does not install the isolated package. See the
+current runbook above for exact commands. Preserve output if verification fails.
+
+Both arms save global36/42; final counters are252 additional updates,882 lifetime
+model updates and optimizer step672. The result archive includes all504 step
+records and4,315 raw mask exports. Return it with its `.sha256` for independent
+input/log/mask/checkpoint/moment auditing and CPU prediction reproduction.
+Inspect the same ten real rows `[0,1,5,6,2,3,4,17,8,23]`, lens-only zoom and
+training fixtures. Only a candidate passing unchanged gates advances to reviewed
+end-to-end completion. An absent `best_detector.pth` is failed eligibility,
+not script cancellation; no automatic promotion occurs.
+
+Track1 retains Phase3 `checkpoints/dgp_zamboanga_final.pth`; full Phase5 ArcFace
+identity training remains pending. Track2 retains its completion generator and
+application baseline. All previously audited detector candidates fail synthetic
+retention. Missing facial regions remain plausible estimates. The full project
+goal is active and unmet, awaiting this external VM run/result and eventual
+reviewed end-to-end improvement. Actual training stays on the VM.
+
+## Prototype milestone — 1 October 2026: four qualified bases before the coverage pilot
+
+`completion_data_v2.py` now provides an opt-in source-qualified path with uniform
+scaling, explicit source support and eye-anchored partial reflection fixtures.
+It leaves the existing training/benchmark data and application unchanged. Native
+training source review admits four low-resolution prototypes (IDs0,4,101,102);
+two likely intrinsic occlusions remain unpaired candidates and174 sources remain
+pending. There are no new accepted real masks and no training enabled.
+
+Twenty procedural cases cover clear frames, white patches, white streaks, scene
+reflections and blue glare. An independent audit verifies123 prepared files and
+zero visible pixels changed outside the known reflection targets. The two preview
+grids and four native sources were inspected. Textures remain simplified; this
+is not evidence of realistic transfer, improved model output or high-resolution
+ground truth. Sixteen new tests pass;37 pass including completion/alignment
+contracts. No local optimizer updates or model inference in this data prototype.
+
+Report:`QUALIFIED_COMPLETION_DATA.md`. Windows artifacts:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\qualified_reflection_v1\`.
+Corresponding VM artifact layout, when transferred:
+`~/forensic-dgp/coverage_vm_bundle/outputs/qualified_reflection_v1/`.
+Registry SHA256:`9dd48c58bd17a1f95588fb745c4cfda06ed15e9932e0e08d17dcdf524cd19116`;
+audit SHA256:`04549c2415f66a8dfea7b376a3866c75f1b3e63883da84ded987a4cb0289ca9f`.
+`visual_review.json` binds the assistant review to both. Existing prepared inputs,
+renderer/builder and saved evidence are hash-bound; use a new version for changes.
+
+Next: qualify more native training sources and freeze reflection coverage before
+implementing a matched VM pilot with valid-support-aware loss reductions. Keep
+the400-case benchmark, original gates, teacher and generator/application baseline.
+No new GPU recipe/package is ready. Actual training remains VM-only. All audited
+detector candidates still fail synthetic retention; there is no eligible
+`best_detector.pth`. Track1's Phase3 baseline and Track2's generator remain;
+full Phase5 identity training and reviewed end-to-end output improvement remain
+pending. The full goal is active and unmet.
+
+## Audited result — 1 October 2026: matched loss return; no eligible detector
 
 The matched VM archive is present and both independent audit passes are complete.
 Both arms execute210 new updates from the same epoch30 model/AdamW moments.
