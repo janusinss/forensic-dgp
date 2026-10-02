@@ -1,4 +1,44 @@
-# Supported real-mask dataset — verified 2 October 2026
+# Supported real-mask dataset — status updated 3 October 2026
+
+## Current V2 extension and VM readiness
+
+The new registry is
+`C:\xampp\htdocs\YEAR 4\Testing\dataset\detector_supported_review_v2\manifest.json`.
+Its isolated VM counterpart after bundle transfer is
+`~/forensic-dgp/real_camera_vm_bundle/dataset/detector_supported_review_v2/manifest.json`.
+It preserves all 115 V1 records exactly and adds eight reviewed Mendeley captures
+as one training-only related cohort: seven covered sources and one clear control.
+Full validation/test support, active metadata and bytes remain unchanged.
+
+| Split | Covered | Clear | Total |
+| --- | ---: | ---: | ---: |
+| Training | 58 | 33 | 91 |
+| Validation | 15 | 10 | 25 |
+| Previously inspected test | 4 | 3 | 7 |
+
+Independent audit verifies 291 data files plus the manifest. New labels preserve
+source aspect ratio and exclude uncertain native polygon boundaries/crop edges
+from supervision while retaining observed RGB. They are assistant pilot detector
+labels, not uncovered-face targets. The full uploaded ZIP and unlabelled/non-face
+images are excluded. Provenance and annotation history are in
+`C:\xampp\htdocs\YEAR 4\Testing\MENDELEY_OCCLUSION_DATA.md` ↔
+`~/forensic-dgp/real_camera_vm_bundle/MENDELEY_OCCLUSION_DATA.md` after transfer.
+
+The separately audited 182-view native/degraded cache changes RGB only, with
+identical targets/support/geometry. Five camera/scheduling contract tests pass
+without model/optimizer work. Registry `training_recipe_ready=false` remains its
+data-stage declaration; the frozen protocol in
+`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_VM.md` ↔
+`~/forensic-dgp/real_camera_vm_bundle/REAL_CAMERA_VM.md` explicitly consumes it
+with supported reductions. Package readiness means VM preflight and the fixed
+three-arm detector diagnostic only; actual CUDA execution is pending.
+
+Next: run native83/camera83/camera91 on the L4 VM, 112 updates per branch, then
+return masks/checkpoints for independent audit and ten-row visual review. No
+`best.pth`, application swap or qualification follows training-fit checks alone.
+The older native-expert recipe remains preserved and must not start automatically.
+
+## Previous V1 dataset verification — 2 October 2026
 
 The separate 115-record registry and explicit three-tensor reader are verified.
 All 105 previous records retain their original image/mask bytes, metadata and
@@ -107,7 +147,7 @@ venv/Scripts/python.exe -m unittest tests.test_supported_real_data tests.test_su
 | Executed builder | `0cf9ed0cc71a469707125824ec925a4bab61c74564761ee5a0318482d0cdaeec` |
 | Independent auditor | `dd0691dd252f8fd6e5f2c23ae5069e96b373249b9f943641942604583b9f0aea` |
 
-## Next decision
+## Previous V1 decision
 
 The previous teacher/replay, projection, post-update retention and feature-head
 reports have now been reviewed. Projection did not restore retention and real
@@ -117,11 +157,17 @@ including under a label-informed presence oracle. The latest pretrained detector
 adaptation learns real coverings but fails the original synthetic safeguards.
 These results do not establish that every distinct architecture is infeasible.
 
-Next: specify a materially different, bounded repair with a training-only
-feasibility check before commissioning fitting. The new data can support that
-experiment, but do not resolve retention or establish small/partial-glare transfer.
-Do not repeat an unchanged recipe or weaken a guard. No new GPU training command
-is ready at this milestone.
+The subsequent frozen-head feasibility diagnostic is now complete and audited;
+see `C:\xampp\htdocs\YEAR 4\Testing\FROZEN_COMPLEMENTARITY_RESULTS.md`.
+Both heads miss8,205/21,853 reviewed lens pixels, and fixed union/intersection fail
+the training checks. No selector restricted to those binary masks can recover the
+common misses. These are training-only findings, not held-out model selection.
+
+The bounded native-expert pilot was subsequently prepared and audited, but not
+executed. Its inputs/recipe remain preserved. The later practical direct-detector
+review demonstrated camera/covering gaps; the current V2 camera/source diagnostic
+above is the next prescribed VM experiment. Retain the original app detector.
+Useful training fit alone will not qualify a model. No new GPU training has started.
 
 Original gates, accepted datasets, generator/application and Phase3 restoration
 baseline remain unchanged. No commit/push, dependency reinstall or new VM upload

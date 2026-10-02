@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; img-src 'self' data: blob:; connect-src 'self';">
+    <meta name="referrer" content="no-referrer">
+    <title>ZCPO // Face restoration and covering removal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=3.0.0">
+    <link rel="stylesheet" href="/static/face_workflow.css?v=1.0.0">
+</head>
+<body>
+    <div class="terminal-layout">
+        <header class="terminal-header border-bottom">
+            <div class="logo-block border-right">
+                <i class="ph-fill ph-crosshair" aria-hidden="true"></i>
+                <div class="logo-text">
+                    <h1>ZCPO // FORENSICS</h1>
+                    <span class="mono-label">SINGLE-IMAGE FACE REVIEW</span>
+                </div>
+            </div>
+            <div class="status-block">
+                <span class="status-indicator online" aria-hidden="true"></span>
+                <span id="engine-status" class="mono-label" role="status">LOCAL INFERENCE</span>
+            </div>
+        </header>
+        <main class="terminal-body">
+            <section class="panel input-panel border-right" aria-labelledby="input-panel-heading">
+                <div class="panel-header border-bottom">
+                    <h2 id="input-panel-heading">01 // FACE_INPUT</h2>
+                    <span id="input-status-label" class="mono-label">FRONTAL OR MILDLY TURNED CROP</span>
+                </div>
+                <div class="panel-content">
+                    <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Upload a cropped face image">
+                        <input type="file" id="file-input" accept="image/png,image/jpeg" hidden>
+                        <div class="reticle reticle-tl" aria-hidden="true"></div><div class="reticle reticle-tr" aria-hidden="true"></div>
+                        <div class="reticle reticle-bl" aria-hidden="true"></div><div class="reticle reticle-br" aria-hidden="true"></div>
+                        <div class="drop-zone-ui"><i class="ph ph-upload-simple" aria-hidden="true"></i><span class="mono-label">[ UPLOAD FACE CROP ]</span><span class="mono-label dimmed">PNG / JPEG · UP TO 10 MB</span></div>
+                        <img id="preview-image" class="hidden" alt="Original uploaded face crop">
+                    </div>
+                    <section id="mask-review" class="mask-review hidden" aria-labelledby="mask-review-heading">
+                        <div class="review-heading"><h3 id="mask-review-heading">REVIEW REMOVAL AREA</h3><button id="detect-btn" class="tool-btn" type="button">Detect again</button></div>
+                        <p id="mask-message" class="help-text" role="status">Estimating the covering. Review the marked area before generation.</p>
+                        <canvas id="mask-editor" tabindex="0" aria-label="Removal mask editor. Drag to paint. Arrow keys move the brush; Space paints. Green marks the area to generate."></canvas>
+                        <div class="mask-tools" role="group" aria-label="Removal mask tools">
+                            <button id="paint-btn" class="tool-btn active" aria-pressed="true" type="button">Paint</button>
+                            <button id="erase-btn" class="tool-btn" aria-pressed="false" type="button">Erase</button>
+                            <button id="undo-btn" class="tool-btn" type="button" disabled>Undo</button>
+                            <button id="clear-btn" class="tool-btn" type="button">Clear</button>
+                            <button id="reset-btn" class="tool-btn" type="button" disabled>Reset detection</button>
+                        </div>
+                        <label class="brush-label" for="brush-size">Brush <span id="brush-value">12</span><input id="brush-size" type="range" min="2" max="48" value="12"></label>
+                        <div class="mask-file-tools"><label class="tool-btn" for="mask-input">Import mask</label><input type="file" id="mask-input" class="accessible-file-input" accept="image/png"><button id="mask-download-btn" class="tool-btn" type="button">Save mask</button></div>
+                        <p class="help-text">Green will be generated. Keep clear glasses and hair that does not cover facial features. Drag to paint; arrow keys move the brush and Space paints.</p>
+                        <label class="review-confirmation"><input id="review-confirm" type="checkbox"> Removal area reviewed</label>
+                    </section>
+                    <div class="restore-controls">
+                        <label class="mono-label" for="restoration-mode">VISIBLE FACE RESTORATION</label>
+                        <select id="restoration-mode"><option value="auto">Automatic when needed</option><option value="off">Off — keep visible pixels</option><option value="on">On — restore visible regions</option></select>
+                        <p class="help-text">Restoration may change visible detail. Choose Off to keep pixels outside the removal area unchanged.</p>
+                    </div>
+                    <div class="action-block"><button id="analyze-btn" class="execute-btn" type="button" disabled><i class="ph ph-sparkle" aria-hidden="true"></i> GENERATE FACE ESTIMATE</button></div>
+                    <div id="loading-state" class="loading-block hidden" role="status" aria-live="polite"><div class="spinner" aria-hidden="true"></div><span id="loading-text" class="mono-label">ESTIMATING REMOVAL AREA…</span></div>
+                    <p id="workflow-error" class="workflow-error hidden" role="alert"></p>
+                </div>
+            </section>
+            <section class="panel results-panel" aria-labelledby="results-panel-heading">
+                <div class="panel-header border-bottom"><h2 id="results-panel-heading">02 // FACE_ESTIMATE</h2><span class="mono-label">ORIGINAL · REMOVAL AREA · ONE OUTPUT</span></div>
+                <div class="panel-content scrollable">
+                    <div id="results-grid" class="results-container">
+                        <div id="standby" class="empty-state-wrapper">
+                            <div class="standby-split-grid">
+                                <div class="standby-viewport">
+                                    <div class="reticle reticle-tl" aria-hidden="true"></div><div class="reticle reticle-tr" aria-hidden="true"></div><div class="reticle reticle-bl" aria-hidden="true"></div><div class="reticle reticle-br" aria-hidden="true"></div>
+                                    <div class="standby-reticle-graphic" aria-hidden="true"><i class="ph ph-scan"></i></div>
+                                    <div class="standby-text-block"><h3 class="standby-heading">AWAITING_FACE_CROP</h3><p class="standby-subtext">Upload one face, review the detected covering and generate a plausible estimate of the hidden region. Clear visible areas can stay unchanged.</p></div>
+                                    <div class="standby-readiness-pill"><span class="mono-label">LOCAL PROCESSING · MANUAL REVIEW</span></div>
+                                </div>
+                                <div class="standby-telemetry-box">
+                                    <div class="telemetry-box-header"><div class="telemetry-status-badge"><span class="status-indicator online" aria-hidden="true"></span><span class="mono-label status-title">REVIEW BEFORE GENERATION</span></div><p class="telemetry-banner-desc">Automatic covering detection needs review. Paint missed areas or erase visible features before continuing.</p></div>
+                                    <div class="telemetry-specs-strip"><div class="spec-tag"><span class="spec-k">INPUT:</span><span class="spec-v">ONE FACE CROP</span></div><div class="spec-tag"><span class="spec-k">OUTPUT:</span><span class="spec-v">ONE ESTIMATE</span></div></div>
+                                    <div class="standby-diagnostic-grid"><div class="diagnostic-cell"><span class="mono-label">COVERINGS</span><span class="mono-label val">MASKS, SUNGLASSES, GLARE</span></div><div class="diagnostic-cell"><span class="mono-label">OTHER REGIONS</span><span class="mono-label val">HANDS, HAIR, SCARVES, OBJECTS</span></div><div class="diagnostic-cell"><span class="mono-label">PRESERVE</span><span class="mono-label val">VISIBLE APPEARANCE</span></div><div class="diagnostic-cell"><span class="mono-label">LIMIT</span><span class="mono-label val">TOO LITTLE FACE → NEW IMAGE</span></div></div>
+                                </div>
+                            </div>
+                            <div class="standby-pipeline-strip">
+                                <div class="pipeline-step-box"><div class="step-num-row"><span class="mono-label step-tag">STAGE 01</span><span class="mono-label step-status">UPLOAD</span></div><span class="step-title">CROPPED FACE</span><p class="step-detail">Frontal or mildly turned. If almost all facial features are covered, use a less-covered image.</p></div>
+                                <div class="pipeline-step-box"><div class="step-num-row"><span class="mono-label step-tag">STAGE 02</span><span class="mono-label step-status">REVIEW</span></div><span class="step-title">REMOVAL AREA</span><p class="step-detail">Correct automatic detection. A small skin margin can help remove covering edges.</p></div>
+                                <div class="pipeline-step-box"><div class="step-num-row"><span class="mono-label step-tag">STAGE 03</span><span class="mono-label step-status">GENERATE</span></div><span class="step-title">PLAUSIBLE ESTIMATE</span><p class="step-detail">Inspect one result beside the original and mask. Download the image or review bundle.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p id="result-message" class="result-message hidden" role="status"></p>
+                    <div id="result-downloads" class="result-downloads hidden"><a id="image-download" class="tool-btn" download="face-estimate.png">Download estimate</a><a id="bundle-download" class="tool-btn" download="face-review.zip">Download review bundle</a></div>
+                </div>
+            </section>
+        </main>
+        <footer class="terminal-footer border-top"><span class="mono-label">ZCPO FORENSIC LAB // WMSU CS DEPT © 2026</span><span class="mono-label">GENERATED REGIONS ARE ESTIMATES</span></footer>
+    </div>
+    <script src="/static/face_workflow.js?v=1.0.0"></script>
+</body>
+</html>

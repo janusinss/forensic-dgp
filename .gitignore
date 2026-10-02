@@ -40,6 +40,8 @@ checkpoints/*
 !checkpoints/dgp_improved_epoch_2[7-9].pth
 !checkpoints/dgp_improved_epoch_[3-9]*.pth
 outputs/
+# User-uploaded research dataset; keep the original ZIP locally, outside Git.
+/Occluded and Low-Light Human Face Detection Datase.zip
 *.png
 *.jpg
 *.jpeg

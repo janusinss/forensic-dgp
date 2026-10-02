@@ -1,6 +1,612 @@
 # Forensic DGP: workspace handoff and training runbook
 
-## Current status — 2 October 2026: supported real-mask dataset independently verified
+## Current milestone — 3 October 2026: uploaded data audited; VM camera diagnostic ready
+
+The uploaded Mendeley source, eight reviewed detector annotations, supported
+dataset V2 and paired camera inputs are verified. The three-arm VM package was
+prepared on 2 October and its independent audit is complete. **Next action is VM
+CUDA preflight followed by the bounded detector diagnostic in `REAL_CAMERA_VM.md`.**
+No new training, checkpoint promotion, transfer, commit or push has occurred.
+
+The research tracks remain separate: restoration retains Phase 3
+`C:\xampp\htdocs\YEAR 4\Testing\checkpoints\dgp_zamboanga_final.pth` ↔
+`~/forensic-dgp/checkpoints/dgp_zamboanga_final.pth`; Phase 5 ArcFace identity
+training awaits its full GPU pilot. Completion retains the gated U-Net research
+history and CodeFormer benchmark, documented in
+`C:\xampp\htdocs\YEAR 4\Testing\COMPLETION_TRAINING.md` ↔
+`~/forensic-dgp/COMPLETION_TRAINING.md`. The working main upload flow below uses
+pinned CodeFormer completion and selective visible restoration. This new pilot
+changes only the detector; it trains neither restoration nor the generator.
+
+The main application at configured `http://127.0.0.1:8000` now serves upload →
+detected removal preview → paint/erase/import correction → reviewed generation of
+one estimate. Auto/Off/On visible restoration and PNG/original-mask-result ZIP
+downloads work in the existing terminal design. Source:
+`C:\xampp\htdocs\YEAR 4\Testing\face_workflow.py`, `face_workflow_web.py`,
+`templates\face_workflow.html`, `static\face_workflow.js`, `static\face_workflow.css`;
+intended receiving paths are `~/forensic-dgp/face_workflow.py`, `face_workflow_web.py`,
+`templates/face_workflow.html`, `static/face_workflow.js`, `static/face_workflow.css`
+after transfer. The historical `/reconstruct` endpoint, Phase 3 checkpoint and
+original template/script remain unchanged; no failed detector candidate is promoted.
+
+Fifteen unit/adapter/palette checks pass. The active API engine is
+`C:\xampp\htdocs\YEAR 4\Testing\face_workflow_palette.py` with input-only color
+policy `face_color_policy.py` (VM `~/forensic-dgp/face_workflow_palette.py` and
+`~/forensic-dgp/face_color_policy.py` after transfer). It extends the unchanged,
+audited `face_workflow.py` base route. Near-grayscale inputs retain grayscale;
+Off preserves observed pixels exactly and color inputs receive no palette change.
+Bundled inline Playwright checks the actual upload,
+mask import, keyboard paint/erase/undo, review gating, generation and bundle download;
+375/768/1280 layouts have no accidental overflow or unexpected exceptions/console
+errors. Downloaded bundle pixels preserve the reviewed mask exactly and change zero
+pixels outside it with restoration off. Additional browser checks verify clear-glasses
+Auto bypass, forced On, degraded Auto restoration, final PNG download and rejection
+of a reviewed nearly hidden face with no output (expected HTTP 422). The first
+256-pixel browser completion request takes 7.8 seconds including lazy loading.
+Current inference device is CPU, accurately shown in the UI. These are runtime
+checks, not population quality, hidden identity accuracy or full accessibility proof.
+
+Runbook `C:\xampp\htdocs\YEAR 4\Testing\LOCAL_FACE_WORKFLOW.md` (VM
+`~/forensic-dgp/LOCAL_FACE_WORKFLOW.md` after transfer) documents required pinned
+models, configuration, observed timing and the conditional geometry/quality heuristics.
+The automatic detector remains a weak development baseline: mandatory review and
+manual correction are explicit, and corrected outputs are not automatic-detection
+evidence. Inputs/outputs are returned in the request, not persisted by this API.
+Checkpoints under ignored `outputs/` are not transferred by `git pull` alone.
+
+The separately source-reviewed RealOcc gallery is frozen at 16 native/degraded
+cases: two hands, one obstructing-hair case, two scarves, two objects and one
+nearly hidden rejection source. Author `val` membership and publisher labels remain
+intact. Exact files have no match against the previous 115-source review manifest
+and ten-source practical cohort; full-corpus/identity/pretraining overlap is unverified.
+No training admission. Protocol:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\broad_covering_gallery_v1\frozen_protocol.json`
+(VM `~/forensic-dgp/outputs/broad_covering_gallery_v1/frozen_protocol.json` after transfer),
+SHA256 `b7a1a447482d650bb0a18b13d649f0c548c3c59acd6db202111169599c805bc9`.
+The bounded local inference comparison completed: 28 saved outputs across 32 rows,
+16 detector, 21 completion and 15 restoration forwards, 28 generation requests,
+186.48 CPU seconds excluding loading and zero optimizer updates. Source/pixel
+audits pass; all seven usable assisted degraded cases improve known-visible MAE.
+The base assisted mean is 0.017155752 versus input 0.021175412 (18.98% reduction).
+Both reviewed nearly hidden cases reject before generation; **automatic detection
+misses both** and source review holds those outputs separately. Assistant inspection
+finds useful hand/hair/scarf/object estimates with approximate joins; one scarf
+retains a textured beard/knit appearance. Native automatic coverings mostly remain.
+Outputs are under local `outputs\broad_face_workflow_outputs_v1\`
+(VM `~/forensic-dgp/outputs/broad_face_workflow_outputs_v1/` after transfer).
+
+Palette V2 fixes false color in eight of 28 cached outputs without new forwards.
+All cached compositions and visible metrics pass an independent audit; the real
+browser hand-mouth output matches V2 pixels exactly. The assisted degraded mean
+becomes 0.017035153 (19.55% reduction, exposed development cohort only). Four
+grayscale preview rows are inspected. V1 threshold/policy evidence is preserved;
+V2 threshold 4 is explicitly source-derived, not unseen evaluation. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_BROAD_OUTPUT_RESULTS.md` (VM
+`~/forensic-dgp/PRACTICAL_BROAD_OUTPUT_RESULTS.md` after transfer).
+
+The XSeg1 pretrained visible-face comparison completed on 36 native/degraded
+cases. Its official CRC32 matches; observed SHA256 is
+`c4d1498b8a03b5fe2a3a5d2ef2a0402ab03bd51edaf5b2d8d5fb764702a97dd3`.
+Local model/provenance root is `C:\xampp\htdocs\YEAR 4\Testing\outputs\xseg_pretrained_v1\`
+(VM `~/forensic-dgp/outputs/xseg_pretrained_v1/` only after explicit transfer).
+XSeg is research-only and not selected by the app. Its frozen ellipse conversion
+finds more masks/hands/objects, but marks clear glasses, normal hair and background.
+Clear-glasses controls receive 10,918/10,227 unwanted marked pixels; the usable
+knit-scarf pair wrongly rejects. Both nearly hidden cases reject correctly.
+All 36 probabilities and 108 masks pass an independent audit; six preview sheets
+are inspected. V1 interrupted on one probability 1+one float32 ULP; its evidence
+is retained. V2 applies the official consumer's clipping, reuses 24 probabilities
+and runs 12 new forwards without changing spatial criteria. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_XSEG_RESULTS.md` (VM
+`~/forensic-dgp/PRACTICAL_XSEG_RESULTS.md` after transfer).
+
+The returned direct-occlusion checkpoint comparison is now complete on the same
+36 native/degraded cases, with ten reused native masks and 26 new CPU detector
+forwards, zero generation and zero optimizer updates. It takes 4.31 seconds
+excluding model loading. Source and saved-mask audits pass; all six preview
+sheets are inspected. The protocol is frozen at local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_direct_detector_v1\frozen_protocol.json`
+(VM `~/forensic-dgp/outputs/practical_direct_detector_v1/frozen_protocol.json` after transfer),
+SHA256 `69c6a75e4dc1af099a3cb1a621082a870966170108e9a2d2255d614b708a8db8`.
+The direct detector finds native coverings better than the app baseline, but
+degraded hand reference recall drops from 31.21% to 5.32%, obstructing-hair masks
+remain empty, and both nearly hidden cases miss rejection. All four clear-control
+masks are empty. Reference footprints are approximate development proposals.
+Reflective epoch42's original synthetic-retention failure remains unchanged;
+neither this comparison nor XSeg selects an application checkpoint. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_DIRECT_DETECTOR_RESULTS.md` ↔
+`~/forensic-dgp/PRACTICAL_DIRECT_DETECTOR_RESULTS.md` after transfer.
+
+The user-supplied
+`C:\xampp\htdocs\YEAR 4\Testing\Occluded and Low-Light Human Face Detection Datase.zip`
+is preserved and Git-ignored. All 11,987 JPEG members pass CRC/decode checks;
+6,101 dimension-bound decoded RGB images are distinct and 5,886 instances repeat.
+The ZIP supplies no labels or splits. Six source sheets expose 363 file IDs;
+this is not a semantic review of the entire archive. No exact byte/native-pixel
+match appears against the previous 115 supported raw sources; full-corpus,
+identity and pretraining overlap remain unverified. Publisher attribution and
+CC BY 4.0 are recorded in
+`C:\xampp\htdocs\YEAR 4\Testing\MENDELEY_OCCLUSION_DATA.md` ↔
+`~/forensic-dgp/real_camera_vm_bundle/MENDELEY_OCCLUSION_DATA.md` after transfer.
+Only eight related captures receive reviewed pilot labels: three hands, one
+obstructing-hair case, sunglasses, a mask, combined sunglasses/mask and one clear
+control. They share one training-only cohort, not eight independent identities.
+V1/V2 proposals remain intact; V3 makes native boundary/crop-edge uncertainty
+explicit. All 48 V3 assets pass geometry/source/support checks. These are detector
+labels, without uncovered-face targets or independent expert adjudication.
+
+Supported dataset V2 is local
+`C:\xampp\htdocs\YEAR 4\Testing\dataset\detector_supported_review_v2\manifest.json`
+and is bundled at
+`~/forensic-dgp/real_camera_vm_bundle/dataset/detector_supported_review_v2/manifest.json`.
+It has 123 records: 91 training (58 covered/33 clear), 25 unchanged validation
+and seven unchanged previously inspected test. All 115 old records retain active
+metadata and bytes, including full held-out supervision and the mannequin.
+The independent audit verifies 291 data files plus the manifest. The new input
+cache at local `outputs\real_camera_pairs_v1\` ↔
+`~/forensic-dgp/real_camera_vm_bundle/outputs/real_camera_pairs_v1/` contains 91
+native/degraded pairs. Camera changes affect observed RGB only; targets, support,
+geometry and neutral padding stay fixed. All 182 cases reconstruct exactly.
+Five new camera/scheduling contract tests pass without model or optimizer work.
+Standalone scarf/general-object training coverage is still missing.
+
+The audited transfer files are
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\real-camera-vm-bundle.tar.gz` and
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\real-camera-vm-bundle.tar.gz.sha256`.
+Upload both to VM `~`, then extract to `~/forensic-dgp/real_camera_vm_bundle/`
+using the exact commands in
+`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_VM.md` ↔
+`~/forensic-dgp/real_camera_vm_bundle/REAL_CAMERA_VM.md`.
+The 18,892,722-byte archive contains 419 verified regular files and an LF checksum
+sidecar. SHA256 is
+`2b237b2e121951203bde131be5d7c649910392df47bff1bbc953f81a8c8c0e2b`;
+protocol SHA256 is
+`a8adb21910c5aed249f5f2a75e17eef92db35717bd428326c360a1aecf3b99e1`.
+Independent package audit:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\real_camera_package_validation_v1\verification.json`,
+SHA256 `b27897d6781907ae0f27e7a76d0b014e63156d33cec10a093532362fc0253f8b`.
+It verifies all members, code compilation, dataset/pair bindings, reconstructed
+schedules and unchanged original split. The Windows/CPU guard is tested; actual
+CUDA execution is pending. No local training or smoke optimizer ran.
+
+The pilot independently starts three branches from the same reflective epoch42
+weights and inherited AdamW moments: `native83` (old native control), `camera83`
+(same sources with camera degradation) and `camera91` (adds the eight selected
+sources). Each runs two epochs of 56 batches: 112 updates per branch, 336 across
+the experiment. All branches replay the same 280 prior reflection fixtures;
+only 34/336 real slots in the new-source branch use the related cohort. Existing
+VM assets are read-only under `~/forensic-dgp/coverage_vm_bundle/`; reuse
+`~/forensic-dgp/feature_vm_bundle/.venv/`. Preflight requires CUDA/VRAM, pinned
+dependencies, the original `~/forensic-dgp/outputs/phase4_with_progress/split.json`,
+both clean dataset directories, exact file hashes and one finite batch with zero
+updates. Plan approximately 5–15 minutes for the first diagnostic; timing is
+unmeasured. A 30-minute cap covers training/measurement after loading.
+
+Only training-cohort fit is measured here. The original 425-case qualification
+gates are not evaluated or relaxed. No `best.pth` is created: three `last.pth`
+files remain unselected. After the VM finishes, download
+`~/forensic-dgp/real_camera_vm_bundle/real-camera-results.tar.gz` and its `.sha256`
+to `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. Preserve all three final optimizer
+files on the VM; they are deliberately omitted from the download. Next local
+action is an independent state/mask audit and ten-row preview review, followed
+by a decision on original-gate and end-to-end evaluation. The self-contained
+bundle requires no `git pull`; new uncommitted code and ignored data are included.
+All actual training stays on the L4 VM. Goal remains active.
+
+## Previous development decision — 2 October 2026: selective visible restoration
+
+The fixed degraded comparison completed 80 saved outputs plus 40 DGP intermediates
+on 20 inputs, with 24 new nonempty completion forwards, six empty bypasses, ten
+reused native completion outputs and 40 restoration forwards. No detector or
+optimizer update occurred. The independent pixel audit confirms all fixed
+compositions/known-visible metrics and preservation of completed pixels in post
+arms. CPU elapsed 124.0 seconds, excluding initial model loading.
+
+Mean known-visible degraded MAE is 0.020387 with restoration off, 0.046924 with
+legacy DGP before completion, 0.046970 with visible-only DGP after completion and
+0.022522 with a 25% post blend. All forced DGP routes worsen this metric; native
+controls also drift. Assistant inspection finds color shifts/smoothing and
+conspicuous joins. These routes are not selected for automatic restoration.
+Phase 3 weights and historical experiment outcomes remain unchanged.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_RESTORATION_RESULTS.md`, intended
+VM counterpart `~/forensic-dgp/PRACTICAL_RESTORATION_RESULTS.md` after transfer.
+Outputs: `C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_restoration_outputs_v1\`,
+intended VM counterpart `~/forensic-dgp/outputs/practical_restoration_outputs_v1/`.
+Protocol SHA256 `74c652e1d1c604c5229fc953117a45b3c994e17c01fb23158ee9b4bccc17bf00`;
+result SHA256 `2f1b2ff00237302bb3fd42c9188f63541292f777ba0d2df8aa10cc1c21f6223d`;
+verification SHA256 `569f1c2c5112e17104cb7cfce54f6f262fb8dd56b098bf8520ad47e7a3d982eb`.
+
+Separate official CodeFormer restoration weights were acquired (376,637,898 bytes)
+with observed SHA256 `1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7`.
+Strict loading verifies 515 tensor states, codebook 1024, zero trainable parameters;
+three adapter tests pass. This is separate from the pinned inpainting checkpoint.
+The new inference-only protocol is frozen at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_face_restoration_v1\frozen_protocol.json`
+(VM `~/forensic-dgp/outputs/practical_face_restoration_v1/frozen_protocol.json` after
+transfer), SHA256 `c384f1b25e9ab80f44ba6ebef3e47c072a4dc57d406d525f9a637f3abf99b229`.
+It completed 40 restoration forwards and 100 saved outputs in 230.3 CPU seconds
+(excluding model loading). Independent verification checks all saved pixels,
+intermediates, masks and known-visible metrics. Fidelity 1.0 with a 50% blend onto
+visible pixels lowers degraded mean MAE from 0.020387 to 0.015654 (23.2%), improving
+all ten degraded cases and changing zero completed-region pixels. All 20 preview
+rows were inspected. This is selected as the development restoration route;
+forced native controls drift, so clear inputs must bypass it with an override.
+It is not evidence of hidden identity or whole-scope readiness. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_FACE_RESTORATION_RESULTS.md` (VM
+`~/forensic-dgp/PRACTICAL_FACE_RESTORATION_RESULTS.md` after transfer).
+Result SHA256 `de6a7bf7e177d7f2f8d3ed2c0536de05c64e6662e464046dda597a50bd9f7cb0`;
+verification SHA256 `b34c4442ffbb43ffbb811cd02b631622603e6a2639f86e9741e5334be69c7635`.
+
+The author-linked public RealOcc archive downloaded fully (226,205,702 bytes in
+7.7 seconds), SHA256 `de6a26ecc00457c0067991d95906b15638a2f217c5b5ea01a5db42435510577f`.
+All 550 images and 550 binary masks load and match the 550 author `val.txt` entries.
+The masks label visible face (1), with coverings AND background (0); transparent
+glasses follow the publisher's different scope. They must not be blindly inverted
+into this project's covering labels. Source-only contact sheets contain hand,
+scarf, object and obstructing-hair candidates. Further crop/removal-footprint,
+terms and exposure review is required; no training admission occurred. Integrity:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\realocc_source_v1\source_review\integrity.json`
+(VM `~/forensic-dgp/outputs/realocc_source_v1/source_review/integrity.json` after transfer),
+SHA256 `aaf1645debcbf3d43e794fdf92def776a4ba6f314dac3182a04f679f45b7114e`.
+The incomplete COFW archive stays excluded; original author validation membership
+is retained. File integrity alone does not establish identity or pretraining overlap.
+
+The existing main app runs locally at its configured `http://127.0.0.1:8000`.
+Bundled inline Playwright finds no horizontal overflow, page exceptions or console
+errors at 375/768/1280 pixels; evidence is in local git-ignored `scratch/`.
+This verifies the original layout, not the still-pending integrated workflow.
+Next: freeze the broader covering gallery and integrate selective restoration,
+mask correction, visibility rejection and downloads into the existing design.
+All actual training remains VM-only. Goal active; no new transfer, commit or push.
+
+## Previous milestone — 2 October 2026: revised covering footprints
+
+Source-reviewed V3 removal footprints include full opaque glasses, wider obscured
+lens interiors and the facial mask strap segment while excluding a visible clear
+wire. Four coverings plus two empty controls were frozen before generation. These
+are operator proposals, separate from unchanged detector labels/splits. Opaque
+proposals have up to a 6-pixel margin relative to old labels; no extra dilation
+is applied to glare interiors. The turned mask/clear-glasses face is a difficult
+diagnostic, beyond the initial frontal/mild-turn cohort.
+
+CodeFormer/AOT completed 12 requests (eight nonempty forwards, four bypasses),
+reusing 12 previous outputs, in 36.2 CPU seconds with zero failures or training.
+Independent verification checks all saved pixels/proposal deltas and frozen
+artifacts; zero changed pixels outside the active masks or in protected eyewear.
+CodeFormer now gives useful estimated eyes for the dark sunglasses and mirrored
+glasses, and reduces white glare while retaining clear frames. The mask with
+clear glasses still has a poor nose transition. CodeFormer remains the development
+baseline; no automatic detector checkpoint is promoted.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_FOOTPRINT_RESULTS.md`, intended
+VM counterpart `~/forensic-dgp/PRACTICAL_FOOTPRINT_RESULTS.md` after transfer.
+Outputs: `C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_footprint_outputs_v3\`,
+intended VM counterpart `~/forensic-dgp/outputs/practical_footprint_outputs_v3/`.
+Protocol SHA256 `4a256b9a00c25f68414010877a8cf96c1e3a9a283842360ed64978a676a5c5d3`;
+result SHA256 `1c79c0627697a353e57f47adb8943e1e5fda8af1ed51ec00f53aa01dbf3ef17c`;
+verification SHA256 `638b13e094082abdf4c8e088c6fb0c33010c843aad62fe723680e44ddc05b40f`.
+
+Next: compare completion alone against pre-completion restoration and visible-only
+post-completion restoration on the declared degraded copies. Reference metrics
+cover known visible pixels only. Continue broad covering data preparation and
+the existing main-UI integration; full-family usefulness and visibility rejection
+remain unverified. Goal stays active. No new VM training, upload, commit or push.
+
+## Previous comparison — 2 October 2026: AOT-GAN and covering footprints
+
+Face-specific AOT-GAN CelebA-HQ weights were acquired from the author-linked
+public folder. Exact source/license at revision
+`2cd1afd8fdfabb101c678f6062d14bc7d302509e` are retained. The 60,829,150-byte model
+loads 108 finite tensor states strictly with `weights_only=True`. The observed
+SHA256 is an acquisition fingerprint, not a publisher-supplied checksum. 512 is
+the tested inference size/repository default; exact original training history
+is not verified (see preserved provenance erratum).
+
+Ten unchanged reviewed native inputs/masks were compared with 20 cached baseline
+outputs. Eight nonempty forwards and two empty control bypasses completed in
+29.4 CPU seconds, with zero failures, detector forwards or optimizer updates.
+Independent verification checks all 10 new outputs and 20 reused baselines;
+zero pixels change outside the active masks. Assistant triage finds four useful
+covered estimates, one partial and three needing fixes, with both controls exact.
+AOT supplies facial anatomy where generic LaMa fails, but does not resolve the
+dark-eyewear, white-glare or mask/clear-glasses boundary. No backend is promoted.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_AOT_RESULTS.md`, intended VM
+counterpart `~/forensic-dgp/PRACTICAL_AOT_RESULTS.md` after transfer. Outputs:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_aot_outputs_v1\`, intended
+VM counterpart `~/forensic-dgp/outputs/practical_aot_outputs_v1/`.
+Protocol SHA256 `a53c4b8e3a27f30d9ccf0c49c7e04454f6303d72b3c6c08c5977ee168fb7d09b`;
+result SHA256 `bf77388894dd27b68d7f8065a237b6d4a21855770eded8c88e1b79e5ce32a278`;
+verification SHA256 `412222ebb436be618a2ada7b92ae1e4ac5bd30a014620b25dc593f33a1bd25af`.
+
+Next: source-review full opaque eyewear rims/bridges, glare boundaries while
+preserving clear frames, and the mask edge near the nose. Prepare a new operator
+removal-proposal version, separate from unchanged historical labels. Freeze the
+new masks before comparing CodeFormer/AOT on targeted failures. Locate remnants
+relative to the actual active mask before blaming a detector or generator; a
+reviewed approximate label need not include the entire practical removal area.
+No additional unchanged pretrained/detector run or VM training is the next action.
+
+The complete agreed workflow remains unmet: degraded restoration, broad covering
+families, facial-visibility rejection, main-UI integration and Playwright checks
+are pending. Goal stays active. All actual training remains on the L4 VM, without
+a fixed user-imposed GPU-hour cap. No new transfer, commit or push occurred.
+
+## Newest comparison — 2 October 2026: generic LaMa is not selected
+
+The Places2 Big-LaMa checkpoint was acquired from the author's recommended
+mirror and matched its published SHA256. Minimal generator source at revision
+`786f5936b27fb3dacd2b1ad799e4de968ea697e7` retains the Apache-2.0 license.
+The generator-only checkpoint loads with restricted `weights_only=True`; no
+Lightning training environment or project PyTorch downgrade is required.
+
+Two arms on the same ten native inputs and unchanged reviewed masks compare
+native256 and visible-support-normalized 512 inference. Twenty requests comprise
+16 nonempty forwards and four empty control bypasses; CPU elapsed 37.2 seconds,
+zero failures/detector forwards/optimizer updates. Independent verification
+checks all 20 outputs and finds zero changed pixels outside reviewed masks.
+Assistant inspection finds blurred/missing/distorted facial anatomy in the eight
+covered cases, with white glare unresolved. Neither resolution arm is selected.
+This is a failure of this generic pretrained checkpoint on this developmental
+cohort, not evidence that every LaMa or face-specific completion model fails.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_LAMA_RESULTS.md`, intended VM
+counterpart `~/forensic-dgp/PRACTICAL_LAMA_RESULTS.md` after transfer. Outputs:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_lama_outputs_v1\`, intended
+VM counterpart `~/forensic-dgp/outputs/practical_lama_outputs_v1/`.
+Protocol SHA256 `64ff7321ca0580ba9af8df0ab247a22bf3c9171cdfed5f6f01021b2023829d5b`;
+result SHA256 `2dde4543215701641323aa0661bd3314a00e87fc2027df2450360770dd055b94`;
+verification SHA256 `0d9ad01e7a4b0fd6623494c438fbfa8a6ba7f8d9472fced8ed5a514017514de9`.
+
+Next: verify and benchmark a face-specific pretrained mask-conditioned generator;
+the AOT-GAN author supplies a CelebA-HQ checkpoint. It is a research candidate,
+not a selected backend. Native-only evidence does not resolve degraded restoration,
+missing standalone-hand/hair/scarf/object cases, full-eyewear rims or main-UI
+integration. Goal stays active; actual training stays VM-only. No new upload,
+training, commit or push occurred.
+
+## Latest evidence — 2 October 2026: practical native completion comparison
+
+Current local evidence lives at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_native_outputs_v1\`;
+intended VM counterpart `~/forensic-dgp/outputs/practical_native_outputs_v1/`
+only after transfer. No new upload, commit, push or VM training occurred.
+
+Ten previously inspected detector-training sources were frozen before generation.
+Parent automatic, experimental reflective-42 automatic and reviewed removal masks
+were compared with the same CodeFormer inpainting baseline, restoration off and
+existing crops. Thirty wrapper requests comprise 22 nonempty generator forwards
+and eight empty-mask bypasses; CPU elapsed 90.6 seconds. No detector forward or
+optimizer update occurred. An independent artifact/pixel recount verifies all 30
+outputs preserve every pixel outside their active mask and checks immutable
+sources, cached masks, checkpoint/code hashes and before/after state records.
+This is developmental preservation evidence, not hidden-face ground truth.
+
+Assistant visual triage finds four useful reviewed covered estimates, one partial
+and three requiring fixes, with both clear controls preserved. Dark sunglasses
+are recreated and white glare persists even with reviewed masks. Another detector
+run alone cannot address these completion failures. The mask-plus-clear-glasses
+join and remaining mirrored-eyewear rim also need work. No checkpoint is promoted;
+reflective-42's historical retention failure remains unchanged.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_NATIVE_OUTPUT_RESULTS.md`, VM
+counterpart `~/forensic-dgp/PRACTICAL_NATIVE_OUTPUT_RESULTS.md` after transfer.
+Protocol SHA256 `74b80e0ec9ebabb7c8b3b3989f5bc4f44b9a4cf1e39e691c073543f2db4651a5`;
+result SHA256 `38776d1a46967c4338a2082fe94ad50c2ca335d767b57c8c4759f681374f5325`;
+verification SHA256 `d69bc0ea2a77bdecfa7b710d9be1c64d965ebe1236808c08207d82702006d9db`.
+Native-only comparison is complete; the ten degraded copies have not been run.
+Standalone hand, obstructing hair, scarf-over-face and other-object families
+remain missing from this practical pilot. The full Goal remains active and unmet.
+
+Additional-source research is in
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_DATA_SOURCES.md` (intended VM
+counterpart `~/forensic-dgp/PRACTICAL_DATA_SOURCES.md`). Official COFW metadata and
+documentation were verified, but its 503,327,162-byte image archive ended after
+2,153,540 bytes. The `.partial` artifact is excluded; no new image/mask was
+admitted. This does not justify unchanged training.
+
+Next: benchmark pretrained mask-conditioned completion on the unchanged reviewed
+native inputs/masks, then compare restoration on declared degraded cases. LaMa is
+a research candidate; no LaMa output or improvement has yet been demonstrated.
+Review full-eyewear-rim proposals in a new version. Continue missing-family data
+preparation and existing-main-UI integration after processing decisions. Actual
+training stays on the L4 VM. Preserve the immutable native-lens pilot archive;
+do not automatically run it as the new practical workflow's next experiment.
+
+## Active Goal — 2 October 2026: practical workflow discovery complete
+
+The user explicitly requested a Goal after relevant system/workflow questions.
+All three rounds are answered. Before creation, this thread's `get_goal` returned
+no Goal; historical goal-status wording below belongs to earlier work. The full
+current specification is `C:\xampp\htdocs\YEAR 4\Testing\SYSTEM_WORKFLOW_AND_GOAL.md`,
+intended VM counterpart `~/forensic-dgp/SYSTEM_WORKFLOW_AND_GOAL.md` after transfer.
+The requested Goal has now been created with status `active` and no token budget.
+Its objective is the useful combined local workflow, not merely another detector
+checkpoint. The five milestones and completion conditions are in that file.
+
+First-round answers: manual review by school staff/thesis researchers; already
+cropped face input; review/correct the detected removal area before generation;
+local inference with VM-only training; quality takes priority over speed.
+Second-round answers: integrate in the existing main UI; one output alongside
+original/removal area; automatic restoration with a user override; final-image
+download and optional original/mask/result bundle; useful fixed-gallery results
+with manual correction allowed.
+
+Final-round answers: add suitable public research datasets when existing coverage
+is insufficient; frontal and mildly turned faces first; the existing L4 /
+g2-standard-4 VM (4 vCPUs, 16 GB RAM) has credits and no fixed GPU-hour cap was
+imposed. Bound and time individual experiments. Actual training remains VM-only;
+there is no configured SSH connection, so prepare exact commands/transfer files
+when justified by the output audit. These answers authorize no additional VM
+provisioning or unlimited repetitions of failed recipes.
+
+Existing main restoration and completion pages remain separate. Read-only local
+inspection confirms an RTX3050 Laptop GPU but CPU-only project Torch2.13.0;
+CUDA is currently unavailable in the venv. No package installation, training,
+application edit or new model inference was performed in this discovery step.
+Known runtime differences and confirmed choices are recorded in
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_OUTPUT_SCOPE.md`, intended repository
+counterpart `~/forensic-dgp/PRACTICAL_OUTPUT_SCOPE.md`; no new upload occurred.
+
+First evidence milestone: all 83 supported training records were inspected on
+five native-source/accepted-crop sheets. The 51 covered / 32 uncovered records
+contain 44 mouth-mask cases, six sunglasses/reflective-lens cases, three strong
+glare cases and one hand-over-mask case (overlapping tags). No dedicated
+hair-over-features, scarf-over-face, standalone hand or other-object example was
+confirmed in this subset; this is not an absence claim for the full datasets.
+Source fingerprints and group/exact-byte split checks passed. Source manifest
+SHA256 remains `860ea1dfba8fa442cab19bf3ab41f6a678109dcdb067c38ec0bd79ce43b51ace`.
+No model forward, source mutation or local training occurred.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_COVERAGE_AUDIT.md`, intended VM
+counterpart `~/forensic-dgp/PRACTICAL_COVERAGE_AUDIT.md` after transfer.
+Evidence: `C:\xampp\htdocs\YEAR 4\Testing\outputs\practical_coverage_v1\`, intended
+VM counterpart `~/forensic-dgp/outputs/practical_coverage_v1/` if transferred.
+At this first milestone the practical gallery was not frozen yet. The latest
+evidence section above records the subsequent native-only freeze/comparison.
+
+Next: inspect existing source-pool candidates for missing covering families,
+add suitable public research examples if needed, and freeze the practical gallery
+before comparing automatic and reviewed masks through pretrained completion.
+The native-expert VM archive stays immutable while its role is assessed; it is
+not the default next run. Existing main-app behavior is unchanged; no new upload,
+commit or push occurred. The new Goal is active and unmet.
+
+## Current user priority — 2 October 2026: practical covering removal and completion
+
+The user clarified that hidden facial features need only be a plausible estimate.
+The intended useful result detects face masks, sunglasses or strong lens glare,
+replaces the covering with plausible facial content, and restores degraded visible
+features. Completion/inpainting generates the hidden region; restoration addresses
+observed blur/noise. Exact recovery of the person's actual hidden appearance is
+not an acceptance requirement. Visual removal and coherent facial output are the
+priority; preservation of visible appearance remains relevant.
+
+The user confirmed four product decisions: remove sunglasses and strong lens
+glare while keeping ordinary clear frames/transparent lenses; target any facial
+covering, including hands, hair, scarves and objects; permit regeneration of a
+small surrounding skin margin to remove the covering completely; and provide
+automatic detection with optional manual mask correction. These decisions take
+precedence over earlier assumptions about strictly exact covering boundaries.
+The user also confirmed: keep hair unless it covers the face, and request a
+less-covered image when nearly the entire face is hidden. Apply the hair rule to
+strands obstructing facial features while preserving ordinary hairstyle, eyebrows
+and normal facial hair. All six scope decisions are resolved. The existing
+experimental interface supports manual mask correction, but broad automatic
+real-covering performance has not been established.
+
+Do not interpret approximate hidden anatomy as permission to silently relabel
+old masks, change fixed experiments or claim a passed historical selection gate.
+The confirmed scope and proposed output checks are recorded in
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_OUTPUT_SCOPE.md` (intended VM repository
+counterpart `~/forensic-dgp/PRACTICAL_OUTPUT_SCOPE.md`; no new upload). Freeze a
+new execution/acceptance protocol before any new evaluation or training. Assess
+covering removal, plausible anatomy, seams and visible-feature preservation.
+Record any intentional removal margin separately from raw detector accuracy.
+Version any changed detection/selection policy and retain original measurements
+and outcomes. No training, model promotion or packaged source/protocol modification
+is part of this clarification.
+
+Next: audit real-example coverage for the broader scope and compare automatic
+versus reviewed removal regions before selecting VM work. A metadata-only check
+finds68/83 training records with no covering-family tag; among the15 tagged records
+there is one hand-over-mask case, but dedicated hair/scarf/other-object coverage
+is not established. Untagged does not mean absent: inspect and classify examples
+before making a coverage claim. No model forward was used for this check.
+The prior StageA package remains
+available and immutable; it targets native lens learning and does not demonstrate
+all-covering readiness. Actual training remains VM-only. Windows workspace:
+`C:\xampp\htdocs\YEAR 4\Testing\`; VM repository: `~/forensic-dgp/`.
+The full goal remains active and unmet.
+
+## Prepared milestone — 2 October 2026: bounded native-expert VM pilot packaged and audited
+
+StageA is ready to transfer for a bounded GPU pilot, not application promotion.
+The separate native-expert recipe starts from reflective42 with exact inherited
+AdamW moments (step672/model882). Six epochs×56 batches give336 updates, final
+global epoch48, model1218 updates and moment step1008. The fixed batch8 contains
+3real (2covered/1clear) and5fixtures (4covered/1clear), with50/50 supported domain
+loss. Each existing fixture appears once per epoch; all83 real training cases
+appear each epoch. The original parent stays separate and untouched.
+
+This is a changed membership/objective/sampling experiment, not a causal test of
+native additions or replay removal. StageA evaluates only83 real/280 fixture
+training cases at source42 and the fixed final budget. Five predeclared fit/clear
+checks and a fixed ten-row preview determine whether a separate StageB routing
+protocol is justified. No development/test model scoring, learned selector or
+generator/completion run is part of StageA. Original425-case gates remain exact.
+
+The10,465,197-byte upload (about10MB) reuses297,268,325 bytes of existing model,
+moments and fixture-cache assets on the VM. All281 archive files independently
+verify:252 supported dataset files, original split snapshot, six lens maps and
+17 required code files. The auditor reconstructs all336 deterministic batches,
+preserves original full supervision and source171 unknown RGB, and verifies LF
+checksum format. Twenty-one frozen/native/VM-boundary/archive contracts pass;
+the pasted Bash commands pass syntax checking. Actual CUDA execution is unverified
+until the user runs preflight. No actual local training, new model forwards,
+optimizer construction or VM upload occurred in this preparation milestone.
+
+Upload these two Windows files through Google Cloud SSH to `/home/janusdominic0/`:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\native-expert-vm-code.tar.gz`
+and `C:\xampp\htdocs\YEAR 4\Testing\outputs\native-expert-vm-code.tar.gz.sha256`.
+Archive SHA256:
+`9e2edb1c42591d01134514184b23041b7e8e6522d68b48beb6f86983b187e7c9`.
+Exact commands and fixed checks:
+`C:\xampp\htdocs\YEAR 4\Testing\NATIVE_EXPERT_VM.md`, packaged as
+`~/forensic-dgp/native_expert_vm_bundle/NATIVE_EXPERT_VM.md`.
+New VM working root: `~/forensic-dgp/native_expert_vm_bundle/`.
+Read-only existing assets: `~/forensic-dgp/coverage_vm_bundle/`.
+Existing environment activation: `~/forensic-dgp/feature_vm_bundle/.venv/bin/activate`.
+No reinstall or git pull is needed for this self-contained transfer.
+
+Prepared specification:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\native_expert_protocol_v1\protocol.json`,
+SHA256 `711a9def23d53cc32cb645395e8d9154571f5f88797dfbe6a404dadca06ebeab`;
+its bundled VM counterpart is `~/forensic-dgp/native_expert_vm_bundle/inputs/native_expert_protocol.json`.
+Independent archive audit:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\native_expert_package_validation_v1\verification.json`,
+SHA256 `395f11d7c1d409c546841f608997f5f4eb5d82c8c347b3385f1458c7cb216955`.
+This local archive audit has no new VM execution counterpart.
+
+Next: run GPU preflight and the bounded StageA pilot. Return
+`~/forensic-dgp/native_expert_vm_bundle/native-expert-results.tar.gz` and its
+LF checksum to `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. Independently audit,
+reproduce final masks and inspect the grid before any StageB or promotion.
+Source42 remains ineligible on synthetic retention; the new expert is untrained.
+No `best_detector.pth`, application or Phase3 restoration replacement is selected.
+No commit/push occurred. Actual training remains VM-only; the goal remains active
+and unmet. Hidden facial features remain plausible estimates.
+
+## Verified milestone — 2 October 2026: frozen detector complementarity audited
+
+The training-only two-head diagnostic is complete and independently verified.
+All1,946 saved masks and6,811 case/system recounts pass;353 reused masks equal
+the audited VM pixels. Eleven targeted contracts pass. The fixed ten-row preview
+was inspected. Both frozen heads preserve their tensor states; there were1,593
+new CPU predictions, zero optimizer updates and zero held-out forward passes.
+
+Fixed union/intersection fail the predeclared training safeguards. Both binary
+heads miss8,205/21,853 reviewed lens pixels (37.55%); binary selection alone cannot
+recover them. The conservative dominance oracle is target-informed and is not
+optimal image routing. No learned router, completion generation or model promotion
+occurred. The existing archive checksum matches again; no repeat download is needed.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\FROZEN_COMPLEMENTARITY_RESULTS.md`.
+Evidence: `C:\xampp\htdocs\YEAR 4\Testing\outputs\frozen_complementarity_v1\`.
+Independent verification:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\frozen_complementarity_validation_v1\verification.json`,
+SHA256 `449ddc0f85908f653099cb229bfdbce16d152df1eb0ec7a7f4c881bd18d8134b`.
+These local diagnostics have no new VM execution counterpart. VM repository remains
+`~/forensic-dgp/`; executed workspace remains `~/forensic-dgp/coverage_vm_bundle/`.
+
+The separate bounded native-expert VM pilot is now packaged and audited; see
+the current status above. No new VM training has started. StageA expert fit alone
+cannot qualify the detector or generator. Original development gates,
+generator/application and Phase3 baseline remain unchanged. The goal remains
+active and unmet.
+
+## Verified milestone — 2 October 2026: supported real-mask dataset independently verified
 
 The explicit supported reader and separate 115-record registry are complete.
 Training contains83 images (51 covered/32 clear), validation25 (15/10), test7

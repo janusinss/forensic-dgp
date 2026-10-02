@@ -36,6 +36,12 @@ from degradation import (
 
 app = FastAPI(title="Optimal Face Restoration Web UI")
 
+# Reviewed single-face processing shares the established application and design.
+# The historical /reconstruct benchmark remains available without selecting its
+# failed restoration route for the new covering-removal workflow.
+from face_workflow_web import router as face_workflow_router
+app.include_router(face_workflow_router)
+
 # Mount static files (CSS, JS)
 os.makedirs("static", exist_ok=True)
 os.makedirs("templates", exist_ok=True)
@@ -86,7 +92,7 @@ print("Optimal Face Restoration Engine ready.")
 @app.get("/", response_class=HTMLResponse)
 async def serve_ui():
     """Serve the main UI HTML file with UTF-8 encoding and cache-invalidation."""
-    with open("templates/index.html", "r", encoding="utf-8") as f:
+    with open("templates/face_workflow.html", "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(
         content=html_content,
