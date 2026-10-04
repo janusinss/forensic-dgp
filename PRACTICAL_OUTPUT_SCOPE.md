@@ -6,6 +6,49 @@ change to any executed experiment. Windows workspace:
 The intended VM counterpart is `~/forensic-dgp/PRACTICAL_OUTPUT_SCOPE.md`; this
 clarification has not been uploaded. All actual training remains VM-only.
 
+## CCTV restoration priority — 3 October 2026
+
+Latest architecture clarification,4 October2026: the user permits a separately
+documented pretrained face-generating prior with our own trained conditioning
+layers **if reviewed output improves**. This extends the earlier baseline-only
+architecture scope below. It does not authorize relabeling a pretrained model
+as our trained DGP or claiming exact recovered identity. Preserve structure,
+defer insufficient inputs and verify the actual learned contribution. All
+training remains on the L4; local inference-only feasibility is allowed.
+Current comparison: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_FACE_PRIOR_V10.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_FACE_PRIOR_V10.md` after explicit sync.
+
+The user reconfirmed that degraded CCTV face restoration in Zamboanga City is the
+main thesis outcome. This document's covering-removal workflow remains in scope
+as supporting functionality. Earlier resolved questions below concern that
+workflow; the three CCTV-specific question rounds are now resolved in
+`C:\xampp\htdocs\YEAR 4\Testing\SYSTEM_WORKFLOW_AND_GOAL.md` (intended
+`~/forensic-dgp/SYSTEM_WORKFLOW_AND_GOAL.md` after transfer). Acceptance of a coherent
+rough estimate for covered regions does not automatically authorize replacing an
+uncovered person's visible features with sharper generic facial features.
+
+The user identifies `C:\xampp\htdocs\YEAR 4\Testing\docs\THESIS MANUSCRIPT.docx`
+as outdated; later decisions since 19 September take precedence. Keep historical
+protocols, labels, measurements and failures unchanged during this clarification.
+
+The first CCTV question round reconfirmed one face crop as input, no real
+Zamboanga CCTV samples yet, and improvement of our trained DGP as the primary
+restoration contribution, with pretrained restoration models used as comparison
+baselines. All CCTV degradation types are desired; no individual type or input
+face-pixel range has been prioritized. The accepted completion estimates do not
+by themselves demonstrate that the DGP restoration model has improved.
+
+The subsequent CCTV rounds confirmed preservation of visible facial structure
+even at the cost of some softness, requesting a clearer crop when usable facial
+information is insufficient, and 256×256 output for the initial controlled DGP
+comparison. Obtain a public real-CCTV benchmark before choosing new training.
+Prioritize Asian capture sources where available and report broader sources
+separately; source location is not an individual ethnicity label or Zamboanga
+validation. The assistant reviews development outputs and independent reviewers
+assess final thesis results. A separate pretrained completion component is
+permitted while DGP remains the main restoration model. These workflow decisions
+are now sufficiently clear for benchmark acquisition.
+
 ## Confirmed first-version workflow
 
 The user confirmed the first-version workflow on 2 October 2026:
@@ -44,11 +87,13 @@ An uncovered reference image of the same person is not required. A generated
 estimate is not an automatic identity/attendance decision. All discovery questions
 are resolved. The actionable specification is in `SYSTEM_WORKFLOW_AND_GOAL.md`.
 
-Read-only code/runtime inspection finds two current apps: `app.py` for the main
+The historical discovery inspection recorded two apps: `app.py` for the main
 Phase3 restoration page and `completion_web.py` for experimental completion.
-The latter supports face cropping, mask painting/erasing, pretrained CodeFormer
+The latter supported face cropping, mask painting/erasing, pretrained CodeFormer
 inpainting and a manual visible-restoration toggle. This is not yet the agreed
-combined workflow. No app/browser interaction was needed for this inspection.
+combined workflow at that time. The current combined app and remaining DGP
+integration work are recorded in `PROJECT_HANDOFF.md`. No app/browser interaction
+was needed for that historical inspection.
 The local machine reports an RTX3050 Laptop GPU, but the project's current venv
 uses `torch 2.13.0+cpu`, CUDA unavailable. A future local inference setup must
 account for that distinction; no CUDA package replacement occurred in discovery.
@@ -60,6 +105,15 @@ the covering with plausible facial content, and restore observed blur/noise wher
 needed. The output does not have to recover the person's exact hidden appearance.
 Completion/inpainting generates missing facial regions; restoration improves
 degraded visible features. The visible person's appearance should remain coherent.
+
+On 3 October 2026 the user explicitly confirmed: a coherent rough estimate is
+acceptable when the covering is substantially removed and the visible face stays
+coherent. Perfect detail or the person's exact hidden features are not required.
+This is a product-quality criterion, not acceptance of any particular generated
+image. Historical failure labels, numerical gates and frozen review protocols
+remain unchanged; visible covering remnants and incoherent anatomy still require
+case-by-case review. The intended VM counterpart is
+`~/forensic-dgp/PRACTICAL_OUTPUT_SCOPE.md` after a separate document transfer.
 
 | User decision | Intended behavior |
 | --- | --- |

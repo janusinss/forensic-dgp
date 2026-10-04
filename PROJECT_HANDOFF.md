@@ -1,12 +1,1729 @@
 # Forensic DGP: workspace handoff and training runbook
 
-## Current milestone — 3 October 2026: uploaded data audited; VM camera diagnostic ready
+## Current milestone — 4 October 2026: V15 generalization audited; broader diagnostic next
+
+**V15 generalization probe closed — negative, 4 October 2026:** all50
+fresh-image outputs matched the audited ten-face cache; fixed104-reference/
+520-case development validation then exposed severe overfitting. Degraded PSNR
+13.987dB versus retained DGP16.027dB; fixed ArcFace0.07662 versus0.33011. Clear
+PSNR14.081 versus DGP31.132dB. Both unchanged preservation guards fail; embedding
+similarity regresses in every degraded source/profile group. All five fixed
+original-cell grids show distorted/changed features. No useful upgrade/adoption.
+L4 inference212.12s; full audit/export296.54s; peak VRAM1,002,894,336bytes.
+Independent local audit55.49s rebuilt1560 PNGs/2080 cosines,150 raw previews,
+50 fresh/cached parity renders and250 grid cells, with zero neural/training calls.
+All741 execution/data/head assets and116 parent assets reverified on VM.
+Zero optimizers/backwards/updates; no teacher/native/reserved/selection/promotion.
+Windows C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_GENERALIZATION_V15_RESULTS.md ↔
+intended ~/forensic-dgp/CCTV_DGP_GENERALIZATION_V15_RESULTS.md after sync.
+Local outputs\cctv_dgp_generalization_return_v15\ ↔ VM
+~/forensic-dgp/cctv_dgp_generalization_vm_v15/outputs/generalization_v15/.
+All returns collected; fresh idle check passed; Cloud **TERMINATED**,
+stop2026-10-04T08:21:58.016-07:00. No docs/git publication or app integration.
+**Next:** separately prepare a reset code-only head on781 existing training
+references, balanced source/profile exposure and finite VM-only budget. Do not
+resume the memorized head. Broader data is a hypothesis; clear appearance also
+needs a DGP-preserving output path before adoption. Retain the baseline and guards.
+Protocol6c0e1de5bcb56b755b82a3289adb4905c591f49908f02365ad6ad5fbd151f9da.
+<!-- V15 current status end -->
+
+**V14 r2 capacity diagnostic closed, 4 October 2026:**1,000 updates/2,000
+exposures completed on the L4 in97.27 seconds; training/audit/export163.34 seconds,
+peak allocated VRAM1,187,559,424 bytes. The587,564,966-byte return is independently
+audited (450 renders,150 code/stat probes,1,000 traces, zero local neural/backward/
+training calls). All five original256-cell grids are reviewed. Direct prediction
+now produces coherent faces on the ten training photographs. Degraded no-stat
+PSNR13.522→24.272dB, code accuracy2.02→98.95%; this is fitting, not generalization.
+Observed statistics retain dark/noisy degradation; predicted statistics cause
+color/brightness drift and clear PSNR24.731→23.572dB. Do not adopt the stat head.
+Original zero-update V14 failure and separate numeric-only r2 correction remain
+preserved; all100 starting parity checks and frozen-state/quality gates passed.
+No validation/native/reserved use, best.pth, selection or production promotion.
+Windows C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_DIRECT_CODES_V14_R2_RESULTS.md
+↔ intended ~/forensic-dgp/CCTV_DGP_DIRECT_CODES_V14_R2_RESULTS.md after sync.
+Local outputs\cctv_dgp_direct_codes_return_v14_r2\ ↔ VM
+~/forensic-dgp/cctv_dgp_direct_codes_vm_v14_r2/outputs/cctv_dgp_direct_codes_v14_r2/.
+All11 execution sources/116 parent assets reverified. Returns collected; idle
+checks passed and Cloud confirms **TERMINATED**, stop2026-10-04T07:54:24.806-07:00.
+No git/doc publication. The active Goal and DGP-led app integration are incomplete.
+**Next:** separately freeze a no-training fresh-image parity/generalization probe
+on the unchanged104-reference/520-case development validation cohort. Freeze
+no-stat rendering from training evidence; compare retained DGP and starting prior,
+report clear and all source/profile groups; keep native/reserved data untouched.
+Broader training requires a later justified finite VM protocol.
+Protocol d7d5dcac64202c24a7c85658e6b660bdc806bf7d8c16b09542c53170f40a1da2.
+
+**V13 rendering control closed, 4 October 2026:** all 50 cases completed in
+52.21 seconds on the L4, with 162 frozen-generator forwards and zero training
+updates. The 152,609,077-byte return is verified. Independent local audit took
+10.98 seconds and checked 200 PNGs, 160 distinct raw renders and 350 grid cells
+without neural calls. All five grids are reviewed. Clean teacher codes render
+coherent faces; predicted codes remain structurally wrong, while observed
+degraded AdaIN statistics carry dark/noisy texture. Removing statistics alone
+worsens several predicted-code outputs. Both prediction and clean rendering
+statistics need repair. Oracle arms use target codes and prove no learned
+upgrade. No checkpoint/selection/promotion, validation, native or reserved use.
+Windows report `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_FACE_CODE_CONTROLS_V13_RESULTS.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_FACE_CODE_CONTROLS_V13_RESULTS.md` after sync.
+Audited local return `outputs\cctv_dgp_face_code_render_controls_return_v13\`
+↔ VM `~/forensic-dgp/cctv_dgp_face_code_render_controls_vm_v13/outputs/cctv_dgp_face_code_render_controls_v13/`.
+All returns are collected; idle checks passed and Cloud confirms **TERMINATED**,
+last stop `2026-10-04T06:55:04.228-07:00`. No git/doc publication occurred.
+**Next:** prepare our direct code-prediction and clean-statistics conditioning
+layers with starting parity and a finite VM-only train-cohort capacity pilot.
+Keep the retained DGP and declared pretrained renderer frozen; useful training
+outputs are required before a separately versioned held-out experiment.
+
+V12 r2 was trained, independently audited and visually reviewed; its conditioner
+is not a useful upgrade. V13 above is the latest diagnosis. Historical recipes
+and gate failures below remain preserved.
+
+V9 completed **7,820 updates / twenty epochs** on the L4 in **22.61 minutes**;
+training, VM audit and export took **24.60 minutes**. The return archive and
+independent local audit passed. All five original-cell grids were inspected.
+No trained snapshot passed the unchanged selection safeguards: `best.pth`
+retains the V2 starting baseline, selected epoch0. Epoch20 degraded PSNR improves
+16.0267→21.1986dB and SSIM0.61930→0.65281, but fixed ArcFace similarity falls
+0.33011→0.30431 and regresses in all eight degraded source/profile groups.
+Clear preservation improves; degraded facial detail and color artifacts remain.
+The ten-row previews repeat two faces across five profiles; usefulness and
+independent final review remain unestablished. No trained V9 native forwards,
+reserved32 use, app promotion or git/document sync occurred.
+
+The **113.84-second local audit** rebuilt2,600 PNG metrics,50 raw previews,
+520 input metrics and3,120 embedding cosines; checked7,820 traces/78,200
+exposures, loss-weight arithmetic and four changed checkpoint states. It did
+not replay CUDA gradients or recognizer forwards. VM source/control fingerprints
+and interim/final preview equality are independently bound. After verified idle
+GPU/tmux checks, the assistant restored the prior stopped state; Cloud confirms
+**TERMINATED**, stop timestamp `2026-10-04T05:06:53.104-07:00`.
+
+The user answered the architecture question: **“if that makes things better
+then continue”**. A separately declared pretrained face-generating prior with
+our trained DGP conditioning is now within scope, conditional on better reviewed
+output. First prepare and run an inference-only feasibility comparison; do not
+repeat failed pixel recipes, relabel CodeFormer as our trained DGP or relax
+historical guards. All actual training remains VM-only, even for short pilots.
+The full Goal is active and incomplete; the main app still uses Palette/CodeFormer.
+
+**V10 closed as a negative cascade comparison:** all 50 paired and 24 native
+development outputs were saved, but the original runner failed at preview rendering
+before final model-state/count receipts. A separate no-forward recovery and
+independent arithmetic/grid audit passed; all ten grids were reviewed. Direct
+DGP → CodeFormer sometimes adds detail but invents glasses, facial hair or
+expressions. No adoption, checkpoint selection or app promotion. Reserved 32
+remain unused; the VM stays stopped. See `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_FACE_PRIOR_RESULTS_V10.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_FACE_PRIOR_RESULTS_V10.md` after explicit sync.
+Next: a separately versioned feature/code-conditioning prototype, zero-conditioner
+parity and prior-capacity checks before a finite L4 training pilot.
+
+**V11 interface/capacity check complete:** our untrained 455,072-parameter
+conditioner starts at zero and reproduces the frozen CodeFormer baseline exactly
+on two artificial RGB cases. Frozen states/counts are verified; 161.12-second
+local inference and 5.39-second independent no-forward audit passed. Both
+five-reference training-source grids are reviewed. A clean-code oracle forms
+coherent faces but changes some features; it does not restore CCTV or establish
+identity fidelity. Next: a bounded VM-only fitting diagnostic, with gradient/VRAM
+preflight and no checkpoint promotion. No validation or native data was used.
+Runbook: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_FACE_CODE_V11.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_FACE_CODE_V11.md` after explicit source sync.
+
+**V12 r2 fitting closed, 4 October 2026:** the L4 completed 300 updates / 600
+exposures on ten training faces. Trainer 125.22 seconds; complete VM
+training/audit/export 177.28 seconds; peak allocated VRAM 1.43 GB. CUDA
+zero-conditioner parity and gradient preflight passed. The 468,092,580-byte
+return and all 116 VM source/asset bindings are verified. A 21.64-second local
+no-forward audit rebuilt all 300 renders, 150 code probes and 500 grid cells.
+All ten original-cell grids were reviewed. **No useful upgrade:** degraded
+code accuracy stays near 2%, clear accuracy falls 21.35% to 13.78%, and facial
+artifacts persist. No best.pth, selection or production promotion; no validation,
+native development or reserved access. The original Python3.10 loader failure
+(zero updates) and its separate r2 compatibility correction remain preserved.
+
+Current report: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_FACE_CODE_FIT_V12_RESULTS.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_FACE_CODE_FIT_V12_RESULTS.md` after doc sync.
+Audited local return: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_face_code_fit_return_v12_r2_verified\`
+↔ executed VM results below `~/forensic-dgp/cctv_dgp_face_code_fit_vm_v12_r2/outputs/cctv_dgp_face_code_fit_v12/`.
+The earlier sandbox-blocked partial extraction is retained separately. Receipts,
+learning diagnosis and grid review are linked in the report. All return files
+are local; idle checks passed and Cloud confirms **TERMINATED**. Source/doc/git
+publication has not occurred. The active Goal remains incomplete.
+
+**Next:** freeze an inference-only training-cohort control that separates code
+prediction from original-input AdaIN/fidelity rendering. Clean teacher-label
+arms are declared oracle diagnostics, not learned results. Do not repeat this
+recipe or scale it up before identifying a specific repair.
+
+Windows report: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_MIXED_V9_RESULTS.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_MIXED_V9_RESULTS.md` after document sync.
+Research: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_ARCHITECTURE_REVIEW.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_ARCHITECTURE_REVIEW.md` after sync.
+Return: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-mixed-v9-results.tar.gz`
+↔ `~/forensic-dgp/cctv_dgp_mixed_vm_v9_r2/cctv-dgp-mixed-v9-results.tar.gz`.
+Return bytes319,681,838; SHA256
+`e12a68b42e36aa1b98d1eedd6aba303a2b625a8acb5a4e53815248eb5dc02a8c`.
+Audited extraction: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_mixed_return_v9\`;
+its `outputs/cctv_dgp_mixed_v9/` corresponds to the executed VM output directory.
+Receipts include `local_independent_audit.json`, `paired_diagnosis_v9.json`,
+`vm_source_bindings.json` and `assistant_preview_review_v9.json` beneath that
+local extraction. Local VM stop receipt is in Windows `outputs/`.
+The corrected inference loader remains separately versioned, with14 tests and
+four artificial-signal CPU forwards proving stable state/matching output.
+
+## Previous execution snapshot — 4 October 2026: V9 running
+
+All actual training uses the existing L4 VM, including short pilots. Direct
+Google Cloud start/stop/SSH/SCP access is configured and verified; the obsolete
+Goal-tool sentence about absent SSH does not govern current execution. V8's
+two-image fitting result is retained as a diagnostic, not a deployable upgrade.
+
+The Asian source-only review is complete: 451 training candidates, 29 exact-target
+pages and 49 original-resolution checks; 390 accepted, 28 covering exclusions,
+33 quality/pose exclusions. Initial observations and original-image corrections
+are preserved. A separate integrity audit checked every decision/hash/role.
+Combined training cohort: 391 reviewed HQ FFHQ plus 390 Asian replay references.
+Validation remains the same 53 HQ FFHQ and 51 Asian references, 520 cases. All
+Asian source images have minimum edges below 256; replay does not create HQ truth.
+Direct source hashes are disjoint; historical subject/exposure overlap is unknown.
+
+V9 preparation independently rebuilt all 3,905 camera inputs and checked 885
+target pixel hashes, 520 unchanged validation byte copies, 7,820 balanced batches
+and 78,200 exposures. Ten meaningful boundary tests passed and a real local
+training call was rejected before model/output/backward/update operations. All
+6,232 package members independently match pinned hashes. The initial assets-only
+failure from legacy HQ thumbnail pixel metadata is preserved; `r2` separately
+pins actual canonical pixels without changing historic records or targets.
+
+Frozen recipe: V2 starting state, twenty epochs, batch 10, all five profiles in
+both sources every batch, fresh Adam `2e-5/1e-4`, fixed training-only-calibrated
+pixel-loss weights, frozen normalization. Evaluate baseline/epochs 2/5/10/20 with
+unchanged strict per-source/profile PNG PSNR/SSIM/ArcFace guards. No trained
+candidate passing means `best.pth` retains V2. Trainer cap 40 minutes; complete
+training/audit/export cap 60 minutes. This is a pixel-foundation pilot with no
+identity training loss, native reserved use or automatic production promotion.
+
+Historical execution snapshot: VM start, idle/CUDA checks, upload and all 6,232 exact
+asset checks passed. The assistant launched dedicated `dgp_mixed_v9`; unchanged
+PyTorch `2.9.1+cu129` / torchvision `0.24.1+cu129` are verified on the L4. CUDA
+preflight passed with zero optimizer updates and unchanged normalization buffers.
+The update-32 timing projection is 1,492.51 seconds, within the 2,400-second cap.
+Later
+completion/audit receipts supersede this snapshot. No completed V9 training or
+selected useful output is claimed yet. Next: monitor the bounded execution, then independent return
+audit and all five original-cell preview reviews. The full Goal remains active.
+
+A separate corrected inference loader is prepared without changing the historical
+adapter or app defaults: `C:\xampp\htdocs\YEAR 4\Testing\dgp_frozen_inference_v2.py`
+↔ intended `~/forensic-dgp/dgp_frozen_inference_v2.py` after source transfer.
+Fourteen tests passed; four retained-Phase3 CPU forwards on artificial signals
+match the old loader exactly for batches 1 and 6, with stable model state and
+zero backward/update calls. These are contract checks, not quality evidence.
+Current inference requirements and receipts are in `DGP_INFERENCE_READINESS.md`
+beneath the Windows root; intended VM counterpart is `~/forensic-dgp/` after sync.
+
+Runbook: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_MIXED_V9.md` ↔ intended
+`~/forensic-dgp/CCTV_DGP_MIXED_V9.md` after document sync; executable
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_mixed_vm_v9_r2\` ↔
+`~/forensic-dgp/cctv_dgp_mixed_vm_v9_r2/` after verified upload/extraction.
+Protocol SHA256 `6cd9ac8d5f3bf27be773979c2f628e33f5d3cf09748452eeab91a65b05b01c70`.
+Package: 305,689,318 bytes; SHA256
+`f8fb4196a1515c451ca1f77b1d73e81f50e6335e3280b2287de7b78f48090a99`.
+Preparation/audit evidence remains in local `outputs/`; no git/document sync is
+claimed. Main-app defaults and all original V1–V8 protocols/failures remain intact.
+
+## Previous milestone — 4 October 2026: V8 fitting audited; broader mixed-source preparation next
+
+All actual training uses the existing VM, including short pilots; the assistant
+can start it through configured Google Cloud CLI access. V6/V7 returned audits
+are complete and neither experiment qualified a model upgrade. Their original
+protocols, failed gates, returns and preview reviews remain preserved below.
+
+V8 completed as a separate frozen training-only diagnostic: the same two V7 blur pairs,
+original V2 starting tensors and pixel-MSE optimizer, 1,000 updates, fixed
+20/100/1,000 snapshots, a 600-second trainer cap and 900-second complete
+execution cap. All 42 inherited byte copies, three Python 3.10 source parses,
+archive members and the local-training guard passed offline checks. Its
+2,070,573-byte package was uploaded; all 50 assets including three cached
+original weight files passed VM hash verification. The assistant started the
+previously stopped L4 and launched dedicated tmux `dgp_blur_fit_v8`; unchanged
+PyTorch/torchvision CUDA versions and the bounded supervisor are recorded.
+Training completed 1,000 updates in 45.95 seconds; training/audit/export took
+67.87 seconds. Final two-image blur MSE fell from 0.0095371 to 0.0018928
+(ratio 0.19847), passing the fixed training-fit criterion. This shows fitting
+capacity on those examples, not generalization. Other eight training cases
+regressed: motion MSE increased from 0.0050750 to 0.0134428 and clear MSE from
+0.0009495 to 0.0180006. All four grids were reviewed at original cells;
+two fitted faces are clearer, while other faces show severe texture/contrast
+and color artifacts. No production checkpoint was selected or promoted.
+
+Current status: 85,445,552-byte return downloaded and independently audited;
+40 PNGs, 40 raw predictions, 50 embedding arrays, 1,000 traces, three changed
+checkpoints and exact ten-image V7 baseline equality checked. Execution and
+terminal/source fingerprints are bound by the separate assistant review receipt.
+No local model forwards/backward/updates occurred. After checking for competing
+jobs, the assistant restored the VM to its prior stopped state; Cloud reports
+`TERMINATED`. Do not rerun this root, deploy the two-image overfit or forward
+reserved native cases. The full DGP-first Goal remains `active`.
+
+Runbook: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_BLUR_FIT_V8.md` ↔ intended
+`~/forensic-dgp/CCTV_DGP_BLUR_FIT_V8.md` after document sync; runtime
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_blur_fit_vm_v8\` ↔
+`~/forensic-dgp/cctv_dgp_blur_fit_vm_v8/`. Protocol SHA256:
+`d58cf74c41d4b87db294286fd04c04292d00730ec8aa97d86af93169c5bc1d2b`.
+
+Return SHA256: `96a80124de9115ed95995c1e6a7c9acc075185380c06841580e244ee95e3b21d`.
+Local audit: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_blur_fit_return_v8\local_independent_audit.json`;
+VM audit: `~/forensic-dgp/cctv_dgp_blur_fit_vm_v8/outputs/cctv_dgp_blur_fit_v8/independent_audit_vm.json`.
+Local assistant review and VM control receipts remain local; no document/git sync
+is claimed. All V1–V8 failures, original protocols and app defaults remain intact.
+
+**Next:** review existing Asian training sources for covering/quality suitability,
+then freeze a broader mixed-source finite pilot with clear/degradation replay and
+unchanged per-source/profile validation safeguards. A 6.53-second zero-model
+coverage audit verified 1,353 original Asian assets, 451 target pixel hashes and
+1,684 existing camera inputs. V6 trained only 391 HQ FFHQ references; its 51
+Asian cases were validation sentinels. The original split contains 451 Asian
+training references eligible for replay consideration, preserving roles and the
+104-case-reference validation cohort (53 HQ FFHQ / 51 Asian). No direct
+train/validation source-hash collision was found; identity disjointness is not
+established. All 451 Asian originals have a minimum edge below 256, and the HQ
+FFHQ source review does not cover them. Review them before freezing a generator
+training recipe. The next experiment is not executable, started or selected yet.
+Evidence: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_training_coverage_v9_audit.json`
+↔ intended VM evidence copy after verified preparation; no copy claimed.
+
+## Previous milestone — 4 October 2026: V6/V7 returned and audited; next isolate blur fitting
+
+**Training location:** all actual training now uses the existing L4 VM, including
+short pilots. The user withdrew the brief small-local-training permission after
+learning that the assistant can start the VM through the configured Cloud CLI.
+Local preparation, inference and audits remain allowed. Direct VM start/stop,
+SSH and SCP are verified; the old Goal-tool sentence about absent SSH is historical.
+
+V6 completed 196 updates in 259.18 seconds; all four epochs failed unchanged
+selection safeguards. Its return and independent local audit are complete:
+2,600 PNGs, 50 raw previews, 3,120 embedding cosines and 196 update records checked.
+Both `best.pth` files retain the V2 starting tensors. All five ten-row paired grids
+were reviewed: clear HQ detail improves, but degraded-face softness and source/profile
+regressions remain. No V6 native forwarding or promotion occurred.
+
+The 782-case training-only arithmetic range audit took 19.77 seconds with zero
+model/gradient/update operations. The small unavoidable output-range floors do not
+support changing that range alone. A distinct V7 diagnostic then compared pixel-only
+MSE against the retained objective on ten fixed training pairs, with matched larger
+diagnostic learning rates and 100 updates per arm. The L4 completed 200 steps in
+35.15 seconds; training/VM audit/export took 60.93 seconds within a 900-second
+supervisor cap. Both arms failed the declared final blur/motion fit criterion.
+Local audit checked all 70 PNGs, 80 embedding arrays/70 cosines, 200 traces and six changed
+checkpoints. Final grids remain soft; pixel-only outputs show eye/color artifacts.
+These are training-fit results, not independent generalization or a model upgrade.
+
+All returns, terminal/source fingerprints, transport failures and audit receipts
+are preserved. The 63.6-MB transport's VM pixel drift was repaired with exact original
+PNGs; no V6 model/gate changed. Windows command length blocked the first V7 inline
+launch before execution; an identical hash-verified file launcher succeeded.
+No local actual training, environment installation, app default change or git
+commit/push occurred. The 32 reserved native cases remain untouched.
+
+The assistant verified no GPU, other Python or tmux jobs remained after collection
+and restored the initially stopped VM. Google Cloud now reports `TERMINATED`.
+This ends the finite VM executions, not the Goal. Prepare the next recipe locally,
+then start the VM when its verified files are ready.
+
+| Current evidence | Windows local | Linux VM |
+| --- | --- | --- |
+| V6 results/report | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_TARGETS_RESULTS_V6.md` and `outputs\cctv_dgp_targets_return_v6\` | Runtime/result under `~/forensic-dgp/cctv_dgp_targets_vm_v6/`; report still local |
+| V6 exact-byte execution proof | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_v6_execution_evidence_v1\` | Original receipts under `~/forensic-dgp/cctv_dgp_targets_vm_v6/` |
+| Output-range arithmetic evidence | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_output_range_v7\training_range_audit.json` | Local diagnostic; no VM copy claimed |
+| V7 protocol/runtime/results | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_CAPACITY_V7.md`, `outputs\cctv_dgp_capacity_vm_v7\` and `outputs\cctv_dgp_capacity_return_v7\` | Runtime/results under `~/forensic-dgp/cctv_dgp_capacity_vm_v7/`; report/review still local |
+| VM control receipt | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_vm_control_20261004.json` | Control-plane start/stop state; no guest document copy |
+
+V6 return SHA256: `3a12b481a4950ed551c98da6955b463f33f63ee48273c7e1e3dfe20245d13c77`.
+V7 protocol SHA256: `a1d2fbb2c543c95ec1d0c7afe4670d74e7ad8009a8608daf5a2cce6209540b61`.
+V7 return SHA256: `d2eecebb3bc9ffcac7e1abbd71d7455ffe5ed859b18dd9a27b497839fb0f4a9e`.
+V7 local audit SHA256: `dab48537db9bc4f96341c0979f8e1c73c6852a561e67d636b90e00ba8fa18471`.
+
+**Next:** freeze a separate isolated-blur fit diagnostic using the same two V7
+training pairs/starting weights/objective/optimizer. Proposed budget: 1,000 updates,
+snapshots at 20/100/1,000, trainer cap 600 seconds and complete execution cap 900
+seconds; evaluate all ten training pairs for collateral effects. The 20-update point
+matches each blur pair's V7 exposure. The longer endpoint helps distinguish task coupling
+from insufficient exposure. This is a diagnostic proposal; it is not prepared,
+running or eligible for native/default promotion yet. Design:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_blur_fit_v8_design\proposed_protocol.json`
+↔ intended VM copy after executable preparation. Do not repeat V7 mixed training
+unchanged or choose pixel-only loss for full training from these failed results.
+
+The full DGP-first Goal remains `active`: useful native restoration, DGP-led main
+app integration, covering-family behavior, inline Playwright and independent final
+review are still required. Historical milestones below are snapshots, superseded by
+this current section where their execution/location/connection status differs.
+
+## Previous milestone — 4 October 2026: V6 trained; output audit/export underway
+
+The latest user instruction restores VM-only actual training, including small
+pilots, because the assistant can start the existing VM through the configured
+Google Cloud CLI. The earlier conditional local-training permission below is
+superseded. Local preparation, inference and audits remain permitted; the full
+DGP-first Goal stays active.
+
+V6 standalone CUDA preflight passed in 27.40 seconds with zero updates. The matched
+comparison completed 196 optimizer updates in 259.18 seconds on the L4, using
+the unchanged frozen target-bandwidth recipe. All four trained epochs failed its
+strict selection guards; both `best.pth` files retain the starting V2 tensors.
+The VM independent output audit and archive export are running. No local return
+audit, V6 native comparison, app promotion or final usefulness claim exists yet.
+
+The smaller transport stopped on the VM before any training because camera-library
+versions changed actual input pixels (local NumPy 2.5.2/OpenCV 5.0.0/Pillow 12.3.0;
+VM NumPy 1.26.4/OpenCV 4.11.0/Pillow 11.3.0). Its local pass and remote failure are
+preserved. Recovery V2 uploaded 1,430 original PNGs in 100,123,557 bytes and restored
+all 2,709 original asset hashes. All 391 reduced-target pixels also match under the
+original VM verifier. No package versions, data roles, model, loss or gate changed.
+
+The separate portable driver invokes the unchanged verifier/trainer/result auditor
+on those exact prepared bytes and binds the independent local derivation receipt.
+It avoids the historical shell launcher's cross-platform camera regeneration;
+the original launcher remains preserved. Training used dedicated tmux session
+`dgp_training_v6`, driver PID 2050 and trainer PID 2069 (historical once terminal).
+The pilot cap remains 1,200 seconds; the audit/export supervisor cap is 1,800 seconds.
+
+| Evidence | Windows local | Linux VM |
+| --- | --- | --- |
+| Frozen runtime/data | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_vm_v6\` | `~/forensic-dgp/cctv_dgp_targets_vm_v6/` |
+| Camera drift/recovery evidence | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_v6_transport_failure_v1\` and `cctv_dgp_targets_v6_recovery_v2\` | `transport_cache_inventory_failure_v1.json`, `control_pixel_portability_v1.json`, `transport_failures_v1/`, `transport_recovery_v2.json` under V6 root |
+| Portable supervisor source | `C:\xampp\htdocs\YEAR 4\Testing\scripts\run_cctv_dgp_targets_v6_portable_v1.py` | `~/forensic-dgp/cctv_dgp_targets_vm_v6/scripts/run_cctv_dgp_targets_v6_portable_v1.py` |
+| Execution/preflight evidence | Local copy after return | `~/forensic-dgp/cctv_dgp_targets_vm_v6/portable_execution_v1/` and `outputs/cctv_dgp_targets_v6_preflight/` |
+| Results/checkpoints | Intended `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_return_v6\outputs\cctv_dgp_targets_v6\` | `~/forensic-dgp/cctv_dgp_targets_vm_v6/outputs/cctv_dgp_targets_v6/` |
+
+Protocol SHA256: `0fe7d036bf8567bf0860790df553afd627ac50bd5096cfda29cc7d09d71d320c`.
+Recovery archive SHA256: `2fd8719652ee3b6dbdf0be1f33c5a9c40100597f648eb1dbbbc89f7433f59c00`.
+Portable driver SHA256: `7e8f08473f417c6e5254d9e05a5c884225e4821cd121ad8af1ca0bc34fc6dc4b`.
+
+**Next:** collect the verified export, audit it once locally and inspect all five
+paired preview grids/profile regressions before defining another VM experiment.
+The 32 reserved native cases remain untouched. Restore the initially stopped VM
+after needed collection if no competing work exists. Updated documents are local;
+no git commit/push or VM document sync is claimed.
+
+## Previous milestone — 4 October 2026: V6 smaller transport verified locally; VM preflight underway
+
+The previous Goal turn made progress: conditional local-training permission and
+hardware limits were recorded, and independent reconstruction of all 1,302 inputs,
+391 reduced targets and 444 canonical HQ sources passed. The full Goal remains
+active; no model has been promoted and the 32 reserved native crops remain unused.
+
+The L4 instance was initially `TERMINATED` and has now been started for the
+authorized bounded V6 comparison. Read-only SSH verified an idle GPU, 21.59 GiB
+free disk and unchanged torch `2.9.1+cu129`/torchvision `0.24.1+cu129`. Restarting
+assigned external IP `34.171.216.245`. Its offered SSH key matches six previously
+trusted instance keys; CLI operations explicitly pin
+`SHA256:pGOZAAcM7szdr2S1Ty+8UORXEPPAhxMDw7jDfzZ4I0E`.
+The guest host-key attribute is unavailable, and no control-plane host-key match
+is claimed. No private keys/credentials were copied into project artifacts.
+
+The initial 376.8-MB upload averaged about 300 KB/s with 19 minutes remaining.
+It was explicitly cancelled; its session is terminal, and the remote partial
+archive is preserved. Windows pscp's `~/` destination was corrected to the
+absolute `/home/janusdominic0/` directory. A separate lossless transport reduces
+the upload to 63,567,794 bytes (83% smaller), preserving the frozen V6 protocol
+and every asset. It ships 458 assets, reuses 821 exact cached assets and
+regenerates 1,039 camera inputs and 391 reduced targets. One exact cached camera
+module is bootstrapped before materialization imports it. The local independent
+check reproduced all 2,709 assets and a byte-identical recipe in 30.00 seconds
+with zero model operations. The smaller upload has completed; VM checksum,
+materialization and bounded zero-update CUDA preflight are now underway. No
+actual optimizer updates have yet been reported.
+
+Transport SHA256: `16fbe1bcbbe2a54839a858221e1efa5f6b58b3a3f0409ee38f9e043d46c4183a`.
+Manifest SHA256: `e7f12655f74fb94f5b43243acc0fd761f5326dfc519cfcabf01ad49bdda5c0d0`.
+Materializer SHA256: `b7050bcffa14ebfe94b9e0ca038c5cc32a0a484fc39f6b3bbe864c7f70834b09`.
+The original full V6 package, hashes, sources and all historical V1–V5 evidence
+remain intact. This is a transport optimization, not a different experiment.
+
+| Artifact | Windows local | Linux VM |
+| --- | --- | --- |
+| Frozen V6 recipe/runbook | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_TARGETS_V6.md` | Runtime/data under `~/forensic-dgp/cctv_dgp_targets_vm_v6/`; runbook not yet transferred |
+| Smaller transport runbook | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_V6_TRANSPORT.md` | Intended document `~/forensic-dgp/CCTV_DGP_V6_TRANSPORT.md` after transfer |
+| Uploaded transport/checksum | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-targets-v6-transport-v1.tar.gz` and `.sha256` | `~/cctv-dgp-targets-v6-transport-v1.tar.gz` and `.sha256` |
+| Local materialization proof | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_v6_transport_v1\local_materialization_audit.json` | Local receipt; remote counterpart will be `~/forensic-dgp/cctv_dgp_targets_vm_v6/transport_materialization_v1.json` |
+| Standalone CUDA preflight | Local receipt after transfer | `~/forensic-dgp/cctv_dgp_targets_vm_v6/outputs/cctv_dgp_targets_v6_preflight/` when complete |
+
+**Next:** finish VM materialization/CUDA preflight, run the finite matched pilot
+only if those checks pass, independently audit the return and inspect paired
+output grids before any native/app decision. Training completion alone remains
+insufficient for the full Goal.
+
+## Previous milestone — 4 October 2026: conditional local training allowed; V6 package prepared
+
+The latest user instruction permits local training for small pilots estimated at
+3–5 minutes on the L4. Larger runs around 30 minutes should use the VM; tell the
+user when a workload needs it. Choose by measured compute and memory, not archive
+size. This supersedes the earlier blanket VM-only rule for new experiments;
+preserve immutable historical protocols and the full active DGP-first Goal.
+
+Verified local hardware: RTX 3050 Laptop GPU, 4,096 MiB VRAM. The current
+`C:\xampp\htdocs\YEAR 4\Testing\venv\` has PyTorch `2.13.0+cpu`, CUDA unavailable.
+The historical eight-image V5 CUDA preflight allocated 4,398,557,696 bytes (4.10
+GiB), exceeding the local GPU's capacity. The frozen eight-image V6 DGP recipe
+therefore remains an L4 experiment; no local training, VM start or transfer was
+performed. A read-only VM check found the instance `TERMINATED`.
+
+The additive V6 package compares HQ256 reconstruction targets with targets
+reduced HQ256→128→256 through PIL LANCZOS. It holds canonical HQ input images,
+identity targets, case order, starting V2 tensors, Adam, frozen normalization and
+common validation fixed. The reduced arm is a target-bandwidth control, not an
+exact reproduction of the old official-thumbnail recipe. Training uses 391
+source-reviewed FFHQ references; validation uses 53 HQ FFHQ plus 51 unchanged
+Asian sentinel references, each with five fixed camera profiles. Both arms run
+two epochs, 98 updates each (196 total), under a 1,200-second pilot cap. The strict
+source/profile selection guards remain unchanged; native/visual and independent
+final review still govern usefulness, and no production promotion is permitted.
+
+Preparation completed in 76.10 seconds with 2,709 pinned assets and zero local
+model forwards/backward calls/updates. The archive is 376,810,544 bytes.
+Protocol SHA256: `0fe7d036bf8567bf0860790df553afd627ac50bd5096cfda29cc7d09d71d320c`.
+Archive SHA256: `d829012e9a6c2c109335914da207c1fca6c205c7409b756345d41057b064e4c9`.
+Five offline checks passed for matched factors, target bandwidth, safe paths,
+local-training guard and rejection of aggregate gains hiding profile/identity
+regression. Five sources parse as Python 3.10. Independent whole-package data
+audit passed in 33.67 seconds, rebuilding all 1,302 input PNGs, 391 reduced
+targets and 444 canonical sources with zero model operations. CUDA preflight/full
+pilot remain pending. There is no measured V6 L4 runtime or model-quality result yet.
+
+| Artifact | Windows local | Intended VM destination after transfer |
+| --- | --- | --- |
+| V6 package | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_vm_v6\` | `~/forensic-dgp/cctv_dgp_targets_vm_v6/` |
+| Transfer archive/checksum | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-targets-v6.tar.gz` and `.sha256` | `~/cctv-dgp-targets-v6.tar.gz` and `.sha256` |
+| Preparation receipt | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_v6_preparation.json` | Local evidence; not transferred |
+| Passed independent local data receipt | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_targets_v6_local_preparation_audit.json` | Local evidence; not transferred |
+
+**Next:** CUDA preflight on the L4; independent preparation audit has passed.
+The new permission allows practical small future local experiments; it does not
+justify silently changing this already frozen comparison's batch size or device.
+All prior V1–V5 failures/returns, source decisions and 32 reserved native crops
+remain preserved. DGP app integration and useful output remain unfinished.
+
+## Previous milestone — 4 October 2026: all 510 HQ sources reviewed; 444 candidates frozen
+
+The full DGP-first Goal remains `active`. The assistant acquired 16 genuine
+1024×1024 FFHQ counterparts after matching current thumbnail pixels to official
+metadata. The acquisition took 67.69 seconds, downloading 290,338,584 bytes
+including metadata. Independent audit rebuilt all 16 targets and checked 48
+preview cells. Four source-comparison pages and two additional 1024 images were
+reviewed: 14 clean-restoration candidates, two covering exclusions. These are
+reference images, not restored model outputs. No model forwards/backward calls
+or optimizer updates were used; actual training remains VM-only.
+
+All 510 existing FFHQ references now bind to their official thumbnail pixels
+(451 original training-role, 59 validation-role), with 510 genuine 256×256 targets.
+The four-worker acquisition used a 1 GiB/30-minute cap and stopped after a read
+timeout with 507 source files complete. Its failure evidence is preserved.
+Independent cache verification identified only three missing files; a bounded
+recovery downloaded 4,296,660 bytes (4.1 MiB) and completed the catalog in
+42.18 seconds. The full independent audit finished in 61.84 seconds, checking
+all 510 thumbnail/source/target/preview bindings and 32 catalog pages. No exact
+image or source-photo URL overlap exists between roles; full identity overlap
+with historical training remains unestablished. All acquisition/audit process
+handles are terminal. All 32 source pages and 38 ambiguous 1024 sources have now
+been reviewed under the frozen rubric. A separate ledger accepts 391 training-role
+and 53 validation-role references, excludes 60 coverings and excludes six unsuitable
+references (severe original blur or an artificial doll). All original images/roles
+and the initial 16 sample decisions remain intact. This is assistant development
+source review; independent final human/output review remains pending. No new
+training is ready or running.
+
+| Artifact | Windows local | Intended VM copy after transfer |
+| --- | --- | --- |
+| Target-quality status | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_HQ_TARGETS_STATUS.md` | `~/forensic-dgp/CCTV_DGP_HQ_TARGETS_STATUS.md` |
+| Audited 16-source sample | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_hq_counterparts_v1\` | `~/forensic-dgp/outputs/cctv_dgp_hq_counterparts_v1/` |
+| Frozen source decisions/candidate manifest/integrity receipt | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_hq_source_review_v3\` | `~/forensic-dgp/outputs/cctv_dgp_hq_source_review_v3/` if transferred |
+| Full source acquisition plan/review rubric | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_hq_cohort_plan_v2\` | `~/forensic-dgp/outputs/cctv_dgp_hq_cohort_plan_v2/` |
+| Audited source-only catalog | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_hq_cohort_v2\` | `~/forensic-dgp/outputs/cctv_dgp_hq_cohort_v2/` |
+
+Six integrity checks passed; six new acquisition/audit/preparation sources parse
+as Python 3.10. Sample receipt SHA256:
+`3d890f16554511b153fadadb65a0fe24918398815bdc18425fd0a1c4e23621b9`.
+Full plan SHA256: `ad65e35c70104b72a38dfe3cdac1f1027029445313f9d5530dbb18af7cde9501`.
+Source-only rubric SHA256:
+`1e0aa441917280168a87f73509e1846b15ada15ee4d8b0e62ec35bf7cc6bad3e`.
+Full catalog receipt SHA256:
+`d4989390d2c69bcd3c3abb8169aa1c02b4ad6a50aed3c5575b544aa93e96c0c0`.
+Frozen review integrity receipt SHA256:
+`d3fb788eb775d2c178179e283b7a353653473ed088b2a19141ec02e6467078d4`.
+The review freeze checks all 510 actual source/target SHA pairs, 32 page bindings,
+38 original-resolution decisions and original sample agreement in 1.14 seconds.
+It does not independently assess the assistant's visual judgments. Raw acquisition
+review-pending snapshots remain unchanged; the separate frozen ledger is current.
+Roles are preserved even where the official FFHQ category differs. Covered
+references and all old results remain intact. The Asian-source data is unchanged;
+the HQ FFHQ counterparts do not establish Asian representation or local CCTV
+performance. Neither image dimensions nor the source-preview sharpness prove
+that a newly trained DGP will improve.
+
+**Next:** prepare a controlled finite VM comparison using approved genuine targets
+and re-evaluate the starting model on common new references before fitting.
+No new training recipe is ready or running. V5 fallback checkpoints
+remain the V2 starting tensors; no model was promoted. DGP-led app integration,
+useful native restoration and final review remain required. New code/docs are
+uncommitted and the image outputs are local; no VM sync has been claimed.
+
+## Previous milestone — 4 October 2026: V5 audited and rejected; target-resolution audit complete
+
+The full DGP-first Goal remains `active`. V5 finished on the existing L4 with
+452 updates in 348.84 seconds (5 minutes 49 seconds). Its archive/checksum are
+local, and the user's full independent audit, including recognizer verification,
+passed. A new experiment needs one local audit; do not rerun extraction/audit on
+this unchanged return. The assistant can handle future audits when new files
+arrive. The existing receipt and immutable V1–V5 evidence remain intact.
+
+**No V5 trained epoch qualified.** Identity weight 0.4 epoch 2 improves average
+similarity but regresses blur/motion MSE and SSIM. PCGrad epoch 2 increases
+aggregate degraded PSNR 16.2167→16.9750 dB, yet both source blur/motion groups
+regress and Asian low-light similarity falls 0.00432121. Both `best.pth` files
+select epoch 0 and retain the V2 identity epoch 2 tensors; no production model
+was promoted. All 550 V5 baseline PNGs match V2 identity epoch 2 byte for byte.
+All five fixed 10-row previews were reviewed: severe blur/compound outputs remain
+soft and indistinct. No V5 native forwards were run; 32 reserved crops remain
+untouched, and independent final review remains pending.
+
+The local target audit verifies all 1,012 pinned native/target assets and headers.
+896/902 training references are below 256 in both native dimensions; every FFHQ
+reference is 128×128 enlarged to a 256×256 target. Every reference has at least
+one native dimension below 256. This limits available detail but is not proof
+of the failure's cause. Target suitability and exhaustive source identity overlap
+remain incomplete.
+
+| Artifact | Windows local | Existing L4 VM |
+| --- | --- | --- |
+| Returned archive/checksum | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-conflict-v5-results.tar.gz` and `.sha256` | `~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-conflict-v5-results.tar.gz` and `.sha256` |
+| Canonical V5 outputs | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_conflict_return_v5\outputs\cctv_dgp_conflict_v5\` | `~/forensic-dgp/cctv_dgp_vm_bundle/outputs/cctv_dgp_conflict_v5/` |
+| Local independent receipt | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_conflict_return_v5\local_independent_audit.json` | Local receipt; original VM `outputs/cctv_dgp_conflict_v5/independent_audit.json` remains unchanged |
+| Result/next-action report | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_CONFLICT_RESULTS.md` | Intended `~/forensic-dgp/CCTV_DGP_CONFLICT_RESULTS.md` after document transfer |
+| Separate analysis/visual/resolution ledgers | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_conflict_v5_review\` | Optional `~/forensic-dgp/outputs/cctv_dgp_conflict_v5_review/` after transfer |
+
+Archive SHA256: `eec1a062ea3c3203e5bba4a7a12f0a8fdae6de1a1e37942c705ed318aa6cbcb2`.
+Results SHA256: `80d8a9b1d5cec0d6fbe325229664a5c5251ba2739791922ddc728d4466d8cd5b`.
+Local receipt SHA256: `93017a6afb593730afc999de6d8e18603a5f0e441a3faa1fc49517405c45f437`.
+Post-audit analysis used zero model forwards/backward calls/updates; the full
+audit was not repeated or overwritten. Detailed checks and ledger hashes are
+in the result report. Direct CLI/SSH capability is verified with TLS enabled,
+project/instance `forensic-dgp-thesis`, zone `us-central1-a`; the earlier
+no-connection limitation and below live-process snapshot are historical.
+
+**Next:** verify a bounded sample of genuine higher-resolution source counterparts
+and clean target suitability while preserving historical split roles, provenance
+and results. Freeze any new target protocol and re-evaluate its starting baseline
+before a changed finite VM pilot. No new pilot is ready or running. Useful native
+output, DGP-led local integration, insufficient-input behavior, covering-family
+flow, Playwright checks and independent final review remain incomplete. These
+document changes have not been committed/pushed; `git pull` alone does not transfer
+them or result archives.
+
+## Previous milestone — 4 October 2026: V4 audited; V5 live-process snapshot; direct SSH verified
+
+Continuation capability check found the installed, configured Google Cloud CLI.
+Read-only API/SSH access now works from this harness using a command-scoped
+Windows-trusted CA bundle with TLS verification enabled. The earlier statement
+that no SSH connection is available is historical. Verified project/instance:
+`forensic-dgp-thesis`, zone `us-central1-a`, VM `RUNNING`.
+
+The user's V5 process is already running in attached `dgp_training`; no second
+training process was launched. At 07:16 UTC on 4 October, trainer PID `1332` and
+launcher PID `1304` were live, both zero-update gradient-policy preflights had
+passed, and arm 1 was validating epoch 2. GPU allocation observed earlier:
+4,782 MiB. A bounded read-only SSH observer follows this existing run and export.
+V5 results/checksum have not yet arrived locally. Direct retrieval and independent
+audit can proceed after verified export; manual transfer commands remain usable.
+
+The full DGP-first Goal remains `active`. The V4 archive/checksum and user-created
+local receipt are now present. A second independent audit reproduced that receipt
+exactly, with no local model forwards, backward calls or optimizer updates.
+V4 used 40 training references, 50 CUDA autograd traversals, 21.75 seconds and
+zero updates; student and teachers stayed unchanged. This is a completed
+diagnostic, not a newly trained or useful model.
+
+Reconstruction and identity parameter gradients oppose one another for blur and
+low light in both sources. All four groups also have an opposing total identity
+direction under the original weights. The observed-image gradients do not expose
+this conflict. Forty cases at one state do not establish causation or predict
+Adam behavior. Detailed evidence: local
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_OBJECTIVE_RESULTS.md`
+↔ intended VM `~/forensic-dgp/CCTV_DGP_OBJECTIVE_RESULTS.md` after document transfer.
+
+A changed V5 comparison is prepared: identity weight 0.4 with ordinary gradient
+summing versus identity 0.1 with symmetric two-objective PCGrad. Both retain the
+audited V2 starting state, postactivation VGG, original 902/110 reference split,
+degradation/order/seed, Adam settings and strict source/profile/identity guards.
+Budget: 226 updates/arm, 452 total, two epochs/arm, 30-minute training-process cap.
+Expected process time is 8–15 minutes, estimated rather than measured for V5.
+All actual training/autograd remains guarded to the existing Linux L4 VM. The
+32 reserved native crops remain untouched; no default checkpoint was promoted.
+
+| Artifact | Windows local | Existing L4 VM |
+| --- | --- | --- |
+| New additive upload | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-conflict-v5.tar.gz` and `.sha256` | Upload separately to `/home/janusdominic0/`, extract into `~/forensic-dgp/` |
+| Exact run/return commands | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_CONFLICT_V5.md` | `~/forensic-dgp/cctv_dgp_vm_bundle/CCTV_DGP_CONFLICT_V5.md` after extraction |
+| Preparation evidence | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_conflict_v5_checks\` | Local evidence; no separate VM copy until transferred |
+| Expected V5 return | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-conflict-v5-results.tar.gz` and `.sha256` | `~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-conflict-v5-results.tar.gz` and `.sha256` after successful run/audit |
+
+The archive is 731,079 bytes with 11 new files; SHA256
+`1147291cac26c47d1fd1774a28b3894896e1511a8eaff516999a289aadab6388`.
+Protocol SHA256: `ba3a6775ca187ab8199fa2b278685f347004af84bb3a01049ec4e92feb06181f`.
+Checks cover exact archive payloads, additive preservation of V1–V4, split
+integrity, six Python 3.10 sources, Bash syntax and 40 relevant tests. Both V5
+CUDA preflights passed; training is live, final audit/export remains pending.
+Reuse `.venv`; no CUDA reinstall. These
+files have not been committed/pushed; `git pull` does not install this overlay.
+
+Input-policy preparation also audited the 24 native development inputs: the
+current 32-pixel minimum rejects five of six coarse core faces while accepting
+one larger insufficient face. The new observed-only quality helper excludes
+padding/removal regions and passes six checks; eight existing workflow checks
+pass. It is not a structure classifier and was not wired into the app. Evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_INPUT_POLICY_STATUS.md`
+↔ intended VM `~/forensic-dgp/CCTV_INPUT_POLICY_STATUS.md` after transfer.
+
+**Next:** observe the existing V5 process through terminal export, retrieve the
+archive/checksum, then independently audit and review paired previews;
+only an eligible candidate proceeds to native development review. Useful native
+output, DGP-led integration, insufficient-input behavior, covering-family flow,
+Playwright verification and independent final review remain incomplete.
+
+## Previous milestone — 4 October 2026: V3 audited and rejected; zero-update objective diagnostic ready
+
+The full DGP-first Goal remains `active`. The preceding transfer-command response
+made no authoritative project change; continuation revalidated the actual return
+and completed the review and new diagnostic preparation below. DGP-led local
+integration and demonstrated useful output remain required; neither archive
+arrival nor a training run completes the Goal.
+
+The V3 return is present and independently audited at local
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-perceptual-v3-results.tar.gz`
+and `.sha256`, from VM
+`~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-perceptual-v3-results.tar.gz`.
+Archive:347,331,047 bytes, SHA256
+`f5efd077c7ef8254cbb395dd6bc4ff4b9b66f6472d3f661de9ca33dadc4a1674`.
+The audit reconstructed2,750 PNG metrics,50 raw previews,3,300 embedding cosines,
+452 update records and52 pinned recognizer preview forwards. The L4 run used452
+updates in332.78 seconds; allfour epoch checkpoints changed293 parameter tensors,
+with normalization/teachers preserved. Local return auditing used zero restoration
+forwards, backward calls and optimizer updates.
+
+**No V3 trained epoch qualified.** Aggregate degraded PSNR rose16.2167→17.3187dB
+in the preactivation arm, but fixed ArcFace fell0.32686→0.31471 and source/profile
+blur/motion safeguards failed. Both `best.pth` files selectepoch0 and retain the
+same starting V2 tensors. All550 V3 baseline PNGs exactly match V2 identityepoch2.
+The assistant reviewed allfive fixed10-row grids: severe blur/compound outputs
+remain soft and indistinct; brightening does not demonstrate useful recovery.
+No V3 native forwards were warranted. The32 reserved native crops remain untouched.
+
+Detailed report: `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_PERCEPTUAL_RESULTS.md`
+↔ intended `~/forensic-dgp/CCTV_DGP_PERCEPTUAL_RESULTS.md` after document transfer.
+The immutable returned VM receipt is preserved. Separate local receipt:
+`outputs\cctv_dgp_perceptual_return_v3\local_independent_audit.json`, SHA256
+`2010cb66ea1571972367775bb1dbb1100e8d4c595e253ecb2fe9c1416ce461b1`.
+Local analysis/visual ledgers are in `outputs\cctv_dgp_perceptual_v3_review\`
+(optional VM copies under `~/forensic-dgp/outputs/cctv_dgp_perceptual_v3_review/`).
+
+The next prepared experiment is a VM-only **zero-update objective diagnostic**,
+not another identical training run. It starts at retained V2 identityepoch2;
+selects40 training-only cases (four per source/profile); measures weighted pixel,
+color, postactivation VGG, Sobel and ArcFace gradients in parameter/image spaces;
+and stops after10 groups,50 autograd traversals or600 seconds. No optimizer,
+checkpoint export, validation/native/reserved use or production promotion.
+Gradient-direction evidence is diagnostic and does not predict Adam outcomes.
+
+| Artifact | Windows local | Existing L4 VM |
+| --- | --- | --- |
+| Additive upload | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-objective-v4.tar.gz` and `.sha256` | Upload to `/home/janusdominic0/`, extract into `~/forensic-dgp/` |
+| Runbook | `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_OBJECTIVE_DIAGNOSTIC_V4.md` | `~/forensic-dgp/cctv_dgp_vm_bundle/CCTV_DGP_OBJECTIVE_DIAGNOSTIC_V4.md` after extraction |
+| Package audit | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_objective_v4_checks\package_audit.json` | Local preparation evidence; no copy exists until transferred |
+| Expected return | `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-objective-v4-results.tar.gz` and `.sha256` | `~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-objective-v4-results.tar.gz` and `.sha256` after successful diagnostic |
+
+The new package is20,122 bytes with10 files; SHA256
+`1d86057a8318a703a34dfad99675204c971960f52a3d79aa526fac58c863aa0e`.
+Protocol SHA256: `0c7feb50736617fbbbeaa8e79e9987c61c79e05ceaf68613603e989795e75b5c`.
+Independent checks verify exact inventory/payloads, additive preservation of all
+original/V2/V3 assets,40 training-only references, five Python3.10 sources, Bash
+syntax and40 relevant tests. These include resealed cohort/gradient/source
+tampering, changed teachers, accidental updates, and local CUDA-probe rejection.
+The real `--verify` CLI confirms the diagnostic recipe; actual VM execution is
+still pending. Reuse existing `.venv`, data and teachers; do not reinstall CUDA.
+The overlay has not been committed/pushed, so `git pull` does not install it.
+
+**Next:** upload the two V4 files, run the new diagnostic in `dgp_training`, and
+return its small archive/checksum. Independently audit the report before choosing
+a changed finite training recipe. Preserve all prior failures and safeguards.
+Useful native restoration, DGP as the primary local restorer, insufficient-input
+qualification, covering-family output, Playwright flow verification and independent
+final review remain incomplete. No Zamboanga-specific performance is established.
+
+## Previous milestone — 4 October 2026: V2 audited; native review complete; V3 VM comparison ready
+
+A fresh `get_goal` read confirms status `active` with the full DGP-first
+objective. The previously paused manual-support state below is historical.
+Continue the original restoration, covering-completion, local-app and independent
+review requirements; receiving a checkpoint is not completion.
+
+Both return files are now present at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-normfix-v2-results.tar.gz`
+and its `.sha256`, transferred from
+`~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-normfix-v2-results.tar.gz`.
+The 348,737,530-byte archive passed the full independent corrected audit: 2,750
+PNG metrics, 50 raw previews, 3,300 embedding cosines, 452 update traces, 52 pinned
+recognizer forwards and four changed checkpoints with unchanged normalization
+buffers/teachers. The L4 run completed 452 updates in 311.77 seconds. The no-identity
+arm retains epoch0; identity epoch2 qualifies on paired synthetic guards, improving
+degraded PSNR 13.23→16.22 dB and fixed ArcFace similarity 0.277→0.327. These are
+paired photograph results, not native or Zamboanga-specific performance.
+
+The existing 24-case native development run and its independent composition audit
+are complete: 24 frozen DGP forwards/7.87 seconds and 120 PNG stages reconstructed.
+The separate assistant visual ledger reviewed the ten-row preview and all four
+gallery pages. The six input-selected core faces remain soft with color shifts;
+native useful restoration is not demonstrated. Seven input-selected insufficient
+cases require a clearer crop. The 32 reserved native crops remain untouched.
+Detailed evidence: local `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_PILOT_RESULTS.md`
+(intended VM `~/forensic-dgp/CCTV_DGP_PILOT_RESULTS.md` after explicit transfer).
+
+A changed matched V3 experiment is now prepared and independently package-audited.
+Both arms start at the audited identity epoch2 with ArcFace retained; they compare
+continued postactivation against training-only calibrated signed preactivation VGG
+features. The calibration uses 64 original training references and zero validation
+or native cases. It is loss-scale preparation, not evidence of trained improvement.
+The experiment retains the original 902/110 reference split, data/order/seed,
+optimization and strict source/profile/clear/identity selection safeguards.
+Budget: 226 updates/arm, 452 total, two epochs/arm, 90-minute stop limit.
+
+Upload local `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-perceptual-v3.tar.gz`
+and its LF `.sha256` to VM `/home/janusdominic0/`. The 724,844-byte additive archive
+contains 16 new files only and does not overwrite the parent or V2 correction.
+SHA256: `925ef82d27ba1e3bfe010989c79d6e1e28572e8a91c47e83c5da7e09da8d469e`.
+Recipe SHA256: `875cb8b5b58ec1f60f1060d3bafd37c13ab9e984f57c3159b1c460ddd13bd576`.
+Checks: 27 relevant tests, nine files parsed for Python 3.10, Bash syntax, source
+derivation, complete archive/recipe/starting-checkpoint verification and the real
+`--verify` CLI. New CUDA backward checks and training remain pending on the VM.
+No local training/backward calls, reserved-set use or application promotion.
+
+Exact one-file SCP, guarded extraction, tmux/run, return download and independent
+audit commands are in local `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_PERCEPTUAL_V3.md`,
+bundled at `~/forensic-dgp/cctv_dgp_vm_bundle/CCTV_DGP_PERCEPTUAL_V3.md`. Reuse the
+existing `.venv`, data and teachers; do not reinstall CUDA or rerun the historical
+pilot. Local preparation is staged under `outputs/cctv_dgp_perceptual_vm_v3/`;
+package receipt: `outputs/cctv_dgp_perceptual_v3_checks/package_audit.json`.
+
+Next: run the new finite VM comparison and return
+`~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-perceptual-v3-results.tar.gz` plus `.sha256`
+to local `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. Independently audit it and
+review eligible epochs on the unchanged native development cohort before default
+selection. DGP main-app integration, input qualification, covering-family outputs,
+browser verification and independent final review remain required. The Goal stays
+active. These changes have not been committed/pushed; the verified overlay carries
+the new VM sources.
+
+## Previous VM support — 4 October 2026: confirmed InstanceNorm failure; verified correction ready
+
+The autonomous Goal is paused at the user's request. Subsequent SSH support is
+for the user's manually started pilot; it does not mark the Goal complete or
+resume autonomous project work. The original transfer package remains unchanged.
+
+The user supplied logs from `~/forensic-dgp/cctv_dgp_vm_bundle/` showing that CUDA
+preflight passed and the 550-case baseline validation ran. The pilot then stopped
+at `Matched branch did not start at identical baseline`, with
+`optimizer_updates_recorded: 0`. Preserve `outputs/cctv_dgp_pilot/`, including
+`failure.json`, `preflight.json`, `execution.json`, `partial_state.pth`, and the
+baseline outputs, plus `pilot.log`. These are user-reported VM records, not a
+locally audited return. No newly trained checkpoint or completed result archive
+has been received at `C:\xampp\htdocs\YEAR 4\Testing\outputs\`.
+
+The subsequent user-pasted L4 / PyTorch 2.9.1+cu129 diagnostic confirms the cause:
+batch eight changed zero state tensors; batch six changed ten InstanceNorm
+running-statistic tensors despite `.eval()` and zero backward/optimizer calls.
+The largest drift was 0.00048828125 in `smooth.1.running_var`. Native InstanceNorm
+writes averaged repeated statistics back in this runtime. Both fixed validation
+and training end with six-image batches. Retain strict matched-start and frozen
+buffer checks; do not suppress their errors or repeat the unchanged launcher.
+
+The versioned runtime correction passes cloned running statistics into the same
+native operator for the student's five InstanceNorm layers. Checkpoint schema,
+original normalization output/gradient path, ArcFace identity loss, matched arms,
+data/order/losses/seed/selection and the 452-update / 90-minute budget remain.
+Original protocol and model/runner/auditor sources remain unchanged. This is an
+additive runtime correction, not a newly trained model or changed experiment.
+
+Verified Windows correction package:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-normfix-v2.tar.gz`
+plus its ASCII/LF `.sha256`; upload both to `/home/janusdominic0/`.
+It is 10,724 bytes with nine safe new-file members, without data/weight transfer
+or overwriting frozen assets. Archive SHA256:
+`82263d45d70e5c2d0e8277418887f5a23e03b59b288c82af5d5f80b7a46b5221`.
+Correction manifest SHA256:
+`a3c4cfe30164a3a161bf549af29beac122bbdfc274c74ddd49df7cae29c7bf72`.
+Extract its `cctv_dgp_vm_bundle/` prefix under `~/forensic-dgp/`.
+Exact upload/extraction/tmux/return/audit commands are in
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_NORMFIX_V2.md`
+↔ `~/forensic-dgp/cctv_dgp_vm_bundle/CCTV_DGP_NORMFIX_V2.md` after extraction.
+
+Local verification: 18 regression/guard checks pass; six Python files parse for
+Python3.10; Bash launcher syntax and GNU tar export transforms pass. Four CPU
+DGP forwards compare original versus corrected output for batches eight and six:
+maximum output error zero, original state hash preserved, no backward/optimizer
+calls. Evidence is at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_normfix_v2_checks\`
+↔ `~/forensic-dgp/outputs/cctv_dgp_normfix_v2_checks/` only after optional evidence
+transfer. Corrected L4 evaluation/backward compatibility remains unverified.
+
+Next manual operation: upload/extract the correction, launch
+`bash scripts/run_cctv_dgp_normfix_vm.sh --archive-zero-update-failure` inside the
+existing VM bundle's activated environment/tmux. The wrapper checks the original
+and correction assets, preserves only the exact known zero-update failure at
+`~/forensic-dgp/cctv_dgp_vm_bundle/outputs/cctv_dgp_pilot_failed_v1/`, repeats the
+original CUDA gradient preflight and verifies one additional six-image forward
+has identical student state before baseline validation/training. It refuses
+arbitrary/trained failures, overwrite and automatic repeat/resume.
+
+On success return
+`~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-normfix-v2-results.tar.gz` and `.sha256`
+to `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. The corrected return includes
+`normfix_revision.json` and the exact runtime sources. The corrected auditor
+retains all original metric/checkpoint/trace checks and verifies that correction
+lineage. Preserve the received VM audit receipt; write the local recognizer audit
+receipt separately at the extracted archive root. Only an audited return permits
+the prepared native development comparison; keep reserved cases untouched.
+No app checkpoint promotion, UI change, git commit/push or Goal resumption here.
+
+## Previous milestone — 3 October 2026: DGP adapter verified; post-pilot native comparison frozen
+
+The revised DGP-first Goal was active at this milestone. The prior turn completed the verified
+VM pilot package; this continuation completed local inference preparation with
+zero training/backward calls. No `cctv-dgp-results.tar.gz` is present locally,
+and no configured SSH connection can inspect/start the user's VM. The new archive
+is still the unchanged419,370,023-byte package described in the previous milestone.
+Use `C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_VM.md`
+↔ `~/forensic-dgp/cctv_dgp_vm_bundle/CCTV_DGP_VM.md` after extraction for execution.
+
+A strict adapter at
+`C:\xampp\htdocs\YEAR 4\Testing\dgp_face_restoration.py`
+↔ `~/forensic-dgp/dgp_face_restoration.py` after source transfer supports native
+RGB128 padding, bilinear256 RGB and nearest observation/removal masks. It checks
+explicit checkpoint fingerprints, strict schema and finite tensors; missing or
+incompatible weights stop rather than random-fill. Only frozen float32 256 input
+is accepted. Raw DGP float, observation composite and floor-quantized PNG are
+separate; no top-k scores, display sharpening, hidden resize or automatic promotion.
+The current combined application still selects its existing CodeFormer restorer.
+
+Seven adapter checks pass. Eight real native development forwards (two per size
+bin) match the earlier audited Phase3 inputs, raw floats and raw PNGs exactly,
+maximum float error0. Observation compositing matches; tensors/buffers remain
+unchanged. CPU time after loading is2.33 seconds; no backward or optimizer updates.
+This verifies adapter fidelity, not improved quality or complete app integration.
+Evidence: `C:\xampp\htdocs\YEAR 4\Testing\outputs\dgp_restoration_adapter_v1\`
+↔ `~/forensic-dgp/outputs/dgp_restoration_adapter_v1/` after report transfer.
+Results SHA256: `50fb83c65776ee93479312dfe1b7b0a04a87d9a9f0938a479e93950b46d287fb`.
+
+The frozen native candidate plan is at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_native_pilot_review_v1\frozen_plan.json`
+↔ `~/forensic-dgp/outputs/cctv_dgp_native_pilot_review_v1/frozen_plan.json` after
+explicit report transfer. SHA256:
+`475c2225a368fe035d8c02d62953e6cb32c836fdb71b7aa5a8704c6d276f3ded`.
+Its runner re-audits the actual VM return before native outputs; at most one trained
+best checkpoint per arm is eligible. Epoch0 fallback is not admitted as an improved
+model. Four selection checks cover fallback, changed epoch/hash and empty outcomes.
+The six new Python files parse for the VM's Python3.10; the native runner is local.
+
+All24 development cases remain, with a fixed six-case coarse frontal/mild core.
+Seven input-reviewed insufficient cases and profile/uncertain cases remain labeled
+diagnostics; pixel size is not a rejection classifier. Reuse audited cached
+Phase3/CodeFormer raw outputs with identical observed-context composition. Cap new
+candidate inference at48 forwards and480 seconds after loading; no optimizer.
+The ten-row preview and four full gallery pages require output review. The auditor
+checks source/weight/plan lineage and raw/PNG composition; no native PSNR/SSIM or
+identity-accuracy metric is invented. The32 reserved crops remain unaccessed by
+this milestone's model/visual work. Candidate execution/visual review is pending.
+
+Application gaps remain explicit: current upload minimum32 excludes some coarse
+native crops; current output follows original dimensions with a50% visible blend;
+uncovered low-information rejection is uncalibrated. The staged adapter establishes
+the 256 contract, but a useful candidate and a versioned composition/input policy
+must precede default DGP integration and full Playwright/final-review verification.
+Read `C:\xampp\htdocs\YEAR 4\Testing\DGP_INFERENCE_READINESS.md`
+↔ `~/forensic-dgp/DGP_INFERENCE_READINESS.md` after source/document transfer for the
+post-return commands and unresolved requirements. No UI, app default, checkpoint,
+training split, frozen historical protocol or transfer bundle changed here.
+
+Next operational step: run the existing guarded L4 pilot and return
+`~/forensic-dgp/cctv_dgp_vm_bundle/cctv-dgp-results.tar.gz` plus `.sha256` to
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\` using the documented gcloud commands.
+Audit the return, run the prepared native comparison, review its outputs and choose
+the next justified model/app action. Do not promote `best.pth` from its name alone.
+
+## Previous milestone — 3 October 2026: DGP-first Goal active; matched VM package independently verified
+
+The app Goal is active with the revised DGP-first objective recorded in
+`C:\xampp\htdocs\YEAR 4\Testing\SYSTEM_WORKFLOW_AND_GOAL.md`
+↔ `~/forensic-dgp/SYSTEM_WORKFLOW_AND_GOAL.md` after document transfer. The main
+outcome remains useful 256×256 degraded-CCTV restoration by our trained DGP;
+covering completion supports it. Independent final assessment and the full local
+application workflow are still required. No Goal completion or app promotion.
+
+Preparation completed locally with **zero backward calls or optimizer updates**.
+Two exact within-training duplicates were removed in a derived manifest. Input
+gate V1 is preserved: its 90% full 112-pixel context requirement rejected tight photos
+whose facial feature cores were visible. A separate V2 replaces only that
+disproved assumption with measured feature-core/landmark support and consistent
+unsupported recognizer-context masking. Its independent audit reconstructs all
+1,150 saved source/geometry records without new detector/model forwards. V1 used
+1,150 input-only detector requests in 44.85 seconds; no restoration or updates.
+
+V2 admits 917 training and 110 validation references. Its 64 input previews identify
+two further training exceptions: Asian09274 has a hand over the mouth/closed eyes;
+Asian02752 has a facial watermark. The separate reviewed manifest excludes those
+and retains the original-quality warnings in validation. Equal-source truncation
+by inherited ordering yields **902 training references (451/source)** and all
+**110 validation references (59 FFHQ/51 Asian-source), 550 fixed cases**. Targets
+are processed photographs, usually below 256 captured pixels. Not all references
+were visually reviewed and no full historical identity overlap audit is claimed.
+
+The self-contained Windows bundle directory is
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_vm_bundle_v1\`.
+The archive at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv-dgp-vm-bundle.tar.gz`
+with adjacent LF `.sha256` is **419,370,023 bytes**. Upload both to VM `~/`,
+then extract under `~/forensic-dgp/`; the archive prefix becomes
+`~/forensic-dgp/cctv_dgp_vm_bundle/`. It includes native selected references,
+target/observation PNGs, two precomputed camera epochs, fixed validation PNGs,
+retained DGP/ArcFace/extracted VGG weights, model code, guarded scripts and auditors.
+No full 80,000-image re-download is needed for this bounded pilot.
+
+Independent package verification reconstructs 1,012 reference canvases and all
+2,354 prepared cases, checks 5,419 archive entries and validates the LF checksum.
+Eight meaningful contract tests and both Bash syntax checks pass. A two-image CPU forward check uses one
+DGP batch, frozen converted/ONNX recognizer comparisons and the declared loss;
+encoder maximum absolute error is 3.219e-6, states remain unchanged and there are
+zero local backward/optimizer calls. CPU forward timing after loading is 2.71 seconds.
+This does **not** verify GPU backward compatibility, VRAM or useful trained output.
+
+| Binding | SHA256 |
+| --- | --- |
+| Transfer archive | `3be6cf4a3a6fbcdb88c5934e8a0c0fd2b426465c0f4a863d9f893b3f32eee97e` |
+| Frozen executable protocol | `b652914335e33375f8108ba427e4b5be99fd86e811f455b307ab72ae7cf152f6` |
+| Independent archive/pixel audit | `cfff7f45cd38713348b12732293341b6dfe6658bbb61f255fe87e7ac5bb321dc` |
+| Local forward-only check | `a91f14a598d78796bcd882e051d7492cdcacbbb05179dd116c9462920551317e` |
+| Separate input review | `69b72552932275de8f55393f90c4f94ad778bbd0f42d29999910982dca4fba92` |
+
+Build/audit/forward receipts are in
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_pilot_protocol_v1\`
+↔ `~/forensic-dgp/outputs/cctv_dgp_pilot_protocol_v1/` after explicit report transfer.
+Input gate V1/V2 and their review/audit records remain in local
+`outputs\cctv_dgp_reference_gate_v1\` and `outputs\cctv_dgp_reference_gate_v2\`;
+selected JSON evidence is bundled under VM `cctv_dgp_vm_bundle/evidence/outputs/`.
+
+**Next is the VM pilot**, using
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_VM.md`
+↔ `~/forensic-dgp/cctv_dgp_vm_bundle/CCTV_DGP_VM.md` after extraction. The matched
+arms start from retained Phase 3 and differ only in identity coefficient 0/0.1.
+Both use the same camera inputs, clear anchors, order, Adam and common
+Charbonnier/color/VGG/Sobel loss; no FAN/FFT, AMP or EMA. Normalization buffers
+stay frozen. Each arm has 2 epochs/226 updates, batch 8; **452 updates total and
+90 minutes including validation/preflight**, with timing projection at update 32.
+The runner refuses non-VM/local CPU execution, wrong host/GPU, changed assets,
+existing outputs, nonfinite gradients and automatic resume. Its initial batch 8
+CUDA backward preflight has **zero optimizer updates** and must pass first.
+Actual CUDA execution is pending; no VM training or Git push occurred here.
+
+After return, independently audit every saved PNG/cohort/update/selection and
+raw checkpoints, then review all source/profile/clear results and compare qualified
+candidates on the 24-case native development gallery. The 32 reserved native crops
+remain untouched by output review or models. `best.pth` may retain epoch 0 if any
+guard fails; no automatic production promotion. New PNG/observed-identity metrics
+are not directly interchangeable with old float/unmasked reports. Preserve the
+Phase 3 checkpoint; original Phase 5 full GPU return remains absent. Broader
+training, primary DGP app integration and independent final review remain pending.
+
+## Previous milestone — 3 October 2026: updated Goal active; paired regression audited; DGP pilot pool inspected
+
+A fresh app Goal read verifies `active` with the complete revised DGP-first
+objective in `C:\xampp\htdocs\YEAR 4\Testing\SYSTEM_WORKFLOW_AND_GOAL.md`
+↔ `~/forensic-dgp/SYSTEM_WORKFLOW_AND_GOAL.md` after transfer. The user applied
+the objective and resumed the Goal; the preceding paused-control limitation is
+historical. Completion still requires a verified DGP-led local workflow and
+independent final assessment, including the agreed supporting covering families.
+
+The three input-selected canonical alignment successes now have an audited
+common-frame comparison at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_alignment_restoration_comparison_v1\`
+↔ `~/forensic-dgp/outputs/cctv_alignment_restoration_comparison_v1/` after transfer.
+There are six CPU restoration forwards, 17.06 seconds after loading, 18 exact
+PNG reconstructions and 12 float stages, with zero updates and unchanged model
+states. Alignment does not establish a reliable gain across the three cases;
+control resampling and uncertain landmarks limit interpretation. No alignment
+default, application change or checkpoint is selected.
+
+The **full original Phase 4 split is available locally** at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\downloaded_phase4\outputs\phase4_with_progress\split.json`.
+The original VM run path is `~/forensic-dgp/outputs/phase4_with_progress/split.json`.
+Its SHA256 is `5c71bc358a351d50e3c0a7d76abe749cb4412aca80d2c7eb4de5fb33dbd29071`:
+76,000 training and 4,000 validation paths (3,500 FFHQ thumbnails, 500 Asian-source
+validation images). Normalize path separators when checking the inherited split.
+It is historical development evidence, not a new untouched identity test.
+
+The frozen paired regression is complete and independently audited at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_paired_regression_v1\`
+↔ `~/forensic-dgp/outputs/cctv_paired_regression_v1/` after transfer. Eight
+deterministically selected validation references produce 40 fixed clear/blur,
+low-light, motion and compound cases. The input-only review separates six
+uncovered frontal/mild references from an already covered sunglasses reference
+and a strong profile, retaining all cases in diagnostics. Do not call either
+exception a clean uncovered reference. Both frozen models receive identical
+aspect-preserving inputs. Reference-only recognizer geometry fixes eligibility
+across arms; scores remain development proxies. There are 40 DGP and 40 CodeFormer
+CPU forwards, 229.91 seconds after loading, 112 frozen recognition forwards,
+zero optimizer updates and unchanged model states. The independent audit
+reconstructs 136 PNGs, checks 80 raw float stages and reconstructs 105 saved
+embedding cosines. All 40 cases and the ten-row grid have been reviewed.
+
+Over the 24 degraded cases from the six input-selected in-scope references,
+mean fixed-reference cosine is 0.3271 for resizing, 0.2268 for DGP and 0.1945 for
+CodeFormer. DGP smooths clear controls and darkens low-light inputs. CodeFormer
+adds sharp but unverified detail, changes expressions and introduces a hand-like
+artifact absent from one reference. Neither is promoted. Full source/profile,
+clear-control and exception results are recorded separately in
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_PAIRED_RESTORATION_RESULTS.md`
+↔ `~/forensic-dgp/CCTV_PAIRED_RESTORATION_RESULTS.md` after transfer.
+
+A deterministic candidate pool at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_pilot_pool_v1\`
+↔ `~/forensic-dgp/outputs/cctv_dgp_pilot_pool_v1/` after transfer contains 1,024
+inherited training and 128 inherited validation references, balanced by source
+before qualification. All 1,152 files fully decode and match recorded bytes;
+an independent audit confirms inherited memberships and exact-byte groups.
+No selected train/validation byte overlap is found; two exact duplicate groups
+exist within Asian-source training. Most targets are below 256 captured pixels.
+The 32 predetermined previews include dim/noisy/grayscale originals, coverings,
+closed eyes and strong profiles. Do not call every candidate a clean target or
+claim all 1,152 were visually reviewed. This is not a full 80,000-file/identity
+overlap audit, and no new high-resolution targets have been downloaded.
+
+| Current binding | SHA256 |
+| --- | --- |
+| Paired results | `afe601078153d133f68870c9ef120029c270099ae9def034efa40357dcd44a30` |
+| Independent paired audit | `8a05eb9ec6559e80f9ced6930c4fb8c69d2bfd185d9464c4f698af71d1371964` |
+| Paired visual review | `8203c3e53983851f88db35e03b4eb36198b704b514baf28f133cb119d8aa7a7b` |
+| Candidate-pool data audit | `422d0646b2685664a42e3eca593acd10ac2bc2a58505381699f3fdb5b10dc79f` |
+| Independent pool audit | `0c9bb2573e18fa2687515505fe8ea43b29e30d51a501417cf7f658f2a421433f` |
+
+Next: deduplicate in a derived manifest and freeze input-only quality/pose/landmark
+coverage gates, then implement/package the finite VM-only DGP diagnostic in
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_DGP_NEXT_PILOT.md`
+↔ `~/forensic-dgp/CCTV_DGP_NEXT_PILOT.md` after transfer. Intended matched arms
+compare camera/clear-anchor training without versus with identity supervision,
+at most two epochs and 256 updates per arm, 90 minutes total. Final executable
+loss/eligibility/optimization settings and transfer files remain pending: **not
+training-ready yet**. Keep Phase 3 retained; original Phase 5 full GPU return is
+still absent. No local training, Git push or VM run occurred in this milestone.
+
+## Previous milestone — 3 October 2026: native CCTV outputs audited; DGP-first Goal specification updated
+
+The updated copy-paste Goal objective is at the top of
+`C:\xampp\htdocs\YEAR 4\Testing\SYSTEM_WORKFLOW_AND_GOAL.md`
+↔ `~/forensic-dgp/SYSTEM_WORKFLOW_AND_GOAL.md` after transfer. It prioritizes
+our trained DGP for 256×256 degraded CCTV restoration, visible structure over
+maximum sharpness, a clearer-crop request for insufficient information, and
+public native CCTV evaluation before choosing training. Completion remains
+supporting functionality. The actual app Goal reads `paused`; tools cannot edit
+its objective or resume it. The file is updated; the app Goal control is unchanged.
+
+The official QMUL-SurvFace source is now sampled into 24 development crops and
+32 reserved crops across four native-size ranges. Selected labeled identities
+are disjoint and selected bytes are distinct; all 56 copies match the archive.
+The reserved set receives only header/hash checks and remains unviewed/unprocessed
+by models. This does not establish overlap absence from historical model training.
+The first partial selector is retained: V2 corrects a `.jpg`/PNG-content assumption
+without changing ranges, quotas or native bytes. Individual country/ethnicity
+labels and real Zamboanga CCTV samples remain unavailable.
+
+The first model comparison is complete at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_native_comparison_v1\`
+↔ `~/forensic-dgp/outputs/cctv_native_comparison_v1/` after explicit transfer.
+Both models receive the same native-padded bilinear 256 input. There are 24 DGP
+and 24 CodeFormer CPU forwards, taking 141.08 seconds after loading, with zero
+optimizer updates and unchanged model states. Raw DGP, legacy display-only DGP
+and raw CodeFormer outputs are separate. An independent audit reconstructs all
+96 PNGs and verifies 48 float stages and 56 native copies. All 24 development
+outputs and the ten-row grid were reviewed; independent final review is pending.
+
+DGP often smooths weak features; display processing amplifies patterned texture.
+CodeFormer can produce coherent sharper faces but also unverified detail and
+artifacts. Neither establishes reliable improvement across the gallery. No
+checkpoint, application change or new training recipe is selected. Preserve the
+Phase 3 checkpoint; the Phase 5 full GPU return is still absent.
+
+Two processing diagnostics narrow the next work. Existing signal filters change
+only one of 24 native inputs. On six input-selected coarse frontal/mild cases,
+native-space legacy alignment yields zero canonical results and silently catches
+five detector-size errors. Padded-256 alignment avoids those errors and yields
+three canonical results; framing/tilt still needs restoration comparison. V2
+retains the error findings after the first probe's reporting guard stopped it.
+All original partial evidence is preserved. An independent processing audit
+reconstructs 96 signal PNGs and 12 alignment PNGs without model forwards.
+
+| Current binding | SHA256 |
+| --- | --- |
+| Native subset | `c063985b258b808efaa897c88593cbdbcee2848d686d3d056219f8a8e555a98e` |
+| Model-comparison results | `3be73af7b0cdae85f54adc8173fd8f48b42511a604fcd60244e3b1d2565a4c34` |
+| Independent comparison audit | `c7801b90a817f20403abc3bd99743e8d0f8e782003b1e1d938bfff05be38671a` |
+| Independent processing audit | `0bd4b61f6fa2e50a04f20d769f31efca9b050fe5e9400198b548a3c8e7306a32` |
+
+Full findings, Windows/VM paths, source limits and the next sequence are in
+`C:\xampp\htdocs\YEAR 4\Testing\CCTV_NATIVE_RESTORATION_RESULTS.md`
+↔ `~/forensic-dgp/CCTV_NATIVE_RESTORATION_RESULTS.md` after transfer.
+Next at that milestone: compare model outputs with versus without the feasible alignment, freeze
+paired low-light/native-size regressions, then choose a bounded VM-only DGP pilot.
+Do not infer clean-reference PSNR/SSIM from native unpaired CCTV or promote a
+model from sharpness alone. No local training, Git push or VM run occurred here.
+
+## Previous milestone — 3 October 2026: DGP-led CCTV scope confirmed; public native archive audited
+
+The user reconfirmed the main aim: a useful face restoration model for degraded
+CCTV imagery in Zamboanga City. Keep the existing Goal and covering-removal
+workflow as supporting functionality. Do not let the recent detector/inpainting
+experiments replace the primary restoration objective.
+
+The title in `C:\xampp\htdocs\YEAR 4\Testing\docs\THESIS MANUSCRIPT.docx`
+is "Forensic Deep Generative Prior Face Reconstruction for Degraded CCTV Video in
+Zamboanga City." Its intended Linux counterpart is
+`~/forensic-dgp/docs/THESIS MANUSCRIPT.docx` after transfer. The user says the
+manuscript is outdated: decisions since the 19 September conversation take
+precedence. The manuscript was read, not edited. Its older video/multiple-output
+and police-user descriptions are historical requirements pending reconciliation.
+
+The first CCTV question round confirms one already cropped face as input, no real
+Zamboanga CCTV samples yet, and improvement of our trained DGP as the main
+restoration contribution; pretrained restoration models are comparison baselines.
+The user wants all CCTV degradations addressed, with face restoration first,
+without ranking individual degradation types or specifying input face sizes.
+Public/synthetic images cannot be presented as verified Zamboanga CCTV evidence.
+
+The subsequent rounds confirm visible facial structure over maximum sharpness,
+accepting some softness; request a clearer crop when extreme blur/tiny faces leave
+insufficient facial information. The initial DGP output/comparison stays 256×256.
+Obtain a public real-CCTV benchmark before choosing new training, prioritizing
+Asian capture sources where available and reporting broader sources separately.
+The assistant reviews development outputs; independent reviewers assess final
+thesis results. A separate pretrained completion component is permitted while
+DGP remains the main restorer. No individual ethnicity or Zamboanga-performance
+claim is implied by a public benchmark's capture location.
+
+The CCTV workflow questions are resolved sufficiently for benchmark acquisition.
+Existing covering decisions remain. The announced 36-case context-margin
+comparison has not been prepared or executed and is supporting work after the
+primary CCTV restoration comparison. The completed V1 comparison and packaged
+grayscale detector pilot remain intact; any already-produced return may be
+audited independently, but it does not replace the DGP benchmark prerequisite.
+
+Current local inspection verifies the Phase 3 restoration checkpoint at
+`C:\xampp\htdocs\YEAR 4\Testing\checkpoints\dgp_zamboanga_final.pth` ↔
+`~/forensic-dgp/checkpoints/dgp_zamboanga_final.pth`, SHA256
+`b6376f56c4161ef1f26a8f9efb0bb309b3014f4ecdeaca5399a47c1c4607586c`.
+Only `outputs/phase5_smoke/` is present among local Phase 5 artifacts; no complete
+Phase 5 GPU return is verified. The DGP `/reconstruct` endpoint remains in
+`app.py`, while the combined `face_workflow_palette.py` route uses pretrained
+CodeFormer completion and visible restoration. These are distinct models:
+pretrained-route improvements do not establish an improved trained DGP output.
+
+See `SYSTEM_WORKFLOW_AND_GOAL.md` and `PRACTICAL_OUTPUT_SCOPE.md` in the Windows
+root (intended counterparts under `~/forensic-dgp/` after document transfer).
+The official QMUL-SurvFace V1 archive is now acquired at
+`C:\xampp\htdocs\YEAR 4\Testing\dataset\cctv_survface_raw\QMUL-SurvFace-v1.zip`
+↔ intended `~/forensic-dgp/dataset/cctv_survface_raw/QMUL-SurvFace-v1.zip`
+after an explicit transfer. It is 408,164,983 bytes; acquisition/inventory takes
+48.26 seconds. Observed SHA256
+`2fbb0876bc4761217c6de5576905e2524b8ca50ad7905720a5b4b378a0ff8e13`;
+the adjacent checksum uses LF. No publisher checksum is claimed.
+
+An independent structure audit verifies exact gallery/probe metadata membership
+and 10,051 byte-identical verification-image copies. There are 463,341 canonical
+image filenames, 166 fewer than the published total; the discrepancy is retained.
+The labeled train/test person IDs are disjoint. There are 28,476 unlabeled
+distractor images, so a complete identity census/overlap claim is not justified.
+Actual metadata has 3,000 gallery IDs despite an older bundled README claim of
+5,319. Original files and counts stay unchanged; no restoration evaluation is
+reported from these checks.
+
+Receipt: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_survface_structure_audit_v1\verification.json`
+↔ intended `~/forensic-dgp/outputs/cctv_survface_structure_audit_v1/verification.json`,
+SHA256 `cf9124983a815776a787eeae577bbbbd173892be2f69dc33c354626641863222`.
+Provenance, access terms, Asian-source limitations, discrepancies and next steps
+are in `C:\xampp\htdocs\YEAR 4\Testing\CCTV_BENCHMARK_STATUS.md`
+↔ intended `~/forensic-dgp/CCTV_BENCHMARK_STATUS.md` after document transfer.
+The native CCTV release is not clean paired restoration ground truth; per-image
+country/ethnicity attribution and prior model-training identity overlap are unknown.
+No source image was decoded/extracted and no model inference ran in acquisition.
+
+Next: inspect a labeled native development contact sheet, freeze a separate
+restoration evaluation subset, and compare the retained DGP with declared
+baselines before choosing VM training. This is not a claim of Zamboanga validation.
+No new training, checkpoint selection or application change occurred here.
+
+## Previous milestone — 3 October 2026: completion context comparison audited; VM detector return pending
+
+The user explicitly confirmed that a coherent rough estimate is acceptable when
+the covering is substantially removed and visible appearance remains coherent.
+This is acceptance of the product criterion, not individual output approval or a
+revision of historical failures. The clarification is recorded in
+`C:\xampp\htdocs\YEAR 4\Testing\PRACTICAL_OUTPUT_SCOPE.md` (intended
+`~/forensic-dgp/PRACTICAL_OUTPUT_SCOPE.md` after a separate document transfer).
+
+A new local inference comparison is complete at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\completion_context_review_v1\`
+↔ intended `~/forensic-dgp/outputs/completion_context_review_v1/` after an explicit
+evidence transfer. It tests 2- and 6-pixel input-conditioning margins on four fixed
+degraded assisted hand/hair/scarf/flower cases. The reviewed output area stays
+unchanged. Nine requests (eight alternatives plus one zero-radius control) take
+86.34 CPU seconds after loading: nine completion/nine restoration forwards,
+zero detector forwards and zero optimizer updates. Both model states are unchanged;
+the control reproduces the cached assisted scarf/glove PNG exactly.
+
+Five support/invalid-input counterexample tests pass. The independent audit checks
+37 artifacts and reconstructs all nine output PNGs from captured floats. All four
+complete preview rows/eight new alternatives are inspected. Six pixels reduces
+scarf wool contamination, but a thin line remains near the upper removal boundary.
+Hand/hair/flower estimates are similar to the useful assisted baseline. Small
+visible-MAE changes do not establish hidden identity. There is no general-default
+or application change, and automatic hair/near-hidden failures remain unresolved.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\COMPLETION_CONTEXT_RESULTS.md`
+↔ intended `~/forensic-dgp/COMPLETION_CONTEXT_RESULTS.md` after document transfer.
+Protocol SHA256 `211945a7187680e12885c6709dea52564593db9a31fb4a69d3a91f152c86c7c3`;
+results `e69b41bab828cc99a4744e3fbe61fa217283650a2a81ddd057e9ab98c7683e17`;
+independent verification `2cd14db824b1d9302b169c5d3c11540f805227a7ed3173739768092846ed575a`.
+The new adapter/runner/auditor are separate from frozen historical inference code
+and the already packaged VM experiment. Current frozen source bindings remain intact.
+
+**Next:** obtain `gray-covering-results.tar.gz` and `.sha256` from
+`~/forensic-dgp/gray_covering_vm_bundle/` into
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\`, use the prepared independent return
+auditor, then run the unchanged practical detector/face-output comparisons.
+The archive remains absent locally; no VM job/SSH session is confirmed live here.
+Use `GRAY_COVERING_VM.md` and `GRAY_COVERING_RETURN_REVIEW.md` under the Windows
+root (intended counterparts under `~/forensic-dgp/` after the stated transfers).
+The 50.3 MB sent bundle, its checksum, checkpoints, original 425-case failures and
+application route remain unchanged. Training remains VM-only. Goal active.
+
+## Previous milestone — 3 October 2026: grayscale VM pilot and independent return auditor prepared
+
+Work continues in `C:\xampp\htdocs\YEAR 4\Testing\`; training remains on
+`~/forensic-dgp/`. Both camera and varied-covering returns are audited. The
+subsequent 20 automatic face estimates are reconstructed and inspected, with
+covering remnants, missed hair and generated artifacts recorded below.
+
+A new zero-forward footprint diagnosis recounts144 saved proposals and72
+probability arrays, reusing seven verified prior assisted outputs. All 449 source
+bindings remain intact. Hair predictions stay empty: the treatment's peak crop
+probability is only 0.0000713 even on the degraded example, so expanding an empty
+mask cannot repair it. With the reviewed removal area the unchanged visibility
+guard rejects both nearly hidden cases (85.9% facial coverage); automatic areas
+cover only 44.5% native/53.9% degraded and miss rejection. All 36 reviewed-mask guard
+decisions agree with the declared gallery scope. This diagnoses conditional
+detector dependence on these exposed cases, not general guard correctness.
+
+All seven cached assisted comparisons were inspected. Corrected footprints yield
+an estimated eye on the hair case and reduce finger/cloth/petal remnants. Exterior
+hair and objects outside the selected facial region remain. Scarf/glove texture
+and stylized anatomy are still limitations. No hidden facial target or user/expert
+acceptance is inferred. Diagnostic:
+`outputs/varied_covering_footprint_diagnostic_v1/results.json` SHA256
+`b88e696f4cc5183c4e5b44924db9279353dd6126c6dad53fed79cefe61f93469`;
+visual review SHA256 `f87d360ced332819f9039ae4f0a2a0634d86d99047d96e3dec740a6279b677bb`.
+The receipt's tentative sampler direction is superseded by the recipe below:
+inspection confirmed V2 already cycles the five new covering families.
+
+The next independent bundle is
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\gray-covering-vm-bundle.tar.gz` plus its
+LF checksum, intended for `/home/janusdominic0/` before extraction into
+`~/forensic-dgp/gray_covering_vm_bundle/`. It is50,299,398 bytes, SHA256
+`212b91935e548ad1423f92f71014681be25abd052bad1d7bf2785e8b2b702d18`.
+All 1,022 regular members pass independent inventory/schedule checks; all 1,009
+original V2 members remain byte-identical. Twenty-three consumed Python files
+compile, seven local contract tests pass and both generated shell scripts pass
+Git Bash syntax checking. The original V2 bundle and source models are untouched.
+
+Both `rgb133` and `gray133` start from camera91 with fresh optimizer state and
+receive 8×64=512 updates each. They share the existing family sampler, cases,
+fixtures, loss and learning rates. Only real-input grayscale exposure differs.
+The first128 RGB steps match V2 exactly and must reproduce its previous treatment
+model before continuing. Every 133-source native/degraded RGB/gray condition is
+exposed in the gray branch. Budget 1,024 total updates /11,440 image forwards,
+3,248 measurement masks and one separate zero-update CUDA preflight; hard cap
+30 minutes after loading. Grayscale is an unproven transfer hypothesis. No new
+labels, held-out training sources, generator/identity training or app selection.
+
+Protocol SHA256 `c29eabcc23b07e2f9353116068c623b35258a56ed5ab259126b13b9c781be47a`;
+independent package audit SHA256
+`4a341c260c4ed39df3af562136c4da41fd2bdbbfa58bd6dbda05048b86288899`;
+shell/contracts receipt SHA256
+`ec5056207ea8eeda196846228b73c0d9a7750effa2f0a0d6135b110bb9ff298d`.
+All receipt paths are relative to the Windows workspace; Linux counterparts are
+`~/forensic-dgp/<same path>` only after an explicit evidence transfer.
+
+**Next:** use `C:\xampp\htdocs\YEAR 4\Testing\GRAY_COVERING_VM.md`
+(bundled `~/forensic-dgp/gray_covering_vm_bundle/GRAY_COVERING_VM.md`) to upload,
+verify/extract and run `bash scripts/run_gray_covering_vm.sh` inside tmux.
+Readiness: `C:\xampp\htdocs\YEAR 4\Testing\GRAY_COVERING_READINESS.md` ↔ intended
+`~/forensic-dgp/GRAY_COVERING_READINESS.md` after a future docs transfer.
+CUDA preflight and actual training remain pending; zero local training updates.
+Return `gray-covering-results.tar.gz` and its `.sha256` file for audit and unchanged
+practical-output evaluation. The user-directed SSH command workflow continues;
+no agent SSH session or new VM job is open. No git commit or push; original 425
+failures and existing app/models remain unchanged. Goal active.
+
+The independent return auditor is now implemented at
+`C:\xampp\htdocs\YEAR 4\Testing\scripts\audit_gray_covering_results.py`
+(intended `~/forensic-dgp/scripts/audit_gray_covering_results.py` after a separate
+source transfer; not inside the frozen VM bundle). Fourteen meaningful integrity
+tests pass: partial/unsafe/corrupted archives, grayscale/replay schedule changes,
+old moment counters, nonfinite/frozen tensor changes, false promotion claims and
+preview corruption are rejected. Both preview reconstructions match the frozen
+producer on explicitly labeled local test fixtures, without model construction.
+The read-only preparation check verifies the unchanged package/sources, both
+schedules and all 812 measurement targets. No new VM return is present locally;
+no returned gray-model or output-quality success is claimed.
+
+Return-review commands and limits:
+`C:\xampp\htdocs\YEAR 4\Testing\GRAY_COVERING_RETURN_REVIEW.md`
+↔ intended `~/forensic-dgp/GRAY_COVERING_RETURN_REVIEW.md` after separate transfer.
+Prepared evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\gray_covering_return_audit_preparation_v1\`
+↔ intended `~/forensic-dgp/outputs/gray_covering_return_audit_preparation_v1/`.
+Preparation receipt `verification.json` SHA256
+`5b86055a1bbb74bb627061e7862d81df3dd9a96be7985d373d10a2aab6d0400b`;
+it explicitly records `returned_results_audited: false`.
+The future audit checks 3,267 members, 3,248 masks, 1,024 logged steps, three
+checkpoint states, exact RGB128 reproduction and both ten-row grids. Actual
+result verification remains pending; the following step is the unchanged
+practical gallery and face-output comparison before any model selection.
+
+## Previous milestone — 3 October 2026: varied-covering return, masks and face outputs audited
+
+The new return is present and verified:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\varied-covering-results.tar.gz`
+↔ `~/forensic-dgp/varied_covering_vm_bundle/varied-covering-results.tar.gz`.
+It is 108,064,323 bytes, SHA256
+`63014d50269bb0b50da0c5b5d1f54cadee1bd180634f0a51ac8b502f0ec9488c`.
+All 1,653 members, 1,638 masks and 256 step records pass independent verification;
+both checkpoints have 184 finite tensors and 92 unchanged reference-head/BN states.
+Each branch logs128 fresh steps/1,122 cumulative updates. Recorded L4 processing
+is43.45 seconds excluding loading/export. Optimizer tensors remain on the VM.
+Actual training occurred on the VM; zero local training updates.
+
+All five new native/degraded family IoUs improve and all final clear controls are
+empty. Old-cohort/reflection retention checks fail; four treatment hair views
+remain empty. All ten training-preview rows were inspected. No checkpoint is
+selected, no `best.pth` is created and original425 gates are neither evaluated nor
+waived. Independent return audit:
+`outputs/varied_covering_results_validation_v1/verification.json` SHA256
+`ebae5bd787f0fe0f19fa57d483c3ea29766c1ef73825e76560cd0f7f3654c95d`;
+visual review SHA256 `7ce8b8b91819eec8603f359e3b92f1a895da3b7bd7e44715ecdb52f85e9f5816`.
+
+The fixed36-case practical comparison is complete, with five counterexample tests
+passing before inference. Both returned models each predict53 CPU images:
+17 return reproductions plus36 practical inputs. Total106 forwards take10.26 CPU
+seconds excluding loading; every34 reproduced mask matches the VM exactly.
+Independent probability/metric/state verification covers290 artifacts and144
+metric records. All six preview sheets were inspected. New candidates keep all
+four clear controls empty, but the retained app-default cache falsely marks the
+native uncovered control. Hand/scarf/object transfer improves; gallery hair masks
+stay empty and both nearly hidden cases still miss automatic rejection.
+
+Practical protocol `outputs/varied_covering_practical_protocol_v1/protocol.json`
+SHA256 `15f6ca20827c4221f7e12630f7d3fab54d7eceae51235eb9401c6f529563382e`;
+audit `outputs/varied_covering_practical_validation_v1/verification.json` SHA256
+`fb76dce5dbe793d536d6058893edcb736e299069dd3664ffa09baf8b16d09e99`.
+All output paths above are relative to `C:\xampp\htdocs\YEAR 4\Testing\`;
+intended receiving paths are `~/forensic-dgp/<same path>` only after explicit transfer.
+These are exposed development masks; the two three-quarter cases remain outside
+first-version pose coverage. Approximate labels are not hidden-face targets.
+
+A ten-case degraded face-output comparison is complete and audited separately:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\varied_covering_completion_review_v1\`
+↔ intended `~/forensic-dgp/outputs/varied_covering_completion_review_v1/` after transfer.
+Its protocol SHA256 is
+`334d7b31ad3ff7b616af7ad06048498e4efb5fdf3f1172253d0ffc570fb56845`.
+All 20 automatic-mask generation requests produced PNGs: 18 completion forwards,
+20 restoration forwards, zero detector/optimizer work, and 174.15 CPU processing
+seconds excluding loading (frozen cap 300 seconds). Two hair masks remain empty;
+nearly hidden sources are
+excluded. Runtime uses existing pinned libraries; their Windows access requires
+the approved unsandboxed inference process, without installing packages or changing ACLs.
+
+Every final PNG reconstructs exactly from captured floats; 59 artifacts and
+unchanged model fingerprints are independently verified. All ten rows/20 outputs
+were visually inspected. Central masks, hands and objects are often replaced,
+but cloth/strap/finger/petal remnants persist. Sunglasses retain or regenerate
+frames; hair remains untouched because both predictions are empty. Scarf/glove
+and flower estimates have conspicuous generated artifacts. This is assistant
+development review, not expert/user acceptance or hidden-identity recovery.
+No assisted outputs were rerun and no model was selected.
+
+Downstream results SHA256
+`6feceb94e9c21c87f88c1b9fbdbfa6bc6f02ebe9745b35df061f60c02df841cb`;
+`independent_verification.json` SHA256
+`5cfb067b650c1069f68749a2d58ae0882d5b76e18de18e424e59ae41af117ece`;
+`visual_review.json` SHA256
+`e08298b5f213c8546d4435c7d0c2451a99672c9a4aa0e8f3ee09a596bd430ae3`.
+The audit's earlier visual-pending flag is preserved; this separate receipt
+records completed visual inspection.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\VARIED_COVERING_RESULTS.md` ↔
+`~/forensic-dgp/VARIED_COVERING_RESULTS.md` after transfer.
+**Next:** audit missing covering footprints and the hair/near-hidden failures
+before choosing a distinct data/processing intervention. No additional VM
+training or app swap yet.
+The full Goal remains active; no commit or push occurred.
+
+## Previous milestone — 3 October 2026: varied-covering return audit prepared
+
+The camera results and local follow-up are already audited in
+`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_RESULTS.md`. No camera checkpoint
+qualified for promotion. The frozen V2 varied-covering pilot below remains the
+next experiment. Its return archive/checksum are **not present locally** at this
+milestone. No live VM job status was observed; local absence does not establish
+whether the remote job has run. Preserve an executed VM workspace rather than
+restarting over its evidence.
+
+The new independent local verifier is ready:
+`C:\xampp\htdocs\YEAR 4\Testing\scripts\audit_varied_covering_results.py`.
+Its intended repository counterpart is
+`~/forensic-dgp/scripts/audit_varied_covering_results.py` after a future transfer;
+it is outside the frozen VM bundle and is not required for the CUDA pilot.
+It expects exactly 1,653 regular return members: two unselected checkpoints,
+1,638 saved masks and 256 step records, plus the fixed metadata/preview.
+It checks transfer/inventory bindings, supported-pixel counts, frozen schedules,
+fresh-step versus cumulative-update lineage, finite checkpoint tensors, unchanged
+reference-head/BN state and the full 10-row preview. Passing training-fit checks
+cannot select `best.pth` or waive the original 425-case/practical-output gates.
+Final optimizer tensors stay on the VM; their logged counters/hashes do not
+constitute independent local moment inspection.
+
+Eleven local counterexample tests pass, including unsafe/partial archive refusal,
+missing-return refusal before extraction/report creation, changed input conditions,
+inherited-moment counters, malformed losses, clear/retention failures and frozen
+tensor changes. These tests use arithmetic and tiny tensor fixtures; no model,
+optimizer, training or inference is constructed. The initial temporary-directory
+permission errors were resolved by using inherited workspace `scratch/` permissions.
+All frozen V2 code/data bindings and archive/protocol/audit hashes remain unchanged.
+
+Preparation-only evidence:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\varied_covering_return_audit_preparation_v1\verification.json`
+SHA256 `bcde7d19ec93e33341325e9e008e86f3467559ff4c0b39419e76dbe83fcf665c`.
+Its intended receiving path is
+`~/forensic-dgp/outputs/varied_covering_return_audit_preparation_v1/verification.json`
+only after transfer. It explicitly records `actual_return_audit_complete=false`;
+no new result extraction, quality report or returned-checkpoint inspection exists.
+Review/download instructions are in
+`C:\xampp\htdocs\YEAR 4\Testing\VARIED_COVERING_RESULT_REVIEW.md` ↔
+`~/forensic-dgp/VARIED_COVERING_RESULT_REVIEW.md` after transfer.
+
+**Next:** execute the packaged V2 pilot on the VM if it has not already run,
+download its two return files, run the independent local audit, then inspect the
+10-row masks before deciding a separate original-gate and practical face-output
+evaluation. Camera files already returned need no repeat transfer. No new CUDA
+execution, promotion, app change, commit or push is claimed here; Goal active.
+
+## Previous milestone — 3 October 2026: bounded varied-covering VM pilot packaged
+
+The next finite detector diagnostic is ready for **VM preflight and its frozen
+two-branch pilot**. It uses the verified 133-source training registry and 266
+native/degraded views. All actual training remains VM-only; no CUDA run, optimizer
+update, model selection or application swap has occurred locally.
+
+Use only these verified V2 files:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\varied-covering-vm-bundle-v2.tar.gz`
+(50,272,406 bytes) and `.sha256`. Upload through the already configured Windows
+Google Cloud SDK Shell to `/home/janusdominic0/` on `forensic-dgp-thesis`.
+Archive SHA256 `780c44f2e3f724ff600eb869e99422b1bf81b18678353a59ac68afb137e32d0b`.
+Extracted VM workspace is `~/forensic-dgp/varied_covering_vm_bundle/`.
+Independent audit verifies all1,010 regular members, the LF sidecar, 21 code
+files, all165 raw-source dependencies, unchanged held-out membership/support and
+independently reconstructed sampling. Audit:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\varied_covering_package_validation_v2\verification.json`
+SHA256 `2c82066ea9a608e5e75907f4b5245e955bacb8aab2a2f85aebe95bff7580c66a`.
+This audit is local evidence; the VM counterpart exists only after transfer.
+
+`existing91` and `varied133` independently start from audited camera91 `last.pth`
+(994 cumulative model updates) with **fresh empty AdamW state**. Both run two
+epochs×64 batches:128 updates each,256 across independent branches. Each final
+model has1,122 cumulative updates/fresh moment step128, not256 sequential updates.
+The treatment substitutes one new covering and one new clear source per batch;
+common slots, conditions and replay match. Batch8 has4 real/4 reflection inputs,
+each domain split2 covered/2 clear. Every arm source appears native/degraded and
+all280 training fixtures appear; new positive family slots are26 hand,26 hair,
+26 cloth,25 object and25 opaque eyewear/mask. No validation/test forward.
+
+Seven local checks pass, including actual Windows refusal before output/model/
+optimizer creation, native/degraded source exposure, clear-failure preservation,
+explicit hair-source resolution and uncertain-pixel loss exclusion. Static/data
+and tensor inspection construct no local model or optimizer. The source's old
+moment tensors are not needed or consumed. Training/measurement budget is3,686
+image forwards plus a separate one-image/zero-update preflight; hard cap30 minutes
+after loading, with new timing pending. Models/fixtures reuse182,552,838 existing
+VM bytes rather than re-uploading them.
+
+Frozen protocol: `outputs/varied_covering_protocol_v2/protocol.json` locally;
+`~/forensic-dgp/varied_covering_vm_bundle/inputs/varied_covering_protocol.json`
+on VM after extraction. SHA256
+`a6ff0780c86a9dc207477b5b40b6ccf6da5d88cd10fc5bb3624fb9e177d13928`.
+V2 names the reviewed native hair source868/case202 for preflight. The unused
+V1 archive/protocol/audit remain preserved: its positional preflight case194
+was a valid hand sample incorrectly described as hair. No V1 transfer/run here.
+
+Exact Windows upload, Google Cloud SSH/tmux preflight/pilot and Windows return
+commands are in `C:\xampp\htdocs\YEAR 4\Testing\VARIED_COVERING_VM.md` ↔
+`~/forensic-dgp/varied_covering_vm_bundle/VARIED_COVERING_VM.md` after extraction.
+Reuse `../feature_vm_bundle/.venv/`, read-only `../coverage_vm_bundle/` fixture/
+dependency assets and `../real_camera_vm_bundle/` camera91 weights. No new package
+installation/model download is prescribed. Original repository dataset directory
+presence and `~/forensic-dgp/outputs/phase4_with_progress/split.json` integrity
+remain required. The isolated bundle carries uncommitted code and ignored data;
+`git pull` does not supply these artifacts. No commit or push has occurred.
+
+**Next:** upload V2, run the one-batch preflight and finite pilot, then return
+`~/forensic-dgp/varied_covering_vm_bundle/varied-covering-results.tar.gz` and
+`.sha256` to `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. Independently audit
+states/budgets/masks/metrics and inspect the10-row preview before original425-gate
+and fixed practical-output evaluation. Fit success does not create `best.pth`
+or qualify detection/completion. Original failures remain; nearly hidden
+automatic rejection is unresolved. The full Goal remains active.
+
+The COFW data-stage report and milestones below preserve their preparation-time
+recipe-pending statements. The separately verified V2 protocol above supersedes
+those holds for this finite diagnostic only; it does not rewrite old evidence.
+
+## Previous milestone — 3 October 2026: varied COFW covering data verified
+
+Added 42 assistant-reviewed, training-only COFW detector examples after the
+camera audit exposed missing hair/scarf/hand coverage. Current registry:
+`C:\xampp\htdocs\YEAR 4\Testing\dataset\detector_supported_review_v3\manifest.json`
+(intended `~/forensic-dgp/dataset/detector_supported_review_v3/manifest.json` only
+after transfer). It has 165 records: 133 training (89 covered/44 clear),
+25 unchanged validation and seven unchanged previously inspected test records.
+All 123 V2 records, PNG bytes, held-out support and the mannequin remain intact.
+The registry is not a ready GPU recipe or selected model.
+
+The complete 503,327,162-byte official COFW archive passes publisher MD5/ZIP
+checks. Independent audits verify all 1,345 original training images, 42 selected
+native pairs, 210 proposal assets and 493 registry data files. No test RGB was
+decoded/admitted. Exact checks find no overlap with 290 declared previous
+source/crop files; full-corpus, identity and pretraining separation is unverified.
+Current official metadata declares CC BY 4.0; preserve attribution.
+
+New positives include hands, obstructing hair, cloth/scarves, objects and opaque
+eyewear/masks. Eleven new clear controls include three clear-glasses examples.
+Native-source polygons have explicit unsupervised boundaries. A failed raster
+audit is preserved; V3 excludes its 12 ambiguous native pixels before training.
+Old gates/held-out support are unchanged. These are approximate pilot detector
+labels, not hidden-face targets. The earlier partial archive remains excluded.
+
+Report: `C:\xampp\htdocs\YEAR 4\Testing\COFW_DATA_PREPARATION.md` ↔
+`~/forensic-dgp/COFW_DATA_PREPARATION.md` after transfer.
+Registry SHA256 `abab07e152941c4ae24d8aea3755fa7aaedb18965b25f6d0d1b6a7e00094aadd`;
+dataset audit `outputs/cofw_supported_dataset_validation_v1/verification.json`
+SHA256 `a403f14457d7ba850ff2dbea4236b1db88276cd9e5d4f8192a65e0a0159261cc`;
+source/geometry audit `outputs/cofw_covering_data_validation_v3/verification.json`
+SHA256 `e16625fa2f66d51c33a8ee5481dec821648d531522a93d4f54236e187938faf1`.
+Audit paths are relative to both repository roots; new artifacts are local only.
+
+Paired camera cache is now verified locally:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\cofw_camera_pairs_v2\manifest.json`
+↔ `~/forensic-dgp/outputs/cofw_camera_pairs_v2/manifest.json` after transfer.
+It has 133 native/133 degraded training views, with all previous 91 pairs exact.
+Independent reconstruction verifies every degraded pixel and unchanged
+target/support/geometry; held-out inputs are absent. Both five-row preview sheets
+are inspected. Manifest SHA256
+`b6f4a800427e96a52468a0ec10eec478ec8f5875e1302b35ffd6c072dfec041c`;
+`outputs/cofw_camera_pairs_v2/independent_verification.json` SHA256
+`c7fb19ff5d936c5e43f8a5c3a56b8ca59db40986d04f3be4c156660258652471`.
+The incomplete V1 cache is preserved/excluded; zero model/optimizer work.
+
+**Next:** prepare a distinct finite VM comparison of existing data versus
+varied coverings, retaining clear/retention checks and the
+original 425-case qualification gates. Package previous raw-source dependencies;
+V3 alone is not a complete provenance bundle. No new CUDA recipe, upload,
+training, promotion, app change, commit or push at this milestone. Actual
+training stays on the VM; Goal active.
+
+## Previous milestone — 3 October 2026: camera results audited; covering gaps remain
+
+The user reports the VM result download is complete. Both files are present at
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\real-camera-results.tar.gz` (161,238,229
+bytes) and its `.sha256` sidecar (93 bytes). VM originals are
+`/home/janusdominic0/forensic-dgp/real_camera_vm_bundle/real-camera-results.tar.gz`
+and its `.sha256`. Transfer SHA256 matches:
+`5dc73ce77291b8622530ae825676728776caa8fdbfd36250f1d0a4e23b1c3c24`.
+All 1,866 archive members, 1,848 binary masks, 336 logged steps and three checkpoint
+states pass independent verification. Each checkpoint changes encoder/decoder/head
+weights while retaining 92 frozen reference-head/BN tensors. Logged L4
+training/measurement time is 53.16 seconds, excluding startup and archive export.
+Final optimizer tensors remain on the VM and were not independently inspected.
+No checkpoint promotion, local training, commit or push has occurred.
+
+Full report is `C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_RESULTS.md` (VM
+`~/forensic-dgp/REAL_CAMERA_RESULTS.md` after a future transfer). Return audit:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\real_camera_results_validation_v1\verification.json`,
+SHA256 `fbe47739fa7ec05f88b7ee22861d81b64b945c320109e4b7aee5a05c8af74245`.
+Local evidence counterparts under `~/forensic-dgp/outputs/` exist only after
+explicit transfer; returned VM originals remain within `real_camera_vm_bundle/`.
+
+The predeclared fit checks reproduce two passes and three failures. Camera83
+raises old degraded training IoU from the native83 control's 0.7861 to 0.9095.
+Camera91 improves new-source IoU to 0.6394 native/0.5185 degraded. However,
+retention errors rise or prior fit declines, and camera83 marks 137 supervised
+pixels on clear fixture 171. These are training-cohort measurements; original 425
+qualification gates are not evaluated, changed or waived. No `best.pth` is created.
+
+The bounded local follow-up verifies 43/44 CPU return masks exactly and one
+threshold-ambiguous pixel; it then compares all three branches on the same 36-case
+gallery with the existing threshold 0.5/3px margin. All 108 practical probabilities,
+216 raw/proposal masks and 144 metric records pass independent verification.
+152 detector-image forwards take 13.74 CPU seconds excluding loading; no training.
+Degraded hand reference recall rises from source42's 5.3% to camera91's 57.0%.
+Masks, eyewear/glare and objects improve; all four clear controls remain empty.
+Hair remains missed, one degraded scarf/gloves case is almost empty, and both
+nearly hidden cases fail automatic rejection. All six preview sheets are inspected.
+This is exposed development evidence, not an unseen holdout or checkpoint selection.
+
+Four actual CodeFormer estimates using cached camera83/camera91 proposals take
+38.03 CPU seconds excluding loading, with four completion/four restoration
+forwards and zero detector/optimizer work. All four final PNGs reconstruct exactly
+from captured stages under the existing Auto restoration/palette policy. Preview:
+`C:\xampp\htdocs\YEAR 4\Testing\outputs\real_camera_completion_review_v1\preview.png`
+(VM `~/forensic-dgp/outputs/real_camera_completion_review_v1/preview.png` only
+after explicit transfer). Plausible mouths/beards appear, but cloth/strap edges
+and fingers remain because the automatic masks are incomplete. The main app
+retains its baseline detector and manual correction; no candidate is qualified.
+
+**Next:** prepare varied reviewed hand/hair/scarf covering examples and full
+removal footprints with clear-control/retention counterexamples before a distinct
+VM pilot. Retain camera degradation as a supported ingredient; do not repeat
+the same recipe, weaken gates or train the inspected RealOcc validation gallery.
+Completion/restoration retraining is not justified by these mask-remnant failures.
+The Goal remains active; all actual training stays on the VM.
+
+The Windows Google Cloud CLI is configured for project `forensic-dgp-thesis`.
+The PuTTY backend rejected the initial command with two remote sources; separate
+one-file SCP commands subsequently completed according to the user. Full install,
+prompt answers, exact transfer commands and checksum instructions are saved in
+`C:\xampp\htdocs\YEAR 4\Testing\WINDOWS_GCLOUD_TRANSFER.md` (repository VM
+counterpart `~/forensic-dgp/WINDOWS_GCLOUD_TRANSFER.md` after a future transfer).
+This new guide is not part of the immutable 419-file pilot bundle. No transfer
+speed was measured and no VM zone is inferred from the instance name.
 
 The uploaded Mendeley source, eight reviewed detector annotations, supported
 dataset V2 and paired camera inputs are verified. The three-arm VM package was
-prepared on 2 October and its independent audit is complete. **Next action is VM
-CUDA preflight followed by the bounded detector diagnostic in `REAL_CAMERA_VM.md`.**
-No new training, checkpoint promotion, transfer, commit or push has occurred.
+prepared on 2 October and its independent audit is complete. The preparation
+details below remain the experiment's historical protocol. The completed return/
+follow-up audits above supersede its preparation-time pending CUDA statements.
 
 The research tracks remain separate: restoration retains Phase 3
 `C:\xampp\htdocs\YEAR 4\Testing\checkpoints\dgp_zamboanga_final.pth` ↔
@@ -166,8 +1883,9 @@ Independent package audit:
 `C:\xampp\htdocs\YEAR 4\Testing\outputs\real_camera_package_validation_v1\verification.json`,
 SHA256 `b27897d6781907ae0f27e7a76d0b014e63156d33cec10a093532362fc0253f8b`.
 It verifies all members, code compilation, dataset/pair bindings, reconstructed
-schedules and unchanged original split. The Windows/CPU guard is tested; actual
-CUDA execution is pending. No local training or smoke optimizer ran.
+schedules and unchanged original split. The Windows/CPU guard is tested; returned
+CUDA execution records are not yet independently verified. No local training or
+smoke optimizer ran.
 
 The pilot independently starts three branches from the same reflective epoch42
 weights and inherited AdamW moments: `native83` (old native control), `camera83`
@@ -525,7 +2243,7 @@ The full goal remains active and unmet.
 StageA is ready to transfer for a bounded GPU pilot, not application promotion.
 The separate native-expert recipe starts from reflective42 with exact inherited
 AdamW moments (step672/model882). Six epochs×56 batches give336 updates, final
-global epoch48, model1218 updates and moment step1008. The fixed batch8 contains
+global epoch48, model1218 updates and moment step1008. The fixed batch 8 contains
 3real (2covered/1clear) and5fixtures (4covered/1clear), with50/50 supported domain
 loss. Each existing fixture appears once per epoch; all83 real training cases
 appear each epoch. The original parent stays separate and untouched.
@@ -574,7 +2292,7 @@ Next: run GPU preflight and the bounded StageA pilot. Return
 LF checksum to `C:\xampp\htdocs\YEAR 4\Testing\outputs\`. Independently audit,
 reproduce final masks and inspect the grid before any StageB or promotion.
 Source42 remains ineligible on synthetic retention; the new expert is untrained.
-No `best_detector.pth`, application or Phase3 restoration replacement is selected.
+No `best_detector.pth`, application or Phase 3 restoration replacement is selected.
 No commit/push occurred. Actual training remains VM-only; the goal remains active
 and unmet. Hidden facial features remain plausible estimates.
 
@@ -603,7 +2321,7 @@ These local diagnostics have no new VM execution counterpart. VM repository rema
 The separate bounded native-expert VM pilot is now packaged and audited; see
 the current status above. No new VM training has started. StageA expert fit alone
 cannot qualify the detector or generator. Original development gates,
-generator/application and Phase3 baseline remain unchanged. The goal remains
+generator/application and Phase 3 baseline remain unchanged. The goal remains
 active and unmet.
 
 ## Verified milestone — 2 October 2026: supported real-mask dataset independently verified
@@ -642,7 +2360,7 @@ reports were reviewed. They do not justify another unchanged adaptation run.
 Next: specify one materially different bounded repair with a training-only
 feasibility check before fitting. This dataset is verified; a new GPU recipe is still
 pending. No unchanged teacher/projection/retention run or weakened gate is
-justified. Original gates, generator/application and Phase3 restoration remain
+justified. Original gates, generator/application and Phase 3 restoration remain
 unchanged. Training remains VM-only. No commit/push occurred; the full goal remains
 active and unmet. Hidden facial features remain plausible estimates.
 
@@ -686,7 +2404,7 @@ Legacy `ReviewedMasks` ignores valid support, and its manifest reader does not
 enforce format/readiness metadata; existing runners must not consume these partial
 annotations. After data checks, retention repair still needs a distinct hypothesis
 before a bounded VM pilot. No new GPU recipe is ready.
-Original gates, generator/application and Phase3 restoration remain unchanged.
+Original gates, generator/application and Phase 3 restoration remain unchanged.
 Training remains VM-only; no commit/push occurred. The full goal remains active
 and unmet; hidden features remain plausible estimates.
 
@@ -766,7 +2484,7 @@ training-only dataset version. The existing27-source eyewear queue has proposals
 not accepted pixel labels; exclude already-used reviewed sources before additions.
 Preserve held-out membership and original real/synthetic gates. Retention repair
 needs a distinct hypothesis. No new VM training recipe is ready; actual training
-remains VM-only. Baseline generator/application and Phase3 restoration are retained.
+remains VM-only. Baseline generator/application and Phase 3 restoration are retained.
 The subsequent real-source qualification is complete; see the current status
 above. Ten later native annotations are accepted for the separate supported
 dataset, not for generator training. The goal remains active and unmet; hidden
@@ -916,7 +2634,7 @@ training fixtures. Only a candidate passing unchanged gates advances to reviewed
 end-to-end completion. An absent `best_detector.pth` is failed eligibility,
 not script cancellation; no automatic promotion occurs.
 
-Track1 retains Phase3 `checkpoints/dgp_zamboanga_final.pth`; full Phase5 ArcFace
+Track1 retains Phase 3 `checkpoints/dgp_zamboanga_final.pth`; full Phase 5 ArcFace
 identity training remains pending. Track2 retains its completion generator and
 application baseline. All previously audited detector candidates fail synthetic
 retention. Missing facial regions remain plausible estimates. The full project
@@ -954,8 +2672,8 @@ implementing a matched VM pilot with valid-support-aware loss reductions. Keep
 the400-case benchmark, original gates, teacher and generator/application baseline.
 No new GPU recipe/package is ready. Actual training remains VM-only. All audited
 detector candidates still fail synthetic retention; there is no eligible
-`best_detector.pth`. Track1's Phase3 baseline and Track2's generator remain;
-full Phase5 identity training and reviewed end-to-end output improvement remain
+`best_detector.pth`. Track1's Phase 3 baseline and Track2's generator remain;
+full Phase 5 identity training and reviewed end-to-end output improvement remain
 pending. The full goal is active and unmet.
 
 ## Audited result — 1 October 2026: matched loss return; no eligible detector
@@ -978,7 +2696,7 @@ neither arm has`best_detector.pth`. Training reflection recall improves to84.93%
 control and90.50% focus from source30's59.48%, but the491-pixel validation
 reflection is entirely missed. Full result:`FACE_OCCLUSION_FOCUS_RESULTS.md`.
 
-Both final states were inferred on638 pinned training replay cases, batch8,
+Both final states were inferred on638 pinned training replay cases, batch 8,
 tensors unchanged. Control/focus training IoU0.95688/0.94281 versus source30
 0.93217 and original parent0.96904. Source counts reused after provenance,
 target/summary and saved-mask checks. Weighting reduces visible false pixels
@@ -1023,7 +2741,7 @@ uncovered completion bases from unpaired real occlusion images; review proposed
 masks and source-only augmentation previews first. Existing benchmarks/gates
 remain unchanged. No new GPU package is ready and another identical run is
 unjustified. Only an eligible detector advances to reviewed end-to-end completion.
-Track1 Phase3 baseline remains`checkpoints/dgp_zamboanga_final.pth`; full Phase5
+Track1 Phase 3 baseline remains`checkpoints/dgp_zamboanga_final.pth`; full Phase 5
 identity training is pending. Track2 generator/application baselines are retained.
 External pretraining overlap, label adjudication and final generalization remain
 unresolved; the full improvement goal is active and unmet. Older sections are
@@ -1088,7 +2806,7 @@ and its`.sha256` to`C:\xampp\htdocs\YEAR 4\Testing\outputs\`.
 Audit420 step logs,2,915 masks, source/moment/final bindings, frozen states and
 unchanged selection. Compare matched checkpoints and inspect the ten-row grid
 and reflection zoom before an eligible detector advances to end-to-end completion.
-Track1 Phase3`checkpoints/dgp_zamboanga_final.pth` is retained; full Phase5 identity
+Track1 Phase 3`checkpoints/dgp_zamboanga_final.pth` is retained; full Phase 5 identity
 training remains pending. Track2 completion generator/application remain at their
 current baselines. External pretraining overlap, approximate polygons and tiny
 reflection sample size limit generalization claims; the broader improvement goal
@@ -1112,7 +2830,7 @@ CPU reproduces2,915 masks with three pixel differences and identical selection;
 epoch30 masks are all exact. Remote parent invariance remains an executed-code
 check/log claim; its VM tensors were not returned. No local optimizer updates.
 
-Training replay diagnostic:638 pinned cached cases, batch8, unchanged model state.
+Training replay diagnostic:638 pinned cached cases, batch 8, unchanged model state.
 Epoch30 training IoU0.93217 versus parent0.96904; weighted exposure0.93427.
 Degraded irregular training/validation IoU0.84717/0.81573. Final real training
 IoU0.91719. Original/source10 replay counts reused after integrity/count checks.
@@ -1146,7 +2864,7 @@ Next: prepare a single-change matched VM experiment for small reflection/irregul
 fit and clear-face specificity, using equally verified model/optimizer starts.
 Pre-register its control, budget, checks and stopping point; a new training
 recipe/package is not ready yet. Only an eligible detector advances to reviewed
-end-to-end completion. Track1 Phase3 baseline is retained; full Phase5 identity
+end-to-end completion. Track1 Phase 3 baseline is retained; full Phase 5 identity
 training remains pending. External FFHQ overlap and final generalization remain
 unverified. The full goal is active and unmet. Earlier entries are historical.
 
@@ -1223,7 +2941,7 @@ to`C:\xampp\htdocs\YEAR 4\Testing\outputs\face-occlusion-continuation-results.ta
 Audit420 new steps, source/parent/candidate state and masks, all original gates
 and final optimizer binding. Only an eligible detector advances to reviewed
 end-to-end completion. Glare is still missed and must be addressed explicitly;
-external FFHQ pretraining overlap is unknown. Track1 Phase3/Track2 generator and
+external FFHQ pretraining overlap is unknown. Track1 Phase 3/Track2 generator and
 application baseline remain unchanged. No automatic extra epoch or promotion.
 The full goal remains open; earlier entries below are historical milestones.
 
@@ -1265,7 +2983,7 @@ remains unresolved, so these reused development results are not final accuracy.
 Next: diagnose synthetic error strata and638-case replay training fit before
 specifying a bounded VM follow-up using the promising pretrained representation.
 Keep unchanged real/synthetic guards and require reviewed end-to-end completion
-before promotion. Track1 Phase3 restoration remains retained; full Phase5 identity
+before promotion. Track1 Phase 3 restoration remains retained; full Phase 5 identity
 run is pending. Entries below are historical preparation/results.
 
 ## Preparation record — 30 September 2026: direct occlusion pilot packaged

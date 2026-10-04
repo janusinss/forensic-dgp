@@ -2,9 +2,43 @@
 
 Updated 3 October 2026. Windows workspace: `C:\xampp\htdocs\YEAR 4\Testing\`.
 Intended VM repository counterpart after transfer: `~/forensic-dgp/`.
-This records additional-source research and the selected Mendeley extension.
-Eight reviewed detector sources are admitted to a separate training registry;
-the complete archives are not admitted wholesale. No new training has run.
+This records additional-source research and the selected Mendeley/COFW
+extensions. Eight Mendeley and 42 COFW reviewed detector sources are admitted
+to versioned training registries; complete archives are not admitted wholesale.
+The camera diagnostic is complete; no new COFW training has run.
+
+## Current COFW preparation — verified 3 October 2026
+
+The complete official 503,327,162-byte color archive now passes publisher MD5
+and ZIP checks; the earlier partial remains excluded history. All 1,345
+author-training images are independently verified, including 44 grayscale
+sources. No test RGB was decoded/viewed. Current official metadata declares
+CC BY 4.0 and public access.
+[Official record](https://data.caltech.edu/records/bc0bf-nc666)
+
+Native source review and versioned covering proposals admit 42 training-only
+examples: 31 covered and 11 clear, including hands, obstructing hair,
+cloth/scarves, objects, eyewear/masks and clear-glasses controls. Source/geometry
+and registry audits pass. Twelve raster-ambiguous native pixels are explicitly
+unsupervised; old held-out support is unchanged. These are approximate assistant
+detector annotations, not paired true uncovered faces.
+
+Supported V3 has 133 training, 25 validation and seven previously inspected test
+records; all 123 V2 records are preserved. Exact RGB checks against 290 declared
+prior source/crop files find no match, without claiming full 80,000-source,
+identity or pretraining separation. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\COFW_DATA_PREPARATION.md` ↔
+`~/forensic-dgp/COFW_DATA_PREPARATION.md` after transfer. New files are local only.
+Paired camera inputs are now verified: 133 native/133 degraded training views,
+all previous 91 pairs exact, unchanged targets/support/geometry and no held-out
+inputs. Evidence is `outputs/cofw_camera_pairs_v2/independent_verification.json`
+under both roots after transfer. The distinct finite comparison is now packaged
+and independently audited: `VARIED_COVERING_VM.md`, local bundle
+`outputs/varied-covering-vm-bundle-v2.tar.gz`, intended VM workspace
+`~/forensic-dgp/varied_covering_vm_bundle/`. It includes all165 registered raw
+sources and compares existing versus varied data with matched fresh optimizers,
+clear controls and128 updates per branch. Actual CUDA execution is pending.
+No checkpoint promotion or wholesale archive admission. Next: VM preflight/pilot.
 
 ## Existing local candidates
 
@@ -45,7 +79,7 @@ Documentation archive: `documentation.zip`, 1,140,264 bytes; MD5
 `cc3a8f6fc6b49f6186985c1c68c6fa52` matches the publisher.
 If transferred, these live under `~/forensic-dgp/outputs/cofw_source_research_v1/`.
 
-## Acquisition result and guard against partial data
+## Earlier acquisition failure — superseded, partial remains excluded
 
 The official color transfer ended with curl exit 18 after 378.9 seconds and only
 2,153,540 bytes (approximately 5.7 KB/s), versus 503,327,162 expected. It is now
@@ -59,8 +93,9 @@ Acquisition status evidence: `research_status.json`, SHA256
 `c22ccc480221c292e87092d66d41d5ebf438815329e2b600760a33f4b0b6705c`.
 An isolated `h5py==3.14.0` reader was installed under
 `outputs/cofw_read_dependencies/`; the main application environment was not changed.
-Elevated execution verified the reader version. It is unused until a complete
-archive is obtained and verified. No new masks are approved or training-enabled.
+Elevated execution verified the reader version. It was unused at this earlier
+milestone. The complete archive and training-only extension above supersede
+that hold without altering the earlier evidence.
 
 Keep the publisher's original train/test membership when acquiring usable images.
 Use train sources for the next developmental gallery; leave test images separate.
@@ -129,8 +164,9 @@ The 36-case pretrained XSeg and returned direct-detector comparisons are complet
 XSeg violates clear-glasses/background scope; direct coverage worsens under camera
 degradation and hair remains undetected. Neither changes the app checkpoint.
 Reports are `PRACTICAL_XSEG_RESULTS.md` and `PRACTICAL_DIRECT_DETECTOR_RESULTS.md`
-under the repository roots above. The partial COFW archive stays excluded;
-RealOcc author-validation membership and publisher labels remain unchanged.
+under the repository roots above. The partial COFW archive stays excluded; the
+newly verified complete archive is separate. RealOcc author-validation
+membership and publisher labels remain unchanged.
 
 ## Uploaded Mendeley source and next VM decision
 
@@ -151,10 +187,17 @@ previously inspected test sources. Exact byte/native-pixel overlap checks agains
 115 prior raw sources find no match; full-corpus, identity and pretraining overlap
 remain unverified. Paired camera RGB changes preserve labels/support/geometry.
 
-Next: the audited 18.9 MB bundle and exact commands in
-`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_VM.md` (VM
-`~/forensic-dgp/real_camera_vm_bundle/REAL_CAMERA_VM.md`) prepare a three-arm
-VM-only detector diagnostic: native83, camera83 and camera91, 112 updates each.
-Actual CUDA execution is pending. Measurements are training-fit evidence only,
-with no automatic checkpoint promotion; returned files need independent audit
-and visual review before original-gate/end-to-end evaluation.
+The three-arm native83/camera83/camera91 VM diagnostic is complete and audited,
+112 updates each. Camera degradation improves transfer and the small source
+addition helps hands; external hair and nearly hidden cases remain missed.
+Retention/clear checks fail, so no checkpoint is selected. Four generated estimates
+still show missed covering remnants. Full report:
+`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_RESULTS.md` ↔
+`~/forensic-dgp/REAL_CAMERA_RESULTS.md` after a future transfer.
+
+The COFW preparation above now supplies varied training-only coverings and clear
+controls. Keep the inspected RealOcc validation gallery excluded from training;
+the entire Mendeley ZIP is not automatically usable labelled data. Paired V3
+camera inputs are verified. The distinct finite V2 protocol/package is now
+independently verified; see `VARIED_COVERING_VM.md`. Next: VM preflight/pilot. No
+generator/restoration retraining is indicated by the current mask-remnant failures.

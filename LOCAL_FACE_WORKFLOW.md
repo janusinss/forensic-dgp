@@ -1,5 +1,23 @@
 # Local face workflow — status updated 3 October 2026
 
+## DGP-first integration preparation
+
+The current combined app still uses CodeFormer for visible restoration. A strict
+256×256 DGP adapter and post-pilot native review plan are now prepared in
+`C:\xampp\htdocs\YEAR 4\Testing\DGP_INFERENCE_READINESS.md`
+↔ `~/forensic-dgp/DGP_INFERENCE_READINESS.md` after source/document transfer.
+Seven adapter checks and four candidate-selection checks pass; eight native DGP
+forwards exactly reproduce the audited Phase3 baseline without state changes or
+training. This does not establish improved output or select an app default.
+
+The useful-candidate review, 256 output/composition policy, qualification of tiny
+or severely degraded crops and DGP-led browser verification remain pending.
+The existing decoder's32-pixel minimum and original-size/50% blend behavior below
+describe the current historical route, not the final CCTV contract. UI and live
+route behavior remain unchanged during this inference-preparation milestone.
+
+## Current combined route
+
 The existing main application now provides upload, automatic removal-area preview,
 paint/erase correction, one face estimate and PNG/ZIP downloads. Hidden facial
 features are plausible estimates. Automatic detection uses the retained development
@@ -8,6 +26,12 @@ detector accuracy. The broad-family review is complete: assisted hand, hair, sca
 and object estimates are useful in several inspected cases; one scarf remains
 partial and automatic proposals miss most native coverings. See
 `PRACTICAL_BROAD_OUTPUT_RESULTS.md` under the Windows/VM repository roots below.
+
+A separate four-case assisted context comparison now reduces scarf texture in one
+case, with an unresolved boundary line and no established general-default benefit.
+It is audited and documented in `COMPLETION_CONTEXT_RESULTS.md` under the same
+Windows/VM repository roots. The main app still uses the existing route; the
+grayscale detector VM return and full practical evaluation remain pending.
 
 | Component | Windows local | Linux VM repository after transfer |
 | --- | --- | --- |
@@ -133,10 +157,33 @@ the direct detector misses obstructing hair and loses coverage under degradation
 Neither candidate is selected by this app. See `PRACTICAL_XSEG_RESULTS.md` and
 `PRACTICAL_DIRECT_DETECTOR_RESULTS.md` under the repository roots above.
 
-Next: execute the independently audited three-arm VM camera/source diagnostic
-in `C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_VM.md` (bundled VM runbook
-`~/forensic-dgp/real_camera_vm_bundle/REAL_CAMERA_VM.md`). It isolates camera
-degradation and eight new reviewed sources, with 112 updates per branch. Actual
-CUDA preflight and training are pending; no new app checkpoint is qualified.
-Goal remains active. Return the results for state/mask audit and preview review
-before choosing further evaluation or changing local inference.
+The three-arm VM camera/source diagnostic is complete and audited. Camera
+degradation improves practical masks/glare/hands, but retention/clear checks fail,
+hair stays undetected and both nearly hidden cases miss automatic rejection.
+Four follow-up estimates still contain missed cloth/finger remnants. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_RESULTS.md` ↔
+`~/forensic-dgp/REAL_CAMERA_RESULTS.md` after a future transfer.
+
+The subsequent varied-covering V2 VM comparison and36-case local practical mask
+review are now audited. New data improves exposed family fit and some hand/scarf
+transfer, but old/reflection retention fails, gallery hair remains undetected and
+nearly hidden automatic rejection still fails. Both returned models preserve the
+four practical clear controls; the retained app-default cached mask has a native
+uncovered-control error. The new 20-estimate downstream comparison is complete,
+independently reconstructed and visually reviewed. Central coverings are often
+replaced, but hair remains, covering edges persist and scarf/flower estimates
+contain conspicuous artifacts. These automatic outputs do not establish full-scope
+readiness; optional manual correction remains a separate assisted path. See
+`C:\xampp\htdocs\YEAR 4\Testing\VARIED_COVERING_RESULTS.md` ↔
+`~/forensic-dgp/VARIED_COVERING_RESULTS.md` after future transfer.
+
+A subsequent saved-pixel/cached-output diagnosis confirms that reviewed footprints
+improve hair/hand/scarf/object completion and trigger near-hidden rejection on the
+fixed examples. The automatic detector remains the main observed limitation;
+generated scarf texture and stylized anatomy also remain imperfect.
+
+Next: run the separately prepared matched RGB/grayscale detector pilot on the VM
+after preflight. Commands: `C:\xampp\htdocs\YEAR 4\Testing\GRAY_COVERING_VM.md` ↔
+`~/forensic-dgp/gray_covering_vm_bundle/GRAY_COVERING_VM.md` after extraction.
+No new app checkpoint is qualified; the current local workflow and pinned models
+remain unchanged. Goal active; no local training or actual new CUDA execution.

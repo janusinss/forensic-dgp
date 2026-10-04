@@ -1,6 +1,46 @@
 # Supported real-mask dataset — status updated 3 October 2026
 
-## Current V2 extension and VM readiness
+## Current V3 COFW extension — data verified; finite VM pilot packaged
+
+`C:\xampp\htdocs\YEAR 4\Testing\dataset\detector_supported_review_v3\manifest.json`
+has 165 records: 133 training (89 covered/44 clear), 25 unchanged validation
+(15 covered/10 clear), and seven unchanged previously inspected test records
+(four covered/three clear). Intended Linux path after transfer:
+`~/forensic-dgp/dataset/detector_supported_review_v3/manifest.json`.
+All 123 V2 records and active image/mask/core/valid-support bytes are exact.
+
+Forty-two author-training COFW images add 31 varied coverings and 11 clear
+controls. Native source/geometry audits pass; ambiguous boundaries, padding and
+12 declared raster-disagreement pixels are unsupervised while RGB remains intact.
+These are assistant pilot detector annotations, not uncovered-face targets.
+No COFW test images or full-archive training admission.
+
+The unchanged three-tensor reader verifies all records. Dataset audit verifies
+493 files, preserved held-out support/mannequin and old raw-source hashes.
+Registry SHA256 `abab07e152941c4ae24d8aea3755fa7aaedb18965b25f6d0d1b6a7e00094aadd`;
+`outputs/cofw_supported_dataset_validation_v1/verification.json` SHA256
+`a403f14457d7ba850ff2dbea4236b1db88276cd9e5d4f8192a65e0a0159261cc`.
+
+Source/terms/refinement history: `COFW_DATA_PREPARATION.md` under both roots after
+transfer. New artifacts are local only. Old raw-source paths are external
+dependencies listed in the audit; include/verify them in the next package.
+`training_recipe_ready=false`; zero model forwards/optimizer updates or promotion.
+The new paired cache `outputs/cofw_camera_pairs_v2/manifest.json` contains
+133 native/133 degraded training views. All degraded pixels independently
+reconstruct; previous 91 pairs remain exact and no held-out input is included.
+Its `independent_verification.json` SHA256 is
+`c7fb19ff5d936c5e43f8a5c3a56b8ca59db40986d04f3be4c156660258652471`.
+Both five-row preview sheets are inspected. These are relative paths under both
+roots after transfer. The separate finite V2 VM protocol is now packaged and
+independently verified; data-stage `training_recipe_ready=false` remains intact.
+Runbook `VARIED_COVERING_VM.md` uses matched `existing91`/`varied133` branches,
+128 updates each, fresh optimizers and more clear controls, with original gates
+preserved. Bundle: `outputs/varied-covering-vm-bundle-v2.tar.gz`; intended VM root
+`~/forensic-dgp/varied_covering_vm_bundle/`. All165 raw sources are included,
+closing the earlier provenance-transfer hold. Actual CUDA execution is pending;
+no local training/model qualification. Next: VM preflight/pilot and return audit.
+
+## Previous V2 extension and executed VM diagnostic
 
 The new registry is
 `C:\xampp\htdocs\YEAR 4\Testing\dataset\detector_supported_review_v2\manifest.json`.
@@ -31,12 +71,20 @@ data-stage declaration; the frozen protocol in
 `C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_VM.md` ↔
 `~/forensic-dgp/real_camera_vm_bundle/REAL_CAMERA_VM.md` explicitly consumes it
 with supported reductions. Package readiness means VM preflight and the fixed
-three-arm detector diagnostic only; actual CUDA execution is pending.
+three-arm detector diagnostic only. That preparation-time CUDA hold is
+superseded by the completed return audit below.
 
-Next: run native83/camera83/camera91 on the L4 VM, 112 updates per branch, then
-return masks/checkpoints for independent audit and ten-row visual review. No
-`best.pth`, application swap or qualification follows training-fit checks alone.
-The older native-expert recipe remains preserved and must not start automatically.
+The native83/camera83/camera91 L4 run is now complete and independently audited,
+112 updates per branch. Camera augmentation improves degraded fit; added sources
+help hands, but retention/clear checks fail and external hair stays undetected.
+All eight preview sheets and four downstream estimates are reviewed. Report:
+`C:\xampp\htdocs\YEAR 4\Testing\REAL_CAMERA_RESULTS.md` ↔
+`~/forensic-dgp/REAL_CAMERA_RESULTS.md` after future transfer.
+
+Next: varied reviewed covering/complete-footprint data with clear/retention
+counterexamples before a distinct VM protocol. No `best.pth`, app swap or
+qualification occurred. The older native-expert recipe remains preserved and
+must not start automatically; registry/labels/splits remain unchanged.
 
 ## Previous V1 dataset verification — 2 October 2026
 
