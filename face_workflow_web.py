@@ -5,12 +5,11 @@ import logging
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 
-from face_workflow import (UPLOAD_LIMIT, decode_image,
-                           decode_removal_mask, make_review_bundle, png_bytes)
-from face_workflow_palette import PaletteFaceWorkflow
+from face_workflow import UPLOAD_LIMIT, png_bytes
+from dgp_face_workflow_v3 import DGPFaceWorkflow, decode_crop, decode_mask, make_dgp_bundle
 
 router = APIRouter(prefix="/face", tags=["Reviewed face restoration"])
-engine = PaletteFaceWorkflow()
+engine = DGPFaceWorkflow()
 
 
 def data_url(array):
@@ -18,21 +17,23 @@ def data_url(array):
 
 
 def review(contents):
-    result = engine.review_mask(decode_image(contents))
+    result = engine.review_mask(decode_crop(contents))
     return {**{k: v for k, v in result.items() if k not in ("original", "mask", "raw_mask")},
             "original": data_url(result["original"]), "mask": data_url(result["mask"]*255),
             "raw_mask": data_url(result["raw_mask"]*255)}
 
 
-def generate(contents, mask_contents, restoration, include_bundle):
-    rgb = decode_image(contents)
-    mask = decode_removal_mask(mask_contents, rgb.shape[:2])
-    output, metadata = engine.generate(rgb, mask, restoration)
-    result = {"original": data_url(rgb), "mask": data_url(mask*255),
+def generate(contents, mask_contents, restoration, include_bundle, input_review="", mask_reviewed=False):
+    rgb = decode_crop(contents)
+    mask = decode_mask(mask_contents, rgb.shape[:2])
+    processed = engine.generate(rgb, mask, restoration, input_review, mask_reviewed)
+    output, metadata = processed["output"], processed["metadata"]
+    result = {"original": data_url(processed["original"]), "mask": data_url(processed["mask"]*255),
               "output": data_url(output), "metadata": metadata,
-              "message": "Hidden facial regions are plausible estimates. Review the original and removal area alongside the result."}
+              "message": "256×256 research output. Hidden regions are plausible estimates; native CCTV usefulness remains unverified."}
     if include_bundle:
-        result["bundle"] = "data:application/zip;base64," + base64.b64encode(make_review_bundle(rgb, mask, output, metadata)).decode("ascii")
+        bundle = make_dgp_bundle(rgb, mask, processed["original"], processed["mask"], output, metadata, processed["raw"])
+        result["bundle"] = "data:application/zip;base64," + base64.b64encode(bundle).decode("ascii")
     return result
 
 
@@ -56,12 +57,13 @@ async def mask_endpoint(file: UploadFile = File(...)):
 
 @router.post("/generate")
 async def generate_endpoint(file: UploadFile = File(...), mask: UploadFile = File(...),
-                            restoration: str = Form("auto"), include_bundle: bool = Form(True)):
+                            restoration: str = Form("auto"), include_bundle: bool = Form(True),
+                            input_review: str = Form(""), mask_reviewed: bool = Form(False)):
     try:
         return await run_in_threadpool(generate, await file.read(UPLOAD_LIMIT+1),
-                                       await mask.read(UPLOAD_LIMIT+1), restoration, include_bundle)
+                                       await mask.read(UPLOAD_LIMIT+1), restoration, include_bundle, input_review, mask_reviewed)
     except (FileNotFoundError, OSError) as exc:
-        raise HTTPException(503, "The configured pretrained model is unavailable. Check the local model files.") from exc
+        raise HTTPException(503, "A configured DGP or completion model is unavailable. Check the local model files.") from exc
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
     except Exception as exc:

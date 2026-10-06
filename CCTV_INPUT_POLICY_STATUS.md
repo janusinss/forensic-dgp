@@ -1,5 +1,14 @@
 # CCTV input-policy audit: preparation, not a deployed gate
 
+Update 5 October 2026: the new `dgp_face_workflow_v3.py` route removes the 32-pixel
+upload gate and uses observed-support quality signals. Mandatory input-only
+operator review routes insufficient/unsupported crops to a clearer/suitable
+image request; it is not an automatic facial-structure classifier. Exactly flat
+native visible regions and near-total reviewed covering are rejected before
+generation. Six frozen native core cases match cached DGP raws exactly; no useful
+native improvement follows. See `CCTV_DGP_APP_V3_INTEGRATION.md`. The original
+input audit below and its sources/results remain historical and unchanged.
+
 Verified 4 October 2026. Local workspace `C:\xampp\htdocs\YEAR 4\Testing\`;
 intended VM document copy `~/forensic-dgp/CCTV_INPUT_POLICY_STATUS.md` after an
 explicit transfer. This input-only audit made zero model forwards, backward

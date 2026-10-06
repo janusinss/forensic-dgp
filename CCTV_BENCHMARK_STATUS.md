@@ -1,3 +1,23 @@
+# CCTV restoration benchmark — current status 5 October 2026
+
+The source extension and matched ChokePoint development comparison are complete
+and independently audited. All six comparison sheets are reviewed. The retained
+own DGP remains unqualified for useful native restoration; the pretrained
+CodeFormer comparison is clearer but has unverifiable fine detail. No new
+training package, threshold fit or checkpoint adoption. Original QMUL24/32 and
+new ChokePoint12/13 labeled identity roles remain separate; both reserved sets
+remain unviewed. All current source/terms/resolution/split/overlap/review details:
+[CCTV_NATIVE_SOURCE_EXTENSION_V1.md](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_NATIVE_SOURCE_EXTENSION_V1.md>).
+
+The following 3 October report and its executable checklist are historical.
+Its original bytes are preserved at
+`outputs/dgp_processing_diagnostics_milestone_v3/before_docs/CCTV_BENCHMARK_STATUS.md`
+and the separately pinned QMUL extension provenance snapshot. Do not rerun
+its closed pilots. Follow the latest `PROJECT_HANDOFF.md` for current work;
+VM execution remains verified-transfer-files/pasteable-commands only.
+
+---
+
 # CCTV restoration benchmark — 3 October 2026
 
 The first public native-CCTV archive is acquired and its release structure is
@@ -100,7 +120,7 @@ The full archive's image
 CRC/decode quality has not been audited. This is a source/structure check, not
 reproduction of the original recognition challenge or a frozen restoration test.
 
-## Next execution
+## Historical next execution — 3 October 2026; closed commands
 
 1. Upload the verified `cctv-dgp-vm-bundle.tar.gz` and LF checksum using the commands
    in `CCTV_DGP_VM.md`; preserve the immutable candidate/gate versions and split.

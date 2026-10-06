@@ -25,9 +25,9 @@ document.addEventListener('DOMContentLoaded', () => {
         byId('workflow-error').classList.toggle('hidden', !message);
     };
     const syncControls = () => {
-        byId('analyze-btn').disabled = !file || !maskReady || busy || !byId('review-confirm').checked;
+        byId('analyze-btn').disabled = !file || !maskReady || busy || !byId('review-confirm').checked || byId('input-review-decision').value !== 'usable';
         byId('loading-state').classList.toggle('hidden', !busy);
-        ['paint-btn', 'erase-btn', 'clear-btn', 'detect-btn', 'brush-size', 'mask-input', 'mask-download-btn', 'review-confirm', 'restoration-mode'].forEach(id => {
+        ['paint-btn', 'erase-btn', 'clear-btn', 'detect-btn', 'brush-size', 'mask-input', 'mask-download-btn', 'review-confirm', 'restoration-mode', 'input-review-decision'].forEach(id => {
             byId(id).disabled = busy || !file;
         });
         byId('undo-btn').disabled = busy || !history.length;
@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         byId('drop-zone').classList.add('has-image');
         byId('drop-zone').querySelector('.drop-zone-ui').classList.add('hidden');
         byId('mask-review').classList.remove('hidden');
+        byId('input-review').classList.remove('hidden');
         renderMask();
     };
     const loadMask = image => {
@@ -149,16 +150,17 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const image = await imageFrom(sourceUrl);
             if (version !== requestVersion) return;
-            if (Math.min(image.naturalWidth, image.naturalHeight) < 32 || Math.max(image.naturalWidth, image.naturalHeight) > 4096 || image.naturalWidth*image.naturalHeight > 16000000) {
-                throw new Error('Use a cropped face between 32 and 4096 pixels per side.');
+            if (Math.max(image.naturalWidth, image.naturalHeight) > 4096 || image.naturalWidth*image.naturalHeight > 16000000) {
+                throw new Error('Use a face crop no larger than 4096 pixels per side.');
             }
             installOriginal(image);
             byId('input-status-label').textContent = 'REVIEW THE REMOVAL AREA';
             byId('review-confirm').checked = false;
+            byId('input-review-decision').value = '';
             await detect();
         } catch (error) {
             if (version !== requestVersion) return;
-            file = null; maskReady = false; byId('mask-review').classList.add('hidden');
+            file = null; maskReady = false; byId('mask-review').classList.add('hidden'); byId('input-review').classList.add('hidden');
             byId('preview-image').classList.add('hidden');
             byId('drop-zone').querySelector('.drop-zone-ui').classList.remove('hidden');
             showError(error.message); syncControls();
@@ -180,6 +182,11 @@ document.addEventListener('DOMContentLoaded', () => {
     byId('undo-btn').addEventListener('click', () => { const previous = history.pop(); if (previous) { maskCtx.putImageData(previous, 0, 0); renderMask(); changed(); } });
     byId('reset-btn').addEventListener('click', () => { if (detectedMask) { saveUndo(); maskCtx.putImageData(detectedMask, 0, 0); renderMask(); changed(); } });
     byId('review-confirm').addEventListener('change', syncControls);
+    byId('input-review-decision').addEventListener('change', () => {
+        clearResults(); syncControls();
+        const choice = byId('input-review-decision').value;
+        showError(choice === 'needs_clearer' ? 'Facial structure is insufficient. Upload a clearer face crop.' : choice === 'out_of_scope' ? 'Upload one already cropped frontal or mildly turned face.' : '');
+    });
     byId('restoration-mode').addEventListener('change', clearResults);
     byId('mask-input').addEventListener('change', async event => {
         const candidate = event.target.files[0]; event.target.value = '';
@@ -240,7 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'removal-mask.png'; anchor.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     });
     const renderResult = data => {
-        const cards = [['Original', data.original, 'Observed input'], ['Removal area', data.mask, 'White marks generated regions'], ['Face estimate', data.output, 'Plausible hidden features']];
+        const cards = [['Original', data.original, 'Input resized to 256×256; native original in bundle'], ['Removal area', data.mask, 'White marks generated regions'], ['Face estimate', data.output, '256×256 plausible estimate']];
         results.replaceChildren(); results.classList.add('has-estimate');
         for (const [label, source, caption] of cards) {
             const card = document.createElement('article'); card.className = 'result-card';
@@ -251,8 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const detail = document.createElement('p'); detail.className = 'workflow-card-caption'; detail.textContent = caption;
             card.append(header, holder, detail); results.append(card);
         }
-        const applied = data.metadata.restoration_applied ? 'Visible-region restoration applied.' : 'Visible pixels preserved; restoration off.';
-        byId('result-message').textContent = data.message+' '+applied+' Processing: '+data.metadata.elapsed_seconds.toFixed(1)+' seconds.';
+        const applied = data.metadata.restoration_applied ? 'DGP visible-region restoration applied.' : 'Resized visible input preserved; restoration off.';
+        const maskSource = data.metadata.mask_source === 'automatic_reviewed' ? 'Reviewed automatic area.' : 'Assisted removal area.';
+        byId('result-message').textContent = data.message+' '+applied+' '+maskSource+' Processing: '+data.metadata.elapsed_seconds.toFixed(1)+' seconds.';
         byId('result-message').classList.remove('hidden');
         byId('image-download').href = data.output;
         byId('bundle-download').classList.toggle('hidden', !data.bundle);
@@ -260,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         byId('result-downloads').classList.remove('hidden');
     };
     byId('analyze-btn').addEventListener('click', async () => {
-        if (!file || !maskReady || busy || !byId('review-confirm').checked) return;
+        if (!file || !maskReady || busy || !byId('review-confirm').checked || byId('input-review-decision').value !== 'usable') return;
         const requestVersion = version;
         controller = new AbortController(); busy = true;
         byId('loading-text').textContent = 'LOADING MODELS / GENERATING ESTIMATE…';
@@ -268,13 +276,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const form = new FormData(); form.append('file', file); form.append('mask', await maskBlob(), 'removal-mask.png');
             form.append('restoration', byId('restoration-mode').value); form.append('include_bundle', 'true');
+            form.append('input_review', byId('input-review-decision').value); form.append('mask_reviewed', String(byId('review-confirm').checked));
             const data = await responseJson(await fetch('/face/generate', { method: 'POST', body: form, signal: controller.signal }));
             if (version === requestVersion) { renderResult(data); byId('input-status-label').textContent = 'ESTIMATE READY FOR REVIEW'; }
         } catch (error) { if (version === requestVersion && error.name !== 'AbortError') showError(error.message); }
         finally { if (version === requestVersion) { busy = false; syncControls(); } }
     });
     fetch('/face/status').then(responseJson).then(data => {
-        byId('engine-status').textContent = 'LOCAL INFERENCE // '+data.device.toUpperCase();
+        byId('engine-status').textContent = 'DGP 256 // '+data.device.toUpperCase();
     }).catch(() => { byId('engine-status').textContent = 'CHECK LOCAL SERVER'; });
     syncControls();
 });

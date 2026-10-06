@@ -1,5 +1,128 @@
 # DGP architecture review — 4 October 2026
 
+**Latest 5 October 2026 — V19 r2 audited/reviewed; preservation remains negative.**
+The normalization correction passes all 520 exact canonical DGP PNG comparisons
+and 50 training parity cases. Independent 97.61s audit passes saved outputs and
+24 cached CPU decoder replays. No training/checkpoint/state changes; all original
+failures and gates remain. Automatic output fails 30 preservation checks, with
+SSIM/cosine regression despite +3.027dB degraded synthetic PSNR. Five original-cell
+sheets show patchy colour/texture and changed or weak features/glasses. Three
+clear development crops wrongly enter the ten-face-calibrated spatial branch.
+
+A fixed saved-output uniform-luminance ablation, zero neural/training calls,
+reproduces 83.59% of mean MSE reduction in these cases. It still fails 13 MSE/SSIM
+checks; fresh recognizer/full qualification are unavailable. This suggests much
+pixel gain comes from photometric change, without proving preserved facial
+structure or restored missing information. No architecture-equivalence or native/
+local/independent-final/adoption claim. Close R2; do not refit the old selector or
+scale the failed recipe unchanged. Isolate exposure correction and appearance
+preservation before justifying a separate finite VM pilot. Report:
+[V19 r2 results](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_R2_RESULTS.md>).
+
+**Earlier 5 October 2026 — measured normalization cause; V19 r2 prepared.** The
+returned three-case/eight-DGP-forward L4 diagnostic is independently audited.
+NumPy-before-GPU exactly matches both V15 PNG references; CUDA scalar division
+exactly matches the fixed V18 training raw/PNG. Tiny measured float differences
+cross PNG flooring boundaries. Repeated forwards/state hashes remain exact.
+This establishes a processing incompatibility, not a restoration-quality result.
+
+The separate R2 package keeps both conventions and exports the canonical DGP
+comparison raw separately from V18's internal DGP conditioning base. One extra
+DGP forward per development case; no changed architecture, checkpoint, training,
+selector threshold, split, source RGB bytes, display transform or scientific gate.
+Eight regressions, independent transfer audit and actual frozen-package preflight
+pass. Manual inference on unchanged 104 development identities/520 synthetic
+cases is pending; original 20min inference/30min overall caps remain. Original
+V19 failure/diagnostic and V18 preservation failures stay closed and intact.
+[R2 plan](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_R2_PLAN.md>) and
+[manual commands](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_R2_VM.md>).
+No generalization, native/local performance, app adoption or final-review claim.
+
+**Earlier5 October2026 — V19 partial failure verified.** All50 fresh training
+parity cases pass exactly, but the first development DGP PNG fails V15 baseline
+equality. Saved evidence contains no first failed raw/PNG or completed prediction.
+Separate5.59s audit checks144 assets,100 training raw/compositions,728 identical
+camera/target/support images and104 fresh target embeddings. No quality conclusion.
+NumPy-before-GPU versus CUDA-scalar normalization is a concrete hypothesis;
+prepare only a separate three-case/eight-DGP-forward diagnostic to measure it.
+That21KB source/checksum is prepared, tested and independently transfer-audited;
+120s worker/240s supervisor, no training/resume/other-network/native/reserved use.
+Original V19/V18 source, checkpoints and preservation failures stay unchanged.
+[Failure report](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_FAILURE.md>) and
+[diagnostic commands](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_PARITY_DIAGNOSTIC_VM.md>).
+Original V19 commands are closed. Diagnostic CUDA execution/return audit pending.
+No architecture-equivalence, generalization, local CCTV or adoption claim.
+
+**Earlier5 October2026 — separate input-only preservation control verified; V19
+development inference prepared.** The training-only rule uses Laplacian input
+detail/variance and retains DGP for ten clear inputs, using the fixed V18 terminal
+residual for forty degraded inputs. Every selected output aliases its audited
+original. Separate50-case saved-output audit2.53s preserves all unchanged training
+group guards; ten regressions pass. V18 unconditional failures remain unchanged.
+
+The new finite inference-only104-reference/520-case development package compares
+resizing/DGP/declared pretrained CodeFormer/fixed residual/automatic alias, with
+50 fresh training parity checks first. No optimizer/backward/threshold refit or
+checkpoint search. Native/reserved evidence untouched; no architecture-equivalence,
+generalization/local-performance or app-adoption claim. Frozen80,388,709-byte
+archive/146 members/798 data files independently transfer-audited. VM launch and
+development output review pending; manual path remains authoritative.
+[V19 plan](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_PLAN.md>) and
+[manual VM runbook](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_INPUT_SELECTION_V19_VM.md>).
+
+**Completed5 October2026 — V18 trained capacity demonstrated, clear preservation
+failed.** Our spatial residual decoder completed600 updates on the existing L4;
+retained DGP, R2 code head and declared pretrained prior/recognizer stayed frozen.
+Successful return is independently audited in60.29s, including250 CPU replays,
+all metrics/cosines and550 original grid cells. Maximum CPU difference9.54e-7
+passes the frozen5e-5 limit. All ten sheets are reviewed. Original float32/log10
+audit failures and separate arithmetic corrections are retained; no source,
+training recipe, coefficient, quality threshold or checkpoint changes.
+
+Ten-photograph degraded fitting PSNR15.5527→23.5201dB and SSIM0.62517→0.70649
+improve, but all trained snapshots fail clear preservation. Update600 has four
+failed clear aggregate/source checks. This proves fitting capacity, not useful
+generalization/native CCTV performance or equivalent published-DGP architecture.
+No teacher/validation/native/reserved/selection/adoption. Next diagnose a separate
+input-only clear-preservation processing control before another protocol; do not
+repeat V18 or waive its gates. Report:
+[CCTV_DGP_STRUCTURE_V18_RESULTS.md](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_STRUCTURE_V18_RESULTS.md>).
+The full DGP-led app/restoration/completion goal remains incomplete.
+
+**Earlier5 October2026 update — V18 interface verified; manual capacity training
+pending.** The retained trained DGP remains the pixel base. Our new684,395-
+parameter spatial decoder uses camera/DGP skips plus declared frozen CodeFormer
+64×64 features from our frozen audited R2 code head. Only this decoder is fitted
+by the new protocol. Output is a bounded learned RGB residual, initialized to
+exact DGP parity, with observed pixel/coarse/appearance objectives. It is a
+custom prototype, not a published-DGP or official CodeFormer reproduction.
+
+Two fresh training-only CPU inputs preserve exact initial DGP pixels and all
+frozen states; eight saved artifacts independently audited. Thirteen regressions
+pass with no local training/backwards. The9,063,630-byte finite VM package and
+all23 members/70 selected data files are independently verified. Ten photographs,
+50 cases,600 updates/6,000 exposures maximum, update50 stop and30-minute supervisor
+budget. CUDA gradient proof, trained quality and generalization remain pending;
+initial zero residual does not prove useful learned contribution. No app adoption
+or validation/native/reserved use. Plan:
+[CCTV_DGP_STRUCTURE_V18_PLAN.md](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_STRUCTURE_V18_PLAN.md>).
+Manual gcloud/tmux/download commands:
+[CCTV_DGP_STRUCTURE_V18_VM.md](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_STRUCTURE_V18_VM.md>).
+Historical frozen sources, checkpoints, splits and failed gates remain unchanged.
+
+**Earlier5 October 2026 update:** broader R2 training is fully audited and reviewed.
+All 3,128 updates are valid, but both trained snapshots fail appearance
+preservation. The following V17 input-feature connection control improves clear
+training previews and worsens degraded cases; it also fails as a universal repair.
+Reports: `CCTV_DGP_BROADER_CODES_V16_R2_RESULTS.md` and
+`CCTV_DGP_FIDELITY_SPOTCHECK_V17_RESULTS.md`.
+Do not scale CE-only fitting or default w1 rendering unchanged. A new output
+path must explicitly preserve visible DGP/input structure, with initial parity
+verified before a finite VM capacity pilot tests learned benefit. At that closure
+no next package was prepared. V18 preparation above addresses this prerequisite;
+learned benefit remains unverified and no app adoption follows.
+Historical rationale/results below are preserved; their cloud states are snapshots.
+
 **V15 generalization probe closed — negative, 4 October 2026:** all50
 fresh-image outputs matched the audited ten-face cache; fixed104-reference/
 520-case development validation then exposed severe overfitting. Degraded PSNR
