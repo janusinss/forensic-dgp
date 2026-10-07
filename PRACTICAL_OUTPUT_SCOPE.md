@@ -1,5 +1,1032 @@
 # Practical facial completion scope — user decisions, 2 October 2026
 
+**Latest application milestone - 7 October 2026: imported masks require fresh review before generation.**
+
+A reproduced frontend race allowed generation with the previously reviewed mask
+while a replacement mask loaded, then displayed the old-area result after review
+was cleared. Import now locks generation immediately and clears approval. Invalid
+imports recover controls without approval; a superseded import cannot alter or
+unlock a newer face upload. Three inline Playwright ordering regressions pass.
+
+The real local app completed 11 generation and 11 proposal requests in 66.29 seconds
+across all seven covering families, uncovered/clear-glasses controls and On/Off/Auto
+selection. Two insufficient/unsupported input decisions submit zero generation
+requests. All 11 PNG downloads match the prior audited neural processing exactly;
+the independent audit also verifies 1,521,399 visible Off bytes and a complete
+original/mask/result/raw-DGP bundle. Responsive 375/768/1280 checks have no overflow,
+page exceptions or console errors. The existing design and backend are preserved.
+
+This verifies review ordering and functional development flow. The cases are
+previously exposed photographs, not native CCTV or independent final evidence.
+Their legacy native suffix means original photo. Covering generation uses reviewed
+operator masks; automatic-family quality remains unqualified. The prior finger,
+scarf, gaze and DGP visible-softening defects are unchanged. No hidden-identity,
+ethnicity or Zamboanga-performance claim is made. No training occurred.
+
+The original frontend is archived at
+outputs/dgp_mask_review_race_fix_v1/before/static/face_workflow.js.
+Historical app22 source/evidence bindings remain verified against that archived
+source where required; other bindings stay at their original locations. The
+current frontend is separately bound. Original checkpoints, splits, scientific
+caches, failure records, previous documents and the actual Windows backup remain.
+
+The user's V31 launch then failed before training: the schedule helper in the
+packet root was missing from Python's script import path. A read-only VM status
+check retained two terminal tracebacks, confirmed no V31 process/log/outputs and
+an idle GPU. A second read-only check verified the command-only PYTHONPATH fix:
+all 3,905 cases/781 references pass transfer verification with zero neural,
+gradient or optimizer calls. No training was started by the agent and no pilot
+file was changed. The packet/protocol/gates are unchanged and no return is
+present locally. The corrected launcher supersedes only step4 of the old guide.
+Actual new training remains the user's manual tmux workflow on the existing L4 VM.
+Useful native restoration, automatic/assisted covering quality and independent
+final review remain outstanding. Goal active/incomplete.
+
+[Application ordering fix and verification](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_MASK_REVIEW_RACE_FIX_V1.md>)
+[V31 five manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_PROFILE_BATCHES_V31_VM.md>)
+[Corrected V31 tmux launch](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_PROFILE_BATCHES_V31_LAUNCH_IMPORT_V1.md>)
+
+The complete previous document body is preserved below. Its unchanged-app-source
+statements refer to the archived pre-fix frontend; neural processing is unchanged.
+
+
+**Latest research milestone - 7 October 2026: sampling diagnostic audited; V31 paired-batch pilot ready.**
+
+The human returned the distinct V30 sampling-gradient diagnostic. The independent
+local audit verifies all 756 files, 280 saved component-gradient queries and 200
+CPU inference outputs across original/stopped states. VM diagnostic runtime was
+34.729 seconds, with zero optimizer updates, zero backwards and no new checkpoint.
+All 12 selected decoder tensors have finite nonzero improvement gradients.
+The audit used no local autograd or training. Original models and V30's failed
+50-update/0.805717% structure requirement remain preserved.
+
+The stopped candidate drifts on four unexposed clear TRAIN controls: the largest
+raw observed-pixel MSE increase is 16.2719%. One motion case also activates the
+pixel-regression hinge. Preservation gradients therefore protect a measured
+regression. The stopped negative total-objective direction increases the
+whole-observed-detail term in both measured cohorts. These are local gradient
+and raw-loss observations, not a reconstruction of AdamW steps or a unique causal
+proof. The cohorts are TRAIN data; source labels are not ethnicity. Raw objective
+drift is separate from delivered PNG gates and paired synthetic PSNR/SSIM.
+
+V31 changes batch formation only: each approved reference's clear control and
+four degradations share one batch. The full 781-reference/3,905-case TRAIN corpus,
+original DGP initialization, mean-centered decoder path, 12 trainable tensors,
+seven losses, fixed initial50 normalizers, AdamW and all numerical gates stay
+fixed. The frozen V30 permutation determines reference order. The first 781
+updates cover every TRAIN case once; 19 further batches complete the finite
+800-update maximum. The unchanged early gate stops at50 unless structure gain
+reaches1%; final gates require10%, all17 preservation groups, nonnegative source
+gains and mean-only fraction<=20%. No V30 continuation or unchanged failed rerun.
+
+The nine-file 751,432-byte transfer packet is independently verified, including
+10 regressions, Python3.10 syntax, read-only Bash syntax and rejection of local
+training before model imports. Protocol SHA256:
+ae91d25066bcb532a8a88bdc48fe401c4b18d73e8d348b47b5d012d5df8e485e.
+Execution archive SHA256:
+bdf79346b10376b75328dfd2fab3ab3902935982cb9910b4478b401c0c55b9b8.
+Actual V31 VM training remains unstarted. Follow the five manual upload/install/
+tmux/launch/download steps on the existing L4/g2-standard-4 VM at ~/forensic-dgp.
+Require6GiB free; timing, VRAM and export stops are enforced. Historical storage
+measurements are not a fresh free-space reading. The local research-cache backup,
+original checkpoints, splits, provenance and all failures remain retained.
+
+Returned V31 results require an independent audit and all50 TRAIN preview review.
+Only passing capacity justifies repeating the fixed520 paired DEV cases and24
+unpaired native development crops. V29 development/native failures remain binding;
+reserved final pixels remain unopened. No new native or evaluation images were
+used in this diagnostic or packet. No real Zamboanga CCTV evidence exists yet.
+
+The DGP-led app is unchanged. Useful native structure, all seven covering families
+with separate automatic/assisted review, independent final review and the full
+bundled inline Playwright app flow remain required. Preserve clear glasses,
+non-obstructing hair and all visible facial appearance; request a clearer or
+less-covered crop when usable information is insufficient. Goal active/incomplete.
+
+[Audited diagnostic findings](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V30_SAMPLING_GRADIENT_V1_RESULTS.md>)
+[V31 five manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_PROFILE_BATCHES_V31_VM.md>)
+
+The complete earlier document body is preserved below. Its diagnostic-unrun
+language is historical and superseded by this audited human return.
+
+
+**Latest research milestone - 7 October 2026: V30 independently audited; early structure gate failed.**
+
+The human ran V30 on the existing NVIDIA L4 and returned the archive. The local
+independent R1 audit verifies 27,622 files, both complete 3,905-case TRAIN
+snapshots, raw/display separation, source and checkpoint provenance, saved
+gradients and CPU inference replay. V30 stopped after 50/800 optimizer updates:
+structure gain 0.805717% against the unchanged 1% early requirement. No
+800-update result exists. Preserve the stopped checkpoint, logs and failed gate;
+do not resume, rerun unchanged or promote V30 into the app.
+
+All 17 fixed group preservation checks pass at update50. Source-group gains are
+1.072549% for dataset/asian_faces/degraded and 0.742743% for
+dataset/thumbnails128x128/degraded. This is paired synthetic photographic TRAIN
+evidence; source labels do not establish ethnicity, real CCTV performance or
+Zamboanga performance. No new native, development or reserved-final cases were
+opened. All 50 fixed preview rows/250 exact comparison cells were visually
+reviewed: visible appearance remains broad, but the outputs are soft and show
+little useful whole-face clarity gain. All visible facial features remain in scope.
+
+The original local checker failed at its last early-receipt equality comparison
+because CPU/VM aggregate arithmetic differed by 1.1102230246251565e-16. Its source
+and failure logs remain unchanged. A separate R1 checker allows 1e-12 receipt
+arithmetic difference, while retaining the exact 1% threshold and both failed
+gate decisions. This checker repair does not change the V30 recipe or qualification.
+
+After the required V28-V30 architecture discussion, the user selected 'Apply the
+best approach'. Before another training recipe, a distinct metadata-selected
+sampling-gradient diagnostic compares two 50-case matched TRAIN cohorts at the
+original and stopped update50 states. It has 280 gradient queries, zero optimizer
+updates, a 600-second worker limit, a 900-second external limit and finite export
+limits. These subsets are not held-out evaluation. Selection uses frozen schedule
+and source/profile metadata only; reference repetition is matched one to one.
+No new loss, training recipe or checkpoint is
+created. The independently verified packet remains unrun and requires the human
+upload/install/tmux/download steps on the existing L4/g2-standard-4 VM. All new
+actual training continues under the user's manual command workflow.
+
+The prior authorized cleanup reclaimed 36.75 GiB and measured 43.13 GiB free
+before V30 ran; those are historical measurements, not a fresh disk reading.
+The actual Windows research-cache backup remains preserved. Research markdown,
+provenance, original checkpoints, splits and all prior failed gates remain intact.
+
+The DGP-led app remains unchanged. V29 development/native qualification failures
+remain binding. Useful native restoration, automatic and assisted evidence for
+all seven covering families, an independent final review and the full bundled
+inline Playwright app flow remain required. Preserve clear glasses and visible
+appearance; request a clearer/less-covered crop when structure is insufficient.
+Goal active/incomplete.
+
+[V30 results](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BROADER_MEAN_V30_RESULTS.md>)
+[Next manual diagnostic steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V30_SAMPLING_GRADIENT_V1_VM.md>)
+[Independent V30 audit](<C:/xampp/htdocs/YEAR 4/Testing/outputs/cctv_dgp_broader_mean_v30_independent_audit_r1.json>)
+
+The complete earlier document body is preserved below. Its V30-not-started
+language is historical and superseded by this audited human run.
+
+
+**Latest maintenance â€” 7 October 2026: inactive VM caches removed after full local backup verification.**
+
+The latest explicit user authorization permits direct maintenance connection to
+the existing forensic-dgp-thesis/us-central1-a VM. Fresh inventory confirms the
+original instance and 100 GB boot-disk identities, an idle NVIDIA L4 and no active
+cache readers. The offered SSH key matches the previously trusted fingerprint;
+the initial uncached-IP stop is retained. Linux restricted the first added
+process-file check; a separate read-only privileged inspection established the
+safe correction. The stopped verifier and original source remain preserved.
+Exact file unlinks still run as the original VM user, without root deletion.
+
+All 4,431 actual Windows cache files/39,448,585,279 bytes pass fresh full SHA256
+verification against the frozen source inventory. All 4,431 VM hashes match those
+copies. Cleanup removes only 4,429 inactive .bin/.npz files:39,442,892,400 logical
+bytes. These are four expanded-feature binary files and 4,425 closed V16 r2 cache
+files. Their two original state.json metadata files remain on the VM, together
+with original DGP checkpoints, datasets, splits, source, research markdown,
+provenance, logs and failed gates. The Windows actual cache copies remain intact.
+Closed historical recipes must stay closed; restore a required historical cache
+from the verified local files before a justified later read-only audit.
+
+Initial live free space is 6,905,155,584 bytes (6.43 GiB).
+The removal receipt measures 39,455,641,600 additional free bytes
+(36.75 GiB); final live free space is46,312,128,512 bytes
+(43.13 GiB). Independent VM verification confirms every planned
+deletion, 210,274 retained file hashes,
+388 retained tensor stamps and all 5,757 current
+V30 dependency bindings, including 5,467 TRAIN files. The existing CUDA runtime
+remains available. No active workload is killed, VM stopped or model promoted.
+
+V29 remains rejected for application promotion. V30's distinct broader TRAIN
+coverage packet and finite 800-update protocol remain unchanged and verified.
+V30 is not installed or started. Actual training remains the user's manual
+upload/install/tmux workflow on the existing L4/g2-standard-4 at ~/forensic-dgp.
+Use the five exact steps in CCTV_DGP_BROADER_MEAN_V30_VM.md, including separate
+PuTTY-compatible downloads. The unchanged 6 GiB requirement is satisfied.
+Returned results still require independent audit, paired synthetic and unpaired
+native evidence kept separate, useful native structure review and preservation
+gates. Useful DGP restoration, all seven covering families, independent final
+review and full bundled inline Playwright app verification remain required.
+Goal active/incomplete.
+
+[Cleanup evidence](<C:/xampp/htdocs/YEAR 4/Testing/outputs/cctv_dgp_vm_storage_cleanup_20261007_v2/closure_manifest.json>) Â·
+[V30 manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BROADER_MEAN_V30_VM.md>) Â·
+[Actual Windows cache backup](<C:/xampp/htdocs/YEAR 4/Testing/outputs/cctv_dgp_local_research_cache_backup_20261007_v1/complete.json>)
+
+Earlier complete document bodies remain preserved history. Current cache
+locations and live free space above supersede earlier storage readings; prior
+restoration findings, quality failures and research scope remain unchanged.
+
+
+**Latest maintenance — 7 October 2026: actual research caches backed up locally and audited.**
+
+The user chooses a Windows backup in preparation for a possible later Google Cloud VM.
+All three historical caches are now copied as actual files: 4,431 files /
+39,448,585,279 bytes (36.74 GiB), including both expanded-feature caches and the
+V16 r2 cache. Every reconstructed file matches its frozen VM SHA256; a separate
+read-only verifier re-reads all 4,431 local files and passes. The source caches
+retain their original sizes, inodes and timestamps. No source cache is removed.
+
+The initially selected cloud snapshot was an agent destination error. It is deleted;
+independent live checks confirm its absence and the original running VM/disk.
+The earlier migration recovery ZIP contains metadata only and its cloud restore
+instructions are obsolete; its original bytes and the rollback evidence remain.
+The actual local files and current restore guide supersede that route.
+
+The installed Windows SDK cannot carry the interactive binary control stream
+through its automatic PuTTY stdin reply. The corrected transfer uses the SDK-generated
+console SSH connection with cached host-key checking. A demonstrated Windows
+temporary-path limit was fixed using short names; completed blocks were retained
+through an owned local-transfer pause. The early failures, original partial and
+source revisions remain. Only 147 redundant new Windows transfer blocks are
+removed after the independent full-file audit, reclaiming 36.74 GiB locally.
+
+This is a three-cache backup, not a boot-disk image or proof that every separate
+checkpoint, dataset and environment is bundled. Existing model, split, provenance
+and gate-failure files remain. The GPU is idle; latest source free space is
+6.43 GiB, still above the unchanged 6 GiB V30 requirement.
+Actual training remains human/manual on the existing L4 at ~/forensic-dgp.
+No new VM, optimizer, pilot, application change or source shutdown occurs.
+V29 remains rejected for application promotion; useful DGP restoration, all
+covering families, independent final review and the full app flow remain required.
+Goal active/incomplete.
+
+[Local backup and restore guide](VM_CACHE_BACKUP_RESTORE_20261007_V1.md) ·
+[Independent local audit](outputs/cctv_dgp_local_research_cache_backup_20261007_v1/independent_local_cache_audit.json) ·
+[Source/resource audit](outputs/cctv_dgp_local_research_cache_backup_20261007_v1/source_final/independent_source_resource_audit.json)
+
+Earlier complete document bodies remain preserved history.
+
+
+**Latest maintenance — 7 October 2026: VM cleanup complete; V30 remains ready for manual VM execution.**
+
+The user explicitly authorizes direct connection and removal of unnecessary
+VM files to reclaim at least1.3GiB, or more, before the6GiB V30 space check.
+The existing forensic-dgp-thesis/us-central1-a connection is used for storage
+maintenance only. Actual training remains manual VM execution on the existing
+NVIDIA L4/g2-standard-4 at ~/forensic-dgp; no pilot or optimizer is launched.
+
+Ten duplicate top-level transfer/result archives and four redundant pretrained
+recognizer copies in closed V22/V23/V24/V25 packets are removed only after full
+Windows backups and VM SHA256/stamp verification:1,915,161,691 logical bytes.
+The four recognizer copies match the retained active V27 VM weight and their
+original local packet manifests. V26's two-link copy stays; unlinking a shared
+copy would not reclaim that storage. The initial conservative inventory stop
+and the diagnostic that established this distinction are both retained.
+Original trained DGP checkpoints, data, splits, logs, source, all failed gates
+and all Windows recovery files remain. Historical V22–V25 recognizer copies
+can be recovered from the exact Windows paths in the plan; do not rerun those
+immutable failed pilots automatically. Research markdown files are preserved.
+
+The pip download-cache scan yields0 eligible files.
+Independent live and Windows audits verify
+the exact deletion ledger, 210,274 protected file hashes,
+4,817 retained tensor stamps and5757 current
+dependency bindings, including all5467 V30 TRAIN assets. The three historical
+scientific caches remain intact:4431 files/39,448,585,279 bytes. All11 tmux
+sessions were at shell prompts before maintenance; the L4 remains idle and the
+existing CUDA runtime is available. No process is killed or VM stopped.
+
+The removal receipt measures 1,915,215,872 additional free bytes
+(1.78GiB). Final live free space is 6,907,056,128 bytes
+(6.43GiB), satisfying the unchanged6GiB V30 requirement.
+V30 has not been uploaded or installed on this VM. Use the existing five manual
+steps; its packet, protocol, finite800-update schedule and quality gates are
+unchanged. Cleanup does not qualify V29 restoration or promote a model.
+
+All previous5934 research bindings, the deeper371/1041/586/50/668/cleanup60/
+309/66/692/299/697/513 history, complete document bodies and app22 bindings
+remain preserved. Useful DGP native restoration, all seven covering families,
+independent final review and the full local app flow remain required.
+Goal active/incomplete.
+
+[Cleanup evidence](<C:/xampp/htdocs/YEAR 4/Testing/outputs/cctv_dgp_vm_storage_cleanup_20261007_v1/closure_manifest.json>) ·
+[V30 manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BROADER_MEAN_V30_VM.md>)
+
+Earlier complete document bodies below remain preserved history. Their research
+findings and quality failures retain their original scope; the current verified
+free space above supersedes earlier storage readings.
+
+
+**Latest research milestone — 7 October 2026: V29 TRAIN capacity audited;520 paired DEV cases and24 native faces reviewed; broader-coverage V30 prepared for manual VM execution.**
+
+The downloaded V29 return matches SHA256
+ecf88626b31dee6b0ceb65f6a2a76e534cea8079183e0efd143c6bcb16fb5ae2,
+294,561,124 bytes. The original frozen independent checker passes837 files,
+38,394,279 gradient values, all four checkpoints and500 forward-only CPU calls.
+All800 VM updates complete. Final50-case TRAIN structure gain20.0551%, all17
+preservation groups and the original brightness gate pass. All50 TRAIN faces
+are viewed. Original checkpoint, encoder/head4, buffers, splits and failures
+remain. TRAIN capacity is necessary evidence and does not qualify restoration.
+
+The separately frozen single-crop inference path passes seven contract checks
+and50 CPU/VM parity cases: raw error<=2.355e-6, PNG<=one byte, exact padding.
+It requires original baseline plus candidate plus the fixed mean projection.
+The existing app model/design remains unchanged; this is a benchmark candidate.
+
+All520 paired photographic DEV cases are retained and independently audited.
+Aggregate degraded landmark structure gain is1.3516%; asian_faces source
+worsens3.4051%, thumbnails128x128 improves2.3437%. There are21 fixed group/metric
+regressions,17 in ArcFace. ArcFace is a preservation diagnostic, not identity
+accuracy. All50 fixed DEV preview faces are actually viewed: sharper edges
+can coexist with changed eyes, mouth or expression. Reject V29 app promotion.
+Paired synthetic MSE/PSNR/SSIM do not become native CCTV metrics.
+
+All24 frozen ChokePoint C1 native development faces are independently audited
+and actually reviewed against resizing, retained Phase3, original DGP and
+declared CodeFormer on identical256 inputs. V29 retains broad face arrangement
+but lacks convincing useful clarity over resize. The previously useful02_t033
+still needs clearer eyes/nose/lips. Usable inputs are not reclassified from
+model softness. Source capture country is unspecified in acquired metadata;
+no ethnicity or Zamboanga performance is inferred. No final reserved pixels
+are opened. The separate58 cases /45 namespaced final identities remain reserved.
+
+V30 changes optimization coverage from10 to the already approved781 TRAIN
+references /3905 existing cases, retaining800 updates /4000 sample exposures.
+The first781 batches cover every case once;19 predetermined second-epoch
+batches follow. Original initialization, same mean-centered decoder path,
+selected12 tensors, seven losses, fixed50 normalizers, AdamW and numeric gates
+stay unchanged. This tests the coverage hypothesis, not a proven unique cause.
+No V9 trained weights, V29 continuation or unchanged historical pilot is run.
+The104 DEV references remain outside optimization; person/pretrained overlap
+remains unknown. Every original checkpoint and failed gate remains preserved.
+
+The eight-file746,356-byte packet uploads no images or weights. Protocol:
+b7b6e26bef102b5ca873d4ff01cd4c4df6bcabfb898e56bd899757ac99b65aa1.
+Archive:7a3d58db1e6d14a1c5a589269ec6922cd8fbe8d0f1834f4c242fb1d2cf72ac39.
+Independent metadata/packet/source checks pass5467 TRAIN files, exact50-case
+source parity, Python3.10 parsing, Windows pre-neural training rejection,
+seven return-boundary regressions, readonly Bash syntax and five manual steps.
+The original local Bash checker failed because the process sandbox blocked
+its signal pipe; the source and failure remain. The distinct R1 checker uses
+the separately observed readonly external Bash check. No packet, loss or gate
+changed. This is a local setup repair, not a VM/model success.
+
+Actual V30 training has not started. Human gcloud upload/SSH/tmux is required.
+Require idle existing L4/g2-standard-4 and6GiB free, without deleting research
+assets. Initial proof300s /70 queries, cache900s, fit3600s, worker4500s,
+external4800s+30s grace, export900s/external930s+30s grace, allocatedVRAM<=20GiB.
+Snapshots0/50/400/800 include all3905 TRAIN outputs and mean controls; only50
+raw previews are exported. Early50>=1% structure, final800>=10%, both sources
+nonnegative, all17 groups and brightness<=20% remain. Final800 only, no resume,
+overwrite, unchanged retry, competing-task termination or automatic promotion.
+The prospective independent return checker checks all saved outputs/gates,
+the initial proof and frozen partitions, every final3905 case and checkpoint
+previews through CPU inference only, with7200s audit cap.
+
+All prior371 bindings and1041/586/50/668/cleanup60/309/66/692/299/697/513 history,
+three complete document bodies and app22 bindings are preserved. All seven
+covering-family automatic/assisted requirements, useful native restoration,
+full app flow and independent final review remain unfinished. Goal active/incomplete.
+
+[V29 results](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_MEAN_CENTERED_DECODER_V29_RESULTS.md>) ·
+[V30 five manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BROADER_MEAN_V30_VM.md>)
+
+Earlier bodies below are preserved history. V29 pending/not-started language is
+superseded by its audited return and failed development qualification. Only
+the distinct V30 coverage pilot is ready for manual execution; no failed
+historical pilot is automatically rerun.
+
+
+**Latest research milestone — 6 October 2026: V28 final-state diagnostic audited; distinct mean-centered V29 finite pilot verified for human VM execution.**
+
+The downloaded211,650,756-byte zero-update diagnostic matches SHA256
+7ed57b598096e2bf52302b5acba45626a12ec66f17ca3d94f565e704d170cc75.
+The R1 independent audit verifies322 regular files and54,848,970 saved gradient
+values, displacement and per-component/per-tensor arithmetic. CPU replay uses
+50 original-DGP,50 final-DGP and100 recognizer forwards with no local derivatives.
+All50 fresh VM initial/final raw and vector parity maxima are exactly zero;
+final PNGs match exactly. The VM performs100 gradient queries in30.042s,
+zero optimizer updates/backwards/epochs and no new checkpoint. All states remain.
+
+The original local audit stopped on two one-ULP Linux/Windows norm differences
+(max5.55e-17). Its original source and failure are retained. The distinct R1
+checker allows rtol1e-12/atol1e-14 only for derived arithmetic. Saved arrays,
+displacement, archive/source hashes and PNGs still require exact matches.
+Four repair regressions pass. No model-quality gate changes.
+
+At the final V28 state, the existing seven-term objective's plain negative
+gradient increases the measured RGB-mean penalty (directional derivative
++1.998307315), while clear SSIM and ArcFace hinge penalties decrease.
+Preservation gradients are active. This is local first-order evidence, not a
+finite-step/AdamW guarantee or a unique historical cause. V28's18.0595% TRAIN
+structure gain still fails three gates; the post-training mean control still
+fails five. Both remain rejected, with no app promotion or earlier selection.
+
+V29 tests one changed spatial path: subtract the observed RGB mean of candidate
+minus frozen same-input original-DGP baseline BEFORE unchanged losses and final
+clamping. All profiles use that path without target/source/identity routing.
+No learned projection parameters, strength selection, loss-weight change or
+surrogate derivatives. Clipping can reintroduce mean shift; the original
+brightness and all17 preservation groups still decide acceptance. Original
+selected12 decoder tensors train from the original checkpoint in a separate
+copy; encoder/FPN/inactive head4 and all evaluation buffers stay frozen.
+
+The schedule/optimizer remain800 updates/80 epochs, AdamW lr0.00003/WD0.01,
+clip1, snapshots0/50/400/800, selected12 initial70-query proof before optimizer.
+Early50 structure gain>=1%, final>=10%, both source gains>=0, all17 groups and
+brightness fraction<=20% remain. Final800 only. No unchanged historical run,
+resume, gate weakening, competing-task termination or automatic follow-on.
+
+V29's seven-file30,293-byte packet uploads no images or weights. Protocol:
+77565ba437959305f22cff4dd967fc6c3caadbf9dbd4ac91abf8a366577fa72f.
+Archive:de158e52c44494638c0477cd7fca2a67ed12f18ad40a9fc38e9ff45cdac67e4d.
+It verifies246 original assets plus11 closed V28 and9 diagnostic dependencies.
+Python3.10 parsing,17 forward-only/return regressions, all50 exact initial
+projection cases, float64 reference arithmetic(max5.96e-8), actual Windows
+pre-neural/gradient rejection, readonly Bash syntax and five manual steps pass.
+Two local unissued test setup failures remain recorded; no VM work or local
+gradients occurred. Actual V29 training has not started. Human gcloud upload,
+SSH and tmux remain the only training execution path. Preflight300s, fit1500s,
+worker1800s, external2100s+30s grace, export120s/external150s+30s grace;
+idle existing L4/g2-standard-4,3GiB free, allocatedVRAM<=20GiB.
+
+All prior1041 bindings and deeper586/50/668/cleanup60/309/66/692/299/697/513
+history, three full document bodies and app22 bindings remain preserved.
+No new native or reserved-final pixels are opened. These50 paired photographic
+TRAIN cases do not establish native CCTV, ethnicity or Zamboanga performance.
+V29 return audit and all50-face review must precede separately frozen native/app
+qualification. Useful DGP restoration, all seven automatic/assisted covering
+families, full app flow and independent final review remain required. The
+existing app model/design stays in place. Goal active/incomplete.
+
+[Diagnostic results](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V28_PRESERVATION_DIAGNOSTIC_V1_RESULTS.md>) ·
+[V29 five manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_MEAN_CENTERED_DECODER_V29_VM.md>)
+
+Earlier bodies below are retained history. Diagnostic-ready/pending wording is
+superseded by this audited return; only the distinct V29 pilot is ready for
+manual execution. V28 and the fixed mean control remain rejected.
+
+
+**Latest research milestone — 6 October 2026: V28 completed800 but failed acceptance; all50 final faces reviewed; distinct zero-update preservation diagnostic verified for manual VM execution.**
+
+The downloaded291,926,255-byte V28 archive matches
+3196e8ab797763e7ced75a57411b973afc3b1b12654632b7662fab3e2e168aac.
+Independent audit passes838 regular files,246 original assets,38,394,279
+saved gradient values and every checkpoint/raw/PNG/metric at0/50/400/800.
+CPU replay performs50 original-DGP,200 candidate-DGP and250 recognizer
+forwards without local derivatives or updates. All selected12 initial CUDA
+parity/gradient requirements pass. The VM completes800 updates/80 epochs:
+fit91.850s, worker124.967s, terminal125.789s, peak allocated1,240,671,744 bytes.
+The original checkpoint, encoder/FPN, inactive head4 and evaluation buffers
+remain unchanged. The historical R2 all14 failure remains failed.
+
+Final delivered degraded landmark-HF MSE improves18.0595%; both photograph
+source gains are nonnegative. V28 still fails the fixed requirements: one
+clear-source group losesSSIM and frozen ArcFace similarity, and a constant
+RGB-mean shift explains71.3988% of the degraded pixel-MSE gain against20% max.
+This fraction refers to pixel-MSE gain, not recovered identity or a percentage
+of structural gain. necessary_capacity_pass remains false. Final800 only;
+no earlier checkpoint selection, unchanged rerun or weakened gate is allowed.
+
+All50 final TRAIN faces are viewed in ten exact-size sheets;200 saved cells
+match their source arrays. Several degraded faces have clearer coarse eyes,
+nose and mouth boundaries, with unresolved or altered finer eyes, glasses,
+gaze and expression in strong degradation. Training capacity and this primary
+assistant review do not establish generalization or independent final review.
+Source labels do not imply ethnicity. Native unpaired evidence remains separate.
+
+One fixed target/profile-independent RGB-mean control retains18.0237% landmark-HF
+gain and reduces brightness fraction to1.6955%, but fails five preservation
+checks. Independent readback verifies all50 arrays/PNGs/recognizer vectors and
+17 groups. Only two control examples are visually inspected; no complete
+control visual acceptance is claimed. This processing control is insufficient
+and is not adopted. All original raw outputs, checkpoints and failures remain.
+
+The next distinct VM diagnostic measures the final V28 original seven loss
+gradients plus RGB-mean and clear-only SSIM/ArcFace diagnostic components.
+It permits100 queries in ten fixed5-case batches, zero optimizer updates/epochs
+or backwards, and no new model checkpoint. Extra components are measurements,
+not a new training objective or selected weights. First-order derivatives do
+not identify a unique trajectory cause. No actual VM run has occurred yet.
+The300s worker/330s external+30s grace and120s export/150s external+30s grace
+are finite; idle existing L4/g2-standard-4,2GiB free and allocatedVRAM<=20GiB.
+Every source/state/parity/finite/time failure is retained; no resume or follow-on.
+
+The28,332-byte three-file packet uploads no images or weights. It reuses307
+closed V28 evidence bindings and246 original assets. Protocol SHA256:
+a270f4631f00c55e8c0377f082bc5ec7d593b633c53f91126078a5452e3cf5b0.
+Archive SHA256:d700acbb0bf6cdc03de9b6389132e77830937af518bc6ae563fee67698f11a51.
+Python3.10 parsing, nine malformed-return/no-training regressions, actual
+Windows rejection before neural/gradient work, read-only Bash syntax and five
+manual command steps pass. The initial local AST save-check failure occurred
+before packet creation/VM work; its source/evidence is preserved. The corrected
+check specifically rejects Torch checkpoint/optimizer calls. Human transfer,
+SSH and tmux remain the execution path; no assistant cloud action occurs.
+
+Previous586 bindings and deeper50/668/cleanup60/309/66/692/299/697/513 history,
+three full document bodies and app22 bindings remain intact. The existing app
+model/design stays in place. Original checkpoints, splits, scientific caches,
+logs and all prior gate failures remain. No new native or reserved-final pixels
+are opened. Useful native restoration, all seven automatic/assisted covering
+families, meaningful full app verification and independent final review remain
+required. No Zamboanga or exact hidden-identity claim. Goal active/incomplete.
+
+[Audited V28 results](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_ACTIVE_ORIGINAL_DECODER_V28_RESULTS.md>) ·
+[Next five manual diagnostic steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V28_PRESERVATION_DIAGNOSTIC_V1_VM.md>)
+
+Earlier bodies below are retained history. V28-ready/pending wording and its
+training commands are superseded by the rejected final return; only the distinct
+zero-update diagnostic is ready for manual execution.
+
+
+**Latest research milestone — 6 October 2026: R2 all14 failure audited; inactive head4 traced; distinct V28 active-decoder pilot verified for manual execution.**
+
+The downloaded93,557,954-byte R2 archive matches
+dfd8e661126d144e87875f236a7eedb339f7803a65f57b92aa0fd128110d4e3e.
+Safe import verifies172 regular files. Independent audit checks46,909,863 saved
+gradient values,246 original assets,50 original-DGP CPU forwards,50 recognizer
+forwards and50 cohort rows. All70 L4 queries ran, then the unchanged all14 gate
+failed at line263. Head4's two tensors are exactly zero in every component and
+every batch; the other12 aggregate improvement gradients are nonzero. The four
+initial preservation terms/gradients are correctly zero. No optimizer, updates,
+epochs or new checkpoint occurred. Worker25.232s/supervisor26.416s; no timeout.
+Export completion is packaging only. R2 remains failed and must not rerun.
+
+Forward-only trace: every110,592 head4 kernel value is nonzero float32 subnormal
+(maximum about6.31e-40). The fourth map is nonzero, but head4 outputs exactly zero
+in all50 cases. Separate float64 calculations give2.49e-76–4.29e-76 maxima, below
+float32's smallest positive value1.40e-45. Independent NumPy readback verifies
+350 activation arrays/100 convolutions. No local derivatives or model changes.
+No unique checkpoint-history cause or explanation of all prior failures is claimed.
+The fourth map still contributes through the FPN top-down path to other heads.
+
+The actual app encoder divides in NumPy before device transfer; R2 used the older
+Torch division after transfer. Both are exactly equal on all256 byte values and
+all50 current CPU inputs/raw/PNGs: no CPU normalization defect or gain. CUDA
+encoding equivalence was not measured. Earlier canonical wording is corrected
+in scope without editing old receipts. V28 ships the exact actual app encoder AST.
+
+The selected separate-original-decoder direction continues as distinct V28:
+train head1–head3,smooth,smooth2,final only; keep head4, the encoder/FPN and all
+stored buffers frozen. The unchanged original forward has498,627 trainable
+parameters in12 tensors. Initial actual-app raw/PNG parity passes all50 CPU
+inputs; original state remains unchanged. This does not waive or accept R2 all14.
+V28 first requires70 fresh same5-case CUDA gradient queries: every selected12
+improvement gradient finite/connected/nonzero, all initial preservation values
+and gradients exactly zero, exact raw/PNG baseline parity before any optimizer.
+
+V28 is bounded800 updates/80 epochs; AdamW fixed0.00003, weight decay0.01 and
+clip1. Snapshots0/50/400/800; stop at50 if structure gain<1%. Final gain>=10%, both
+source nonregression, original17-group MSE/SSIM/ArcFace bounds and brightness
+fraction<=20% remain. No checkpoint selection before final800; even capacity
+pass requires all50-face review and separately frozen broader/native/app work.
+Require idle existing L4/g2-standard-4 and3GiB free. Preflight300s, fit1500s,
+worker1800s; supervisor2100s+30s grace; export120s/external150s+30s grace;
+torch allocated VRAM<=20GiB. Preserve every failure; no automatic follow-on,
+overwrite, resume, failed-recipe rerun or threshold search. Training remains
+human transfer/SSH/tmux only. No assistant VM/cloud action occurs.
+
+The29,527-byte eight-file packet uploads no original data or weights.
+Archive SHA256:e1484a675ad4330e4615d2f58a70f66ba8a8ad287b78cae66f8555ec4c4b1614.
+Protocol SHA256:27c140430673880f1aaab47a9df9af9b33758cc5d8adec53822cd9e05b13bbc8.
+Python3.10 parsing, source/packet/app-encoder contracts, actual Windows pre-neural
+rejection, unchanged historical shell deadlines, Bash syntax and nine malformed
+return/frozen-partition/group/quality regressions pass. A prospective complete
+return audit is prepared. Its initial CPU replay was exercised on genuine closed
+R2 evidence:50 DGP/50 recognizer/50 cohort rows; this is not a V28 VM result.
+The missing CPU device argument found before release was corrected; preliminary
+auditor source/checks and failure evidence remain. Actual V28 training is pending.
+
+Previous50 preparation bindings, deeper668/cleanup60/309/66/692/299/697/513,
+the three complete document bodies and app22 bindings remain intact. Cleanup
+remains previously verified14 duplicate archives/1.64GiB; last measured7.48GiB
+free, not a new live disk claim. Original checkpoints, scientific caches, splits,
+logs and all earlier failed gates remain. No native or reserved-final pixels are
+opened. Photograph source labels remain separate and do not imply ethnicity.
+Useful whole-face native restoration, all seven automatic/assisted covering
+families, canonical app flow/regressions and independent final review remain
+required. No Zamboanga or hidden-identity claim follows. Goal active/incomplete.
+
+[R2 results and branch diagnosis](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_ORIGINAL_DECODER_GRADIENT_V1_R2_RESULTS.md>) ·
+[Five manual V28 steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_ACTIVE_ORIGINAL_DECODER_V28_VM.md>) ·
+[App-input clarification](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_DECODER_APP_NORMALIZATION_V1.md>)
+
+Earlier bodies below remain preserved history. R2-ready/pending and its launch
+commands are superseded by the closed failed return; only distinct V28 is ready.
+
+
+**Latest research milestone — 6 October 2026: selected original-decoder review verified; finite zero-update L4 proof R2 ready.**
+
+The user selects review of a separate copy of the original DGP reconstruction
+decoder after V25–V27 failed the unchanged early structure gate. V27 is fully
+audited and visually reviewed: 0.221088578% gain versus 1%; its failed50/800
+endpoint remains closed. No earlier recipe, checkpoint, split or gate changes.
+
+The separate copy uses the unchanged DGPSynthesizer forward and enables only
+head1–head4,smooth,smooth2,final:609,219 parameters in14 tensors. The2,703,488
+remaining encoder/FPN parameters and every stored buffer stay frozen/evaluation.
+All original shared FPN aliases remain internal; no tensor is shared with the
+original model. Exact fresh-reference initial raw/PNG parity passes all50 exposed
+TRAIN cases. CPU review21.631s:50 original/51 candidate forwards; no derivatives,
+backwards, optimization or checkpoint writes. Actual local differentiation and
+invalid-input attempts reject before neural work; partial support is preserved.
+Independent251-binding source/layout readback passes. Clamp saturation0–3.1993%
+of RGB component values is forward evidence, not a derivative or failure cause.
+
+Only the new original-decoder gradient proof V1 R2 is ready for manual execution.
+It is not a training pilot:10 five-case batches,70 component gradient queries,
+zero optimizer construction/updates/epochs and no new checkpoint. Require finite
+connected nonzero improvement gradients at all14 original decoder tensors;
+all four initial preservation terms and every gradient must be exactly zero.
+Same-batch fresh canonical baseline/candidate output must match exactly. Legacy
+cached evidence remains separate. The seven objective formulas, original CPU-
+built fixed filter and all retained capacity/preservation gates remain unchanged.
+Save all ten7×609,219 matrices and their sum; no automatic follow-on or app promotion.
+
+Unissued V1/R1 drafts are preserved. Source review corrected GPU kernel creation
+and an erroneous shell substring deadline before release. R2's full AST/shell
+comparison, Python3.10 parsing, actual Windows neural rejection, Bash syntax and
+eight malformed scientific-return regressions pass. Synthetic arrays are not VM
+evidence. The released13,816-byte/four-file packet uploads no data or weights.
+Archive SHA256:f21634d909e880a26b8ae90e0e6393ff32fc7f2758ebb5312faf59707d82900d.
+Protocol SHA256:81127e45a205c44ef685646a4f82911d02b2355dfe24c63772c23e62e66a41f2.
+Require2GiB free/idle existing L4; worker600s, supervisor660s+30s grace,
+export90s/external120s+10s grace; at most20GiB torch-allocated VRAM. Five pasteable
+Google Cloud SDK/SSH/tmux steps include separate PuTTY-compatible downloads.
+An independent safe importer/full-matrix/CPU forward/vector/cohort audit is
+prepared before execution. It never executes returned source or local derivatives.
+
+Actual L4 proof and returned audit remain pending. No new training protocol is
+defined before that proof; no further assistant VM/cloud action occurs. Direct
+VM cleanup was separately authorized and verified:14 backed-up duplicate archives
+removed/1.64GiB; last verified free7.48GiB. Original scientific caches, sources,
+checkpoints, outputs, failures and current V27 archives remain protected.
+
+Previous668 research bindings, cleanup60, deeper309/66/692/299/697/513 histories,
+three full document bodies and app22 bindings remain intact. The original DGP
+remains primary in the existing app; pretrained restorers are comparisons. No
+native/reserved-final pixels, ethnicity or local/hidden-identity claim enter this
+TRAIN-only diagnostic. Useful native outputs, all visible facial features,
+canonical app flow/regressions, all seven automatic/assisted covering families
+and independent final review remain required. Goal active/incomplete.
+
+[Original-decoder review](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_ORIGINAL_DECODER_REVIEW_V1.md>) ·
+[Five manual R2 VM steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_ORIGINAL_DECODER_GRADIENT_V1_R2_VM.md>) ·
+[Verified cleanup](<C:/xampp/htdocs/YEAR 4/Testing/VM_STORAGE_CLEANUP_20261006_V2.md>)
+
+Earlier bodies below remain preserved history. Their V27-pending, architecture-
+question and prior pilot-launch text is historical; only the new R2 proof is ready.
+
+
+**Latest research milestone — 6 October 2026: V27 return independently audited/reviewed; structure failure closed.**
+
+The325,777,145-byte archive matches SHA256
+1bd4aec2bdc10cd6aca4455f24875b006bf4bca2d1a4f1cae8f4932400b386ab.
+Safe import verifies631 regular files. Independent CPU replay checks246 original
+assets,100 raw/PNG pairs and metric rows,100 head/110 recognizer forwards and250
+own-DGP feature arrays. All original source/state/numerical/cohort/timing checks
+remain. No local gradients/backwards/optimizer updates or model changes occur.
+
+V27's delivered degraded structure gain is0.2210885780%, below the unchanged1%
+requirement. It stops at50/800 updates with51 backwards; final800 never runs.
+All five new feature-readout gradients are active before optimization and the
+original five projection gradients are active at update2. Initial corrected
+identity value/all36 gradients are exactly zero for all ten batches. Original
+DGP and recognizer states remain frozen. Worker30.127s, fit9.615s, supervisor
+36.006s and allocated VRAM1,843,821,568 bytes pass original timing/memory bounds.
+This is a quality stop, not a transfer, CUDA, timing or absent-gradient failure.
+
+All ten original-detail sheets/50 paired photographic TRAIN cases are reviewed;
+all200 source cells are exact. All50 PNGs change, with median degraded correction
+1.0231445 byte units/max8. Small tonal changes do not convincingly add eye, nose,
+mouth, outline and overall visible-appearance structure together. At stopped50,
+saved arithmetic has no original17-group pixel/SSIM/identity violation. This does
+not establish final capacity, native generalization or independent human acceptance.
+
+V25/V26/V27 gains are0.0282235%/0.0335636%/0.2210886%. Stop model modifications for
+the architecture discussion required by the frozen plan and workspace circuit
+breaker. The invalid assumption is that these finite small-head changes on frozen
+own-DGP pixels/features would provide sufficient whole-face structure. No unique
+optimization cause or impossibility of all heads is proved. The user selects
+review of a separate candidate of the original DGP reconstruction decoder;
+the direct reply is preserved. Review its source/initial parity before a distinct
+finite protocol. No next
+pilot/protocol is created, no failed recipe reruns and no gate is relaxed.
+
+The user-authorized direct VM cleanup is complete and independently verified:
+14 backed-up archive duplicates/1.64GiB removed;8,036,728,832 bytes(7.48GiB) free;
+207,967 protected hashes,4,817 scientific tensor stamps and490 current research
+bindings preserved. The39,448,585,279-byte scientific caches/current V27 archives
+remain. CUDA available/L4 idle; VM left running. Direct access was maintenance
+only; actual training remains manual on the existing L4/g2-standard-4 with verified
+transfers and pasteable commands. The exact restated user goal remains recorded.
+
+Completed cleanup60 bindings, previous309 and deeper66/692/299/697/513 histories,
+five complete document bodies, app22 bindings and every original checkpoint,
+split and failed gate remain preserved. Own-trained DGP remains primary and
+pretrained restoration models comparisons. Native CCTV stays unpaired; paired
+photographic TRAIN evidence stays separate. Reserved-final identities remain
+unviewed. No new native/covering pixels, ethnicity or Zamboanga/hidden-identity
+claim enters this milestone. Previously useful inputs remain usable. Useful
+native outputs, canonical app flow/regressions, all seven automatic/assisted
+covering families and independent final review remain required. Goal active/incomplete.
+
+[Audited V27 results](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_FEATURE_SKIPS_V27_RESULTS.md>) ·
+[Architecture discussion](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_POST_V27_ARCHITECTURE_REVIEW.md>) ·
+[Verified VM cleanup](<C:/xampp/htdocs/YEAR 4/Testing/VM_STORAGE_CLEANUP_20261006_V2.md>)
+
+Earlier bodies below are preserved history. Their V27 install/launch steps and
+pilot-pending statements are historical. V27 is closed; do not rerun those steps.
+
+
+**Latest authorization and maintenance — 6 October 2026: VM cleanup complete; full DGP goal active.**
+
+The user explicitly authorizes direct connection/storage cleanup before continuing
+the DGP workflow. The existing gcloud connection to forensic-dgp-thesis in
+us-central1-a is verified. This maintenance exception supersedes the prior
+no-connection restriction for cleanup only; actual training remains manual on
+the existing NVIDIA L4/g2-standard-4 under ~/forensic-dgp. No historical pilot,
+instance start/stop, model training, process termination or app promotion occurs.
+
+Fourteen exact duplicate top-level transfer/result archives are removed after
+complete retained Windows copies and VM SHA256/stamp checks: 1,756,556,632 bytes
+(1.64 GiB). The apply receipt measures 1,756,598,272 additional free bytes. The final
+live check reports 8,036,728,832 bytes (7.48 GiB) free. Separate live
+and Windows audits verify the deletion ledger, 207,967 protected
+file hashes, 4,817 scientific tensor stamps
+and 490 current V26/V27 bindings. Original unpacked checkpoints, sources, inputs,
+splits, outputs and failed gates remain. All three scientific caches stay intact:
+4,431 files/39,448,585,279 bytes. The existing CUDA runtime is available; L4 idle.
+Current V27 execution/return archives and all Windows recovery copies stay intact.
+
+V27 is reported stopped at50/800 updates for 0.221088578% structure improvement,
+below the unchanged1% early requirement. Its complete 325,777,145-byte return,
+checksum and export receipt are present on Windows, with reported SHA256
+1bd4aec2bdc10cd6aca4455f24875b006bf4bca2d1a4f1cae8f4932400b386ab.
+Cleanup confirms transfer hash only; independent result replay and visual review
+are the next research actions. Export completion does not imply quality success.
+Do not rerun V27 unchanged or relax its stop. Following the third spatial-path
+failure, stop model modifications for the required architecture discussion.
+
+All previous309 research bindings, deeper66/692/299/697/513 histories, three full
+document bodies, earlier maintenance and app22 bindings remain preserved. The
+user's restated goal takes precedence over historical manuscript/permission text.
+Own-trained DGP remains primary; pretrained restoration models are comparisons.
+All visible facial features, native unpaired evidence, separate paired synthetic
+metrics, all seven automatic/assisted covering families, exact local app flow and
+independent final review remain required. No new native/reserved-final pixels or
+ethnicity/Zamboanga/hidden-identity claims enter maintenance. Goal incomplete.
+
+[Cleanup evidence](<C:/xampp/htdocs/YEAR 4/Testing/outputs/cctv_dgp_vm_storage_cleanup_20261006_v2/closure_manifest.json>) ·
+[Cleanup report](<C:/xampp/htdocs/YEAR 4/Testing/VM_STORAGE_CLEANUP_20261006_V2.md>)
+
+Earlier document bodies below are preserved history. Their earlier pilot-launch
+instructions and no-connection statements are historical; current authorization
+and the retained quality failures above govern the next action.
+
+
+**Latest research milestone — 6 October 2026: corrected V26 gradient return audited; V27 direct own-feature pilot independently prepared.**
+
+The 1,665,230-byte diagnostic return matches SHA256
+`bb07f90ef10496a8b464d61d9e446826e4f8d824c12478f35765b3d3b160c201`.
+Ten regular files, 240 original assets, 118 saved inputs, 250 frozen own-DGP feature
+arrays and two 7×53,781 gradient matrices pass independent source/state/statistic/
+batch/count/timing readback. All 752,934 saved gradient values are checked. The L4
+measurement takes 19.089s, with 140 gradient queries and zero optimizer updates.
+Its snapshot50 replays the old stopped V26 head; no new training occurs. Initial
+identity value/all26 gradient tensors are exactly zero in all ten batches.
+Preservation/improvement norm ratio at stopped50 is 0.3701499, cosine −0.7547647;
+the improvement gradient remains nonzero. No preservation term or margin changes.
+
+Independent pure-array path arithmetic verifies 269 sources/84 term-family rows
+and 250 input-feature summaries. Direct RGB carries 98.4251552% of stopped50 landmark
+squared-gradient magnitude. This depends on parameterization and does not prove
+full optimizer trajectory causality. V26 remains a closed structure failure:
+0.0335635587% delivered gain versus the unchanged1% early stop, with no convincing
+whole-face gain in50 TRAIN cases. Do not rerun V26 or the completed diagnostic.
+
+Within the user's selected own-DGP spatial direction, V27 adds five independent
+normalized zero-initialized 1×1 RGB readouts from frozen own-DGP feature levels.
+They shorten the feature path into the same bounded residual, retaining every
+original decoder/RGB tensor, frozen DGP/recognizer, corrected seven-term loss,
+seed,50 exposed TRAIN cases and original schedule. Add1743 parameters for55524 in
+36 groups. All28 original VM state tensors must match V26 initialization exactly.
+No fitted statistics, clean target, person/source label or pretrained restoration
+output conditions inference. All visible facial features remain in scope together.
+
+The 51,049-byte/seven-file thin packet reuses240 original VM assets with hash-bound
+hardlinks and uploads no data or weights. Original files are never modified; require
+3GiB free and preserve partial work. Installation60s; neural preflight300s; matched
+identity proof180s; fit1500s; worker1800s; external2100s plus30s grace; export120s/
+external150s plus30s grace; peak allocated VRAM20GiB. Finite800 updates/80 epochs.
+Original update20 timing projection,1% early/10% final structure, all17 group pixel/
+SSIM/identity bounds, source gains, brightness limit and final800 selection remain.
+All36 initial identity gradients must be exactly zero; all five new skip weight
+gradients must be positive before an optimizer. The original five projection
+gradients must remain positive at update2. No automatic follow-on or unchanged retry.
+If this third spatial-path capacity attempt fails, stop model modifications for
+an architecture discussion before another attempt.
+
+Full AST comparisons retain original head/trainer/guard/supervisor and prospective
+safe importer/CPU/group/capacity/state/feature/cohort/timing audits except declared
+new connections, counts, names, initial proofs and hardlink receipt. Python3.10
+parsing,14 meaningful source/archive/receipt regressions and actual Windows transfer/
+neural-install rejection pass. All247 bundle files remain unchanged by guard checks.
+The shell is byte-equivalent to the original after restoring its worker filename.
+
+Local inference verifies exact initial raw/PNG parity for50 cases and all28 shared
+CPU tensors. Five predetermined, unfitted forward controls prove wiring without
+clean targets, fitting or derivative estimates; independent NumPy/OpenCV arithmetic
+checks their responses. Partial support preserves outside pixels; empty support
+is rejected. There are61 valid CPU head forwards, zero DGP/recognizer forwards and
+zero local derivatives/backwards/optimizer updates in the new interface audit.
+No probe checkpoint/image is created. Actual L4 proof and trained capacity remain
+pending. Five pasteable gcloud/SSH/tmux steps include separate PuTTY downloads.
+The human performs every VM/cloud action; none is performed by this agent.
+
+Previous66 bindings and deeper692/299/697/513 histories, seven complete document
+bodies, app22 bindings and concurrent completed VM maintenance are preserved.
+No candidate is promoted and the existing app design/checkpoint is unchanged.
+Native CCTV stays unpaired; paired photographic TRAIN metrics remain separate.
+Reserved-final identities remain unviewed. No new native/covering pixels, ethnicity
+or Zamboanga performance claim enters this milestone. Previously useful native
+inputs remain usable despite failed model corrections. Useful native development
+output, candidate app parity/full flow, input-only insufficient-information handling,
+all seven automatic/assisted covering families and independent final review remain
+required. **Goal active/incomplete.**
+
+[Verified diagnostic](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V26_GRADIENT_DIAGNOSTIC_V1_RESULTS.md>) ·
+[V27 frozen design](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_FEATURE_SKIPS_V27_PLAN.md>) ·
+[Five manual VM steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_FEATURE_SKIPS_V27_VM.md>) ·
+[Milestone](<C:/xampp/htdocs/YEAR 4/Testing/outputs/dgp_v26_gradient_return_and_feature_skips_v27_milestone/milestone.json>)
+
+Previous bodies below are preserved history. Their diagnostic-pending statements
+and V22–V26/diagnostic commands are historical. Launch only the new V27 protocol
+once under its current manual runbook; all earlier failed/completed runs stay closed.
+
+
+**Latest research milestone — 6 October 2026: corrected V26 scalar objective audited; finite zero-update L4 gradient measurement verified.**
+
+The unchanged corrected V26 objective decreases from 1.2999999568 to 1.2997388024
+between saved states 0/50. Degraded structure/pixel terms improve slightly; clear
+controls contribute a small preservation cost. Two degraded cases incur SSIM
+costs and one incurs an identity cost at stopped 50. Scalar penalty sizes do not
+establish their active gradient strength or the optimizer trajectory's cause.
+Do not remove preservation terms, relax gates or invent a new recipe from these
+scalar observations. The original V26 failure remains closed: 0.0335635587% versus
+the unchanged 1% early requirement, with no convincing whole-face gain in 50 cases.
+
+The 54.273-second local diagnostic uses 30 frozen-recognizer CPU forwards and 20
+saved prediction replays, zero head/DGP forwards and zero local derivatives or
+optimization. The actual corrected loss/metric function ASTs and five-case batch
+contexts are retained. Independent arithmetic checks 280 source bindings, 30 vector
+arrays, 100 case states and 34 group states. All seven term assemblies agree exactly.
+This is saved-scalar/source evidence, not a GPU derivative or SSIM-field rerun.
+
+The next packet measures actual corrected V26 component gradients at the two
+saved heads: 20 head batches, 140 gradient queries, 70 recognizer forwards, zero
+DGP forwards and zero optimizer updates/epochs. Its 16,047-byte transfer has four
+regular files and uploads no data or weights. Original 240 assets, 118 saved-input
+bindings, the prior identity proof and 250 frozen feature arrays are checked.
+Every initial batch must retain exactly zero identity value/all 26 gradients.
+Worker 420s; supervisor 480s plus 30s grace; export 30s internally/60s externally
+plus 10s grace. Require an idle existing L4 and 1 GiB free disk; preserve any stop.
+No new checkpoint, unchanged training retry or automatic follow-on is allowed.
+
+Eleven source/archive/matrix tamper checks, Python 3.10 parsing, Windows transfer/
+neural-gradient rejection and Bash syntax pass. Full diagnostic-worker AST and
+supervisor behavior retain the original measurement except declared objective,
+proof, counter and name changes. Prospective safe import/full matrix audit preserve
+original guards and require exact-zero corrected identity proof. Actual L4
+measurement and independent returned-matrix audit remain pending; no VM/cloud
+action occurs. Manual gcloud transfers and tmux launch are in the new five-step
+runbook, with three separate PuTTY download calls. No new training recipe exists.
+
+Original V26 and earlier failures/checkpoints/splits, previous 692 bindings and
+deeper 299/697/513 evidence, four full document bodies, app 22 bindings and concurrent
+completed VM maintenance remain preserved. The user-selected own-DGP spatial path
+and all visible facial features together remain required. No app candidate is
+promoted. Native CCTV stays unpaired; paired photographic TRAIN evidence stays
+separate. No native/reserved-final/new covering pixels or ethnicity/Zamboanga
+performance claims enter this milestone. Previously useful inputs remain usable
+despite model softness. Useful native output, candidate app parity/full flow,
+input-only insufficient-information handling, all seven automatic/assisted
+covering families and independent final review remain required. Goal active/incomplete.
+
+[Corrected objective evidence](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V26_CORRECTED_OBJECTIVE_REVIEW.md>) ·
+[Finite measurement design](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V26_GRADIENT_DIAGNOSTIC_V1_PLAN.md>) ·
+[Five manual VM steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V26_GRADIENT_DIAGNOSTIC_V1_VM.md>) ·
+[Milestone](<C:/xampp/htdocs/YEAR 4/Testing/outputs/dgp_v26_corrected_objective_and_gradient_diagnostic_milestone/milestone.json>)
+
+Previous bodies below are preserved history. V26 is a closed training failure;
+the new commands measure saved states only. Historical training/diagnostic commands
+are not instructions to repeat immutable failed recipes or earlier measurements.
+
+
+**Latest research milestone — 6 October 2026: V26 return audited; identity-reference correction proved, structure failure retained.**
+
+The downloaded 325,764,761-byte V26 archive matches SHA256
+`9ea6afad52b70a27681630b8b09f96dfe560f6756664b627037198fe9e47ae53`.
+Safe import verifies 631 regular files. Independent CPU inference and saved-source/
+arithmetic checks pass: 240 assets, two snapshots at 0/50, 100 raw/PNG pairs and
+metric rows, 50 original own-DGP forwards and 250 feature arrays. All original
+numerical and quality bounds remain unchanged. Twenty-five tamper regressions pass.
+
+Actual L4 preflight confirms exact zero matched identity penalty and all 26 matched
+parameter-gradient assertions on all 50 cases, before optimization. The legacy
+discrepancy is reproduced. The reference-processing fix therefore works, but it
+does not resolve the structure failure: **0.0335635587% delivered degraded gain
+against the unchanged 1% requirement at update 50**. Training stops after 50 updates/
+51 backwards; final 800 never runs. Export complete:true packages the retained
+failure and does not imply training success. Do not repeat V26 unchanged or relax
+the stop. Original V22–V25 failures and the separate processing evidence stay intact.
+
+All ten original-size sheets/50 paired photographic TRAIN cases are reviewed;
+200 exact cells are independently checked. Eyes, nose, mouth, face outline and
+overall visible appearance show no convincing V26 gain. All five own-feature
+projection gradients are active and all 26 learned tensors change. Corrections
+reach output, but the median degraded raw change is only 0.1348669090 byte level.
+Raw degraded structure gain is 0.0151795995%, below even the delivered PNG gain;
+quantization alone does not explain the failure. Worker 29.077s, fit 9.197s and
+supervisor 35.001s pass timing bounds. Torch allocated peak VRAM is 1,806,989,312
+bytes. There is no time-cap or CUDA failure behind the reported structure stop.
+
+The corrected identity calculation is insufficient to establish useful restoration.
+Review the corrected objective and spatial response at saved states before choosing
+another training recipe. The complete optimizer-trajectory cause is not proved.
+No V27 packet, unchanged retry, local gradients/optimization or assistant VM/cloud
+action occurs. The user-selected own-DGP spatial/feature direction remains active.
+
+The previous 299 bindings, deeper 697/513 bindings, twelve complete document bodies,
+app 22 bindings and concurrent completed VM maintenance are preserved. No candidate
+is promoted. Native CCTV stays unpaired; exposed paired TRAIN metrics are separate.
+No native/reserved-final/new covering pixels or ethnicity/Zamboanga performance
+claim enters this milestone. Previously useful native inputs remain usable despite
+model softness. Useful native development output, input-only insufficient-information
+handling, candidate app parity/full flow, all seven automatic/assisted covering
+families and independent final review remain required. Goal active/incomplete.
+
+[V26 verified result](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BATCHMATCHED_IDENTITY_V26_RESULTS.md>) ·
+[Milestone](<C:/xampp/htdocs/YEAR 4/Testing/outputs/dgp_batchmatched_identity_v26_audit_milestone/milestone.json>)
+
+Previous bodies below are preserved history. Their V26-pending statements and manual
+V22–V26/diagnostic launch commands are historical. V26 is closed as a failure;
+do not use those commands to repeat immutable historical pilots.
+
+
+**Latest research milestone — 6 October 2026: V25 gradient return audited; V26 reference-processing correction verified for manual L4 execution.**
+
+The 1,695,519-byte fixed-state diagnostic return is verified and safely imported:
+ten regular files, two 7×53,781 gradient matrices, 14 component rows and 26 parameter
+groups per state. Independent arithmetic/source/state/count/timing checks pass.
+The L4 measurement takes 18.535 seconds with 140 gradient queries and zero optimizer
+updates. This readback checks saved derivatives; it does not independently recompute
+L4 derivatives or establish the cause of the entire optimizer trajectory.
+
+All 50 initial raw outputs equal their cached own-DGP baseline exactly. The legacy
+identity reference nevertheless incurs a 1.3932586e-7 mean penalty and a gradient
+1.45139 times the landmark-detail gradient. Baseline scores are computed one case
+at a time without gradient tracking, while predictions use five-case gradient
+calls. The zero-margin penalty responds to that numerical difference. A demonstrated
+reference-processing correction is justified; the original V25 structure failure
+(0.0282235213% against 1% at update 50) remains a failure. Real preservation penalties
+are retained, and useful restoration is still unproven.
+
+V26 changes only the identity reference calculation: baseline and prediction share
+one frozen recognizer call, with the baseline embedding detached. The original
+zero margin, coefficient 5, other six terms, own-DGP spatial head, 50 exposed TRAIN
+cases, schedule, optimizer, quality gates and finite limits remain unchanged.
+The L4 preflight must reproduce the legacy discrepancy and prove exactly zero
+matched penalty and all 26 matched parameter gradients on every initial baseline
+batch before creating an optimizer. No epsilon or preservation waiver is added.
+
+The new transfer is 49,537 bytes, seven regular files and five new source assets.
+Its guarded 60-second installer verifies and copies 235 original VM assets into a
+fresh directory, preserving failed V25. No original data or weights are reuploaded.
+The actual proof has a 180-second limit inside the original 300-second preflight.
+The pilot retains at most 800 updates/80 epochs, the 1% early structure gate at 50
+and the 10% final structure gate at 800, all 17 preservation groups and the brightness
+limit. Fit 1,500 seconds; worker 1,800; supervisor 2,100 plus 30 seconds grace.
+Any proof, timing or quality stop is retained; no unchanged failed recipe is rerun.
+
+Eleven saved-matrix/archive/reference contracts, Python 3.10 parsing, actual Windows
+rejection guards and Bash syntax checks pass. Tests use an arithmetic mock recognizer;
+no local learned-model forwards, gradients, backwards or optimization occur. No
+assistant VM/cloud action occurs. Actual V26 L4 proof/training, independent return
+audit and whole-face review remain pending. Human execution uses the five manual
+upload/install/tmux/run/download steps; PuTTY downloads use three separate calls.
+
+Prior 697 evidence bindings and ten full document bodies are preserved, along with
+the app's 22 bindings and concurrent completed VM maintenance. No app promotion.
+The user-selected own-DGP spatial/feature direction and all visible facial features
+together remain required; previous useful native inputs stay usable despite model
+softness. Native CCTV remains unpaired, and paired photographic TRAIN metrics remain
+separate. No native/reserved-final/new covering pixels, ethnicity or Zamboanga
+performance claim is introduced. Useful native outputs, candidate app parity/full
+flow, insufficient-information handling, all seven automatic/assisted covering
+families and independent final review remain required. Goal active/incomplete.
+
+[Audited diagnostic](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_V25_GRADIENT_DIAGNOSTIC_V1_RESULTS.md>) ·
+[Finite V26 design](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BATCHMATCHED_IDENTITY_V26_PLAN.md>) ·
+[Current five manual steps](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_BATCHMATCHED_IDENTITY_V26_VM.md>) ·
+[Milestone](<C:/xampp/htdocs/YEAR 4/Testing/outputs/dgp_v25_gradient_audit_and_batchmatched_identity_v26_milestone/milestone.json>)
+
+Previous bodies below are preserved history. Diagnostic-pending statements and old
+V22–V25/diagnostic launch commands are superseded by the completed diagnostic audit
+and the guarded fresh V26 correction. Do not repeat immutable historical pilots.
+
+
 **Latest research milestone — 6 October 2026: V25 audited failure; fixed-state gradient diagnostic verified, manual L4 measurement pending.**
 
 The325,762,305-byte V25 return is verified and safely imported; independent replay

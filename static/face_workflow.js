@@ -192,6 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const candidate = event.target.files[0]; event.target.value = '';
         if (!candidate || !file || busy) return;
         const requestVersion = version;
+        busy = true;
+        byId('loading-text').textContent = 'LOADING REMOVAL AREA…';
+        changed();
         const sourceUrl = URL.createObjectURL(candidate);
         try {
             if (candidate.size > 10*1024*1024) throw new Error('Use a removal mask smaller than 10 MB.');
@@ -201,7 +204,10 @@ document.addEventListener('DOMContentLoaded', () => {
             saveUndo(); loadMask(image); changed();
             byId('mask-message').textContent = 'Imported removal area. Review the green region before generation.';
         } catch (error) { if (version === requestVersion) showError(error.message); }
-        finally { URL.revokeObjectURL(sourceUrl); }
+        finally {
+            URL.revokeObjectURL(sourceUrl);
+            if (version === requestVersion) { busy = false; syncControls(); }
+        }
     });
     const pointFrom = event => {
         const rect = editor.getBoundingClientRect();
