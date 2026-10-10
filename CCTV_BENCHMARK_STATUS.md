@@ -1,3 +1,29 @@
+# CCTV restoration benchmark - current QMUL checkpoint comparison, 9 October 2026
+
+All24 frozen QMUL DEV cases now compare resize, original Phase3, the current
+identity-v2 checkpoint and CodeFormer fidelity1 on the same256-pixel inputs.
+This replaces neither the historical checkpoint findings nor the separate
+ChokePoint comparison. All saved outputs pass the artifact audit; all24 current
+DGP outputs replay exactly. All96 delivered cells receive visual review.
+
+The current DGP does not establish a convincing useful clarity gain over resize
+on the six predeclared coarse frontal/mild cases. Seven insufficient cases retain
+their input-only labels. This is unpaired assistant development evidence, not
+native PSNR/SSIM, identity accuracy, independent final validation or qualification.
+All reserved pixels remain unviewed. No app/model selection changes.
+
+Current report: CCTV_DGP_CURRENT_QMUL_NATIVE_COMPARISON_V1_RESULTS.md.
+V42 remains failed at0.00692364% versus1%, with appearance regressions. The
+original-feature diagnostic remains prepared for manual VM execution; no return
+is locally available in this review. Follow PROJECT_HANDOFF.md and
+CCTV_DGP_ORIGINAL_FEATURE_PROBE_V1_VM.md for that next step.
+The full restoration and seven-family completion goal remains incomplete.
+
+The exact preceding dated benchmark report is preserved below and in
+outputs/cctv_dgp_current_qmul_native_comparison_v1_closure/before_docs/.
+
+---
+
 # CCTV restoration benchmark — current status 5 October 2026
 
 The source extension and matched ChokePoint development comparison are complete

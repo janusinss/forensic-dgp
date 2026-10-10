@@ -1,3 +1,492 @@
+# Method decision — 10 October 2026
+
+The replacement candidate will be an own-trained input-conditioned hybrid
+generative-prior restorer. A frozen external face-generating bank supplies
+declared features; our learned conditioning/reconstruction must demonstrate
+useful256 restoration with visible appearance preserved. The existing
+DeblurGAN-v2-compatible app model remains the permanent comparator.
+A generator load, generated seed face or training/archive completion does
+not meet this scope.
+
+The standalone bank's local component checks passed. No conditioned model,
+training packet, new adopted checkpoint or covering-family qualification is
+delivered by that check. The full five milestones and all seven separate
+automatic/assisted completion families below remain required.
+Method/evidence: CCTV_DGP_GENERATIVE_PRIOR_METHOD_REVIEW_V2.md.
+
+---
+
+# Current output scope — comparative improvement, 10 October 2026
+
+The user's revised goal is the current section at the start of
+[SYSTEM_WORKFLOW_AND_GOAL.md](<C:/xampp/htdocs/YEAR 4/Testing/SYSTEM_WORKFLOW_AND_GOAL.md>).
+Read
+[CCTV_DGP_COMPARATIVE_IMPROVEMENT_PLAN_V2.md](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_COMPARATIVE_IMPROVEMENT_PLAN_V2.md>)
+before preparing training. The goal now explicitly compares a corrected current
+DGP recipe with one justified replacement reconstruction design, then advances
+through finite accepted improvements. Random initialization of an entire model
+is not the default; its feasibility must be justified separately.
+
+The retained app DGP is the initial improvement baseline, not evidence that the
+full workflow is already useful. Keep its original fingerprint as a permanent
+comparator. A candidate must improve reviewed visible facial detail on native
+development evidence while passing retained paired/source/profile preservation
+checks and raw/delivered-PNG review. Native CCTV remains unpaired; PSNR/SSIM
+belongs to paired synthetic comparisons. No ethnicity, exact hidden-identity or
+Zamboanga performance claim follows. Useful learning on TRAIN alone is insufficient.
+
+An independently accepted development candidate becomes the next incumbent for
+the following finite comparison; the original baseline and rollback versions
+remain. Accepted development status is separate from app integration, reserved
+final review and full completion. Keep final identities outside the improvement
+loop. Continue only through justified finite stages with checkpoints and plateau,
+regression, timing, storage/VRAM and export stops. Every iteration is not
+guaranteed to improve. The proposed additional-epoch1/2/5 schedule is conditional
+and was proposed by the assistant, not supplied as exact numbers by the user.
+
+Restoration and plausible covered-region completion are separately trained and
+evaluated tasks, even if they share components. All seven families remain:
+masks, sunglasses, strong lens glare, hands, obstructing hair, scarves and other
+objects. Preview the automatic removal area for optional correction before
+generation. Preserve visible appearance, clear glasses and non-obstructing hair,
+allowing a small documented margin. Request clearer/less-covered crops when
+usable information is insufficient. Return original, mask and one plausible
+estimate with PNG and optional bundle downloads. Report automatic and assisted
+results separately. A restoration win does not qualify the completion route.
+
+The existing application design, DGP-primary Auto/override objective, five
+milestones, independent final review and bundled inline Playwright checks remain.
+All actual training/gradient work remains manual in tmux on the verified L4;
+existing-VM direct access remains maintenance-only. This update changes scope
+documents, not checkpoints, app routing, scientific gates or training state.
+Historical ready commands and failed pilots below are not reopened. Full goal
+remains incomplete; previous bytes have a hash-verified backup.
+
+---
+
+**Latest verified status — 10 October 2026: multiscale return audited; all64 visual sheets reviewed; all12 treatments rejected. Full goal incomplete.**
+
+The manual L4 diagnostic completed12 independent one-update arms,600 fitting
+exposures and zero complete epochs. Full original-decoder LR0.001 gives
+1.170–1.884% raw structure gain, but changes visible appearance and increases
+clear pixel error24.8–31.5 times. Lower rates/deep-only learning do not supply
+enough useful detail. Every treatment fails unchanged quality requirements;
+no stopped state is resumed or promoted. Current checkpoint/app design remain.
+
+Independent R2 integrity/arithmetic checks preserve the original checker failure
+and every scientific gate decision. All64 planned sheets/2280 exact saved PNG
+cells were inspected; native24 ChokePoint DEV cases remain separately unpaired
+and retain their input-only usable labels. This implementing-assistant review
+is not the goal's independent final review. Final identity pixels remain outside
+tuning. Report: CCTV_DGP_MULTISCALE_CALIBRATION_V1_RESULTS.md.
+
+400 fixed color/detail controls also fail necessary pixel checks. Six fixed
+saved-gradient contrasts support examining active clear/blur RGB reconstruction
+supervision before the first update, while retaining adverse reference slopes.
+These are arithmetic diagnostics, not trained or qualified models. Selected
+next design: CCTV_DGP_POST_MULTISCALE_TRAINING_REVIEW.md. No new executable VM
+packet or additional-epoch run is prepared here; the epoch1/2/5 study stays
+conditional on a passing finite recipe and useful native development review.
+
+All five milestones and seven covering families remain required. Current model,
+original checkpoints, caches, splits, provenance and failed gates are preserved.
+Training remains manual through verified transfers/tmux on the existing L4;
+direct VM access remains maintenance-only. Current guest storage/workload are
+not verified by this local return audit. Historical ready/pending statuses and
+closed commands below are superseded, not authorization to rerun them.
+
+---
+
+**Latest maintenance status — 10 October 2026: backup-verified VM cleanup complete; multiscale diagnostic still awaits the user's manual run. Full goal incomplete.**
+
+Two obsolete Head4 capacity home transfer archives were removed after complete local SHA-256/GZIP backup checks and fresh workload checks. Observed recovery: 3.746 GiB. Fresh guest inventory: 11.181 GiB free; conservative projection after the new packet upload/install: 10.776 GiB, above the retained 7 GiB requirement.
+
+Independent checks preserve 468,473 research metadata entries, 4,111 critical/evidence byte hashes, 346 local bindings and all251 current packet assets. Scientific caches were not deleted; their full bytes were not all rehashed. The deletion proof is exact regular nlink1 files outside the research tree, with unchanged research metadata and critical hashes. All unpacked failed-pilot outputs, states, checkpoints, splits and provenance remain.
+
+The existing verified L4 instance is RUNNING, with an idle GPU and no tmux session at the final snapshot. Maintenance started no VM, model, gradient or training job and did not stop the VM. Upload, install and launch remain manual: CCTV_DGP_MULTISCALE_CALIBRATION_V1_VM.md. Recheck storage/workload before launching; this snapshot is not a future availability guarantee. The previous quality failures and all five restoration/completion milestones remain unchanged. Report: CCTV_DGP_MULTISCALE_STORAGE_CLEANUP_V1.md. Evidence: outputs/cctv_dgp_multiscale_archive_cleanup_v1/.
+
+---
+
+**Latest verified status — 10 October 2026: failed Head4 capacity retained; balanced multiscale/rate diagnostic prepared and independently checked. Manual VM run pending; full goal incomplete.**
+
+The downloaded 50-update Head4 pilot remains rejected: raw structure gain
+0.00608187% versus 1%, two blurred-source group MSE regressions and 53.2186%
+brightness-only share versus the 20% maximum. Its checkpoint, full stopped state,
+original assertions, all saved outputs and failure remain; no failed-state resume.
+
+The saved-gradient review independently checks 1680 products with zero neural,
+gradient or optimizer calls. A favorable averaged initial direction did not
+validate the per-reference recipe: 8/20 individual directions predict worse
+detail in at least one source/cohort group. This is initial TRAIN evidence,
+not a unique causal explanation or a forecast across fifty updates/epochs.
+See CCTV_DGP_POST_HEAD4_CAPACITY_DESIGN_REVIEW.md.
+
+The new initializer preserves all100 current-DGP CPU outputs exactly; ten cases
+are independently replayed. The frozen finite calibration compares deep3 with
+the complete original decoder15, three rates and two balanced exposed TRAIN
+pools. Twelve independent arms have one update/50 fitting exposures each,
+280 preceding gradient queries, separate raw/PNG results and all24 native
+development crops as unpaired review evidence. No final identity pixels enter
+fitting, rate choice or tuning. All64 planned comparison pages require review.
+Archive/member/source/data/launch guards pass. Actual L4 gradients, finite
+outputs, useful native appearance and longer training are still unverified.
+
+The existing VM was API-verified stopped; guest disk space is unknown. Manual
+start/upload/tmux/download commands are in CCTV_DGP_MULTISCALE_CALIBRATION_V1_VM.md.
+Require7GiB after installation, runtime projection, a1GiB reserve and2.5GiB
+output cap. Model work stops at1800seconds and export at600seconds; external
+supervision is also bounded. Local work used no new gradients or updates.
+
+Original1%/10% and appearance requirements remain. Current app checkpoint/model
+selection is unchanged. The proposed additional-epoch1/2/5 study, five milestones,
+independent final review and allseven completion families remain incomplete.
+Native and paired synthetic evidence remain separate; no ethnicity, hidden
+identity or Zamboanga performance claim follows. Historical statuses below are
+superseded; closed pilot commands must not be automatically rerun.
+
+---
+
+**Latest verified status — 10 October 2026: Head4 capacity V1 returned and independently audited; 50 updates failed the unchanged quality requirement. Full goal incomplete.**
+
+The manual L4 training pilot completed all 50 planned optimizer updates (zero
+complete additional epochs; 6.402% of one 781-batch epoch). All three reconnected
+trainable pieces receive positive gradients and their weights change. Raw
+structure gain is 0.00608187% and delivered PNG gain is 0.00578294%, below
+the retained 1% requirement. Both output stages slightly increase pixel error in
+two blurred TRAIN-source groups. Brightness shifts explain 53.2186%
+raw/54.6191% PNG of the measured pixel-error improvement, exceeding
+the unchanged 20% maximum. The stop is an intentional quality rejection after
+evaluation; archive completion is not model qualification.
+
+The unchanged independent checker verifies the 3,586,556,555-byte archive
+(da008028d730db86b7d5dfe92a718474bfee1fdb45e63fb48c5782757800fd3d), all 7,810 case records across
+baseline/candidate snapshots, frozen weights, full optimizer/scheduler/RNG state
+and two fresh CPU replays. Original checkpoints, raw/PNG artifacts and the
+failure remain. Local auditing uses zero gradients/updates. No failed-state
+resume, extra epochs, new training, model/app promotion or gate change follows.
+The current V1 command guide is closed: do not rerun or resume this failed pilot.
+Its previous ready status, disk values and commands below are historical.
+This is paired photographic TRAIN capacity evidence; native development and
+reserved final identities were not evaluated. Two planned diagnostic sheets/10
+TRAIN comparisons were inspected; comprehensive visual review remains pending.
+See CCTV_DGP_HEAD4_CAPACITY_V1_RESULTS.md and
+outputs/cctv_dgp_head4_capacity_v1_independent_audit.json. The earlier prepared
+status below is historical and superseded by this returned failed pilot.
+
+---
+
+**Latest verified status — 10 October 2026: repaired-head4 gradient return audited; backed-up archive cleanup closed; first manual training stage verified. Full goal incomplete.**
+
+The downloaded L4 gradient diagnostic is complete with zero optimizer updates or
+epochs. Independent R2 checks327 members,160 saved vectors,480 component-part
+norms,100 initial raw/PNG/embedding records,40 losses and two fresh CPU replays.
+Allthree repaired connected pieces have finite nonzero improvement gradients in
+both exposed TRAIN cohorts; original equivalents have zero gradients. This is
+learning-path evidence, not restored-image usefulness. The original norm-summary
+checker failure remains; R2's1e-14 allowance affects derived L2 arithmetic only,
+with exact zero/nonzero decisions and unchanged image-quality requirements.
+
+The new independent training initializer preserves all100 CPU outputs exactly,
+the full original fusion tensor and620 other original state entries. Three
+independently owned pieces/147,456 elements are planned trainable. All stored
+normalization, other original parameters and the retained checkpoints remain.
+The selected positive reconstruction loss weights are prospectively reviewed
+against saved TRAIN gradients, including first-Adam weight decay. Those arithmetic
+predictions do not prove finite-step, PNG or native quality improvement.
+
+The new self-contained packet has5505 assets including all5467 unchanged TRAIN
+assets,781 canonical targets and3905 cases. Independent packet audit verifies
+5506 archive members,90 local source bindings, canonical/clear-target equality,
+50 fixed reference batches,100 initial-parity cases, lossless raw storage, safe
+incoming boundaries, Windows training refusal, killed-worker failure retention
+and allfive gcloud transfer commands. No training has been launched by the agent.
+
+Authorized maintenance removes15 exact regular nlink1 home transfer archive
+copies, each matching a complete CRC/hash-verified local backup. It reclaims
+6.210GiB observed. All461,169 research filesystem metadata
+entries and3,973 protected byte hashes remain unchanged. Cache bytes are not all
+rehashed; their retention is additionally proven by disjoint home-only deletions,
+independent-link checks and unchanged full research metadata. No checkpoint,
+split, failure, unpacked training folder, cache, runtime or current new packet is
+deleted. Fresh post-cleanup inventory reports15.027GiB free and an idle GPU.
+This snapshot is not a guarantee for a future launch. The guide's earlier stopped
+API observation is superseded by the fresh running-VM inventory.
+
+Next manual action: **CCTV_DGP_HEAD4_CAPACITY_V1_VM_CURRENT.md**. The original
+prepared guide remains. Current commands pin the verified public SSH host key
+for the VM's new address. Its445,352,976-byte
+execution archive SHA256 is
+`c7651ee72f14b3ac1b2e44f2671982b880f21b88172a87d4a03561dc8c32c8b4`;
+protocol SHA256 is
+`3d6faf634d45867dc2edd7589aa0b5450790e307342f1897f8ea4b859a646532`.
+Require14GiB free after installation. Worker2400s/external2430s,
+each snapshot900s, fitting300s, export600s/external630s, VRAM20GiB,
+return6GiB and free reserve1GiB are enforced. Manual tmux is mandatory.
+
+This first test has a50-update ceiling and250 fitting exposures, checking all3905
+TRAIN outputs at0/50. It completes0 full epochs (50/781 of an epoch). Both raw
+and delivered PNG must meet the retained1% structure and preservation requirements;
+all outputs/embeddings are retained losslessly. Full model/optimizer/scheduler,
+RNG/schedule position, code, environment and failed-gate state are exported.
+Logical full-state portability is distinguished from unproven bitwise CUDA resume.
+Do not repeat a stopped recipe or resume a failed checkpoint.
+
+Additional epochs1,2,5 with maximum5 remain the proposed longer study, requiring
+audited preservation and useful native development gains. This50-update stage
+does not test or waive the later10% capacity requirement, qualify a model, select
+final identities or promote an app checkpoint. All native CCTV evidence remains
+unpaired; synthetic paired metrics remain separate. Ancestral training epochs
+and full historical subject overlap remain unconfirmed.
+
+Allfive milestones and allseven completion families remain binding: masks,
+sunglasses, strong lens glare, hands, obstructing hair, scarves and objects.
+Preserve visible appearance/clear glasses/ordinary hair and existing design;
+request clearer or less-covered input when insufficient. Show automatic masks
+for correction, provide original/mask/one plausible estimate and PNG/bundle
+downloads, and report automatic versus assisted results separately. No ethnicity,
+hidden-identity or real Zamboanga performance claim is supported. DGP-led Auto
+plus override, independent native/final visual review, meaningful regressions
+and bundled inline Playwright app-flow verification are still required.
+
+Current evidence: CCTV_DGP_HEAD4_REACTIVATION_V1_RESULTS.md,
+CCTV_DGP_HEAD4_TRAINING_V1_DESIGN.md,
+outputs/cctv_dgp_head4_capacity_v1_preparation/independent_packet_audit.json and
+outputs/cctv_dgp_head4_archive_cleanup_v1/independent_audit.json.
+Historical status entries below retain their original bytes and prior decisions.
+
+---
+
+**Latest verified status — 10 October 2026: original deepest-path numerical limitation isolated; exact-preserving initialization and manual L4 gradient packet verified. Full goal incomplete.**
+
+The current DGP's deepest head is zero on100 exposed TRAIN inputs. Its two kernels
+and connected fusion slice are near6.305e-40 and are bitwise unchanged from Phase3.
+Other heads remain active. This is one demonstrated branch limitation, not a unique
+explanation of all prior failures or proof of image-quality improvement.
+
+A separate fixed initializer copies our current trained adjacent head/fusion and
+uses six frozen anchors. All100 initial CPU outputs match the current DGP exactly;
+the branch responds on100/100. Independent fresh replays and619 untouched full
+state entries pass. No local gradients, optimizer updates, new epochs or app
+adoption occurred. Original checkpoints, normalization, thresholds and failures remain.
+
+The full input/target audit now covers3,905 TRAIN cases,781 canonical targets and24
+unpaired native development inputs. All5467 TRAIN asset hashes are preserved.
+HQ canonical hashes match; legacy thumbnail-hash mismatches are documented, not
+corruption. Full-corpus motion cases have limited geometric overlap with native
+eye spacing. This does not establish equivalent resolved detail or usable routing.
+
+Next manual action: use **CCTV_DGP_HEAD4_REACTIVATION_V1_VM.md**. The verified
+183,353,481-byte packet is a matched original/repaired gradient diagnostic only:
+160 queries, zero optimizer updates/epochs,600s worker/630s external stop;3GiB
+free required after install. It has not run on the VM. A finite nonzero connected
+gradient pass does not waive the1%-at50/10%-at800 or preservation requirements.
+Additional epochs1/2/5 require a justified changed training recipe and later
+independent capacity/development review. No historical failure is resumed.
+
+All five milestones and seven completion families remain binding. Native CCTV
+stays unpaired; no ethnicity or Zamboanga performance claim is made. Reserved-final
+identities remain outside tuning. Preserve visible appearance and existing design,
+show completion masks for correction, request clearer/less-covered inputs when
+insufficient, and retain original/mask/plausible-result downloads and independent
+final/inline-Playwright requirements. Direct VM connection remains maintenance
+only; all autograd/training is manually launched by the user in tmux.
+
+Current evidence: CCTV_DGP_HEAD4_REACTIVATION_V1_DESIGN.md,
+CCTV_DGP_FULL_TRAINING_COVERAGE_V1_RESULTS.md and
+outputs/cctv_dgp_head4_reactivation_v1_preparation/independent_packet_audit.json.
+The preceding status entries below are retained historical evidence.
+
+---
+
+**Latest verified status - 10 October 2026: finite-guard R1 returned and fully reviewed; conversion and input-coverage diagnostics closed. Full goal incomplete.**
+
+The manual L4 study accepts zero parameter changes and zero epochs. Its frozen
+return checker passes1,629 members,400 raw/PNG records,64 saved aggregate vectors,
+24 comparisons and80 CPU replays. All20 exact-cell pages/400 model outputs have
+primary-assistant development visual review. The proposals remain soft; highest
+PNG structure gain is0.043497%, below1%. Every raw preservation comparison passes,
+but delivered ArcFace regressions reject allthree proposals. Original checkpoints,
+model states, split roles, caches, provenance, terms and failed gates remain.
+
+A separately frozen local conversion check verifies400 rounded PNGs and800 metric
+rows. Nearest rounding approximately halves conversion error, but qualifies no
+proposal, retains recognition failures and introduces negative source gains.
+Historical floor decisions are reproduced. No policy or model is adopted. New
+rounded images are numerically audited, not separately visually qualified.
+
+The input-only coverage review measures100 exposed TRAIN and all24 usable native
+development crops. Sampled degraded TRAIN geometric eye spacing is5.38-21.40 grid
+pixels; native annotation spacing is23.02-47.04 capture pixels. These are geometry,
+not equivalent resolved detail or a full3,905-case corpus audit. Existing Auto
+selects all10 asian_faces clear cases and none of10 FFHQ clear cases, so it cannot
+guarantee a clear-image bypass. All24 native usable labels and source separation
+remain. The older transitive-quality-source omission and preparation failure are
+retained; current sources are prospectively bound. There are zero local DGP or
+completion forwards, gradients, parameter updates or training epochs in these
+two diagnostics; only the conversion audit uses frozen recognizer inference.
+
+Next design: broaden resolution/framing/degradation coverage from genuine audited
+HQ TRAIN references and investigate input-conditioned spatial learning in a
+separate current-DGP copy. This is an evidence-based design hypothesis, not an
+executable training packet. More epochs of the rejected recipe are not justified.
+The current checkpoint remains Phase3 plus two selected fine-tuning epochs; its
+total ancestral count is unestablished. Additional epochs1/2/5 remain a proposed
+five-epoch study after finite qualification, preserving existing quality gates.
+
+All actual training/autograd studies remain manually launched inside tmux on the
+existing L4 until the user names another VM. This turn did not connect, start,
+clean or train on the VM. Returned guest receipts show the human's completed run;
+current power/free-space state was not checked. Earlier stopped-VM statements are
+historical. Direct VM authorization remains inventory-first, hash-bound maintenance
+preserving research and active work. No historical pilot is resumed automatically.
+
+All five milestones remain required: native provenance/terms/overlap/input-only
+criteria; same-input resize/Phase3/DGP/pretrained comparisons; justified finite
+training; primary DGP/Auto/override integration preserving the existing design;
+useful development outputs, independent final review, regressions and bundled
+inline Playwright. Native CCTV remains unpaired, separate from paired synthetic
+PSNR/SSIM. Prioritize Asian capture sources without ethnicity or Zamboanga claims.
+All visible facial features remain in scope; request clearer/less-covered crops
+when information is insufficient. Masks, sunglasses, strong lens glare, hands,
+obstructing hair, scarves and objects require separate plausible completion,
+automatic-area preview/correction, visible-appearance/clear-glasses/ordinary-hair
+preservation, original/mask/result and PNG/bundle downloads, and separate automatic
+versus assisted evidence. Exact hidden identity is not claimed. Goal active/incomplete.
+
+Read CCTV_DGP_FINITE_GUARD_V1_R1_RESULTS.md,
+CCTV_DGP_FINITE_GUARD_QUANTIZATION_V1_RESULTS.md,
+CCTV_DGP_POST_FINITE_GUARD_INPUT_COVERAGE_V1_RESULTS.md and
+CCTV_DGP_POST_FINITE_GUARD_TRAINING_REVIEW.md. This status supersedes historical
+pending/prepared/stopped statements below without deleting their evidence.
+Exact preceding bytes: outputs/cctv_dgp_finite_guard_v1_r1_closure/before/.
+
+
+**Latest status - 10 October 2026: useful restoration and covering-family scope remains incomplete.**
+
+Group-conflicts return is audited and all400 unique outputs reviewed. Every
+quality decision fails; no output is adopted. Automatic covering proposals are
+also audited/reviewed on all36 exposed fixtures and remain unqualified. These
+are development findings, not independent final or native CCTV performance.
+See CCTV_DGP_GROUP_CONFLICTS_V1_RESULTS.md and
+CCTV_DGP_AUTOMATIC_PROPOSAL_SCORE_V1_RESULTS.md.
+
+The user chose the existing L4 VM and the best evidence-based approach. The new
+finite-guard R1 packet is verified for manual execution, not run: at most three
+actual accepted parameter changes, with recomputed cohort/source/profile losses
+and finite raw/PNG preservation checks. It establishes no completed epoch or
+qualified model. The old V1 preparation is superseded and retained. Use only
+CCTV_DGP_FINITE_GUARD_V1_R1_VM.md. The VM was stopped at inspection; disk space
+is unknown. Require7GiB free after installation and live hash-bound inventory
+before cleanup. No VM startup, deletion, training or app promotion occurred.
+
+The existing design, current DGP and original checkpoints stay exact. All
+visible facial features, insufficiency requests, original/mask/plausible-result,
+PNG/bundle downloads, automatic proposal preview/correction, clear-glasses and
+ordinary-hair preservation, seven covering families, separate automatic versus
+assisted results and no exact hidden-identity claim remain required. All five
+milestones, useful native development outputs, independent final review,
+meaningful regressions and bundled inline Playwright app flow remain required.
+Full goal active/incomplete. Exact preceding bytes:
+outputs/cctv_dgp_group_conflicts_v1_closure/before/.
+
+
+**Latest diagnostic status — 10 October 2026: loss-balance evidence reviewed; agreed restoration and covering scope remains incomplete.**
+
+All1,000 loss-balance outputs were reviewed; no trial meets preservation. Small
+TRAIN structure gains do not establish clear facial detail, useful native CCTV,
+independent final performance or successful completion. The app design and
+retained DGP weights remain intact. See CCTV_DGP_ORIGINAL_LOSS_BALANCE_V1_RESULTS.md.
+
+The next verified manual packet measures source/profile loss conflicts before
+training: CCTV_DGP_GROUP_CONFLICTS_V1_VM.md. It has160 gradient queries, zero
+optimizer updates and zero epochs, with conditional reset trials and unchanged
+scientific gates. It is prepared, not run. No failed recipe is resumed.
+
+All seven covering families, automatic removal preview and optional correction,
+preservation of visible appearance/clear glasses/non-obstructing hair, clearer or
+less-covered requests, original/mask/result, PNG/bundle downloads and separate
+automatic/assisted reviews remain required. Independent final review and bundled
+inline Playwright app flow remain required. The full goal is active/incomplete.
+Read the latest PROJECT_HANDOFF.md for precise evidence and execution boundaries.
+Exact preceding bytes: outputs/cctv_dgp_original_loss_balance_v1_closure/before/.
+
+
+**Latest restoration diagnostic status — 9 October 2026: return audited and reviewed; completion requirements remain unchanged.**
+
+The original-feature diagnostic's nine trials remain unqualified on preservation.
+All 1,000 outputs were reviewed as photographic TRAIN development evidence.
+Its small-cohort structure gain does not solve V42 or qualify native CCTV,
+restoration quality, final identities or completion. Current app weights and
+design remain intact. No new completion generation or app change occurs.
+
+A verified finite original-loss-balance diagnostic is ready for manual tmux
+execution: CCTV_DGP_ORIGINAL_LOSS_BALANCE_V1_VM.md. It reuses saved derivatives
+with zero new gradient queries, optimizer updates or epochs. No failed recipe
+is resumed and the existing preservation requirements remain binding.
+
+All seven covering families, automatic mask preview with optional correction,
+visible appearance and clear-glasses/hair preservation, insufficient-information
+handling, original/mask/result, PNG/bundle downloads and separate automatic versus
+assisted review remain required. The full goal, independent final review and
+bundled inline Playwright remain active/incomplete. Read the latest handoff and
+CCTV_DGP_ORIGINAL_FEATURE_PROBE_V1_RESULTS.md for the exact evidence boundary.
+Exact preceding bytes: outputs/cctv_dgp_original_feature_probe_v1_closure/before/.
+
+
+**Latest verified execution — 9 October 2026: V42 training failure is audited; completion scope is unchanged.**
+
+V42 ends at50 decoder updates with no complete epoch. Its failed raw/PNG
+structure and compound appearance requirements prevent adoption. Export success
+and independent artifact verification are not model-quality qualification.
+The original app DGP, design and seven covering families remain in scope.
+
+The earlier proposed-epoch/prepared-only statements below describe the goal-update
+stage. V42 has now been manually run and stopped; it cannot be resumed unchanged.
+CCTV_DGP_V42_RESULTS.md records the return. CCTV_DGP_POST_V42_ARCHITECTURE_REVIEW.md
+records the pending design discussion. Training still follows the manual L4,
+finite-stop and verified-transfer workflow. No native/final pixels or new
+completion-model experiment are used during this closure. Original/mask/result,
+optional mask correction, PNG/bundle downloads, honest insufficient-information
+handling and separate automatic/assisted review remain required.
+
+Exact preceding bytes are retained in
+outputs/cctv_dgp_v42_return_review_v1/before/PRACTICAL_OUTPUT_SCOPE.md.
+
+
+# Practical facial completion scope — current user decisions, 9 October 2026
+
+The canonical current goal is the 9 October 2026 section at the start of
+SYSTEM_WORKFLOW_AND_GOAL.md. It incorporates the user's current-checkpoint
+starting point, evidence-justified multi-epoch training design, native CCTV
+development review, reported USD 34 credit balance, USD 5 migration notification
+and thesis submission/defense around or after 20 November 2026. Read
+CCTV_DGP_CURRENT_TRAINING_IMPROVEMENT_PLAN.md before preparing training.
+
+All seven covering families remain required: masks, sunglasses, strong lens
+glare, hands, obstructing hair, scarves and other objects. Show the automatic
+removal area for optional correction before generation; preserve clear glasses,
+non-obstructing hair and all visible appearance, with a small documented margin.
+Request a clearer or less-covered image when usable information is insufficient.
+Deliver one plausible estimate alongside original and mask, PNG and optional
+original/mask/result bundle downloads, without claiming exact hidden identity.
+Automatic and assisted quality results remain separate.
+
+A training epoch count or a restoration improvement does not qualify completion.
+Preserve the existing app design and DGP-primary workflow. Native unpaired and
+paired synthetic evidence remain separate; independent final review and the
+bundled inline Playwright full app verification remain required.
+
+Training remains manual inside tmux on the existing L4 until a replacement VM
+is identified and verified. No new training or VM connection occurred in this
+goal update. The proposed epochs 1, 2 and 5 comparison is a design outline; its recipe,
+resource bounds and scientific stops must be frozen before transfer.
+
+The exact preceding document is archived in
+outputs/cctv_dgp_goal_update_20261009_v1/before/PRACTICAL_OUTPUT_SCOPE.md.
+The complete earlier document is retained below as historical scope evidence;
+conflicting older training or execution directions are superseded above.
+
+
 # Practical facial completion scope — user decisions, 2 October 2026
 
 **Latest application milestone - 7 October 2026: imported masks require fresh review before generation.**
