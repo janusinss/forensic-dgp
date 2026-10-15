@@ -85,7 +85,7 @@ def main():
         assert guest['gpu_processes']['exit_code']==0 and not guest['gpu_processes']['stdout'].strip()
         assert not any(r['path']=='/home/janusdominic0/cctv-dgp-bank-comparison-v1-results.tar.gz' for r in guest['archives'])
         # Reserve the route-A upload and complete installed packet plus 32 MiB.
-        r=t.read(ROOT/'outputs/cctv_dgp_bank_comparison_v1_r2_preparation.json')['routes'][0]
+        r=t.read(ROOT/'outputs/cctv_dgp_bank_comparison_v1_r3_preparation.json')['routes'][0]
         packet=ROOT/'outputs'/r['name'];p=t.read(packet/'protocol.json')
         install=r['archive_bytes']+sum((packet/n).stat().st_size for n in p['assets_sha256'])+(packet/'protocol.json').stat().st_size+32*1024**2
         guest.update(free_GiB=guest['disk']['free_bytes']/1024**3,install_reservation_bytes=install,conservative_A_post_install_GiB=(guest['disk']['free_bytes']-install)/1024**3,manual_A_space_requirement_met=guest['disk']['free_bytes']-install>=16*1024**3,current_snapshot_not_future_launch_guarantee=True)

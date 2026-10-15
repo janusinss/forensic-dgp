@@ -1,3 +1,19 @@
+# Current recovery location — 13 October 2026
+
+The 4,431 cache payload files have been archived in the user's permanent Drive
+and removed from this local `cache_files` directory after complete streamed
+SHA256 verification, current cloud-hash checks and independent local audit.
+The source VM's actual caches are unchanged. Frozen inventories, verifiers,
+instructions and failed-transfer evidence remain local.
+
+[Verified Drive offload and exact restore commands](<C:/xampp/htdocs/YEAR 4/Testing/GOOGLE_DRIVE_OFFLOAD_COMPLETE_20261013.md>).
+The cache destination is
+`thesis_archive:FORENSIC_DGP_ARCHIVE/Testing/20261012_v1/cache` with the original
+project-relative `cache_files/home/janusdominic0/forensic-dgp/...` layout.
+Restore the needed payloads before running the historical local checker or
+TAR command below. No complete-VM migration or new VM restore is implied.
+The original guide bytes are retained in the dated closure's `documents_before`.
+
 # Local research-cache backup — 7 October 2026
 
 Destination: `C:\xampp\htdocs\YEAR 4\Testing\outputs\cctv_dgp_local_research_cache_backup_20261007_v1`.

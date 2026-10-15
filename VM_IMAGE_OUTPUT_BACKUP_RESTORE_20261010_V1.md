@@ -1,3 +1,18 @@
+# Current portable-TAR location — 13 October 2026
+
+The portable output-recovery TAR is now in the user's permanent Drive archive.
+Its one local TAR copy was removed after complete streamed SHA256 verification,
+matching current Drive IDs/sizes/hashes and independent local retention audit.
+The original downloaded output trees and all backup metadata/restorers remain
+local. The source VM was not contacted or changed by this local offload.
+
+[Verified Drive offload and exact restore commands](<C:/xampp/htdocs/YEAR 4/Testing/GOOGLE_DRIVE_OFFLOAD_COMPLETE_20261013.md>).
+The archive remains SHA256
+`5fe41326fa0ccd6399babf18f4f45582b0fa7d9815d506b998ca29fa637a4c1c`.
+Retrieve the TAR from the `image` batch before running a historical local
+hash/restore command below. The original guide bytes are retained in the
+dated closure's `documents_before`. No new-VM restoration is implied.
+
 # Verified local image-output backup and VM cleanup — 10 October 2026
 
 The user requested additional VM space and a local backup for a later VM change.

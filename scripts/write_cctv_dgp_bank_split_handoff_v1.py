@@ -18,13 +18,13 @@ def save(p,text):
 def main():
     date=datetime.now(timezone(timedelta(hours=8))).date().isoformat()
     audit=read(ANALYSIS/'independent_audit.json');vis=read(ANALYSIS/'visual_review.json')
-    transfer=read(OUT/'cctv_dgp_bank_split_transfer_v1_audit.json')
+    transfer=read(OUT/'cctv_dgp_bank_split_transfer_v2_audit.json')
     cleanup=read(CLEAN/'independent_audit.json');space=read(CLEAN/'inventory_after.json')
     assert audit['complete'] and audit['optimizer_updates_in_VM']==0
     assert vis['complete'] and vis['all_26_planned_sheets_viewed'] and not vis['candidate_comparison_possible']
     assert transfer['complete'] and cleanup['complete'] and cleanup['exact_deletions_checked']==930
     assert space['manual_A_space_requirement_met']
-    prep=read(OUT/'cctv_dgp_bank_comparison_v1_r2_preparation.json');A,B=prep['routes']
+    prep=read(OUT/'cctv_dgp_bank_comparison_v1_r3_preparation.json');A,B=prep['routes']
     aroot=A['name'];astem=A['stem'];apin=A['protocol_sha256']
     report=f'''# Bank comparison v1: returned resource stop, {date}
 
@@ -86,10 +86,15 @@ ablation. Its unchanged fixed JSON schema has a conservative 242,563-byte bound;
 the corrected checker reserves 8 MiB for it. Sealed packets were not edited.
 
 Independent checks compared computational ASTs, all inherited assets, all
-5,616 members of each archive, exact ASCII LF checksums and transfer CLI runs.
+{transfer['routes'][0]['archive_members_checked']:,} A-archive members and
+{transfer['routes'][1]['archive_members_checked']:,} B-archive members, exact ASCII LF checksums and transfer CLI runs.
 Six unsafe mutations per route were rejected (weaker gate, final-role leakage,
 schedule duplicate, removed anchor, wrong route, extra updates). No model,
 gradient or optimizer call occurred in packet preparation/checking.
+The final A r3 packet also corrects an inherited execution declaration: A has
+no generative-prior CUDA fixture, while B retains its one seed fixture. The A r2
+packet and original caption remain historical; training computations did not
+change. B r2 remains the separately prepared comparison route.
 
 ## Storage maintenance and recovery
 
@@ -117,12 +122,12 @@ hash-verified extracted return. This return is a research packet, not a full
 boot-disk/environment backup. Prior scientific-cache/output backups remain.
 
 Evidence: outputs/cctv_dgp_bank_comparison_v1_analysis/import.json,
-independent_audit.json, visual_review.json; outputs/cctv_dgp_bank_split_transfer_v1_audit.json;
+independent_audit.json, visual_review.json; outputs/cctv_dgp_bank_split_transfer_v2_audit.json;
 outputs/cctv_dgp_bank_split_offload_v1_r1/independent_audit.json and inventory_after.json.
 
 ## Next decision
 
-Run A manually with CCTV_DGP_BANK_COMPARISON_V1_R2_VM.md. Return and independently
+Run A manually with CCTV_DGP_BANK_COMPARISON_V1_R3_VM.md. Return and independently
 audit its files before installing/running B; offload new images if needed.
 B remains prepared, unrun. Learning/CUDA/timing/quality can still stop either
 route. A failed quality gate is retained; B starts independently. Review both
@@ -139,7 +144,7 @@ reported automatic/assisted completion families remain required.
 '''
     report=report.replace('[zlib deflate.c]\n(', '[zlib deflate.c](')
     report_path=ROOT/'CCTV_DGP_BANK_COMPARISON_V1_RETURN_REVIEW.md';save(report_path,report)
-    guide=f'''# Bank comparison v1 r2: manual route A
+    guide=f'''# Bank comparison v1 split run: final manual route A (r3)
 
 Run the new **A** root only. The original v1 stopped for storage before training;
 keep its history. A and B now run separately with unchanged scientific checks.
@@ -211,10 +216,10 @@ B is already frozen locally as `{B['stem']}-execution.tar.gz`, protocol
 and VM capacity is checked again. No automatic B launch or app promotion occurs.
 Full goal and all seven completion families remain incomplete.
 '''
-    guide_path=ROOT/'CCTV_DGP_BANK_COMPARISON_V1_R2_VM.md';save(guide_path,guide)
+    guide_path=ROOT/'CCTV_DGP_BANK_COMPARISON_V1_R3_VM.md';save(guide_path,guide)
     handoff=ROOT/'PROJECT_HANDOFF.md';backup=ANALYSIS/'documents_before';backup.mkdir()
     shutil.copyfile(handoff,backup/handoff.name)
-    header=f'''# Latest return and maintenance — {date}: bank v1 storage stop audited; split-route A ready for manual run
+    header=f'''# Latest return and maintenance - {date}: bank v1 storage stop audited; split-route A ready for manual run
 
 The downloaded bank-comparison v1 run stopped before training: zero optimizer
 updates, 9.84 GiB projected result output versus the unchanged 6 GiB cap.
@@ -245,7 +250,7 @@ Original local preparation receipt-key failure was retained; no deletion occurre
 on that attempt. Current VM was not started, stopped or switched by the agent.
 No model/gradient/training work was launched by the agent.
 
-Manual next: CCTV_DGP_BANK_COMPARISON_V1_R2_VM.md, route A only. B is prepared
+Manual next: CCTV_DGP_BANK_COMPARISON_V1_R3_VM.md, route A only. B is prepared
 but requires A's independent return review and another storage check first.
 New actual training stays human/manual tmux. Do not rerun original v1 or resume
 a rejected trained state. Return bytes and restoration/covering-family quality
@@ -253,7 +258,7 @@ are distinct. Full goal ACTIVE and incomplete; no checkpoint is adopted.
 
 Detail: CCTV_DGP_BANK_COMPARISON_V1_RETURN_REVIEW.md.
 Evidence: outputs/cctv_dgp_bank_comparison_v1_analysis/import.json,
-independent_audit.json, visual_review.json; outputs/cctv_dgp_bank_split_transfer_v1_audit.json;
+independent_audit.json, visual_review.json; outputs/cctv_dgp_bank_split_transfer_v2_audit.json;
 outputs/cctv_dgp_bank_split_offload_v1_r1/independent_audit.json and inventory_after.json.
 Exact previous PROJECT_HANDOFF.md bytes: analysis/documents_before/PROJECT_HANDOFF.md.
 All older sections below are historical.

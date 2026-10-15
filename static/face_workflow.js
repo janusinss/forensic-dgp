@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const results = byId('results-grid');
     const standby = byId('standby').cloneNode(true);
     let file = null, original = null, originalWidth = 0, originalHeight = 0;
-    let detectedMask = null, tool = 'paint', history = [], version = 0;
+    const undoFrameLimit = 12, undoByteLimit = 96*1024*1024;
+    let detectedMask = null, tool = 'paint', history = [], historyBytes = 0, version = 0;
     let controller = null, busy = false, maskReady = false, drawing = false;
     let brushPoint = null, lastPoint = null, brushVisible = false;
 
@@ -49,22 +50,35 @@ document.addEventListener('DOMContentLoaded', () => {
         syncControls();
     };
     const saveUndo = () => {
-        history.push(maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height));
-        if (history.length > 12) history.shift();
+        const frameBytes = maskCanvas.width*maskCanvas.height*4;
+        while (history.length && (history.length >= undoFrameLimit || historyBytes+frameBytes > undoByteLimit)) {
+            historyBytes -= history.shift().data.byteLength;
+        }
+        const snapshot = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+        history.push(snapshot); historyBytes += snapshot.data.byteLength;
         syncControls();
+    };
+    const normalizeMask = (left=0, top=0, width=maskCanvas.width, height=maskCanvas.height) => {
+        if (width <= 0 || height <= 0) return;
+        const pixels = maskCtx.getImageData(left, top, width, height);
+        for (let i = 0; i < pixels.data.length; i += 4) {
+            const value = pixels.data[i] >= 128 ? 255 : 0;
+            pixels.data[i] = pixels.data[i+1] = pixels.data[i+2] = value;
+            pixels.data[i+3] = 255;
+        }
+        maskCtx.putImageData(pixels, left, top);
     };
     const renderMask = () => {
         if (!original) return;
-        const pixels = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-        const green = overlayCtx.createImageData(maskCanvas.width, maskCanvas.height);
-        for (let i = 0; i < pixels.data.length; i += 4) {
-            const selected = pixels.data[i] >= 128;
-            pixels.data[i] = pixels.data[i+1] = pixels.data[i+2] = selected ? 255 : 0;
-            pixels.data[i+3] = 255;
+        // The preview is disposable; native removal pixels never pass through it.
+        overlayCtx.imageSmoothingEnabled = false;
+        overlayCtx.drawImage(maskCanvas, 0, 0, overlay.width, overlay.height);
+        const green = overlayCtx.getImageData(0, 0, overlay.width, overlay.height);
+        for (let i = 0; i < green.data.length; i += 4) {
+            const selected = green.data[i] >= 128;
             green.data[i] = 16; green.data[i+1] = 185; green.data[i+2] = 129;
             green.data[i+3] = selected ? 135 : 0;
         }
-        maskCtx.putImageData(pixels, 0, 0);
         overlayCtx.putImageData(green, 0, 0);
         ctx.drawImage(original, 0, 0, editor.width, editor.height);
         ctx.drawImage(overlay, 0, 0);
@@ -79,11 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const scale = Math.min(1, 512/Math.max(originalWidth, originalHeight));
         editor.width = Math.max(1, Math.round(originalWidth*scale));
         editor.height = Math.max(1, Math.round(originalHeight*scale));
-        maskCanvas.width = overlay.width = editor.width;
-        maskCanvas.height = overlay.height = editor.height;
-        maskCtx.fillStyle = '#000000'; maskCtx.fillRect(0, 0, editor.width, editor.height);
+        maskCanvas.width = originalWidth; maskCanvas.height = originalHeight;
+        overlay.width = editor.width; overlay.height = editor.height;
+        maskCtx.fillStyle = '#000000'; maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
         brushPoint = { x: editor.width/2, y: editor.height/2 };
-        detectedMask = null; history = []; maskReady = false;
+        detectedMask = null; history = []; historyBytes = 0; maskReady = false;
         byId('preview-image').src = image.src;
         byId('preview-image').classList.remove('hidden');
         byId('drop-zone').classList.add('has-image');
@@ -94,18 +108,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     const loadMask = image => {
         maskCtx.imageSmoothingEnabled = false;
-        maskCtx.drawImage(image, 0, 0, editor.width, editor.height);
+        maskCtx.drawImage(image, 0, 0, maskCanvas.width, maskCanvas.height);
+        normalizeMask();
         maskReady = true;
         renderMask();
     };
-    const maskBlob = () => new Promise(resolve => {
-        const exported = document.createElement('canvas');
-        exported.width = originalWidth; exported.height = originalHeight;
-        const exportCtx = exported.getContext('2d');
-        exportCtx.imageSmoothingEnabled = false;
-        exportCtx.drawImage(maskCanvas, 0, 0, originalWidth, originalHeight);
-        exported.toBlob(resolve, 'image/png');
-    });
+    const maskBlob = () => new Promise(resolve => maskCanvas.toBlob(resolve, 'image/png'));
     const responseJson = async response => {
         const data = await response.json();
         if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'The image or removal mask is invalid.');
@@ -126,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (version !== requestVersion) return;
             installOriginal(source);
             loadMask(mask);
-            detectedMask = maskCtx.getImageData(0, 0, editor.width, editor.height);
+            detectedMask = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
             byId('mask-message').textContent = data.message;
         } catch (error) {
             if (version !== requestVersion || error.name === 'AbortError') return;
@@ -178,8 +186,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ['paint', 'erase'].forEach(value => { byId(value+'-btn').classList.toggle('active', value === name); byId(value+'-btn').setAttribute('aria-pressed', String(value === name)); });
     }));
     byId('brush-size').addEventListener('input', () => { byId('brush-value').textContent = byId('brush-size').value; renderMask(); });
-    byId('clear-btn').addEventListener('click', () => { saveUndo(); maskCtx.fillStyle = '#000000'; maskCtx.fillRect(0, 0, editor.width, editor.height); maskReady = true; renderMask(); changed(); });
-    byId('undo-btn').addEventListener('click', () => { const previous = history.pop(); if (previous) { maskCtx.putImageData(previous, 0, 0); renderMask(); changed(); } });
+    byId('clear-btn').addEventListener('click', () => { saveUndo(); maskCtx.fillStyle = '#000000'; maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height); maskReady = true; renderMask(); changed(); });
+    byId('undo-btn').addEventListener('click', () => { const previous = history.pop(); if (previous) { historyBytes -= previous.data.byteLength; maskCtx.putImageData(previous, 0, 0); renderMask(); changed(); } });
     byId('reset-btn').addEventListener('click', () => { if (detectedMask) { saveUndo(); maskCtx.putImageData(detectedMask, 0, 0); renderMask(); changed(); } });
     byId('review-confirm').addEventListener('change', syncControls);
     byId('input-review-decision').addEventListener('change', () => {
@@ -214,11 +222,20 @@ document.addEventListener('DOMContentLoaded', () => {
         return { x: Math.max(0, Math.min(editor.width, (event.clientX-rect.left)*editor.width/rect.width)), y: Math.max(0, Math.min(editor.height, (event.clientY-rect.top)*editor.height/rect.height)) };
     };
     const stroke = (from, to) => {
+        const scaleX = maskCanvas.width/editor.width, scaleY = maskCanvas.height/editor.height;
+        const radius = Number(byId('brush-size').value)*editor.width/512;
+        maskCtx.save(); maskCtx.scale(scaleX, scaleY);
         maskCtx.strokeStyle = maskCtx.fillStyle = tool === 'paint' ? '#ffffff' : '#000000';
         maskCtx.lineWidth = Number(byId('brush-size').value)*editor.width/256;
         maskCtx.lineCap = 'round'; maskCtx.lineJoin = 'round';
         maskCtx.beginPath(); maskCtx.moveTo(from.x, from.y); maskCtx.lineTo(to.x, to.y); maskCtx.stroke();
         maskCtx.beginPath(); maskCtx.arc(to.x, to.y, maskCtx.lineWidth/2, 0, Math.PI*2); maskCtx.fill();
+        maskCtx.restore();
+        const left = Math.max(0, Math.floor((Math.min(from.x, to.x)-radius)*scaleX)-1);
+        const top = Math.max(0, Math.floor((Math.min(from.y, to.y)-radius)*scaleY)-1);
+        const right = Math.min(maskCanvas.width, Math.ceil((Math.max(from.x, to.x)+radius)*scaleX)+1);
+        const bottom = Math.min(maskCanvas.height, Math.ceil((Math.max(from.y, to.y)+radius)*scaleY)+1);
+        normalizeMask(left, top, right-left, bottom-top);
         maskReady = true; renderMask();
     };
     editor.addEventListener('pointerdown', event => {

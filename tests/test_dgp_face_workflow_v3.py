@@ -120,6 +120,56 @@ class WorkflowTests(unittest.TestCase):
         self.mask[0, 0] = 1
         self.assertEqual(self.generate(restoration="off")["metadata"]["mask_source"], "assisted_reviewed")
 
+    def test_large_native_provenance_retains_edits_lost_by_256_resizing(self):
+        for width, height in ((1024, 768), (1280, 720)):
+            with self.subTest(native_size=(width, height)):
+                rgb = np.random.default_rng(width).integers(0, 256, (height, width, 3), dtype=np.uint8)
+                raw_mask = np.zeros((height, width), np.uint8)
+                raw_mask[height//3:height//2, width//3:width//2] = 1
+                fake = {"original": rgb, "raw_mask": raw_mask, "mask": raw_mask.copy(),
+                        "proposal_margin_pixels": 3}
+                with patch.object(FaceWorkflow, "review_mask", return_value=fake):
+                    proposed = self.engine.review_mask(rgb)["mask"].copy()
+
+                # Native-sized inputs still require both reviews and visible support
+                # before any mocked component is called.
+                prior_calls = self.engine.generator.calls + self.engine.restorer.calls
+                for decision, confirmed in (("", True), ("needs_clearer", True),
+                                            ("out_of_scope", True), ("usable", False)):
+                    with self.assertRaises(ValueError):
+                        self.engine.generate(rgb, proposed, "off", decision, confirmed)
+                with self.assertRaisesRegex(ValueError, "less-covered"):
+                    self.engine.generate(rgb, np.ones_like(proposed), "off", "usable", True)
+                self.assertEqual(self.engine.generator.calls + self.engine.restorer.calls, prior_calls)
+
+                def generate(mask):
+                    return self.engine.generate(rgb, mask, "off", "usable", True)
+
+                exact = generate(proposed)
+                self.assertEqual(exact["metadata"]["mask_source"], "automatic_reviewed")
+                self.assertEqual(exact["metadata"]["native_mask_sha256"], array_sha(proposed))
+                canvas, observed, delivered_mask, _ = prepare_crop(rgb, proposed)
+                np.testing.assert_array_equal(exact["output"][~delivered_mask], canvas[~delivered_mask])
+                self.assertTrue((observed & ~delivered_mask).any())
+
+                # A real native edit may disappear from the 256 canvas. Provenance
+                # must compare native bytes rather than silently declaring it auto.
+                edited = proposed.copy()
+                edited[0, 0] = 1
+                self.assertNotEqual(array_sha(edited), array_sha(proposed))
+                np.testing.assert_array_equal(prepare_crop(rgb, edited)[2], delivered_mask)
+                assisted = generate(edited)
+                self.assertEqual(assisted["metadata"]["mask_source"], "assisted_reviewed")
+                self.assertEqual(assisted["metadata"]["native_mask_sha256"], array_sha(edited))
+                np.testing.assert_array_equal(assisted["output"], exact["output"])
+
+                reset = generate(proposed.copy())
+                self.assertEqual(reset["metadata"]["mask_source"], "automatic_reviewed")
+                np.testing.assert_array_equal(reset["output"], exact["output"])
+                self.assertEqual(reset["metadata"]["additional_mask_expansion"], 0)
+        self.assertEqual(self.engine.restorer.calls, 0)
+        self.assertEqual(self.engine.generator.calls, 6)
+
     def test_invalid_models_never_produce_a_result(self):
         class Bad(torch.nn.Module):
             def forward(self, image):
