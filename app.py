@@ -41,6 +41,8 @@ app = FastAPI(title="Optimal Face Restoration Web UI")
 # failed restoration route for the new covering-removal workflow.
 from face_workflow_web import router as face_workflow_router
 app.include_router(face_workflow_router)
+from research_restoration_web import router as research_restoration_router
+app.include_router(research_restoration_router)
 
 # Mount static files (CSS, JS)
 os.makedirs("static", exist_ok=True)

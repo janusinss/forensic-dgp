@@ -26,14 +26,22 @@ def main():
     causal = read(ANALYSIS/'independent_causal_review.json')
     closure = read(ANALYSIS/'independent_readback.json')
     assert all(item['complete'] for item in [imported,audit,repair,causal,closure])
-    assert imported['protocol_sha256'] == audit['protocol_sha256'] == repair['protocol_sha256'] == causal['protocol_sha256'] == PIN
+    assert closure['full_saved_numerical_audit_complete'] is True
+    assert imported['protocol_sha256'] == audit['protocol_sha256'] == causal['protocol_sha256'] == PIN
+    assert repair['final_saved_audit_sha256'] == sha(ANALYSIS/'independent_audit_r2.json')
     assert audit['exact_retained_RAW_and_floor_PNG_cases'] == 400
     assert audit['batch5_objective_rows_checked'] == 80
     assert audit['returned_run_counts']['gradient_queries'] == 70
     assert audit['returned_run_counts']['optimizer_updates'] == 0
+    assert audit['source_A0_all_model_tensor_bytes_exact'] is True
+    assert audit['saved_model_and_CPU_CUDA_RNG_before_after_exact'] is True
+    assert audit['model_qualified'] is False
+    for state in ['probe_1_16','probe_1_4','fit_u001']:
+        for gate in audit['all17_RAW_and17_PNG_original_gates_retained'][state].values():
+            assert gate['pass'] is False and gate['preservation_failures']
     assert repair['original_checker_passed_unmodified'] is False
     assert repair['derived_R2_numerical_checks_complete'] is True
-    assert repair['scientific_thresholds_changed'] is False
+    assert repair['scientific_thresholds_or_bounds_changed'] is False
     assert sha(OUT/'cctv_dgp_face_code_fit_vm_v12_r2/weights/dgp_v2.pth') == CHECKPOINT
     archive = OUT/'cctv-dgp-decoder-activation-v1-results.tar.gz'
     assert sha(archive) == imported['archive_sha256']
@@ -101,6 +109,8 @@ structure-error reduction is **0.113913%**, PNG **0.128470%**, with **30 RAW and
 Structure means landmark-supported high-frequency luminance MSE reduction;
 recognizer similarity is a separate metric. These are exposed photographic
 TRAIN results, not native CCTV, final review or identity recovery.
+Dataset labels do not establish ethnicity or local performance; no Zamboanga
+CCTV evidence was created by this diagnostic.
 
 R2 changes only declared checker boundaries. Four missing historical metadata
 fields match the frozen parent gate exactly. Exact dyadic integer arithmetic
@@ -167,9 +177,11 @@ prospective contract and independent review.
    the other 18 provide essential finite checks rather than fitted derivatives.
 4. Bind and inspect every planned visual sheet for useful eyes, brows, nose,
    mouth, jaw and visible appearance. Tiny loss changes or PNG-unchanged images
-   do not establish useful detail. A TRAIN pass still needs the frozen native
-   DEV comparisons, original/pretrained comparators and independent final
-   evaluation before any app promotion or extra-epoch continuation.
+   do not establish useful detail. TRAIN and frozen native/paired DEV evidence,
+   with original/pretrained comparators, may justify a finite continuation.
+   Finish training selection and freeze the candidate and processing before
+   independent final evaluation. Reserved final results must not select extra
+   epochs; final review is required before app qualification or promotion.
 5. Stop this declared experiment if the solve is infeasible or every allowed
    placement fails. Return to reconstruction/data design review; do not add a
    fourth scale or resume the failed Adam recipe. Infeasibility concerns this
@@ -181,6 +193,23 @@ profile losses and exact corrected batch-five path are now exposed. It must
 not reproduce those failed methods under a new name. A solver that cannot
 represent the required constraints must report that limitation before any
 finite neural proposal is made.
+
+The solver's success flag will not admit a candidate. For example, the official
+SciPy 1.15.3 HiGHS documentation gives a default primal feasibility tolerance
+of 1e-7; that cannot by itself certify this experiment's 1e-12 MSE allowance.
+This is a comparison of documented numerical tolerances, not a claim about the
+installed VM solver version.
+[Official SciPy options](https://docs.scipy.org/doc/scipy-1.15.3/reference/optimize.linprog-highs-ds.html).
+Freeze scaling, version, options and finite iteration/time limits before any
+solve. Independently certify unscaled constraints and the actual rounded
+float32 displacement with exact dyadic or outward-bounded arithmetic; reject
+an uncertain certificate. A nonlinear radius must not silently become a
+coefficient box: the documented second-order-cone form supports Euclidean
+norm constraints, while a conservative box would define a different search.
+[Official cone-program example](https://www.cvxpy.org/examples/basic/socp.html).
+Failure to obtain a certified candidate is not a proof of whole-model
+infeasibility. The sign-dependent clipped mean/brightness terms also need an
+explicit derivation; they cannot simply be declared linear.
 
 Route A remains a DeblurGAN-v2-compatible conditional restorer; cached external
 GAN features are not injected into this A path. This is not a newly trained GAN

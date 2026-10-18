@@ -1,0 +1,13 @@
+# Filter TRAIN admission data v2
+
+This is data preparation only: 64 deterministic, license/source-category stratified photographs from the retained391 historical TRAIN references, with eight prospective fixed corruption profiles each. All512 cases require input-only review and a separate explicit finite pilot protocol before optimization. The53 historical DEV references, native CCTV, user wild stress images and reservedFINAL identities are excluded. This sample is not the complete TRAIN population or an evaluation cohort.
+
+Clean256 PNG bytes are retained exactly and checked against direct RGB1024 LANCZOS256. Clean512 derives directly from RGB1024 LANCZOS512. The observed canvas is direct RGB1024 BILINEAR256. Gaussian, repeated-row and mosaic arithmetic remains bound to the preserved v1 CPU filter source; no exposure, face alignment, warp, stochastic operation, model or neural framework is used.
+
+The new local128-square position is determined per photograph by the prospective source-byte SHA256 rule in approved_profiles.json. Positions vary on a16-pixel grid; there is no modification of the old fixed-center filter implementation. These are synthetic corruption footprints, not face segmentation, completion masks or object removal areas. Exact original pixels remain outside each local footprint.
+
+The32 input-only review sheets contain16 exact256-pixel cells each. Profile order is globalmosaic8, localmosaic8, localGaussian3, repeatedrows4/.75, Gaussian2.4, horizontal anisotropic blur, vertical anisotropic blur, clear. Clear is withheld until the final four sheets. Earlier decisions must be locked before clear/clean references are viewed. This is not blinded to other degraded versions of the same photograph. No readable/insufficient labels or threshold are inferred automatically. Row cases retain their initial strong-control exclusion unless a future explicit protocol admits individually reviewed readable cases; no old exclusion is relaxed.
+
+Every source photo retains its exact per-photo attribution and license URL; FFHQ collection and pretraining-overlap limitations remain in the pinned cohort contract. File-byte uniqueness does not establish person-identity nonoverlap or authorize new uses. No ethnicity, native CCTV or Zamboanga performance claim is made.
+
+Run from the workspace with the six required CLI flags shown by --help. The output namespace must be new under outputs/. Caps are1300 files,512MiB and600 seconds; partial failures remain in place with failure.json. Inputs and producer dependencies are hash-checked before and after generation. Actual model training is separate, manual and confined to the authorized finite L4/tmux workflow.

@@ -1,3 +1,30 @@
+# USED: activation measurement audited; preservation conflict isolated — 15 October 2026
+
+**Do not rerun the activation packet or resume the failed optimizer.** The
+downloaded manual diagnostic completed 70 gradient queries, zero updates and
+no new direction. A separate local R2 audit verifies 400 exact retained RAW/PNG
+controls, 80 actual batch-five objectives, saved gradients and exact restored
+model/RNG states. The original VM/local and R1 checker stops remain preserved;
+explicit metadata/schema repairs do not change scientific gates. The user's
+diagnostic answer selects the best approach: an explicit saved-evidence schema.
+
+The mean objective rises from 5.200000 to 5.218366 at the smallest tested
+placement. Low-light/compound preservation losses increase despite improving
+landmark slopes; tiny regression margins activate well before that placement.
+Batch-five versus batch-fifteen differences are too small to explain this
+failure. All retained nonzero proposals still fail RAW/PNG preservation.
+No model qualifies, replaces the baseline or earns additional epochs.
+
+[Audited results and checker limitations](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_DECODER_ACTIVATION_V1_RESULTS.md>).
+[Next bounded feasibility design requirements](<C:/xampp/htdocs/YEAR 4/Testing/CCTV_DGP_POST_ACTIVATION_V1_REVIEW.md>).
+
+Next work must establish a distinct preservation-aware direction before a new
+training trajectory. No new execution packet is certified by this decision.
+All five milestones, independent native DEV/final review and seven covering
+families remain active. Checkpoints, splits, caches, failed states and exact
+historical instruction bytes stay retained. Prior PREPARED/UNRUN commands below
+are historical and superseded by this USED status.
+
 # Decoder activation V1: five manual steps
 
 **VERIFIED / PREPARED / UNRUN. This measures the failed direction; it performs
