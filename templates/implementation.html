@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta name="referrer" content="no-referrer">
+  <title>ZCPO // Face restoration</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/face_workflow.css">
+  <link rel="stylesheet" href="/static/research_restoration.css">
+  <link rel="stylesheet" href="/static/research_surroundings_restoration_v1.css">
+  <link rel="stylesheet" href="/static/research_brush_restoration_v1.css">
+</head>
+<body>
+  <div class="terminal-layout">
+    <header class="terminal-header border-bottom">
+      <div class="logo-block border-right"><div class="logo-text"><h1>ZCPO // FORENSICS</h1><span class="mono-label">REVIEWED U96 RESTORATION</span></div></div>
+      <div class="status-block"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div>
+    </header>
+    <main class="terminal-body">
+      <section class="panel input-panel border-right" aria-labelledby="restoration-input-heading">
+        <div class="panel-header border-bottom"><h2 id="restoration-input-heading">01 // FACE_INPUT</h2><span class="mono-label">ONE FRONTAL OR MILD-TURN CROP</span></div>
+        <div class="panel-content">
+          <p class="help-text">Experimental U96 workflow. Native CCTV usefulness and final acceptance remain under review. This page restores visible information; completion and covering removal are separate.</p>
+          <form id="brush-form" class="context-form">
+            <section aria-labelledby="brush-upload-heading">
+              <h2 id="brush-upload-heading">1. Inspect the original</h2>
+              <label for="brush-file">PNG or JPEG face crop, up to 10 MiB</label><input id="brush-file" type="file" accept="image/png,image/jpeg">
+              <img id="upload-preview" class="hidden" width="160" height="160" alt="Oriented original face crop before preparation">
+              <label for="brush-review">Visible facial information</label>
+              <select id="brush-review"><option value="">Inspect the original first</option><option value="usable">One face with readable visible facial structure</option><option value="needs_clearer">Too degraded or covered to read the face</option><option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option></select>
+              <p class="help-text">Request a clearer or less-covered crop when the visible eyes, nose and mouth cannot be meaningfully inspected. A plausible sharper face is not proof of recovered identity.</p>
+            </section>
+            <section aria-labelledby="restoration-mode-heading">
+              <h2 id="restoration-mode-heading">2. Choose restoration</h2>
+              <label for="brush-model">Restoration model</label>
+              <select id="brush-model"><option value="u96">U96 · conservative default</option><option value="u64">u64 · experimental comparison</option></select>
+              <label for="brush-restoration">Visible face restoration</label>
+              <select id="brush-restoration"><option value="auto">Auto · original-input blur/noise suggestion</option><option value="on">On · restore with the selected model</option><option value="off">Off · keep the original resized input</option></select>
+              <p class="help-text">Auto assesses the original before optional preparation. You can override it. On uses one selected-model inference call; Off uses none and skips preparation.</p>
+              <label for="brush-preparation">Input preparation</label>
+              <select id="brush-preparation"><option value="bypass">Bypass · use the original upload</option><option value="manual">Optional manual Protect + Apply</option></select>
+              <p class="help-text">Globally soft, unknown or mixed inputs can bypass. Surroundings blur helped some examples but was mixed or adverse in the paired study. Automatic blur detection and matching remain unavailable.</p>
+            </section>
+            <section id="brush-edit-section" class="hidden" aria-labelledby="brush-edit-heading">
+              <h2 id="brush-edit-heading">3. Review Protect and Apply</h2>
+              <p id="brush-dimensions" class="help-text"></p>
+              <div class="brush-controls">
+                <label for="brush-plane">Area<select id="brush-plane"><option value="protect">Protect · green</option><option value="apply">Apply · blue</option></select></label>
+                <label for="brush-action">Action<select id="brush-action"><option value="paint">Paint</option><option value="erase">Erase selected area</option></select></label>
+                <label for="brush-size">Brush diameter, native pixels<input id="brush-size" type="number" min="1" max="160" step="1" value="25"></label>
+              </div>
+              <p class="help-text">Protect the complete face, existing blur and soft edges. Apply starts empty: paint only where added blur is permitted. Green wins overlap. Every protected pixel and every pixel outside Apply stays unchanged during preparation.</p>
+              <canvas id="brush-editor" tabindex="0" role="img" aria-label="Native Protect and Apply editor. Arrow keys move the cursor. Space paints or erases. Coordinate fields and rectangle controls are available below."></canvas>
+              <p id="brush-cursor" class="help-text" aria-live="polite">Paint or use the coordinate controls.</p>
+              <div class="brush-controls"><label for="brush-x">Cursor X<input id="brush-x" type="number" min="0" step="1" value="0"></label><label for="brush-y">Cursor Y<input id="brush-y" type="number" min="0" step="1" value="0"></label><button id="brush-stamp" class="tool-btn" type="button">Use brush at cursor</button></div>
+              <div class="context-actions"><button id="brush-fill" class="tool-btn" type="button">Permit all surroundings</button><button id="brush-undo" class="tool-btn" type="button" disabled>Undo</button><button id="brush-clear" class="tool-btn" type="button">Clear selected area</button><button id="brush-reset" class="tool-btn" type="button">Reset both areas</button></div>
+              <details><summary>Start Protect with a rectangle</summary><div class="context-bounds"><label for="brush-left">Left pixel<input id="brush-left" type="number" min="0" step="1" value="0"></label><label for="brush-top">Top pixel<input id="brush-top" type="number" min="0" step="1" value="0"></label><label for="brush-right">Right pixel<input id="brush-right" type="number" min="0" step="1" value="0"></label><label for="brush-bottom">Bottom pixel<input id="brush-bottom" type="number" min="0" step="1" value="0"></label></div><button id="brush-rectangle" class="tool-btn" type="button">Add Protect rectangle</button></details>
+              <label for="brush-radius">Approximate surroundings blur radius at 256 pixels<input id="brush-radius" type="number" min="0" max="12" step="0.5" value="1"></label>
+              <p class="help-text">Manual Gaussian blur only, starting at radius 1. The preview adds an 8-pixel protection margin and a 16-pixel outside transition entirely within Apply. It rebuilds from the immutable original; previews never accumulate blur. No arbitrary noise, JPEG or mosaic is copied.</p>
+              <button id="brush-preview" class="tool-btn" type="button" disabled>Preview permitted surroundings</button>
+              <label class="context-confirm" for="brush-confirm"><input id="brush-confirm" type="checkbox" disabled>I reviewed the current preview. Existing facial blur and soft edges are protected; Apply contains only permitted surroundings.</label>
+            </section>
+            <section aria-labelledby="brush-run-heading">
+              <h2 id="brush-run-heading">4. Restore the selected input</h2>
+              <label class="context-confirm" for="brush-include-bundle"><input id="brush-include-bundle" type="checkbox" checked>Include original, masks, preparation, result and available RAW records in a ZIP</label>
+              <div class="context-actions"><button id="brush-run" class="execute-btn" type="submit" disabled>RESTORE SELECTED INPUT</button><button id="brush-refresh" class="tool-btn" type="button">Check service</button></div>
+              <p class="help-text">This sends one selected input to one model. It does not run covering detection or completion. Input protection applies only to preparation; the generated face can still change appearance.</p>
+            </section>
+            <p id="brush-progress" class="help-text" role="status" aria-live="polite">Checking the reviewed local service.</p>
+            <p id="brush-error" class="workflow-error hidden" role="alert"></p>
+          </form>
+        </div>
+      </section>
+      <section class="panel results-panel" aria-labelledby="restoration-results-heading">
+        <div class="panel-header border-bottom"><h2 id="restoration-results-heading">02 // RESTORATION_REVIEW</h2><span class="mono-label">ORIGINAL · SELECTED INPUT · ONE RESULT</span></div>
+        <div class="panel-content scrollable">
+          <p id="brush-standby" class="result-message">Upload and inspect one crop. Optional Protect + Apply preparation is reviewed before generation. Downloaded outputs remain experimental estimates.</p>
+          <section id="brush-preview-section" class="hidden" aria-labelledby="brush-preview-heading">
+            <h2 id="brush-preview-heading">Preparation preview</h2>
+            <div class="brush-previews"><figure><img id="brush-original" alt="Immutable oriented native original"><figcaption>Original upload</figcaption></figure><figure><img id="brush-overlay" alt="Green protection, blue permission and amber outside transition"><figcaption>Green: unchanged Protect. Blue: permitted Apply. Amber: transition inside Apply.</figcaption></figure><figure><img id="brush-derived" alt="Actual native input after optional preparation"><figcaption>Actual prepared input</figcaption></figure></div>
+            <p id="brush-preservation" class="help-text"></p>
+            <div class="context-actions"><a id="brush-prepared-download" class="tool-btn" download="reviewed-prepared-input.png">Download prepared PNG</a><a id="brush-preview-download" class="tool-btn" download="Protect-Apply-preparation.zip">Download preparation evidence</a></div>
+          </section>
+          <div id="brush-results" class="results-container has-estimate hidden" aria-label="Original, selected input and one restoration result">
+            <article class="result-card"><div class="result-card-header"><h3 class="rank-pill">ORIGINAL / RESIZE</h3><span class="mode-pill">256 × 256</span></div><div class="result-image-container"><img id="brush-result-input" class="result-image workflow-image" width="256" height="256" alt="Original input resized to 256 pixels"></div><div class="workflow-card-caption"><a id="brush-download-input" class="tool-btn" download="original-256.png">Download PNG</a></div></article>
+            <article class="result-card"><div class="result-card-header"><h3 id="brush-selected-heading" class="rank-pill">SELECTED INPUT</h3><span class="mode-pill">256 × 256</span></div><div class="result-image-container"><img id="brush-result-prepared" class="result-image workflow-image" width="256" height="256" alt="Selected original or reviewed prepared input at 256 pixels"></div><div class="workflow-card-caption"><a id="brush-download-prepared" class="tool-btn" download="selected-input-256.png">Download PNG</a></div></article>
+            <article class="result-card primary-card"><div class="result-card-header"><h3 id="brush-output-heading" class="rank-pill">U96 RESULT</h3><span class="mode-pill">EXPERIMENTAL</span></div><div class="result-image-container"><img id="brush-result-output" class="result-image workflow-image" width="256" height="256" alt="One U96 restoration result or original resized input when restoration is off"></div><div class="workflow-card-caption"><a id="brush-download-output" class="tool-btn" download="U96-restoration.png">Download PNG</a></div></article>
+          </div>
+          <p id="brush-result-summary" class="help-text hidden"></p>
+          <div id="brush-result-downloads" class="result-downloads hidden"><a id="brush-result-bundle" class="tool-btn" download="U96-restoration-evidence.zip">Download original + masks + preparation + result evidence</a></div>
+        </div>
+      </section>
+    </main>
+    <footer class="terminal-footer border-top"><span class="mono-label">U96 · RESTORATION FIRST</span><span class="mono-label">LOCAL INFERENCE · REVIEWED INPUT · 256 × 256</span></footer>
+  </div>
+  <script src="/static/implementation.js"></script>
+</body>
+</html>

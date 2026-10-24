@@ -1,0 +1,10 @@
+# Keep verified model architecture source bytes portable across Windows clones.
+*.py text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.MD text eol=lf
+*.txt text eol=lf
+*.bat text eol=crlf
