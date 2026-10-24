@@ -1,3 +1,41 @@
+# IMPLEMENTATION branch ready for local restoration testing — 24 October 2026
+
+The separate [IMPLEMENTATION branch](https://github.com/janusinss/forensic-dgp/tree/IMPLEMENTATION)
+packages the restoration-only application. Run `install.bat`, then `start.bat`.
+Setup downloads three size/SHA-256-verified assets from the repository's
+[model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1).
+The short, checkout-specific Python environment avoids Windows path-length errors.
+The existing research checkout and original checkpoints remain preserved.
+
+U96 is the conservative functional default; retained u64 is selectable. The
+642-output / 321-paired-DEV saved comparison found better average u64 scores,
+but worse normal-blur PNG error in 46/48 cases. Neither model passes every
+preservation requirement. See [MODEL_CARD.md](MODEL_CARD.md) for exact artifacts,
+comparison limits and attribution. This selection does not establish a qualified
+scientific winner or independent FINAL acceptance.
+
+Verification of runtime commit `150bb79f0b27c6cdc03f5d9b5cd6b343ede03333` passed:
+fresh GitHub clone installation, downloaded model hashes, dependency consistency,
+17 regression checks, and actual `start.bat` launch. Root browser checks covered
+375/768/1280 widths without overflow or page errors; real U96/u64 restoration,
+manual preview/confirmation, stale-edit refusal, clearer-input refusal, Off with
+zero inference, and PNG/ZIP downloads passed. Both original-input runtimes matched
+retained RAW/PNG exactly on the fixed case. A fresh-clone U96 call also produced
+the identical PNG; its actual inference took 22 seconds on this computer.
+Evidence is retained in git-ignored `scratch/implementation-ui/`,
+`scratch/fresh-clone-verification/` and `scratch/implementation_validation.json`.
+
+Optional Protect/Apply preparation rebuilds from the original upload and preserves
+protected pixels before generation. Automatic blur matching, completion and
+covering removal are not implemented by this branch. Generated appearance still
+requires review. No training, optimizer or VM operation ran for this delivery.
+The broader thesis goal, independent review and final model qualification remain
+open; earlier research results and failed gates remain binding.
+
+Earlier status below remains retained.
+
+---
+
 # Spatial-path test complete; prepare fusion-focused pilot — 18 October 2026
 
 [Controlled path-isolation review and actual evidence](CCTV_CODEFORMER_FILTER_PATH_ISOLATION_V1_REVIEW.md).

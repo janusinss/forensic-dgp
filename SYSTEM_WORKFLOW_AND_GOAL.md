@@ -1,3 +1,24 @@
+# Current branch scope — IMPLEMENTATION, 24 October 2026
+
+Deliver a Windows restoration application that a fresh clone can install with
+`install.bat` and run with `start.bat`, retaining the existing interface and
+reviewed Protect/Apply preparation with bypass. Model assets come from this
+repository's GitHub Release and must pass exact size/SHA-256 verification.
+
+U96 is the conservative functional default after the saved U96/u64 comparison;
+u64 remains selectable for experimental comparison. Neither is independently
+qualified. Optional surroundings preparation preserves protected native pixels
+before restoration, starts from the immutable original, and requires preview and
+confirmation. Automatic blur matching and completion development stay deferred.
+
+This runnable-branch milestone is verified in [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md).
+It does not complete the broader thesis goal or change preservation gates, final
+identity separation, paired/unpaired evidence boundaries, or the user's manual
+finite L4 training workflow. Later user decisions retain precedence over the
+historical instructions below.
+
+---
+
 # Spatial-path test complete; prepare fusion-focused pilot — 18 October 2026
 
 [Controlled path-isolation review and actual evidence](CCTV_CODEFORMER_FILTER_PATH_ISOLATION_V1_REVIEW.md).
