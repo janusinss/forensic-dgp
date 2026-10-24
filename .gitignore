@@ -53,6 +53,7 @@ outputs/
 # ML Weights
 weights/
 /models/implementation/
+/.implementation-env.json
 *.pth
 !checkpoints/dgp_zamboanga_final.pth
 !checkpoints/dgp_improved_epoch_20.pth

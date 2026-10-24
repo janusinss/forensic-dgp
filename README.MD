@@ -12,7 +12,7 @@ cd forensic-dgp
 install.bat
 ```
 
-The installer creates venv, installs CPU PyTorch and the application dependencies, and downloads three assets from this repository's [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1). Every model file must match its size and SHA-256. Existing mismatched files are preserved and reported.
+The installer creates a short, installation-specific environment under `%LOCALAPPDATA%\DGP\` to avoid Windows filename-length failures, installs CPU PyTorch and the application dependencies, and downloads three assets from this repository's [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1). Its local environment record is `.implementation-env.json`. Every model file must match its size and SHA-256. Existing mismatched files are preserved and reported.
 
 ## Start
 
