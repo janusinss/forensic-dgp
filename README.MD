@@ -1,56 +1,59 @@
 # Forensic face restoration — IMPLEMENTATION
 
-Windows application for one already cropped frontal or mildly turned face, producing a 256×256 result. This branch packages the trained CodeFormer-based U96 adaptation, optional reviewed Protect/Apply preparation, and original bypass in the existing local interface.
+This branch is for application development, deployment, and real-world testing of a local Windows face-restoration app. It accepts one already cropped frontal or mildly turned face and produces a 256×256 result. Research and training are maintained separately.
 
-## Install
+## Requirements
 
-Install 64-bit Python 3.12 or 3.13 with the Python launcher or Python on PATH. Initial setup requires internet access.
+- 64-bit Windows with 64-bit Python 3.12 or 3.13; enable the Python launcher or Python on PATH.
+- Git for cloning and updates, plus internet access during installation.
+- At least 2.5 GiB available RAM before restoration; inference uses CPU PyTorch.
+
+Dependencies are pinned in [requirements.txt](requirements.txt). The installer creates a short, checkout-specific environment under `%LOCALAPPDATA%\DGP\` and records it in the ignored `.implementation-env.json` file. Existing project `venv` folders are preserved.
+
+## Install and start
 
 ```bat
-git clone --branch IMPLEMENTATION https://github.com/janusinss/forensic-dgp.git
+git clone --depth 1 --single-branch --branch IMPLEMENTATION https://github.com/janusinss/forensic-dgp.git
 cd forensic-dgp
 install.bat
-```
-
-The installer creates a short, installation-specific environment under `%LOCALAPPDATA%\DGP\` to avoid Windows filename-length failures, installs CPU PyTorch and the application dependencies, and downloads three assets from this repository's [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1). Its local environment record is `.implementation-env.json`. Every model file must match its size and SHA-256. Existing mismatched files are preserved and reported.
-
-## Start
-
-```bat
 start.bat
 ```
 
-The browser opens after the local health check passes, normally at http://127.0.0.1:8000. Keep the terminal open; press Ctrl+C to stop. The launcher never kills another application's port. To select an available port:
+Installation downloads three model files from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1). Each must match its complete size and SHA-256; existing mismatched files are preserved and reported.
+
+The browser opens after the local health check passes, normally at http://127.0.0.1:8000. Keep the terminal open and press Ctrl+C to stop. If that port is occupied, use `start.bat --port 0`; the actual address is printed and recorded in `scratch/implementation_launch.json`. After setup, inference runs locally without model-download requests.
+
+## Update
+
+Stop the running app with Ctrl+C and wait for it to exit. Save any local source changes before updating. From this checkout, run:
 
 ```bat
-start.bat --port 0
+git pull --ff-only origin IMPLEMENTATION
+install.bat
+start.bat
 ```
 
-The actual address is printed and recorded in scratch/implementation_launch.json. After setup, inference runs locally without model-download requests.
+If the pull fails, resolve the reported local changes or branch divergence before continuing. Rerunning installation updates dependencies and verifies the model files.
 
 ## Use
 
-1. Upload one PNG/JPEG crop and inspect visible facial structure. Request clearer or less-covered input when too little information remains.
-2. Use U96 by default; u64 is an experimental comparison. Choose Auto, On or Off. Off retains the original resized input and performs no inference.
-3. Bypass preparation, or paint Protect over existing facial blur and soft edges. Paint Apply only where added surroundings blur is permitted.
-4. Preview and confirm manual preparation. Edits invalidate confirmation; every preview rebuilds from the original upload. Protected native pixels stay unchanged during preparation.
-5. Restore the selected input. Review original, selected input and result; download PNGs or the optional evidence ZIP with available RAW output.
+1. Upload one PNG/JPEG crop, up to 10 MiB and 1600 pixels per side, and inspect its visible facial structure.
+2. Keep U96 as the default or select optional experimental u64. Auto uses an input-quality suggestion; On requests restoration; Off keeps the resized original with no inference.
+3. Bypass preparation, or paint Protect over the face and its existing soft edges. Paint Apply only where added surroundings blur is permitted.
+4. Preview and confirm manual preparation. Edits invalidate confirmation; every preview rebuilds from the original. Protected pixels and pixels outside Apply stay exact during preparation.
+5. Restore the selected input and compare the original, selected input, and result. Download PNGs or an optional evidence ZIP containing the original, available masks, preparation records, result, and available RAW output.
 
-Preparation is optional: it did not consistently help the paired study. This branch does not provide an automatic blur matcher or always-on surroundings blur. Input protection does not guarantee identical generated appearance. Completion and covering removal remain separate, deferred work.
+Manual preparation is optional; there is no automatic blur matcher. Protection applies to preprocessing only. Generated facial details can change, and a sharper-looking result does not prove recovered identity. Request clearer or less-covered input when visible information is insufficient. Completion and covering removal are outside this app. Both models remain experimental; see [MODEL_CARD.md](MODEL_CARD.md).
 
-## Model choice
+## Privacy and troubleshooting
 
-A saved-output comparison recomputed 642 outputs across 321 paired DEV cases. u64 had slightly better aggregate scores but worsened normal-blur PNG error in 46/48 cases. U96 is the conservative functional default because visible structure and preservation take priority over average scores. Both retain preservation failures; a runnable app is not independent FINAL qualification or proof of recovered identity. See [MODEL_CARD.md](MODEL_CARD.md).
+The service listens on loopback. Uploaded images and retained request records stay locally under `scratch/implementation_requests`; downloaded ZIPs also contain image data. Remove your own records and downloads when no longer needed.
 
-Models are defined in implementation/models.json and loaded only in disposable CPU workers. No training, optimizer, VM, historical pilot or research output directory is required. Uploaded images and retained request records stay on this computer under scratch/implementation_requests. Remove your own request records when they are no longer needed.
-
-## Troubleshooting
-
-- Missing dependency or model: rerun install.bat and inspect the reported failing step.
-- Low memory: close unused applications. The worker requires 2.5 GiB available RAM and has a 6 GiB RSS limit.
-- Worker failure: inspect the retained request directory before restarting start.bat. There is no automatic retry; each request has a 360-second limit.
-- Busy port: close your own earlier server or use start.bat --port 0.
+- Missing dependency or model: rerun `install.bat` and inspect the failing step.
+- Low memory: close unused applications before retrying. Each worker has a 6 GiB RSS limit.
+- Worker failure: review the retained request directory before restarting `start.bat`. Requests have a 360-second limit and no automatic retry.
+- Busy port: stop your own earlier server or use `start.bat --port 0`. The launcher does not kill other applications.
 
 ## Attribution
 
-CodeFormer is an existing S-Lab architecture; this thesis uses trained adaptations. Retain [the S-Lab license](third_party/codeformer/LICENSE) and [notices](third_party/codeformer/NOTICE.md). Its non-commercial terms remain applicable. This implementation includes no training dataset or reserved FINAL face set.
+The app uses trained adaptations of S-Lab's CodeFormer architecture. Retain [the S-Lab license](third_party/codeformer/LICENSE) and [notices](third_party/codeformer/NOTICE.md); its non-commercial terms apply. Training datasets are not included.

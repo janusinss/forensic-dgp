@@ -1,8 +1,14 @@
-# Frozen restoration models in IMPLEMENTATION
+# Application model card — IMPLEMENTATION
 
-**Default: U96.** Original terminal-update-64 post-fusion heads (u64) are selectable for comparison. No failed successor replaces either artifact.
+This branch packages frozen models for application development, deployment, and real-world testing. Research and training are maintained separately.
 
-Both use the trained R2 CodeFormer base with the 24-tensor U96 residual skip adapter. u64 adds 36 post-fusion correction tensors from the retained update-64 experiment. The numbers denote training updates, not image sizes. Internal processing is singleton CPU FP32 at 512×512, fidelity 1 and AdaIN, followed by explicit 256×256 delivery. PNG uses floor quantization without extra sharpening or brightness display processing.
+**U96 is the default.** Optional experimental u64 is selectable in the interface. Both use the trained R2 CodeFormer base and U96 residual adapter; u64 additionally loads the terminal-update-64 post-fusion heads. The model names do not denote image dimensions.
+
+## Runtime and assets
+
+Models load in disposable CPU workers only when restoration is required. Each request permits at most one inference call. Processing uses FP32 at 512×512, fidelity 1 and AdaIN, followed by 256×256 delivery. PNG uses floor quantization without extra sharpening or brightness processing. Off returns the resized original without inference.
+
+The installer downloads these assets into `models/implementation` from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1). All three files must pass complete size and SHA-256 verification.
 
 | Asset | Bytes | SHA-256 |
 | --- | ---: | --- |
@@ -10,10 +16,14 @@ Both use the trained R2 CodeFormer base with the 24-tensor U96 residual skip ada
 | `codeformer_u96_adapter.pth` | 212827 | `958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0` |
 | `terminal_u0064_heads.npz` | 685818 | `77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17` |
 
-The implementation comparison freshly verified 642 saved RAW/PNG outputs across 321 paired DEV cases and retained adverse cases. On the broader 285-case subset, u64 improved mean PNG MAE from 0.06130135 to 0.06052539 and mean PSNR by 0.12043 dB. It worsened normal-blur MAE in 46/48 cases and all four fixed severe-Gaussian cases. Existing preservation checks recorded 137 violating scalar comparisons for U96 and 141 for u64; these are scalar checks, not counts of people or entire images. Neither model passes all research requirements. The incomplete broader bank cannot supply a full-bank qualification.
+## Intended use and limits
 
-These measurements use known synthetic paired targets. Native CCTV and wild images without aligned clean references remain unpaired. No ethnicity, Zamboanga performance, exact hidden identity or independent FINAL qualification is established.
+Use one already cropped frontal or mildly turned face with readable visible structure. Auto provides an input-quality suggestion, not a usefulness or identity score. U96 and u64 remain experimental and can change facial appearance; application operation does not establish restoration accuracy or recovered identity.
 
-The application preserves neutral padding and reviewed input preparation. Generated facial details may still change; clearer/less-covered input is required when visible information is insufficient. Completion and covering removal are outside this restoration implementation.
+Preparation can be bypassed or reviewed manually with Protect/Apply masks. Exact protected and outside-Apply pixels concern preprocessing only. The generated result has no corresponding facial-pixel guarantee. Neutral padding remains preserved. Completion, covering removal, automatic blur matching, and recovery of hidden identity are outside this app.
 
-Model lineage and failed experiments remain in the research checkout; packaging does not relax their gates. Further training remains manual on the designated L4 VM under a new justified finite protocol.
+Review the original, selected input, and result together. Prefer clearer or less-covered input when information is insufficient. Optional evidence ZIPs contain the original and available masks, preparation records, RAW output, and result. Request records remain locally in `scratch/implementation_requests`; downloaded evidence also contains image data.
+
+## Attribution and license
+
+CodeFormer is an S-Lab architecture used here with trained adaptations. Retain [the S-Lab license](third_party/codeformer/LICENSE) and [notices](third_party/codeformer/NOTICE.md). Its non-commercial terms apply to use and distribution. No training dataset is included.
