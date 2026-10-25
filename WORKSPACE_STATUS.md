@@ -35,3 +35,8 @@ inside the reviewed area. Restoration remains a distinct model. Both branches
 initially retain the complete source tree; shared integration files require
 review when changes are eventually merged. No checkpoint is promoted by this
 Git setup. All actual training remains manual on the authorized L4 VM.
+
+# Conditioned SFT Learning V1 Status (25 October 2026)
+
+- **Feasibility Proof (`outputs/codeformer_conditioned_sft_learning_v1_feasibility/feasibility_receipt_v1.json`)**: `STAGE1_SAVED_ARRAY_FEASIBILITY_PROVEN` — `single_pass_input_anchored_B8_beta0p005` passes `56/56` inherited + `40/40` monitor gates at `u8` and `u24/u48` (`-48,923` RGB8 code improvement on clear monitors).
+- **Sealed Manual L4 VM Packet (`outputs/cctv-codeformer-conditioned-sft-learning-v1-execution.tar.gz`)**: `107,283,842` bytes (`690` PAX members, SHA256 `4e3d07432ea1951a60050bb5aba5dfbbf30f6ad7b2cdc5e54232f0fa62b7af64`), Protocol SHA256 `f54c37e8b6b05473b1530395549b31f89189445f642ecfc49b1280ba8442d7f0` (`691` static files). Ready for manual 5-step launch per [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md).
