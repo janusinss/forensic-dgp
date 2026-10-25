@@ -1,4 +1,4 @@
-"""Automatically sync RESTORATION branch commits and Conditioned SFT V1 outputs into main (Testing)."""
+"""Automatically sync RESTORATION branch commits and Conditioned SFT V1/V2 outputs into main (Testing)."""
 import hashlib
 import os
 import shutil
@@ -20,6 +20,13 @@ SYNC_OUTPUT_PATHS = (
     'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/member_index.json',
     'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/visuals',
     'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/checkpoints',
+    'outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz',
+    'outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz.sha256',
+    'outputs/codeformer_conditioned_sft_learning_v2_feasibility',
+    'outputs/codeformer_conditioned_sft_learning_v2_preparation',
+    'outputs/codeformer_conditioned_sft_learning_v2_source_preparation',
+    'outputs/cctv_codeformer_conditioned_sft_learning_v2_vm',
+    'outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1',
 )
 
 
