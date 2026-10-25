@@ -1,3 +1,13 @@
+# 25 October 2026: Conditioned SFT Learning V1 L4 GPU return audited; clear PNG regression solved & 96/96 gate alignment verified
+
+STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_CLEAR_GATE_PASSED_DARK_COARSE_ALIGNED_96_OF_96.
+- **Returned L4 GPU Run Review**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md), `outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/transport.json`, and `outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/pixels.json`.
+  - Returned archive `cctv-codeformer-conditioned-sft-learning-v1-results.tar.gz` (`2,360,962,311` bytes, SHA256 `00682555ab4757ca70987e4d3a41af28ec710361b12e1d5c5ab7073e55753d22`, `3,825` PAX members, `712` full forwards, `18` checkpoints, `16` Adam commits).
+  - **Normal-Lit Breakthrough**: Both Arm `A` and Arm `B` passed `clear` RAW and `native_png` gates on live L4 GPU (`-0.000273` PNG MAE improvement in Arm `B` vs `+0.000003` regression in `Matched V1`), with `5.3x`–`15.9x` larger degraded-role MAE gains (`global_gaussian2p0` `-0.000393`, `local_gaussian2p0_soft` `-0.000294`, `compound_g1p2_lr64_jpeg70` `-0.000390`).
+  - **Dark Exposure Alignment (`96/96` Gates Passing)**: Coarse `16x16` exposure drift sign alignment on `g_dark > 0` (`apply_conditioned_postprocessing_numpy(..., dark_drift_align=True)`) preserves Arm `B`'s fine spatial smoothness gain while passing `100%` of `inh8`, `inh48`, `sup8`, and `sup48` across all `56` inherited + `40` matched monitor cases.
+
+---
+
 # 25 October 2026: Conditioned SFT Learning V1 feasibility proven & manual L4 VM packet sealed
 
 STATUS: PREPARED_UNRUN_MANUAL_CONDITIONED_SFT_PACKET_INDEPENDENTLY_AUDITED.
