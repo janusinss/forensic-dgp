@@ -1,0 +1,80 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "review_type": "Independent R1 worker and namespace-only helper source review; infrastructure-only repair to verified zero-call V1 failure",
+  "UTC": "2026-10-21T13:31:24.789276+00:00",
+  "worker": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1_r1/worker.py",
+    "bytes": 51208,
+    "sha256": "262892ff6713b53af1b195e7d284d11aa25a442f270441dddb2734b8f0d4f3d9"
+  },
+  "contract": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1_r1/CONTRACT.md",
+    "bytes": 9844,
+    "sha256": "0b085960a655f09fb9beed552228f005adacf543c765173ec7bf6cc6ed978624"
+  },
+  "sources": [
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/packet.py",
+      "bytes": 9436,
+      "sha256": "9770f8ee31ac3c1516a3e33708512cab8703fc1c0ebef14846d9caac264782bb",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/entry.py",
+      "bytes": 6444,
+      "sha256": "844d7f3cd85824ead770aa76a13ea10e0a3bfe5c1b13ad015e8599553047a945",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/stage_entry.py",
+      "bytes": 313,
+      "sha256": "b9f081fbe86345c9c472365ae2e7a34f6573618e175e684d1ee5894568f0a666",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/__init__.py",
+      "bytes": 56,
+      "sha256": "86e15fdaa07cbeaea7d51759567091101497cff992f8aa926cb9a704d834e0ab",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/run_preflight.sh",
+      "bytes": 337,
+      "sha256": "e593e871c47371f99461fa8d01922340c7ec6587932ff7e50a4a9362bdbc7bb7"
+    }
+  ],
+  "source_readback_preserves_old_V1": true,
+  "unchanged_numerical_suffix_from_canonical_through_failure_handler": true,
+  "all16_LIMITS_unchanged": true,
+  "helper_changes_namespace_only": true,
+  "worker_repair_scope": [
+    "Remove optional psutil import and process object",
+    "Use existing Linux /proc/self/statm current RSS with pure validated parser",
+    "Preserve Linux resource.ru_maxrss peak RSS and exact limits",
+    "Check top-level torch/numpy/PIL discoverability without package imports",
+    "Fresh R1 output namespace; V1 remains immutable"
+  ],
+  "inert_imports_Python3_10_AST": true,
+  "blocked_runtime_import_attempts": [],
+  "pure_RSS_parser_checks": {
+    "valid_cases": 2,
+    "invalid_cases_rejected": 6,
+    "actual_proc_or_VM_read": false
+  },
+  "exact_U96_539_frozen_36_new_heads_168960_parameters_unchanged": true,
+  "strict_forward_parity_and_narrow_gradient_warn_only_unchanged": true,
+  "full_forward_attempts": 20,
+  "gradient_queries_planned": 4,
+  "optimizer_constructions": 0,
+  "optimizer_updates": 0,
+  "actual_Torch_model_forward_gradient_optimizer_VM_calls": 0,
+  "R1_real_L4_execution_verified": false,
+  "remaining": [
+    "Thin installer source review and real staged/archive readback remain required.",
+    "No numerical or quality gate has changed; real parity/gradient success remains unproven.",
+    "V1 zero-call infrastructure failure must not be relabeled a model-quality failure or learning result."
+  ],
+  "model_qualified": false,
+  "source_edited": false
+}

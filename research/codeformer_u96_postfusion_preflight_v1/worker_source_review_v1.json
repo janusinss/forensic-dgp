@@ -1,0 +1,99 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "review_type": "independent final source-only review, Python 3.10 grammar and inert dependency boundary; no real Torch/model/runtime execution",
+  "UTC": "2026-10-21T13:07:52.527802+00:00",
+  "worker": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/worker.py",
+    "bytes": 50684,
+    "sha256": "c8f8808bd9efa5a8fecfae5bc3cf3cc72235e00ebfd3fc12bc6139185c2796ca"
+  },
+  "contract": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/CONTRACT.md",
+    "bytes": 9548,
+    "sha256": "369a5a55212f7446f7c19cc5e87c124205089698f4b9b0daf36cc0268ab4140e"
+  },
+  "prototype_source": {
+    "path": "research/codeformer_u96_postfusion_v1/model.py",
+    "bytes": 23240,
+    "sha256": "ca2b466161932068c01980bb41fcc08e12ee8f0120f17c8fdf47898f35934aa8"
+  },
+  "Python3_10_grammar": true,
+  "inert_module_import_pass": true,
+  "Torch_NumPy_PIL_psutil_import_attempts": [],
+  "checks": {
+    "immutable_full_U96_539_frozen_plus_36_heads_168960_parameters": true,
+    "independent_reference_515_plus_exact24_adapters": true,
+    "reference_and_candidate_CPU_CUDA_rng_preservation_asserted_not_runtime_proven": true,
+    "strict_mode_before_every_full_forward": true,
+    "forward_parity_native512_logits_LQ_RAW_unclipped_PNG_no_relaxation": true,
+    "decoder_graph_and_clamp_resize_delivery_connected_by_source": true,
+    "four_joint_gradient_queries_no_backward_accumulation_no_optimizer": true,
+    "all36_actual_gradient_arrays_per_witness_retained_before_finite_and_projection_gate": true,
+    "earlier_layer_zero_gradients_allowed_only_final_projections_require_nonzero": true,
+    "initial_final36_head_states_PT_plus_portable_NPZ": true,
+    "source_model_data_and_all575_parameter_state_readbacks": true,
+    "failed_phase_survives_context_cleanup": true,
+    "module_site_reservations_distinguished_from_verified_returns": true,
+    "exact_NVIDIA_L4_not_substring_match": true,
+    "current_and_Linux_peak_RSS_enforced": true,
+    "output_exclusive_no_resume_failure_evidence_and_64KiB_reserve": true,
+    "resource_caps_and_20_forward_4_gradient_0_optimizer_source_ledger": true
+  },
+  "gradient_determinism_policy": {
+    "strict_forward_and_parity": true,
+    "warn_only_scope": "only each reserved autograd.grad query and its CUDA synchronize",
+    "warn_only_affects_all_operations_in_narrow_scope": true,
+    "always_capture_all_warnings": true,
+    "restore_enabled_and_warn_flags_finally": true,
+    "unexpected_nondeterminism_stops_after_evidence_retention": true,
+    "RNG_equality_is_not_repeatable_gradient_evidence": true,
+    "mock_only_control_flow_checks": [
+      "expected operator warning retained and strict flags restored",
+      "query exception propagates and strict flags restored",
+      "unexpected operator warning separately retained",
+      "non-strict entry rejected"
+    ],
+    "mock_checks_execute_no_Torch_or_neural_operations": true,
+    "actual_CUDA_gradient_repeatability_claim": false
+  },
+  "limits": {
+    "full_forward_attempts": 20,
+    "full_forward_returns": 20,
+    "reference_forwards": 8,
+    "candidate_parity_forwards": 8,
+    "candidate_gradient_forwards": 4,
+    "gradient_queries": 4,
+    "optimizer_constructions": 0,
+    "optimizer_updates": 0,
+    "internal_seconds": 1200,
+    "external_seconds": 1260,
+    "per_phase_seconds": 180,
+    "initial_free_disk_bytes": 6442450944,
+    "continuing_disk_reserve": 4294967296,
+    "maximum_RSS_bytes": 10737418240,
+    "maximum_CUDA_reserved_bytes": 19327352832,
+    "maximum_output_bytes": 134217728
+  },
+  "prior_source_findings_retained": "scratch/u96_preflight_worker_source_findings_v1/worker_source_findings_v1.json",
+  "upstream_primary_sources": [
+    "https://raw.githubusercontent.com/pytorch/pytorch/v2.9.1/aten/src/ATen/native/cuda/UpSampleBilinear2d.cu",
+    "https://docs.pytorch.org/docs/2.9/generated/torch.use_deterministic_algorithms.html"
+  ],
+  "remaining_runtime_requirements": [
+    "Actual staged positive verifier and exact archive/source readback before manual launch.",
+    "Real Python3.10/Torch2.9.1 CUDA L4 dependency/factory/exact-parity/gradient/resource behavior remains unexecuted.",
+    "Returned saved gradients and initial/final states must be independently recomputed; gradient RAW/PNG must match candidate parity for the same input.",
+    "Zero-optimizer preflight proves no learned improvement, actual-step preservation, DEV/native usefulness, or model qualification."
+  ],
+  "Torch_imported": false,
+  "factory_called": false,
+  "full_model_forwards": 0,
+  "gradient_queries_executed_on_Torch": 0,
+  "optimizer_constructions": 0,
+  "optimizer_updates": 0,
+  "VM_calls": 0,
+  "model_qualified": false,
+  "automatic_training_authorized": false,
+  "source_edited": false
+}

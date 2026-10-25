@@ -1,0 +1,23 @@
+.context-form { display: grid; gap: 1.5rem; margin: 1.5rem 0; min-width: 0; }
+.context-form section { display: grid; gap: .75rem; min-width: 0; }
+.context-form h2 { font-size: 1rem; line-height: 1.5; }
+.context-form input, .context-form select { width: 100%; min-width: 0; min-height: 44px; font: inherit; }
+.context-form input[type="number"], .context-form select { color: var(--color-foreground); background: var(--color-card); padding: .6rem; border: 1px solid var(--color-border); }
+.context-form label, .context-previews figcaption { font-size: .875rem; line-height: 1.6; }
+.context-form .tool-btn, .research-header a { min-height: 44px; padding: .65rem .9rem; display: inline-flex; align-items: center; justify-content: center; white-space: normal; overflow-wrap: anywhere; }
+.context-form .tool-btn { justify-self: start; max-width: 100%; }
+.context-form button:disabled { opacity: .45; cursor: not-allowed; }
+.context-form :focus-visible, .research-header a:focus-visible { outline: 2px solid var(--color-accent, #10b981); outline-offset: 3px; }
+.context-bounds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; max-width: 680px; }
+.context-bounds label { display: grid; gap: .35rem; }
+.context-actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+#context-editor { width: min(100%, 480px); height: auto; display: block; touch-action: none; cursor: crosshair; border: 1px solid var(--color-border-highlight); }
+.context-previews { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; max-width: 1000px; }
+.context-previews figure { margin: 0; min-width: 0; }
+.context-previews img { display: block; width: 100%; height: auto; }
+.context-confirm { display: flex; align-items: center; gap: .75rem; min-height: 44px; }
+.context-confirm input[type="checkbox"] { width: 22px; height: 22px; min-height: 22px; flex: 0 0 22px; }
+.research-header, .research-main, .context-form p, .context-form label { overflow-wrap: anywhere; }
+.research-results { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1050px) { .research-results { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .context-bounds { grid-template-columns: repeat(2, minmax(0, 1fr)); } .context-previews, .research-results { grid-template-columns: 1fr; } .research-header { flex-wrap: wrap; } }

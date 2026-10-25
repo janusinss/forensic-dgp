@@ -1,0 +1,104 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "review_type": "Independent R1 helper/installer source-only review; real thin-stage positive verification pending",
+  "UTC": "2026-10-21T13:33:08.305822+00:00",
+  "sources": [
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/packet.py",
+      "bytes": 9436,
+      "sha256": "9770f8ee31ac3c1516a3e33708512cab8703fc1c0ebef14846d9caac264782bb",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/entry.py",
+      "bytes": 6444,
+      "sha256": "844d7f3cd85824ead770aa76a13ea10e0a3bfe5c1b13ad015e8599553047a945",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/stage_entry.py",
+      "bytes": 313,
+      "sha256": "b9f081fbe86345c9c472365ae2e7a34f6573618e175e684d1ee5894568f0a666",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1_r1/install_weights_from_v1.py",
+      "bytes": 5741,
+      "sha256": "830b79088b28d0c74ee6d48ea212948616aec5cf6e4768fc1abaff41b8b09d18",
+      "AST_Python3_10_grammar": true
+    }
+  ],
+  "contract": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1_r1/CONTRACT.md",
+    "bytes": 9844,
+    "sha256": "0b085960a655f09fb9beed552228f005adacf543c765173ec7bf6cc6ed978624"
+  },
+  "shell": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1_r1/run_preflight.sh",
+    "bytes": 337,
+    "sha256": "e593e871c47371f99461fa8d01922340c7ec6587932ff7e50a4a9362bdbc7bb7",
+    "LF_only": true,
+    "Bash_syntax_actually_executed": false
+  },
+  "worker_review": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1_r1/worker_source_review_v1.json",
+    "bytes": 3303,
+    "sha256": "ecb2509d331e65054b9709bb3dbd2b33ab45d9025fb7df2533f8595a50116273"
+  },
+  "limits": {
+    "full_forward_attempts": 20,
+    "full_forward_returns": 20,
+    "reference_forwards": 8,
+    "candidate_parity_forwards": 8,
+    "candidate_gradient_forwards": 4,
+    "gradient_queries": 4,
+    "optimizer_constructions": 0,
+    "optimizer_updates": 0,
+    "internal_seconds": 1200,
+    "external_seconds": 1260,
+    "per_phase_seconds": 180,
+    "initial_free_disk_bytes": 6442450944,
+    "continuing_disk_reserve": 4294967296,
+    "maximum_RSS_bytes": 10737418240,
+    "maximum_CUDA_reserved_bytes": 19327352832,
+    "maximum_output_bytes": 134217728
+  },
+  "inert_packet_and_installer_import_pass": true,
+  "Torch_NumPy_PIL_psutil_resource_import_attempts": [],
+  "installer_checks": {
+    "exact_Linux_Python3_10_home_stage_cwd_required": true,
+    "installer_location_must_belong_to_R1_stage": true,
+    "exact_R1_protocol_hash_and_all_nonweight_static_pins_before_copy": true,
+    "exact_old_V1_protocol_hash_all40_static_file_pins_and_known_failure1532_bytes_hash": true,
+    "old_failure_zero_counters_and_no_model_construction_required": true,
+    "only2_exact_initializer_bindings_equal_old_and_FIXED": true,
+    "fresh_R1_no_runtime_markers_no_unknown_namespace": true,
+    "ordinary_ancestor_paths_no_links_reparse_or_multilink_files": true,
+    "free_space_before_copy_covers_model_bytes_plus6GiB_reserve": true,
+    "exclusive_xb_streamed_1MiB_copies_not_hardlinks": true,
+    "source_before_after_and_target_bytes_hash_verified": true,
+    "full_packet_verify_after_copy": true,
+    "copy_failure_preserves_partial_file_and_refuses_overwrite_retry": true,
+    "no_old_files_deleted_or_modified": true,
+    "no_download_or_network_or_model_action": true,
+    "stdout_only_no_undeclared_installer_receipt": true
+  },
+  "helper_controls_unchanged_from_reviewed_V1_except_R1_namespaces": true,
+  "supervisor_worker1260_seconds_plus_up_to20_seconds_termination_grace": true,
+  "export_explicit_gzip_streaming_tar_internal330_external345_seconds": true,
+  "actual_installer_called": false,
+  "actual_weights_copied": 0,
+  "actual_old_VM_or_failure_opened": false,
+  "actual_model_Torch_gradient_optimizer_VM_calls": 0,
+  "real_thin_packet_verified": false,
+  "R1_L4_runtime_verified": false,
+  "remaining": [
+    "Root must bind installer and current receipts into the exact thin archive/protocol, with only two declared model files absent.",
+    "Independently verify thin archive namespace/static bytes and the local inert CLI; complete packet verification requires the exact retained weights.",
+    "On VM only the user performs the explicit installer and tmux diagnostic; original V1 source/failure records remain immutable.",
+    "Source review is not real parity/gradient success, trained improvement or model qualification."
+  ],
+  "source_edited": false,
+  "model_qualified": false
+}

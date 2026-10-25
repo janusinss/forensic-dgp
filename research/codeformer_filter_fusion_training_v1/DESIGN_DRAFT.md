@@ -2,7 +2,7 @@
 
 **DRAFT / NOT LAUNCH READY.** This is a proposed finite experiment, not a
 training packet, authorized automatic launch, new trained model or qualification.
-TRAIN admission, exact sampler, executable objective, operation/disk census,
+Explicit pilot TRAIN admission, exact sampler, executable objective, operation/disk census,
 gradient prerequisites and independent review must close before sealing it.
 No neural, gradient, optimizer, VM or browser call was made for this design.
 
@@ -71,8 +71,8 @@ fusion site in the prospective witness.
 
 ## Admission before optimization
 
-Root is preparing64 selected TRAIN photographs ×8 declared variants,512
-observations. Twenty-two are in the prior R2's100-source training set;42 were
+Root prepared64 selected TRAIN photographs ×8 declared variants,512
+observations, independently verified with zero saved-pixel mismatches. Twenty-two are in the prior R2's100-source training set;42 were
 not in that set. This is not64 new-to-R2 or new-to-pretraining identities;
 pretraining/person overlap remains unknown. This is a bounded admission set, not the entire
 391-reference research pool or a new population sample. Audit all391 retained
@@ -106,6 +106,81 @@ must retain that evidence gap rather than claiming the family is covered.
 
 ## Proposed coherent loss roles
 
+The completed root input-only review contains390 readable,93 borderline,
+one insufficient and28 out-of-scope original per-input decisions. Its clear
+controls expose second recognizable background faces in sources04454,20546,
+45314,49284 and61989. Preserve all earlier decisions; exclude all40 variants
+from those five sources through a separate source-scope override. Four of the
+40 were individually called readable, eight borderline and28 out of scope.
+No replacement source or new crop is substituted. This is an observed source
+scope gap in the selected64; the original data/decisions remain research evidence.
+
+The initial root candidates number386 from59 sources:59 clear and327 nonclear.
+They are candidates for a later explicit protocol, **not already admitted or
+optimized**. Every optimization flag remains false. All nine selected source/
+license strata remain represented; their official FFHQ category is metadata,
+not the unchanged historical TRAIN/DEV role. Root's32 sheet receipts/512 panels
+and chronological declarations have been independently checked as metadata;
+the auditor did not independently observe or repeat root's visual judgment.
+
+| Initial root candidate nonclear profile | Count |
+| --- | ---: |
+| Gaussian2.4 |59|
+| Anisotropic horizontal5/vertical0.7 |59|
+| Anisotropic horizontal0.7/vertical5 |54|
+| Repeated rows4/blend0.75 |59|
+| Global mosaic8 |18|
+| Local Gaussian3 |53|
+| Local mosaic8 |25|
+
+The59 repeated-row candidates still require explicit new pilot admission despite
+their readable decisions; their historical strong-control tag is retained.
+The failed/ambiguous variants are not replaced by easier images. Source
+attribution/stratum counts and every hash join are retained in
+`outputs/codeformer_filter_train_v2_preparation/admission_metadata_audit_v1.json`.
+Root review SHA-256:
+`f306abc619944a85f29f946d2a0bb7afb79420ebbb5125835d17d05fb0e42d06`.
+
+### Conservative second-observer holds
+
+The later second observer reviewed only64 global-mosaic inputs, not all512.
+Root/observer exact labels agree on46/64, with18 differences;13 are jointly
+readable before clear-source scope exclusion and12 afterward. This observer
+authored the source/cohort audit and was exposed to root's aggregate counts;
+its per-input review is not blinded independent FINAL evaluation.
+
+The original512 labels,386 root candidates and this design's164-update version
+remain intact. Exact164-version bytes/hashes are saved under
+`outputs/codeformer_filter_fusion_training_v1_preparation/design_before_second_observer_v1/`.
+The former draft SHA is
+`f89b656b4d56cbe373f8faafed30a521d04ba971ec4458d1361a31fdef1093bf`;
+its structured proposal SHA is
+`e2b03a7761b257e9f594a5220f533204461cab2333614214ec277f886e2dc25f`.
+
+The separate ledger holds six root-readable/observer-borderline global cases
+(32648,32828,39377,41369,51547,60124), plus every variant of pose-disputed
+sources28856 and62653 pending input-only adjudication. The latter remove ten
+former candidates across16 retained variants. Do not resolve these disagreements
+from clean targets or restored appearance; do not promote observer-only-readable
+cases. No original label or pixel is relabeled or replaced.
+
+Current conservative candidates number**370 from57 sources:57 clear and313
+nonclear**. Nonclear profile counts are Gaussian2.4=57, horizontal anisotropy57,
+vertical anisotropy53, rows57, global mosaic12, local Gaussian52 and local mosaic25.
+All nine selected source/license strata remain represented after independent
+recomputation: the counts are1/1 for US-government training/validation metadata,
+20/3 for BY-NC,21/3 for BY,5/1 for public-domain-mark, and2 for CC0-training.
+These official categories do not change the historical TRAIN role. Seven original
+selected sources now have whole-source exclusions/holds (five multi-face plus
+two pose disputes); this retained scope gap is not repaired by easier replacements.
+
+Hold ledger SHA-256:
+`5c59dbf7826e976eb4e1605183b5a3255eaa518745e1ee085b2ba9062cbde24a`.
+Its independent metadata audit is
+`outputs/codeformer_filter_train_v2_preparation/candidate_holds_metadata_audit_v1.json`.
+The ledger still grants no training admission. Clear/dark joins, sampler and
+explicit row-profile admission remain open.
+
 The following is one prospective objective to review, not a rate/weight search.
 Do not inherit disconnected token objectives into the optimizing scalar. With
 the encoder/predictor frozen, token CE/KL and latent losses cannot update fusion;
@@ -129,7 +204,7 @@ Use four microbatches per new update, with exactly these roles:
 | Slot | Target / prospective scalar |
 | --- | --- |
 | Filter A | Paired clean256; `Lspatial +0.25*Ladjacent` |
-| Filter B | A different declared eligible corruption family/reference; same scalar |
+| Filter B | Next predeclared eligible input in the balanced sequence, with the explicit padding exception; same scalar |
 | Clear/readable normal | Frozen untouched original teacher; `2*mean(abs(Ucandidate-Uoriginal))` |
 | Dark | Frozen R2 teacher on the same audited dark input; `2*mean(abs(Ucandidate-UR2))` |
 
@@ -160,22 +235,26 @@ dark/clear DEV controls and native visual review remain necessary.
 
 ## Finite optimization and prerequisites
 
-Propose **maximum224 new Adam updates /896 microbatches**: at most448 filter,
-224 clear,224 dark. The generated set has64 clear and448 nonclear observations
+Propose **maximum157 new Adam updates /628 microbatches**:314 filter,
+157 clear,157 dark. The generated set has64 clear and448 nonclear observations
 (seven nonclear profiles, grouped into corruption families); generation does not
 establish that every nonclear observation is eligible. Seal the exact finite
-update count as `ceil(admitted_nonclear_count/2)`, capped224, after input-only
-review. Visit every admitted nonclear variant once before any duplicate; an odd
-count permits one explicit, predeclared final padding duplicate. The two filter
+update count as `ceil(admitted_nonclear_count/2)`, capped157, after explicit
+pilot admission. If all313 current conservative nonclear candidates are admitted, visit each
+once and add exactly one padding duplicate: `tr_ffhq_03212__global_mosaic_8`,
+the lexicographically first eligible global-mosaic candidate, selected before
+new model outputs. This is a fixed padding rule, not extra evidence or an
+easier-quality selection. If later source/dark-join review excludes candidates,
+recompute the lower finite count before sealing; do not replace sources. The two filter
 slots need not be different families if that would prevent complete admitted
 coverage; declare the balanced sequence and every repetition first. Clear/dark
 anchors cycle deterministically across their audited joins. Do not call this
-224 epochs, a complete pass over all391 sources or an authorization for later
+157 epochs, a complete pass over all391 sources or an authorization for later
 continuation. Exact passes/counts are reported only after sampler sealing.
 
 Fresh empty Adam: betas(0.9,0.99), eps1e-8, weight_decay0; one fusion group.
 Prospective base LR1e-5, ten-update linear warmup `1e-5*u/10`, then constant1e-5
-through the sealed final update, at most224. No rate grid, clipping, scaler, mixed precision, GAN, EMA, automatic
+through the sealed final update, at most157. No rate grid, clipping, scaler, mixed precision, GAN, EMA, automatic
 extension/resume or selected best-looking intermediate checkpoint. This rate is
 a conservative design choice, not measured optimality or a claim that LR alone
 fixes previous failures. FP32 throughout. Preserve actual optimizer attempts,
@@ -204,10 +283,17 @@ the future protocol; no seed sweep is authorized by this draft.
 
 ## Evaluation and stop policy
 
-Save initial, update50 and the sealed final update (at most224) model/Adam/RNG/
+Save initial, update50 and the sealed final update (at most157) model/Adam/RNG/
 sampler/counter states and full delivered RAW/PNG. If the final count is<=50,
 deduplicate that snapshot rather than add calls. Use all406 existing DEV cases at each planned
-snapshot, plus the72 existing admitted filter observations with known targets.
+snapshot, plus72 retained filter-comparison observations with known targets.
+The old72 are **36 historical TRAIN and36 DEV observations**, from four TRAIN
+and four DEV photographs. They are not72 additional DEV cases. Their original
+96-case manifest includes12 TRAIN and12 DEV refused controls. Keep every role
+attached; report the36 TRAIN probe outputs separately from DEV. Each full
+snapshot therefore has478 output slots (406 historical DEV plus72 mixed-role
+comparisons), not478 independent DEV images or identities. References can
+overlap existing cohorts; do not sum these slot counts as independent samples.
 Retain all24 refused controls without new model calls. Report core63/flagged9
 and source groups; don't replace full406 by the eight-reference filter test.
 No clean scores are calculated for the48 native CCTV cases. At initial and
@@ -257,14 +343,15 @@ post-install free20GiB and disk reserve4GiB. Bounds must be enforced before
 operations, not inferred from logs. Historical R2's612.67s total/185.17s optimizer
 work motivates bounded feasibility; it does not measure this proposed workload.
 
-Let D be newly evaluated filter DEV count and F=406+D. Here D72/F478 is the
-proposed maximum. Three candidate snapshots need3F=1434 calls. Candidate TRAIN896,
-frozen original-clear/R2-dark teacher targets448, frozen R2 baselineF478,
-initial/update20 TRAIN guards48, and new original/parent filter baselines2D144
-add up to3448 top-level forwards before
+Let C=72 retained mixed-role filter comparisons and F=406+C=478 output slots.
+These are36 TRAIN/36 DEV comparisons, not72 new DEV samples. Three candidate
+snapshots need3F=1434 calls. Candidate TRAIN628, frozen original-clear/R2-dark
+teacher targets314, frozen R2 baselineF478, initial/update20 TRAIN guards48,
+and current-runtime original/parent filter baselines2C144
+add up to3046 top-level forwards before
 prerequisites. Reserve at most18 further forward calls only after their exact
-purpose/order is enumerated, giving a provisional3466-forward ceiling. No HQ
-or LPIPS calls are planned. Eight hundred ninety-six backwards and224 optimizer attempts
+purpose/order is enumerated, giving a provisional3064-forward ceiling. No HQ
+or LPIPS calls are planned. Six hundred twenty-eight backwards and157 optimizer attempts
 plus fresh finite gradient-query reservations must be enumerated. Bind every
 operation source and do not treat unenumerated calls as free contingency.
 
@@ -286,7 +373,8 @@ must request enough space before launch rather than deleting research evidence.
 
 ## Remaining prerequisite gaps
 
-The512 input-only admission, source/terms/overlap audit, exact clear/dark joins,
+The512 data generation, independent exact-pixel audit, source audit and root
+input-only review are complete. Explicit pilot admission, exact clear/dark joins,
 sampler, loss implementation, gradient prerequisites, operation ledger,
 checkpoint/disk accounting and independent source/data/transport reviews remain
 unfinished. No exact runtime estimate, executable protocol hash, transfer archive,

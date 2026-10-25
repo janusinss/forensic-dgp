@@ -1,0 +1,113 @@
+{
+  "format": "U96-postfusion-source-only-inert-preparation-v1-r1",
+  "complete": true,
+  "source": [
+    {
+      "path": "research/codeformer_u96_postfusion_v1/__init__.py",
+      "bytes": 66,
+      "sha256": "b294dfcc71d5358daccc4a7e02d475eae39c3c0a24952ef522062653a8ade54a"
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_v1/model.py",
+      "bytes": 23240,
+      "sha256": "ca2b466161932068c01980bb41fcc08e12ee8f0120f17c8fdf47898f35934aa8"
+    }
+  ],
+  "design": {
+    "path": "research/codeformer_u96_postfusion_v1/architecture_design_v1_r1.json",
+    "bytes": 15781,
+    "sha256": "cf4ce39beefa2bef41149de6399f4f8b86cac3bdddf5ab6818651631ef0567be"
+  },
+  "static_checks": {
+    "AST_parse_pass": true,
+    "inert_import_pass": true,
+    "Torch_NumPy_import_interception_active": true,
+    "intercepted_dependency_import_attempts": [],
+    "shape_count_arithmetic_pass": true,
+    "retained_U96_inference_adapter_schema_AST_equal": true,
+    "factory_called": false,
+    "base_adapter_head_modules_constructed": 0,
+    "neural_gradient_backward_optimizer_VM_HTTP_browser_calls": 0,
+    "actual_runtime_count_or_parity_or_gradient_verified": false,
+    "old_original_base_prototype_source_unchanged": {
+      "path": "research/codeformer_original_spatial_correction_v1/model.py",
+      "bytes": 17983,
+      "sha256": "7e8fceccb027fa4ab37e9054c19a0c2c9e9ec0ef24eb3d9f549b19004def5971"
+    },
+    "AST_parse_Python310_feature_version_pass": true,
+    "Python310_syntax_check_is_not_Python310_runtime_certification": true,
+    "hashlib_file_digest_AST_calls_present": false,
+    "source_diff_streaming_hash_only": true,
+    "runtime_Python310_or_Torch_or_forward_or_gradient_tested": false
+  },
+  "compatibility_repair": {
+    "location": "new unsealed prototype model.py nested file_digest helper",
+    "cause": "hashlib.file_digest is unavailable in historical VM Python3.10",
+    "fix": "Bounded1MiB streaming hashlib.sha256 update loop; no Python/VM upgrade",
+    "source_diff_is_only_streaming_hash_replacement": true,
+    "syntax_checked_with_ast_feature_version": [
+      3,
+      10
+    ],
+    "actual_Python310_runtime_executed": false,
+    "historical_snapshots": {
+      "path": "research/codeformer_u96_postfusion_v1/review_history_v0/snapshot_map_v0.json",
+      "bytes": 1738,
+      "sha256": "3ae2e30a05054ecc873e8ef9d781f4b8efded65c3da91d2eab69411b0ecae70a"
+    },
+    "initial_current_path_receipts_are_historical_after_source_repair": true,
+    "prior_source_design_and_receipt_current_pins_superseded": true,
+    "factory_Torch_or_neural_call": false,
+    "VM_upgrade_or_state_change": false
+  },
+  "supersedes_source_pins_from": {
+    "path": "research/codeformer_u96_postfusion_v1/source_inert_receipt_v1.json",
+    "bytes": 2959,
+    "sha256": "a754d83d44a849de9856d1e63e14142849cd3aee34c97e85dc816062b7508c54"
+  },
+  "retained_inference_reference": {
+    "path": "research_spatial_restoration_v1.py",
+    "bytes": 20043,
+    "sha256": "08fa6d4d7d252c0c96d35c87c40ee1035d8e5a68e8ce42d62b1c8b7f721a9437"
+  },
+  "retained_architecture_sources": [
+    {
+      "path": "third_party/codeformer/codeformer_arch.py",
+      "bytes": 11377,
+      "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb",
+      "module": "third_party.codeformer.codeformer_arch"
+    },
+    {
+      "path": "third_party/codeformer/vqgan_arch.py",
+      "bytes": 15855,
+      "sha256": "b47033f66b4a8434e0f04d4df8a69a7ac4b6c5bdf52f5b74912371dff0a20eaf",
+      "module": "third_party.codeformer.vqgan_arch"
+    },
+    {
+      "path": "third_party/codeformer/registry.py",
+      "bytes": 2267,
+      "sha256": "bbc3507148101bb202e8f52f5cca75d2cc21d780def757c055d82cb8e6bd594e",
+      "module": "third_party.codeformer.registry"
+    }
+  ],
+  "tensor_arithmetic": {
+    "base_frozen_tensors": 515,
+    "U96_frozen_adapter_tensors": 24,
+    "frozen_total": 539,
+    "new_trainable_head_tensors": 36,
+    "head_parameters": 168960,
+    "adapter_parameters": 51328,
+    "full_state_tensors": 575,
+    "full_state_prefixes": [
+      "base.",
+      "adapters.",
+      "heads."
+    ],
+    "actual_runtime_constructed_or_verified": false
+  },
+  "runtime_or_quality_claim": false,
+  "actual_Torch_or_NumPy_imports": false,
+  "factory_or_runtime_call": false,
+  "manual_training_packet_prepared": false,
+  "old_original_base_prototype_unchanged": true
+}

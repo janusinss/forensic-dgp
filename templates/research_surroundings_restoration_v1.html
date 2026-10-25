@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta name="referrer" content="no-referrer"><title>Protected surroundings restoration test</title>
+  <link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/face_workflow.css">
+  <link rel="stylesheet" href="/static/research_restoration.css"><link rel="stylesheet" href="/static/research_surroundings_restoration_v1.css">
+</head>
+<body class="research-page">
+  <header class="research-header"><h1>FACE RESTORATION // PROTECTED SURROUNDINGS</h1><a href="/restoration-spatial-test">Normal comparison</a></header>
+  <main class="research-main">
+    <p class="research-notice">Optional experiment. Protect the complete face and its existing blur before softening the surroundings. You review the area; automatic blur detection is not available. A sharper generated face does not establish recovered detail or identity.</p>
+    <form id="context-form" class="context-form">
+      <section aria-labelledby="upload-heading">
+        <h2 id="upload-heading">1. Inspect one face crop</h2>
+        <label for="context-file">PNG or JPEG face crop</label><input id="context-file" type="file" accept="image/png,image/jpeg">
+        <button id="context-example" class="tool-btn" type="button">Load reviewed wild5 example</button>
+        <label for="context-review">Visible facial information</label>
+        <select id="context-review">
+          <option value="">Inspect the original first</option>
+          <option value="usable">Visible facial structure is readable</option>
+          <option value="needs_clearer">Too degraded or covered to read the face</option>
+          <option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option>
+        </select>
+        <p class="help-text">Use a clearer or less-covered crop if eyes, nose and mouth cannot be meaningfully inspected. This experiment does not remove coverings.</p>
+      </section>
+      <section id="context-editor-section" class="hidden" aria-labelledby="protect-heading">
+        <h2 id="protect-heading">2. Protect the face and existing blur</h2>
+        <p id="context-dimensions" class="help-text"></p>
+        <p class="help-text">Drag a rectangle over the complete face and blurred patch, or edit the pixel bounds below. Include the soft edges. Green marks protection; the final preview includes its margin.</p>
+        <canvas id="context-editor" aria-label="Face protection rectangle editor. Use the four pixel fields as a keyboard alternative." role="img"></canvas>
+        <div class="context-bounds">
+          <label for="context-left">Left pixel<input id="context-left" type="number" min="0" step="1"></label>
+          <label for="context-top">Top pixel<input id="context-top" type="number" min="0" step="1"></label>
+          <label for="context-right">Right pixel<input id="context-right" type="number" min="0" step="1"></label>
+          <label for="context-bottom">Bottom pixel<input id="context-bottom" type="number" min="0" step="1"></label>
+        </div>
+        <div class="context-actions"><button id="context-center" class="tool-btn" type="button">Start with center area</button><button id="context-clear" class="tool-btn" type="button">Clear protection</button></div>
+        <p id="context-protection-note" class="help-text">No protection selected. The center area is a starting rectangle, not a detected face.</p>
+        <button id="context-preview-run" class="tool-btn" type="button" disabled>Preview surroundings blur</button>
+      </section>
+      <section id="context-preview-section" class="hidden" aria-labelledby="preview-heading">
+        <h2 id="preview-heading">3. Review before restoration</h2>
+        <div class="context-previews">
+          <figure><img id="context-protection" alt="Reviewed protection: green receives no added blur; amber blends outside it"><figcaption>Green: unchanged pixels. Amber: outside transition.</figcaption></figure>
+          <figure><img id="context-prepared" alt="Image with protected face and softened surroundings"><figcaption>Actual image submitted to the model.</figcaption></figure>
+        </div>
+        <p id="context-preservation" class="help-text"></p>
+        <label class="context-confirm" for="context-confirm"><input id="context-confirm" type="checkbox">The complete face and its already-blurred edges lie inside the green protection.</label>
+        <div class="context-actions"><a id="context-input-download" class="tool-btn" download="protected-surroundings-input.png">Download prepared image</a><a id="context-preparation-download" class="tool-btn" download="surroundings-preparation.zip">Download original + protection + preparation</a></div>
+      </section>
+      <section aria-labelledby="restore-heading">
+        <h2 id="restore-heading">4. Compare the same restoration model</h2>
+        <label for="context-selection">Restoration model</label><select id="context-selection"><option value="spatial_u">U96 · preferred development model</option><option value="r2">Retained R2 · comparison</option><option value="original">Untouched CodeFormer</option></select>
+        <p class="help-text">Compare the original input with the reviewed surroundings version. Both use the same model and 256 × 256 delivery, without added display enhancement.</p>
+        <button id="context-run" class="tool-btn" type="submit" disabled>Compare original and protected surroundings</button>
+      </section>
+      <p id="context-progress" class="help-text" role="status" aria-live="polite">Ready to inspect a crop. Nothing is applied automatically.</p>
+      <p id="context-error" class="workflow-error hidden" role="alert"></p>
+    </form>
+    <section id="context-results" class="research-results hidden" aria-label="Original and protected surroundings restoration results">
+      <article><h2>Original / resize control</h2><img id="result-original-input" width="256" height="256" alt="Original prepared input"></article>
+      <article><h2>Protected surroundings / resize control</h2><img id="result-prepared-input" width="256" height="256" alt="Prepared surroundings input"></article>
+      <article><h2>Restoration from original input</h2><img id="result-original-context" width="256" height="256" alt="Restoration with original surroundings"><a id="download-original-context" class="tool-btn" download="original-context-restoration.png">Download PNG</a></article>
+      <article><h2>Restoration from protected surroundings</h2><img id="result-prepared-context" width="256" height="256" alt="Restoration with reviewed softened surroundings"><a id="download-prepared-context" class="tool-btn" download="protected-context-restoration.png">Download PNG</a></article>
+      <a id="context-bundle" class="tool-btn" download="protected-surroundings-comparison.zip">5. Download original + protection + results + raw records</a>
+      <p class="help-text">Look for changes to visible eyes, brows, nose, mouth and jaw. The protected input pixels stay exact; the model's generated face can still change appearance. This input has no aligned clean reference in this flow. Experimental preprocessing and restoration models are not qualified for forensic accuracy.</p>
+    </section>
+  </main>
+  <script src="/static/research_surroundings_restoration_v1.js"></script>
+</body>
+</html>

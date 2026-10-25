@@ -1,0 +1,35 @@
+{
+  "complete": true,
+  "reason": "Preserve initial unsealed source/design/receipt before Python3.10 streaming-hash compatibility repair",
+  "initial_artifacts_preserved_exact": true,
+  "snapshot_map": [
+    {
+      "initial_path": "research/codeformer_u96_postfusion_v1/__init__.py",
+      "snapshot_path": "research/codeformer_u96_postfusion_v1/review_history_v0/__init__.py",
+      "bytes": 66,
+      "sha256": "b294dfcc71d5358daccc4a7e02d475eae39c3c0a24952ef522062653a8ade54a"
+    },
+    {
+      "initial_path": "research/codeformer_u96_postfusion_v1/model.py",
+      "snapshot_path": "research/codeformer_u96_postfusion_v1/review_history_v0/model.py",
+      "bytes": 23088,
+      "sha256": "bb2183ed6f09774457623c941538a069394f978de838f0f84efb262105a90de6"
+    },
+    {
+      "initial_path": "research/codeformer_u96_postfusion_v1/architecture_design_v1.json",
+      "snapshot_path": "research/codeformer_u96_postfusion_v1/review_history_v0/architecture_design_v1.json",
+      "bytes": 13855,
+      "sha256": "d99f6b1047218b060e96f6ac964be7db3648ecb1b5c9e8c1076ba7c3093f6f87"
+    },
+    {
+      "initial_path": "research/codeformer_u96_postfusion_v1/source_inert_receipt_v1.json",
+      "snapshot_path": "research/codeformer_u96_postfusion_v1/review_history_v0/source_inert_receipt_v1.json",
+      "bytes": 2959,
+      "sha256": "a754d83d44a849de9856d1e63e14142849cd3aee34c97e85dc816062b7508c54"
+    }
+  ],
+  "initial_v1_receipts_are_historical_after_current_model_repair": true,
+  "next_receipts": "architecture_design_v1_r1.json and source_inert_receipt_v1_r1.json supersede source pins",
+  "no_historical_VM_pilot_or_model_changed": true,
+  "Torch_model_neural_gradient_optimizer_VM_calls": 0
+}

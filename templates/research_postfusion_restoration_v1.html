@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta name="referrer" content="no-referrer"><title>U96 and post-fusion restoration comparison</title>
+  <link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/face_workflow.css">
+  <link rel="stylesheet" href="/static/research_restoration.css"><link rel="stylesheet" href="/static/research_filter_restoration_v1.css">
+</head>
+<body class="research-page">
+  <header class="research-header"><h1>FACE RESTORATION // POST-FUSION TEST</h1><span class="help-text">LOCAL INFERENCE</span></header>
+  <main class="research-main">
+    <p id="quality-status" class="research-notice">Experimental comparison only. U96 remains the selected development model. The new u64 passed a small TRAIN screen; broader usefulness and independent final review remain unresolved.</p>
+    <form id="research-form" class="research-form">
+      <label for="research-file">One already cropped frontal or mildly turned face</label>
+      <input id="research-file" name="file" type="file" accept="image/png,image/jpeg" required>
+      <img id="upload-preview" class="hidden" alt="Uploaded face before restoration">
+      <label for="research-review">Inspect the input before generating</label>
+      <select id="research-review" name="input_review" required>
+        <option value="">Choose after inspecting the face</option>
+        <option value="usable">Visible facial structure is readable</option>
+        <option value="needs_clearer">Too degraded or covered to read the face</option>
+        <option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option>
+      </select>
+      <p class="help-text">Compare U96 with the new post-fusion u64 on the same prepared input. Restoration only: coverings remain. No extra blur, noise, sharpening or display brightening is applied. Outputs are 256 × 256. Use a clearer or less-covered crop when the visible face is unreadable.</p>
+      <button id="research-run" class="tool-btn" type="submit" disabled>Compare both models</button>
+      <p id="research-progress" class="help-text" role="status" aria-live="polite">Checking model availability.</p>
+      <p id="research-error" class="workflow-error hidden" role="alert"></p>
+    </form>
+    <section id="research-results" class="research-results hidden" aria-label="Restoration results">
+      <article><h2>Input / resize control</h2><img id="result-input" width="256" height="256" alt="Prepared input at 256 by 256 pixels"></article>
+      <article><h2 id="label-incumbent_U96">U96 · incumbent · experimental</h2><img id="result-incumbent_U96" width="256" height="256" alt="Incumbent U96 restoration"><a id="download-incumbent_U96" class="tool-btn" download="incumbent-u96.png">Download PNG</a></article>
+      <article><h2 id="label-postfusion_LR_u64">Post-fusion LR u64 · experimental</h2><img id="result-postfusion_LR_u64" width="256" height="256" alt="Experimental post-fusion LR u64 restoration"><a id="download-postfusion_LR_u64" class="tool-btn" download="postfusion-lr-u64.png">Download PNG</a></article>
+      <a id="research-bundle" class="tool-btn" download="u96-postfusion-comparison.zip">Download original, PNGs, raw arrays and processing record</a>
+      <p class="help-text">Compare the visible eyes, brows, nose, mouth and jaw with the input. CodeFormer architecture and pretrained prior by S-Lab; U96 and post-fusion heads are our trained adaptations. A plausible sharp face does not prove recovered identity. Native CCTV without an aligned clean reference remains unpaired evidence.</p>
+    </section>
+  </main>
+  <script src="/static/research_postfusion_restoration_v1.js"></script>
+</body>
+</html>

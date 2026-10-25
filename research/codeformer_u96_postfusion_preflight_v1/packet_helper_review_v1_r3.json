@@ -1,0 +1,99 @@
+{
+  "complete": true,
+  "review_type": "R3 independent source-only review rebinding final worker contract; unchanged helper/entry/stage/shell sources rehashed and parsed; real staged positive verification pending",
+  "sources": [
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1/packet.py",
+      "bytes": 9427,
+      "sha256": "56fa3119efe423cf1d2d80b2e06f9e9e5abb339b4fb12c2fee60b69a48653981",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1/entry.py",
+      "bytes": 6432,
+      "sha256": "09b8fb1feae592671474956aab12099babffbb644d30062ae3e2a9345b34420b",
+      "AST_Python3_10_grammar": true
+    },
+    {
+      "path": "research/codeformer_u96_postfusion_preflight_v1/stage_entry.py",
+      "bytes": 310,
+      "sha256": "5aa7a0dde413de2ae949db214ea50daa4bda79c78296acc0c95cabe04654e3d7",
+      "AST_Python3_10_grammar": true
+    }
+  ],
+  "contract": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/CONTRACT.md",
+    "bytes": 9548,
+    "sha256": "369a5a55212f7446f7c19cc5e87c124205089698f4b9b0daf36cc0268ab4140e"
+  },
+  "shell": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/run_preflight.sh",
+    "bytes": 334,
+    "sha256": "bf6f235ce00cd2b75fcbc74d08b437c10423e3630b7286f375837c5de15888a4",
+    "LF_only": true,
+    "Bash_syntax_actually_executed": false
+  },
+  "source_review_pass": true,
+  "inert_packet_import": true,
+  "Torch_NumPy_import_attempts": [],
+  "exact_model_and_prototype_FIXED_hashes_match_retained_artifacts": true,
+  "exact_data_FIXED_semantics_not_reparsed_in_this_source_pass": true,
+  "exact_four_reference_clear_local_order_enforced": true,
+  "limits": {
+    "full_forward_attempts": 20,
+    "full_forward_returns": 20,
+    "reference_forwards": 8,
+    "candidate_parity_forwards": 8,
+    "candidate_gradient_forwards": 4,
+    "gradient_queries": 4,
+    "optimizer_constructions": 0,
+    "optimizer_updates": 0,
+    "internal_seconds": 1200,
+    "external_seconds": 1260,
+    "per_phase_seconds": 180,
+    "initial_free_disk_bytes": 6442450944,
+    "continuing_disk_reserve": 4294967296,
+    "maximum_RSS_bytes": 10737418240,
+    "maximum_CUDA_reserved_bytes": 19327352832,
+    "maximum_output_bytes": 134217728
+  },
+  "prior_findings_retained": "research/codeformer_u96_postfusion_preflight_v1/packet_helper_review_v1_r2.json",
+  "source_guards_reviewed": [
+    "Exact direct section keys and hash/byte pins",
+    "Raw ancestor lstat before resolve for packet/expectedVM/cwd",
+    "Finite JSON recursive check and exact int limit map",
+    "Clear/localpair+exactreferenceIDorder",
+    "No overwrite/resume guards with exclusive output opens",
+    "Explicit gzip wrapper plus streaming tar without broken compresslevel usage",
+    "Bounded worker process group termination and independent export attempt after failure",
+    "Return excludes baseline weights; payload and compressed archive cap160MiB"
+  ],
+  "remaining_integration_checks": [
+    "Actual staged positive --verify-transfer plus complete bytes/hash/namespace readback remains required.",
+    "Shell must be staged under scripts/ because dirname/.. assumes that placement.",
+    "Real worker/model/CUDA execution remains unrun; this receipt is not a runtime pass.",
+    "Pre-module packet/protocol failures remain in supervisor/run.log plus bounded export where possible; worker-owned failures retain failure.json.",
+    "External1260 worker timeout has up to20seconds termination grace.",
+    "Packing success is separate from preflight, training and quality qualification."
+  ],
+  "real_packet_verified": false,
+  "VM_runtime_verified": false,
+  "worker_model_or_optimizer_called": false,
+  "factory_called": false,
+  "neural_gradient_training_VM_calls": 0,
+  "source_edited": false,
+  "packet_sealed": false,
+  "UTC": "2026-10-21T13:07:52.531235+00:00",
+  "contract_consistency": {
+    "all16_exact_LIMITS_unchanged": true,
+    "worker_owned_output_paths_all_under_export_allowed_outputs": true,
+    "portable_head_NPZ_and_144_gradient_arrays_under_128MiB_worker_cap": true,
+    "strict_forward_narrow_warn_only_gradient_policy_is_worker_scoped": true,
+    "helper_and_supervisor_do_not_import_Torch_during_verify": true,
+    "export_uses_explicit_gzip_plus_streaming_tar_Python3_10_compatible": true,
+    "worker_external1260_seconds_plus_up_to20_seconds_termination_grace": true,
+    "export_internal330_external345_seconds": true,
+    "no_automatic_resume_or_overwrite": true
+  },
+  "worker_source_review": "research/codeformer_u96_postfusion_preflight_v1/worker_source_review_v1.json"
+}

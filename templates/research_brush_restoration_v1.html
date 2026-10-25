@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta name="referrer" content="no-referrer"><title>Reviewed Protect and Apply restoration</title>
+  <link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/face_workflow.css">
+  <link rel="stylesheet" href="/static/research_restoration.css"><link rel="stylesheet" href="/static/research_surroundings_restoration_v1.css">
+  <link rel="stylesheet" href="/static/research_brush_restoration_v1.css">
+</head>
+<body class="research-page">
+  <header class="research-header"><h1>FACE RESTORATION // PROTECT + APPLY</h1></header>
+  <main class="research-main">
+    <p class="research-notice">Optional manual preparation. Protect the complete face, existing blur and soft edges. Paint Apply only where added surroundings blur is permitted. Automatic detection and exact blur matching are not available. U96 remains the control; u64 is experimental.</p>
+    <form id="brush-form" class="context-form">
+      <section aria-labelledby="brush-upload-heading">
+        <h2 id="brush-upload-heading">1. Inspect the original crop</h2>
+        <label for="brush-file">PNG or JPEG face crop</label><input id="brush-file" type="file" accept="image/png,image/jpeg">
+        <label for="brush-review">Visible facial information</label>
+        <select id="brush-review"><option value="">Inspect the original first</option><option value="usable">Visible facial structure is readable</option><option value="needs_clearer">Too degraded or covered to read the face</option><option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option></select>
+        <p class="help-text">Request a clearer or less-covered crop when the visible eyes, nose and mouth cannot be meaningfully inspected. This workflow does not remove coverings.</p>
+      </section>
+      <section id="brush-edit-section" class="hidden" aria-labelledby="brush-edit-heading">
+        <h2 id="brush-edit-heading">2. Mark Protect and Apply separately</h2>
+        <p id="brush-dimensions" class="help-text"></p>
+        <div class="brush-controls">
+          <label for="brush-plane">Area<select id="brush-plane"><option value="protect">Protect · green</option><option value="apply">Apply · blue</option></select></label>
+          <label for="brush-action">Action<select id="brush-action"><option value="paint">Paint</option><option value="erase">Erase selected area</option></select></label>
+          <label for="brush-size">Brush diameter in native pixels<input id="brush-size" type="number" min="1" max="160" step="1" value="25"></label>
+        </div>
+        <p class="help-text">Green always wins when areas overlap. Apply starts empty. Pixels outside Apply remain unchanged. The preview adds an 8-pixel protection margin and a 16-pixel transition entirely inside permitted Apply.</p>
+        <canvas id="brush-editor" tabindex="0" role="img" aria-label="Protect and Apply editor. Arrow keys move the native pixel cursor; Space paints or erases. Coordinate fields provide another keyboard control."></canvas>
+        <p id="brush-cursor" class="help-text" aria-live="polite">Paint or use the coordinate controls.</p>
+        <div class="brush-controls">
+          <label for="brush-x">Cursor X<input id="brush-x" type="number" min="0" step="1" value="0"></label>
+          <label for="brush-y">Cursor Y<input id="brush-y" type="number" min="0" step="1" value="0"></label>
+          <button id="brush-stamp" class="tool-btn" type="button">Use brush at cursor</button>
+        </div>
+        <div class="context-actions"><button id="brush-fill" class="tool-btn" type="button">Permit all surroundings</button><button id="brush-undo" class="tool-btn" type="button">Undo</button><button id="brush-clear" class="tool-btn" type="button">Clear selected area</button><button id="brush-reset" class="tool-btn" type="button">Reset both areas</button></div>
+        <details><summary>Start Protect with a rectangle</summary>
+          <div class="context-bounds"><label for="brush-left">Left pixel<input id="brush-left" type="number" min="0" step="1" value="0"></label><label for="brush-top">Top pixel<input id="brush-top" type="number" min="0" step="1" value="0"></label><label for="brush-right">Right pixel<input id="brush-right" type="number" min="0" step="1" value="0"></label><label for="brush-bottom">Bottom pixel<input id="brush-bottom" type="number" min="0" step="1" value="0"></label></div>
+          <button id="brush-rectangle" class="tool-btn" type="button">Add Protect rectangle</button>
+        </details>
+        <label for="brush-radius">Approximate surroundings blur radius at 256 pixels<input id="brush-radius" type="number" min="0" max="12" step="0.5" value="6"></label>
+        <p class="help-text">Manual Gaussian blur only. Start with the original; previews never accumulate blur. Matching the unknown input blur is approximate. Keep preparation off when it does not help.</p>
+        <button id="brush-preview" class="tool-btn" type="button" disabled>Preview permitted surroundings</button>
+      </section>
+      <section id="brush-preview-section" class="hidden" aria-labelledby="brush-preview-heading">
+        <h2 id="brush-preview-heading">3. Review the actual prepared input</h2>
+        <div class="brush-previews"><figure><img id="brush-original" alt="Decoded original image"><figcaption>Immutable original</figcaption></figure><figure><img id="brush-overlay" alt="Protection and permission preview"><figcaption>Green: unchanged protection. Blue: permitted Apply. Amber: transition inside Apply.</figcaption></figure><figure><img id="brush-derived" alt="Actual prepared native input"><figcaption>Actual input after optional preparation</figcaption></figure></div>
+        <p id="brush-preservation" class="help-text"></p>
+        <label class="context-confirm" for="brush-confirm"><input id="brush-confirm" type="checkbox">I reviewed both areas. The complete face and existing blurred edges are protected, and Apply contains only permitted surroundings.</label>
+        <div class="context-actions"><a id="brush-prepared-download" class="tool-btn" download="reviewed-prepared-input.png">Download prepared PNG</a><a id="brush-preview-download" class="tool-btn" download="Protect-Apply-preparation.zip">Download original + masks + preparation</a></div>
+      </section>
+      <section aria-labelledby="brush-restore-heading">
+        <h2 id="brush-restore-heading">4. Restore with the same selected model</h2>
+        <label for="brush-model">Restoration model<select id="brush-model"><option value="incumbent_U96">U96 · retained control</option><option value="postfusion_LR_u64">Post-fusion LR u64 · experimental</option></select></label>
+        <div class="context-actions"><button id="brush-run" class="tool-btn" type="submit" disabled>Compare original and prepared</button><button id="brush-bypass" class="tool-btn" type="button" disabled>Restore original · bypass preparation</button></div>
+        <p class="help-text">The comparison uses two frozen inference calls; bypass uses one. Protected input pixels stay exact during preparation. The restoration model can still change generated facial appearance. A sharper result does not establish recovered identity.</p>
+      </section>
+      <p id="brush-progress" role="status" aria-live="polite" class="help-text">Checking reviewed model availability.</p>
+      <p id="brush-error" role="alert" class="workflow-error hidden"></p>
+    </form>
+    <section id="brush-results" class="research-results hidden" aria-label="Original and prepared restoration results">
+      <article><h2>Original / resize control</h2><img id="brush-result-input" width="256" height="256" alt="Original prepared 256 input"></article>
+      <article><h2 id="brush-prepared-input-heading">Reviewed preparation / resize control</h2><img id="brush-result-prepared" width="256" height="256" alt="Reviewed prepared 256 input"></article>
+      <article><h2>Restoration from original</h2><img id="brush-result-original" width="256" height="256" alt="Restoration of original input"><a id="brush-download-original" class="tool-btn" download="original-restoration.png">Download PNG</a></article>
+      <article><h2 id="brush-prepared-result-heading">Restoration from reviewed input</h2><img id="brush-result-derived" width="256" height="256" alt="Restoration of reviewed input"><a id="brush-download-derived" class="tool-btn" download="reviewed-restoration.png">Download PNG</a></article>
+      <a id="brush-result-bundle" class="tool-btn" download="Protect-Apply-restoration.zip">Download original + masks + results + RAW records</a>
+      <p class="help-text">Manual assisted preparation. Native inputs have no aligned clean reference in this page. Neither automatic mask quality, exact blur matching, forensic identity nor final model qualification is established.</p>
+    </section>
+  </main>
+  <script src="/static/research_brush_restoration_v1.js"></script>
+</body>
+</html>

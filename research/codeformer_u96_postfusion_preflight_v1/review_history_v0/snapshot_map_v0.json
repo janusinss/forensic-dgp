@@ -1,0 +1,20 @@
+{
+  "complete": true,
+  "reason": "One pre-seal batch repair of independent worker source findings and CUDA bilinear gradient nondeterminism guard",
+  "files": [
+    {
+      "initial_path": "research/codeformer_u96_postfusion_preflight_v1/worker.py",
+      "snapshot_path": "research/codeformer_u96_postfusion_preflight_v1/review_history_v0/worker.py",
+      "bytes": 42657,
+      "sha256": "5d5efd26d49937db16ae710919ed1a1504e5c34232c39f1f2c067e886ba5459e"
+    },
+    {
+      "initial_path": "research/codeformer_u96_postfusion_preflight_v1/CONTRACT.md",
+      "snapshot_path": "research/codeformer_u96_postfusion_preflight_v1/review_history_v0/CONTRACT.md",
+      "bytes": 7108,
+      "sha256": "bed12bdb16eb5e20c7babe6b412ede5d5d459e0bd93772492e287cca6145e34d"
+    }
+  ],
+  "original_worker_and_contract_preserved_exact": true,
+  "actual_runtime_calls": 0
+}

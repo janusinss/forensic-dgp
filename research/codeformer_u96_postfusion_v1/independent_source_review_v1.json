@@ -1,0 +1,62 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "reviewer": "separate u96_mild_context_design_review agent; source/inert checks only",
+  "model": {
+    "path": "research/codeformer_u96_postfusion_v1/model.py",
+    "bytes": 23088,
+    "sha256": "bb2183ed6f09774457623c941538a069394f978de838f0f84efb262105a90de6"
+  },
+  "architecture_design": {
+    "path": "research/codeformer_u96_postfusion_v1/architecture_design_v1.json",
+    "bytes": 13855,
+    "sha256": "d99f6b1047218b060e96f6ac964be7db3648ecb1b5c9e8c1076ba7c3093f6f87"
+  },
+  "current_inference_comparator": {
+    "path": "research_spatial_restoration_v1.py",
+    "bytes": 20043,
+    "sha256": "08fa6d4d7d252c0c96d35c87c40ee1035d8e5a68e8ce42d62b1c8b7f721a9437"
+  },
+  "static_checks": {
+    "AST_parse": true,
+    "inert_module_import_with_Torch_NumPy_import_block": true,
+    "Torch_NumPy_import_attempts": [],
+    "metadata_contract_and_source_pins_match": true,
+    "exact_adapter_schema_matches_current_inference": true,
+    "adapter_forward_expression_AST_matches_current_inference": true,
+    "adapter_tensors": 24,
+    "adapter_parameters": 51328,
+    "head_tensors": 36,
+    "head_parameters": 168960,
+    "frozen_tensors": 539,
+    "prospective_total_tensors": 575,
+    "retained_architecture_hashes_match": true,
+    "decoder_and_fused_not_detached": true,
+    "observed_and_coarse_detached": true,
+    "forward_has_no_blanket_no_grad": true
+  },
+  "manual_source_findings": [
+    "Factory binds both exact initializer artifact SHA256 values and canonical515R2/24U96 tensor contents; S96 or partial dictionaries are refused.",
+    "Four ordered sites apply frozen U96 adapter prehooks, capture used32coarse context, then correct matching stock fused results with zero-final jointlyconditioned heads.",
+    "Perwrapper nonblocking forward lock and thread-bound base/SFT hooks reject nested/foreign execution during owned forward; scoped handles/pending/coarse state are released in finally.",
+    "CPU-only convolution constructors execute inside CPU fork_rng and explicit CPU default-generator seed; subsequent to(device) does not request random tensors. Actual CPU/CUDA RNG equality remains to be measured.",
+    "Zero final projections imply algebraic identity only. Numerical parity, finite actual output sensitivity, gradients and successful cleanup under injected exceptions are unexecuted."
+  ],
+  "integration_caveats": [
+    "Current forward rejects all pre-existing hooks. A future worker must not attach external diagnostic hooks before calling it; implement guarded internal witnesses or independently reconstruct readouts.",
+    "Factory accepts CPU or CUDA and does not itself enforce Linux/tmux/L4. A future sealed manual worker must enforce that environment before model construction or gradient work.",
+    "Structural checks bind state/module source but are not a general defense against arbitrary external monkeypatching or naked raw-base calls outside owned forwards; use freshly owned runtime objects.",
+    "validate_invariants default skips frozen content digests for speed; future reserved initial/post-step/checkpoint boundaries must explicitly request check_frozen_digests=True.",
+    "Zero initial output-head gradients upstream can be valid; require appropriate finite final-projection image-gradient witnesses, not all36 nonzero gradients."
+  ],
+  "factory_called": false,
+  "modules_constructed": 0,
+  "neural_calls": 0,
+  "gradient_queries": 0,
+  "optimizer_calls": 0,
+  "training_or_VM_or_browser_calls": 0,
+  "runtime_parity_or_gradient_or_hook_exception_behavior_verified": false,
+  "qualified_restoration_or_FINAL_claim": false,
+  "packet_sealed": false,
+  "old_inference_or_original_prototype_edited": false
+}

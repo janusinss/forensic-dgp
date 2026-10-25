@@ -1,0 +1,25 @@
+{
+  "complete": true,
+  "review_type": "compatibility addendum after inert/source checks; no runtime construction",
+  "model_at_review": {
+    "path": "research/codeformer_u96_postfusion_v1/model.py",
+    "bytes": 23088,
+    "sha256": "bb2183ed6f09774457623c941538a069394f978de838f0f84efb262105a90de6"
+  },
+  "prior_source_review": {
+    "path": "research/codeformer_u96_postfusion_v1/independent_source_review_v1.json",
+    "bytes": 3779,
+    "sha256": "fc6be10f48c27fa3beab457eb13098872eea17988d4df8e30bb1d7d4814691c6"
+  },
+  "finding": {
+    "location": "research/codeformer_u96_postfusion_v1/model.py:138",
+    "cause": "hashlib.file_digest is only available from Python3.11; historical existingVM transcript usedPython3.10. CurrentVM Pythonversion was not queried in this source-only review.",
+    "primary_source": "https://docs.python.org/3.11/library/hashlib.html#hashlib.file_digest",
+    "primary_source_checked": "Official Python3.11 docs explicitly mark file_digest New in version3.11",
+    "fix": "Use a streaming hashlib.sha256 update loop compatible with3.10, or independently confirm actualruntime>=3.11 before any packet is sealed; do not upgrade the VM speculatively."
+  },
+  "prior_structural_inert_checks_remain_evidence": true,
+  "VM_compatibility_or_packet_readiness_pass": false,
+  "prototype_edited": false,
+  "model_construction_forward_backward_optimizer_training_VM_calls": 0
+}

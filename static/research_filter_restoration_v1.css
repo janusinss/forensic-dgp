@@ -1,0 +1,6 @@
+.research-main { max-width: 1440px; }
+.research-results { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.research-results article { overflow-wrap: anywhere; }
+.research-main > p { overflow-wrap: anywhere; }
+@media (max-width: 1050px) and (min-width: 768px) { .research-results { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) { .research-results { grid-template-columns: 1fr; } }
