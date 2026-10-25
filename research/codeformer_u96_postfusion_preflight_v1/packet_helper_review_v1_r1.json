@@ -1,0 +1,166 @@
+{
+  "complete": true,
+  "reviewed_source": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/packet.py",
+    "bytes": 7971,
+    "sha256": "c82aaf07dc242475625719de960d812f4b0a594f48f6dbf689429df28ce5c878"
+  },
+  "contract": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/CONTRACT.md",
+    "bytes": 7108,
+    "sha256": "bed12bdb16eb5e20c7babe6b412ede5d5d459e0bd93772492e287cca6145e34d"
+  },
+  "fixture_directory": "scratch/u96_preflight_packet_adversarial_v1_r1_5_hp_as1",
+  "positive_fixture_accepts": true,
+  "AST_Python3_10_grammar": true,
+  "actual_Python3_10_runtime": false,
+  "inert_import_Torch_NumPy_blocked": true,
+  "dependency_import_attempts": [],
+  "checks": [
+    {
+      "probe": "full_schema_small_validator_fixture_positive_not_real_model_assets",
+      "accepted": true
+    },
+    {
+      "probe": "missing_model_section",
+      "accepted": false,
+      "error_type": "KeyError",
+      "message": "'model'"
+    },
+    {
+      "probe": "empty_required_direct_pin_sections",
+      "accepted": true
+    },
+    {
+      "probe": "unpaired_roles_per_reference",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Exactly one clear/local pair per TRAIN reference required"
+    },
+    {
+      "probe": "noncanonical_witness_order",
+      "accepted": true
+    },
+    {
+      "probe": "gradient_bool_as_int",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Exactly4 TRAIN photographs/gradient witnesses required"
+    },
+    {
+      "probe": "changed_internal_time_limit",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Exact finite resource/call/time limits required"
+    },
+    {
+      "probe": "limit_int_as_bool",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Exact finite resource/call/time limits required"
+    },
+    {
+      "probe": "unjoined_direct_model_pin",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Direct metadata/source/model pin must join declared files"
+    },
+    {
+      "probe": "undeclared_empty_directory",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Unexpected directory namespace: unlisted_empty"
+    },
+    {
+      "probe": "undeclared_extra_file",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Unexpected packet namespace: extra.txt"
+    },
+    {
+      "probe": "witness_escape",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Paired reference must use one exact clean target"
+    },
+    {
+      "probe": "declared_relative_dot",
+      "accepted": false,
+      "error_type": "ValueError",
+      "message": "Packet path escape refused"
+    },
+    {
+      "probe": "strict_JSON_overflow",
+      "accepted": false
+    },
+    {
+      "probe": "strict_JSON_duplicate_key",
+      "accepted": false
+    },
+    {
+      "probe": "strict_JSON_NaN",
+      "accepted": false
+    },
+    {
+      "probe": "relative_.",
+      "accepted": false
+    },
+    {
+      "probe": "relative_..",
+      "accepted": false
+    },
+    {
+      "probe": "relative_../x",
+      "accepted": false
+    },
+    {
+      "probe": "relative_/absolute",
+      "accepted": false
+    },
+    {
+      "probe": "relative_a\\b",
+      "accepted": false
+    },
+    {
+      "probe": "relative_a//b",
+      "accepted": false
+    },
+    {
+      "probe": "relative_a/./b",
+      "accepted": false
+    },
+    {
+      "probe": "relative_C:/x",
+      "accepted": false
+    }
+  ],
+  "limits": {
+    "full_forward_attempts": 20,
+    "full_forward_returns": 20,
+    "reference_forwards": 8,
+    "candidate_parity_forwards": 8,
+    "candidate_gradient_forwards": 4,
+    "gradient_queries": 4,
+    "optimizer_constructions": 0,
+    "optimizer_updates": 0,
+    "internal_seconds": 1200,
+    "external_seconds": 1260,
+    "per_phase_seconds": 180,
+    "initial_free_disk_bytes": 6442450944,
+    "continuing_disk_reserve": 4294967296,
+    "maximum_RSS_bytes": 10737418240,
+    "maximum_CUDA_reserved_bytes": 19327352832,
+    "maximum_output_bytes": 134217728
+  },
+  "historical_probe_record": "scratch/u96_preflight_packet_adversarial_v1_600dasc4/packet_probe_findings_v1.json",
+  "remaining_gaps": [
+    "Empty model/prototype/data dictionaries still accepted; required semantic names/content are not enforced.",
+    "Tiny declared payload can be pinned as both model r2/u96: helper joins integrity but does not itself establish exact initializer semantics.",
+    "Noncanonical witness order accepted although contract names fixed clear-then-local order."
+  ],
+  "path_guard_scope": "Source reviewed directory lstat on rawpath+ancestors before resolve; no real symlink/reparse alias created in this review.",
+  "source_edited": false,
+  "model_neural_training_VM_calls": 0,
+  "current_source_changed_during_probe": false,
+  "packet_ready_or_sealed": false
+}

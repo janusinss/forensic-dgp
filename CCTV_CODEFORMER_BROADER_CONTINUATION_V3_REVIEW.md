@@ -1,0 +1,29 @@
+# Broader restoration comparison: repaired continuation
+
+The comparison has resumed from its first unfilled output, slot 206. The 205 independently audited outputs remain retained and are not regenerated. This is frozen local inference for comparing U96 with experimental postfusion LR u64; it changes no model weights and performs no training.
+
+## Cause and repair
+
+The original comparison stopped on a RAM reserve. A later continuation completed another 144 outputs before its supervisor disappeared during an interruption. Its actual exit time and disappearance cause remain unknown. Independent inspection verified all 205 combined outputs and retained namespaces, with no unresolved forward in the recorded evidence. That conclusion does not prove that undocumented external file deletion never occurred.
+
+The new continuation's preflight then exposed a different problem: a generic file validator requires nonempty files, but the sealed worker intentionally creates empty `worker.log` placeholders while redirecting stdout/stderr to DEVNULL. The actual results and progress are in separate saved records and journals. All nine empty logs had their exact expected digest and complete neighboring 16-output chunks. This validator mismatch occurred before any new model call; it does not invalidate those restoration outputs or explain the earlier supervisor disappearance.
+
+The user first requested further evidence inspection, then authorized the best repair if the problem remained. The inspection and actual checker replay reproduced the mismatch. The new v3 source accepts only the exact nine retained log paths, size zero and SHA-256 of empty bytes, with ordinary-file, single-link, reparse and stable-read checks. Every nonempty file retains the existing checker. Other empty files remain rejected. The old sources, failed-source snapshots, failure transcripts and all outputs remain intact.
+
+## Verification and running scope
+
+- All 205 retained outputs passed an independent saved-pixel, delivery, source and metric audit. All 952 original files and 2,414 interrupted-run files remain exact. The targeted log inspection separately verified all nine clean chunk outcomes and freshly rehashed the interrupted namespace.
+- The repaired runner passed 22 author tests, including a real hard-link fixture, and an actual retained-output/Windows-boot dependency check with zero model calls. Independent review inspected the complete source and ran the focused empty-file regressions; its receipt distinguishes author-run checks from independent checks.
+- Root sealed plan `278c49c19f90b4411445dbb82643e2fba7785511cf23622e32c4e82df66dc96c` and verified it before launch. The hidden persistent supervisor's actual PID, interpreter, environment, source hash and token were checked before explicit process approval. The first new saved outputs confirm the repaired preflight passed; they are partial runtime evidence, not a quality verdict.
+- Exactly 511 remaining calls, 255 U96 and 256 u64, are assigned to 32 bounded chunks. The original monotonic deadline remains binding, shortened one second to remove an earlier rounding overshoot. All idle and preparation time stays charged. The cumulative output allowance remains 6 GiB across every retained/new run, with 2.5 GiB startup RAM, 512 MiB ongoing RAM reserve, 6 GiB worker RSS, 8 GiB free disk and four CPU threads. No automatic retry is configured.
+- Completion still requires all 716 paired outputs, unchanged RAW/PNG preservation gates, independent saved-output auditing and root inspection of all 90 planned sheets. The 64 carried native outputs and 16 native zero-call exclusions remain separate unpaired evidence. U96 remains incumbent and u64 experimental; no app promotion or model usefulness claim follows from launch.
+
+The separate Protect/Apply page is available at [the current local research URL](http://127.0.0.1:65004/restoration-brush-test). Its restarted loading/layout/Ready-state checks made zero model calls; prior actual functional tests remain separate. Preparation stays optional after the mixed/adverse paired study. Automatic matching remains deferred. The delivery adapter is verified but unwired. FINAL reviewers remain unassigned, its protocol unfrozen and reserved pixels unopened. Full app acceptance and later covering-family scope remain unfinished.
+
+## Evidence
+
+- [Interrupted 205-output review](outputs/codeformer_u96_postfusion_lr_broader_tail_interruption_audit_v1/REVIEW.md) and [nine-log inspection table](outputs/codeformer_u96_postfusion_lr_broader_tail_interruption_audit_v1/empty_log_forensics_v1/REVIEW.md).
+- [Actual validator replay](outputs/codeformer_u96_postfusion_lr_empty_log_forensics_v1/root_validator_diagnostic_replay_v1.json) and [independent repaired-source review](outputs/codeformer_u96_postfusion_lr_broader_tail_preparation_v3/independent_runner_source_review_v3.json).
+- [Sealed continuation plan](outputs/codeformer_u96_postfusion_lr_broader_tail_preparation_v3/remaining511_tail_plan_v3.json) and [independent plan/launch readback](outputs/codeformer_u96_postfusion_lr_broader_tail_preparation_v3/independent_plan_launch_readback_060e54cee3454c338efef881ea3f069a_v1.json).
+- [Root's first new-output observation](outputs/codeformer_u96_postfusion_lr_broader_tail_preparation_v3/root_runtime_observations/root_first_new_outputs_observation_v1.json). Its counters are timestamped partial observations; authoritative terminal evidence belongs in the new run's `supervisor.json` and `comparison.json` when they exist.
+- Prepared, unrun acceptance tools: [independent full saved-output auditor](outputs/codeformer_u96_postfusion_lr_broader_tail_saved_audit_v3/audit_all716_saved_v3.py) and [90-sheet renderer](outputs/codeformer_u96_postfusion_lr_broader_complete_render_v3/README.md). Neither may treat a partial run as completed research.

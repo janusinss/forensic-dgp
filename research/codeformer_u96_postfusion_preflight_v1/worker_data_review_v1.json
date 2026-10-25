@@ -1,0 +1,38 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "reviewer": "/root/u96_dev_data_audit; independent source, data, output and resource review only",
+  "worker": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/worker.py",
+    "bytes": 50684,
+    "sha256": "c8f8808bd9efa5a8fecfae5bc3cf3cc72235e00ebfd3fc12bc6139185c2796ca"
+  },
+  "contract": {
+    "path": "research/codeformer_u96_postfusion_preflight_v1/CONTRACT.md",
+    "bytes": 9548,
+    "sha256": "369a5a55212f7446f7c19cc5e87c124205089698f4b9b0daf36cc0268ab4140e"
+  },
+  "review_scope": [
+    "Full worker source, packet/direct data joins and builder portability",
+    "Eight parity/four gradient output schemas and20 full forward/80 frozen/48 head site successful counters",
+    "Regional objective and adjacent-pair normalization, saved144 gradient arrays and72 head NPZ arrays",
+    "128MiB output budget, current/peakRSS10GiB, CUDApeak18GiB,1200s/180s phases and safe owned failure writes"
+  ],
+  "material_findings_resolved": [
+    "Actual failure phase retained before context restoration",
+    "All36 gradients per witness saved with array pins and norm/max/nonzero/nonfinite descriptors",
+    "Counters distinguish frozen/head site reservations from actual verified returns",
+    "Linux getrusage high-water RSS recorded and capped alongside current RSS",
+    "NPZ head tensors permit NumPy canonical/schema/exact unchanged auditing without unpickling"
+  ],
+  "estimated_payload_bytes_including_parity_gradients_HEAD_PT_and_NPZ_and_conservative_PNG": 108993600,
+  "estimated_payload_MiB": 103.94439697265625,
+  "budget_limit_bytes": 134217728,
+  "remaining_bytes_before_small_serialization_JSON_logs_overhead": 25224128,
+  "saved_gradients_can_expose_failure_nonfinite_values_without_fabricating_finite_pass": true,
+  "gradient_warn_only_scope_retains_strict_forward_parity_without_claiming_deterministic_backward": true,
+  "runtime_head_schema_numerical_parity_gradients_resource_feasibility_unverified": true,
+  "frozen539_actual_tensor_states_and_caller_RNG_runtime_pending": true,
+  "zero_optimizer_preflight_not_training_or_model_qualification": true,
+  "Torch_imports_model_forwards_gradients_HTTP_VM_training_calls": 0
+}

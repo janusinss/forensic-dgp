@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta name="referrer" content="no-referrer"><title>Spatial face restoration comparison</title>
+  <link rel="stylesheet" href="/static/style.css"><link rel="stylesheet" href="/static/face_workflow.css">
+  <link rel="stylesheet" href="/static/research_restoration.css"><link rel="stylesheet" href="/static/research_filter_restoration_v1.css">
+</head>
+<body class="research-page">
+  <header class="research-header"><h1>FACE RESTORATION // SPATIAL TEST</h1><span class="help-text">LOCAL INFERENCE</span></header>
+  <main class="research-main">
+    <p id="quality-status" class="research-notice">U96 is the preferred development restorer. R2 stays available for comparison. Preservation limitations and independent final review remain unresolved.</p>
+    <form id="research-form" class="research-form">
+      <label for="research-file">One already cropped frontal or mildly turned face</label>
+      <input id="research-file" name="file" type="file" accept="image/png,image/jpeg" required>
+      <img id="upload-preview" class="hidden" alt="Uploaded face before restoration">
+      <label for="research-review">Inspect the input before generating</label>
+      <select id="research-review" name="input_review" required>
+        <option value="">Choose after inspecting the face</option>
+        <option value="usable">Visible facial structure is readable</option>
+        <option value="needs_clearer">Too degraded or covered to read the face</option>
+        <option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option>
+      </select>
+      <label for="research-selection">Models to test</label>
+      <select id="research-selection" name="selection">
+        <option value="spatial_u" selected disabled>U96 · preferred · checking availability</option>
+        <option value="all">Compare all four models</option>
+        <option value="original">Untouched CodeFormer</option>
+        <option value="r2">Our trained R2 · experimental</option>
+        <option value="spatial_s" disabled>Spatial S · awaiting verification</option>
+      </select>
+      <p class="help-text">Restoration only. Coverings remain. Use a clearer or less-covered crop when the visible face is unreadable. The same prepared input goes to each model. Outputs are 256 × 256, without sharpening or display brightening.</p>
+      <button id="research-run" class="tool-btn" type="submit" disabled>Compare restoration</button>
+      <p id="research-progress" class="help-text" role="status" aria-live="polite">Checking model availability.</p>
+      <p id="research-error" class="workflow-error hidden" role="alert"></p>
+    </form>
+    <section id="research-results" class="research-results hidden" aria-label="Restoration results">
+      <article><h2>Input / resize control</h2><img id="result-input" width="256" height="256" alt="Prepared input at 256 by 256 pixels"></article>
+      <article id="original-result"><h2 id="label-original">Untouched CodeFormer</h2><img id="result-original" width="256" height="256" alt="Untouched CodeFormer restoration"><a id="download-original" class="tool-btn" download="untouched-codeformer.png">Download PNG</a></article>
+      <article id="r2-result"><h2 id="label-r2">Our trained R2 · experimental</h2><img id="result-r2" width="256" height="256" alt="Experimental R2 restoration"><a id="download-r2" class="tool-btn" download="our-codeformer-r2.png">Download PNG</a></article>
+      <article id="spatial_u-result"><h2 id="label-spatial_u">Spatial U · experimental</h2><img id="result-spatial_u" width="256" height="256" alt="Experimental spatial U restoration"><a id="download-spatial_u" class="tool-btn" download="our-codeformer-spatial-u.png">Download PNG</a><p id="status-spatial_u" class="help-text"></p></article>
+      <article id="spatial_s-result"><h2 id="label-spatial_s">Spatial S · experimental</h2><img id="result-spatial_s" width="256" height="256" alt="Experimental spatial S restoration"><a id="download-spatial_s" class="tool-btn" download="our-codeformer-spatial-s.png">Download PNG</a><p id="status-spatial_s" class="help-text"></p></article>
+      <a id="research-bundle" class="tool-btn" download="spatial-restoration-comparison.zip">Download PNGs + raw arrays + processing record</a>
+      <p class="help-text">Compare visible eyes, brows, nose, mouth and jaw with the input. CodeFormer architecture and pretrained prior by S-Lab; R2 and the spatial adapters are our trained adaptations. A plausible sharp face does not prove recovered identity. Native CCTV has no aligned clean reference.</p>
+    </section>
+  </main>
+  <script src="/static/research_spatial_restoration_v1.js"></script>
+</body>
+</html>

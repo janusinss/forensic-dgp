@@ -1,0 +1,285 @@
+{
+  "format": "R2-CodeFormer-spatial-correction-architecture-design-v1",
+  "status": "INERT_UNRUN_PROTOTYPE_NOT_TRAINED_OR_PACKET_READY",
+  "source": [
+    {
+      "path": "research/codeformer_r2_spatial_correction_v1/__init__.py",
+      "bytes": 77,
+      "sha256": "1254203f432cc15f743538558d4c24f5351f8641ff9a6bbf75c7389a5951e541"
+    },
+    {
+      "path": "research/codeformer_r2_spatial_correction_v1/model.py",
+      "bytes": 18337,
+      "sha256": "a08bc2e38334af94dc87fc9944caca6159885c2c85de462a18c4e0a41480157e"
+    }
+  ],
+  "parent_source_retained": {
+    "path": "research/codeformer_original_spatial_correction_v1/model.py",
+    "bytes": 17983,
+    "sha256": "7e8fceccb027fa4ab37e9054c19a0c2c9e9ec0ef24eb3d9f549b19004def5971"
+  },
+  "controlled_replacements": [
+    {
+      "before": "ORIGINAL_STATE_SHA256",
+      "after": "R2_STATE_SHA256",
+      "occurrences": 4
+    },
+    {
+      "before": "6cb93cee937f67814edcf4625a68bae4bf8f1c2351f7306864ceefa63d4803bd",
+      "after": "a3b0986c793cb7c937ca82efde6c9e23e70557d76b93406e0f53e51b938f9e7f",
+      "occurrences": 1
+    },
+    {
+      "before": "OriginalSpatialRestorer",
+      "after": "R2SpatialRestorer",
+      "occurrences": 2
+    },
+    {
+      "before": "check_original_digest",
+      "after": "check_r2_digest",
+      "occurrences": 7
+    },
+    {
+      "before": "base_original_canonical515_sha256",
+      "after": "base_r2_canonical515_sha256",
+      "occurrences": 1
+    },
+    {
+      "before": "original-CodeFormer-spatial-correction-prototype-v1",
+      "after": "CodeFormer-R2-spatial-correction-prototype-v1",
+      "occurrences": 1
+    },
+    {
+      "before": "Exact untouched original CodeFormer content required; R2 is not accepted here",
+      "after": "Exact retained R2 content required; untouched CodeFormer or another state is not accepted here",
+      "occurrences": 1
+    }
+  ],
+  "algebra": {
+    "format": "CodeFormer-R2-spatial-correction-prototype-v1",
+    "status": "UNRUN_PROTOTYPE_NOT_A_TRAINED_MODEL_OR_SEALED_PACKET",
+    "base_r2_canonical515_sha256": "a3b0986c793cb7c937ca82efde6c9e23e70557d76b93406e0f53e51b938f9e7f",
+    "sites": [
+      "32",
+      "64",
+      "128",
+      "256"
+    ],
+    "width": 32,
+    "head_tensor_count": 36,
+    "head_parameters": 168960,
+    "total_expected_tensor_count": 551,
+    "stock": "z=stock_SFT(e,d,w=1)",
+    "head": "h=output(GELU(spatial(GELU((E(e)+D(d)+Z(z)+resize(C(coarse32)))/2))))",
+    "correction": "z_new=z+tanh(h)*(z-d)",
+    "residual_multiplier": "q=1+tanh(h), mathematically0<q<2; FP32mayroundendpoints",
+    "identity": "zero output.weight/output.bias implies h=0; actual VM parity unexecuted",
+    "encoder_and_coarse_detached": true,
+    "decoder_and_fused_graph_not_detached": true,
+    "coarse_projection_before_bilinear_resize": true,
+    "base_all515_frozen_eval": true,
+    "confidence_or_identity_probability": false,
+    "training_or_inference_executed_by_import": false,
+    "quality_gates_changed": false,
+    "loss_LR_dataset_sampler_resources_sealed": false,
+    "trained_model_or_useful_restoration_claim": false,
+    "model_initialization": "Exact retained R2 canonical515 state; all515 base tensors frozen/eval; untouched original remains comparison only.",
+    "R2_inference_file": {
+      "path": "outputs/codeformer_role_preserving_training_v1_r2_model/codeformer_role_preserving_r2.pth",
+      "bytes": 376609465,
+      "sha256": "d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896"
+    },
+    "R2_export_receipt": {
+      "path": "outputs/codeformer_role_preserving_training_v1_r2_model/model_export_v1.json",
+      "bytes": 2654,
+      "sha256": "a45f9353bb3aee82618805efd3029603030cd467be94fa2fa846b06428fc4fa8"
+    },
+    "R2_known_initial_preservation_failure_retained": true,
+    "zero_initialization_runtime_parity_and_gradients": "NOT RUN; mathematical/source identity only, must be measured on manual L4 preflight.",
+    "manual_training_only": true
+  },
+  "head_schema": {
+    "heads.32.encoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.encoder.bias": [
+      32
+    ],
+    "heads.32.decoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.fused.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.32.spatial.bias": [
+      32
+    ],
+    "heads.32.output.weight": [
+      256,
+      32,
+      1,
+      1
+    ],
+    "heads.32.output.bias": [
+      256
+    ],
+    "heads.64.encoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.encoder.bias": [
+      32
+    ],
+    "heads.64.decoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.fused.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.64.spatial.bias": [
+      32
+    ],
+    "heads.64.output.weight": [
+      256,
+      32,
+      1,
+      1
+    ],
+    "heads.64.output.bias": [
+      256
+    ],
+    "heads.128.encoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.128.encoder.bias": [
+      32
+    ],
+    "heads.128.decoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.128.fused.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.128.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.128.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.128.spatial.bias": [
+      32
+    ],
+    "heads.128.output.weight": [
+      128,
+      32,
+      1,
+      1
+    ],
+    "heads.128.output.bias": [
+      128
+    ],
+    "heads.256.encoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.256.encoder.bias": [
+      32
+    ],
+    "heads.256.decoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.256.fused.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.256.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.256.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.256.spatial.bias": [
+      32
+    ],
+    "heads.256.output.weight": [
+      128,
+      32,
+      1,
+      1
+    ],
+    "heads.256.output.bias": [
+      128
+    ]
+  },
+  "actual_model_constructor_forward_gradient_optimizer_VM_calls": 0,
+  "independent_runtime_review_complete": false
+}

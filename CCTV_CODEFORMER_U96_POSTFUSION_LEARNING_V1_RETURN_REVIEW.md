@@ -1,0 +1,38 @@
+# U96 post-fusion learning V1 / B64: real learning, failed quality endpoint
+
+The real downloaded archive passed independent integrity, saved-pixel and saved-state audits. All64 Adam updates committed. All preservation and dark-retention checks passed, but all four terminal blur-structure checks missed1%. The worker correctly returned QUALITY_STOP/exit2. U96 remains current; the failed B64 state is retained for research and migration, without app promotion or appended epochs.
+
+## Exact evidence and result
+
+Archive `outputs/cctv-codeformer-u96-postfusion-learning-v1-results.tar.gz`:1,166,039,684bytes, SHA256 `5f99df00c2eff645d3bc957606766753d3308aaa4e0e22da57ac28edeb8d858a`. Protocol SHA256 `11e3286c64d9de282e46d3fa95ae5c792a402c72a681fba4040d816ae5944903`. The three returned archive/checksum/export files agree. All3,455 regular members/1,308,001,394payload bytes,236 nonweight static files and protocol match. Gzip completion is verified. Successful export is evidence transfer, not model qualification.
+
+| Terminal TRAIN-monitor structure screen | RAW gain | Delivered PNG gain | Requirement |
+|---|---:|---:|---:|
+| Global blur, whole image |0.0161526573%|0.0131317376%|at least1% each|
+| Local blur, central128 region |0.0108894708%|0.0043591067%|at least1% each|
+
+These percentages measure reduction in adjacent-residual error against aligned synthetic clean targets. They are not percentages of recovered identity or the older DGP feature metric. The authoritative failure is `snapshot_u64_quality_gates`; all24 unchanged historical guard cases and the new RAW/PNG preservation/clear-anchor/dark-illumination checks passed. All resource caps passed. Worker runtime was416.668seconds, within the sealed stop limits. The final success result/invariant file is absent because the terminal quality stop occurs before that success-only section; all committed checkpoints, intermediate invariants and failure/status receipts remain preserved.
+
+## What was independently checked
+
+[Saved-pixel arithmetic companion](<C:/xampp/htdocs/YEAR 4/Testing/outputs/codeformer_u96_postfusion_learning_v1_return_audit/saved_pixel_arithmetic_companion_v1.json>) closes the immutable first audit: all712 RAW/PNG pairs, flooring, teacher/parity associations, regional metrics, all six entire legacy/monitor gate dictionaries and256 objective reconstructions. Python3.13's changed builtin sum initially caused seven dictionary differences around1e-18; explicit left-to-right sums matching VM Python3.10 reproduce every gate exactly. No epsilon, threshold change or model recipe change resolves those audit-only differences. Original report and discrepancy list remain retained.
+
+[Saved-state audit](<C:/xampp/htdocs/YEAR 4/Testing/outputs/codeformer_u96_postfusion_learning_v1_state_audit/saved_state_audit_v1.json>) checked65 portable head checkpoints,64 postclip gradient sets/all4,644 arrays and65 safe CPU weights-only resume decodes. All64 updates, sampler exposures, LR/Adam steps and moments are consistent. Every one of36 trainable tensors differs at64; all eight output-projection gradient tensors are nonzero at every update. Independent NumPy Adam recurrence agrees within explicitly reported FP32 arithmetic bounds. These audit bounds do not modify scientific gates. No model/optimizer construction, forward, backward or optimizer step ran locally. Torch was used only for safe CPU saved-state decoding.
+
+[Independent metadata review](<C:/xampp/htdocs/YEAR 4/Testing/outputs/codeformer_u96_postfusion_learning_v1_return_peer/independent_return_review_v1.json>) and [265-check crossread](<C:/xampp/htdocs/YEAR 4/Testing/outputs/codeformer_u96_postfusion_learning_v1_return_audit/peer_state_and_metadata_crossread_v1.json>) agree with the archive, commit chain, counters and endpoint stop. Frozen539 tensor payloads are omitted from return, so unchanged frozen-weight claims remain source/runtime-receipt-bound; the exact originalR2/U96 files stay preserved locally and on the source stage.
+
+## Actual images and learning diagnosis
+
+Root personally viewed all30 planned sheets/all712 generated PNG cells, including every optimization exposure and all monitor/legacy snapshots. [Root visual companion](<C:/xampp/htdocs/YEAR 4/Testing/outputs/codeformer_u96_postfusion_learning_v1_return_audit/root_visual_review_v1.json>) records every sheet/hash/observation. It closes pending flags without rewriting original manifests. The new faces remain visually essentially identical to U96. Existing softness and eye/teeth/skin/hat-detail target differences persist. No obvious new catastrophic artifact was seen. This is an unblinded assistant TRAIN review, not independent human FINAL or user acceptance.
+
+At64, only1.06%–2.05% of monitor PNG RGB components differ from U96, depending on role. RAW mean absolute changes are around4.1e-5–8.1e-5 on the0–1 scale. These small differences align with the negligible visible gain. All36 head tensors moved, so the optimizer was not broken or unused. Norm clipping never activated: recorded gradient norms0.0303–0.5017 stayed below1.0. The LR warmed up over four updates, then stayed5e-5. Increasing clipping allowance cannot fix an inactive clip; this result does not justify simply appending more epochs or increasing LR.
+
+Clear anchoring became smaller across the four fixed role-table passes while local/global paired objectives barely improved. A testable hypothesis is that sign-based L1 anchors oppose tiny corrective changes once exact U96 parity is left. The derivative of L1 stays sign-sized for any nonzero residual, while SmoothL1 decreases its derivative near zero. This mathematical fact motivates a distinct objective comparison; actual opposing head-gradient causation is not established. See [PyTorch2.9 L1](https://docs.pytorch.org/docs/2.9/generated/torch.nn.L1Loss.html) and [SmoothL1](https://docs.pytorch.org/docs/2.9/generated/torch.nn.SmoothL1Loss.html).
+
+The next proposed trial starts fresh from the same complete U96 and same initial new heads, retaining all data/order/seed/Adam/LR/64-update caps and preservation gates. It changes only the common clear/dark anchor criterion to SmoothL1 beta0.01; paired reconstruction/adjacent losses and coefficients stay unchanged. This is a prospective hypothesis, not a promised fix. Beta is a loss transition scale, not permission for0.01 mean error or a flat dead zone. Preserve old L1 diagnostics for comparison. No training launch, B64 continuation or new packet is established by this report.
+
+## Research boundaries and continuation
+
+New96 cases are paired synthetic TRAIN photographs, split16 optimization/8 monitor photographs with no verified subject separation. Monitor has now informed design and must be labeled reused/adaptive TRAIN evidence in any follow-up. Legacy dark uses an R2 behavior teacher, not an aligned clean target. No native CCTV/wild/FINAL output is newly evaluated here; no ethnicity, exact identity or Zamboanga-performance claim follows. Preserve all original labels, exclusions, source terms, models, states and gate failures.
+
+The user manually runs any separately reviewed finite successor on the L4 in tmux. Returned outputs must again be independently audited and all planned sheets reviewed. Useful broader DEV/native evidence, user acceptance, independent FINAL and full app qualification remain outstanding. Optional protected-surroundings preparation stays separately evaluated with original/protected pixels/confirmation/bypass; paired evidence does not support always-on blur. Restoration remains first and later completion/covering-family scope remains required. The full active goal is incomplete.

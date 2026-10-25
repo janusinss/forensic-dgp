@@ -1,0 +1,337 @@
+{
+  "format": "original-CodeFormer-spatial-correction-architecture-design-v1",
+  "status": "INERT_UNRUN_PROTOTYPE_NOT_TRAINED_OR_PACKET_READY",
+  "source": [
+    {
+      "path": "research/codeformer_original_spatial_correction_v1/__init__.py",
+      "bytes": 69,
+      "sha256": "8f3764501161493598bfde494f850339dcaf729d7b5890728687221365965b26"
+    },
+    {
+      "path": "research/codeformer_original_spatial_correction_v1/model.py",
+      "bytes": 17983,
+      "sha256": "7e8fceccb027fa4ab37e9054c19a0c2c9e9ec0ef24eb3d9f549b19004def5971"
+    }
+  ],
+  "API": {
+    "module": "research.codeformer_original_spatial_correction_v1.model",
+    "inert": [
+      "expected_head_shapes()",
+      "architecture_contract()"
+    ],
+    "explicit_factory": "build_restorer(original) imports Torch and constructs an UNTRAINED candidate; not called in local checks",
+    "forward": "candidate(sample512,w=1.,detach_16=True,adain=True) returns stock(native512,logits,LQ) structure",
+    "integrity": "candidate.validate_invariants(check_original_digest=True) at future reserved checkpoints; perforward only structural/frozen checks",
+    "sample": "singletonFP32 preparedRGB512[-1,1], original device; caller prepares same256bilinear512 geometry"
+  },
+  "algebra": {
+    "format": "original-CodeFormer-spatial-correction-prototype-v1",
+    "status": "UNRUN_PROTOTYPE_NOT_A_TRAINED_MODEL_OR_SEALED_PACKET",
+    "base_original_canonical515_sha256": "6cb93cee937f67814edcf4625a68bae4bf8f1c2351f7306864ceefa63d4803bd",
+    "sites": [
+      "32",
+      "64",
+      "128",
+      "256"
+    ],
+    "width": 32,
+    "head_tensor_count": 36,
+    "head_parameters": 168960,
+    "total_expected_tensor_count": 551,
+    "stock": "z=stock_SFT(e,d,w=1)",
+    "head": "h=output(GELU(spatial(GELU((E(e)+D(d)+Z(z)+resize(C(coarse32)))/2))))",
+    "correction": "z_new=z+tanh(h)*(z-d)",
+    "residual_multiplier": "q=1+tanh(h), mathematically0<q<2; FP32mayroundendpoints",
+    "identity": "zero output.weight/output.bias implies h=0; actual VM parity unexecuted",
+    "encoder_and_coarse_detached": true,
+    "decoder_and_fused_graph_not_detached": true,
+    "coarse_projection_before_bilinear_resize": true,
+    "base_all515_frozen_eval": true,
+    "confidence_or_identity_probability": false,
+    "training_or_inference_executed_by_import": false,
+    "quality_gates_changed": false,
+    "loss_LR_dataset_sampler_resources_sealed": false,
+    "trained_model_or_useful_restoration_claim": false
+  },
+  "head_schema": {
+    "heads.32.encoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.encoder.bias": [
+      32
+    ],
+    "heads.32.decoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.fused.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.32.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.32.spatial.bias": [
+      32
+    ],
+    "heads.32.output.weight": [
+      256,
+      32,
+      1,
+      1
+    ],
+    "heads.32.output.bias": [
+      256
+    ],
+    "heads.64.encoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.encoder.bias": [
+      32
+    ],
+    "heads.64.decoder.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.fused.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.64.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.64.spatial.bias": [
+      32
+    ],
+    "heads.64.output.weight": [
+      256,
+      32,
+      1,
+      1
+    ],
+    "heads.64.output.bias": [
+      256
+    ],
+    "heads.128.encoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.128.encoder.bias": [
+      32
+    ],
+    "heads.128.decoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.128.fused.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.128.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.128.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.128.spatial.bias": [
+      32
+    ],
+    "heads.128.output.weight": [
+      128,
+      32,
+      1,
+      1
+    ],
+    "heads.128.output.bias": [
+      128
+    ],
+    "heads.256.encoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.256.encoder.bias": [
+      32
+    ],
+    "heads.256.decoder.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.256.fused.weight": [
+      32,
+      128,
+      1,
+      1
+    ],
+    "heads.256.coarse.weight": [
+      32,
+      256,
+      1,
+      1
+    ],
+    "heads.256.spatial.weight": [
+      32,
+      32,
+      3,
+      3
+    ],
+    "heads.256.spatial.bias": [
+      32
+    ],
+    "heads.256.output.weight": [
+      128,
+      32,
+      1,
+      1
+    ],
+    "heads.256.output.bias": [
+      128
+    ]
+  },
+  "parameter_derivation": {
+    "each_head": "129*c+17472",
+    "per_site": {
+      "32": 50496,
+      "64": 50496,
+      "128": 33984,
+      "256": 33984
+    },
+    "total": 168960,
+    "tensors": 36,
+    "actual_runtime_tensor_count_verified": false
+  },
+  "initializer": {
+    "path": "outputs/codeformer_restoration_pretrained_v1/codeformer.pth",
+    "bytes": 376637898,
+    "sha256": "1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7",
+    "canonical515_sha256": "6cb93cee937f67814edcf4625a68bae4bf8f1c2351f7306864ceefa63d4803bd",
+    "factory_requires_exact_original_not_R2": true
+  },
+  "zero_state_contract": [
+    "Final head projections both zero; mathematical output equals original at all4 sites",
+    "CPUheadconstruction in fork_rng(devices=[]) with CPU-onlyseed20261021; callerCPU_RNG restored; .to(device) consumes no CUDA randomdraws",
+    "Actual native512/deliveredRAW/PNG/logit/LQ/token/postAdaIN parity must be measured onmanualL4 beforeoptimization, not inferred fromalgebra",
+    "Zero-final projection permits zero earlierheadgradients initially; require nonzero finite image-gradient witness at selected output projections, never falsely require all36 nonzeroat0"
+  ],
+  "hook_lifecycle": {
+    "owner": "one live wrapper per original base through weak ownership registry",
+    "serialization": "nonblocking perwrapper forward lock; nested/concurrentforward rejected",
+    "thread_guard": "base and SFT callbacks accept only current owning thread and one basecall",
+    "temporary_hooks": "one base prehook plus paired pre/posthook at each32/64/128/256 SFT",
+    "encoder_and_coarse": "detach; coarse32 captured at firstsite and projected before bilinearresize",
+    "decoder_and_fused": "ordinary autograd connection preserved, not detached",
+    "cleanup": "temporary handles removed and pending/coarse captures released infinally; lock alwaysreleased",
+    "actual_error_or_concurrency_behavior_tested": false
+  },
+  "static_checks": {
+    "AST_parse_pass": true,
+    "inert_import_pass": true,
+    "Torch_NumPy_import_interception_active": true,
+    "no_Torch_NumPy_import_observed": true,
+    "shape_count_arithmetic_pass": true,
+    "factory_called": false,
+    "base_or_head_modules_constructed": 0,
+    "forward_backward_optimizer_VM_browser_calls": 0,
+    "no_optimizer_or_backward_entrypoint": true,
+    "retained_architecture_files_hashchecked_without_import": true,
+    "per_head_parameters": {
+      "32": 50496,
+      "64": 50496,
+      "128": 33984,
+      "256": 33984
+    }
+  },
+  "unexecuted_prerequisites": [
+    "ActualVM515+36/168960 count andfiniteFP32 statecontentaudit",
+    "ActualL4zero-state native512/RAW/PNG/upstreamparity including signedzero/readoutbehavior",
+    "Actualimagegradient/decoderconnection and postupdatefrozenbase/witnessrestoration checks",
+    "Actualhookcleanup after deliberate controlled exceptions and nested/concurrentforward refusal",
+    "FreshmanualL4 timing/memory/diskmeasurements andsealedoperation/outputbounds",
+    "Audit64TRAINsource/readability/corruptions; fixedLR/loss/sampler/unchangedgateapplicability independentreview"
+  ],
+  "quality": {
+    "model_qualified": false,
+    "user_accepted": false,
+    "main_app_default_changed": false,
+    "no_completion_or_removal_model": true,
+    "confidence_not_calibrated": true,
+    "unchanged_R2_dark_gate_not_waived": true,
+    "cannot_change_frozen_code_predictions": true
+  },
+  "not_sealed": [
+    "losses",
+    "learning_rate",
+    "dataset_admission",
+    "sampler",
+    "timing_limits",
+    "quality_gate_applicability",
+    "manual_training_packet"
+  ],
+  "retained_architecture_source_pins": [
+    {
+      "path": "third_party/codeformer/codeformer_arch.py",
+      "bytes": 11377,
+      "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb",
+      "module": "third_party.codeformer.codeformer_arch"
+    },
+    {
+      "path": "third_party/codeformer/vqgan_arch.py",
+      "bytes": 15855,
+      "sha256": "b47033f66b4a8434e0f04d4df8a69a7ac4b6c5bdf52f5b74912371dff0a20eaf",
+      "module": "third_party.codeformer.vqgan_arch"
+    },
+    {
+      "path": "third_party/codeformer/registry.py",
+      "bytes": 2267,
+      "sha256": "bbc3507148101bb202e8f52f5cca75d2cc21d780def757c055d82cb8e6bd594e",
+      "module": "third_party.codeformer.registry"
+    }
+  ]
+}

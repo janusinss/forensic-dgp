@@ -1,0 +1,36 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "reviewer": "Separate runtime author, read-only builder source review; no real build",
+  "UTC": "2026-10-21T13:08:14.837699+00:00",
+  "builder": {
+    "path": "scripts/build_u96_postfusion_preflight_v1.py",
+    "bytes": 10408,
+    "sha256": "434eac05138731d444a32124357e78f8e0de50548d684b19b5392cd0fe084bcf"
+  },
+  "review_scope": "Builder logic and expected receipt schemas only; no stage,archive,VM or model execution",
+  "checks": {
+    "worker_review_schema": "complete/source_review_pass/worker/contract exact current pins required before staging",
+    "packet_helper_review_schema": "complete/source_review_pass/sources[]/contract/shell joins strip only auxiliary review metadata",
+    "source_copy": "Before/after source pin and copied target size/SHA checked; no weight loading",
+    "staging_namespace": "Fresh exclusive stage, static map and packet.verify direct FIXED metadata/model/prototype bindings",
+    "license_retention": "Retained CodeFormer license/notice copied from local project",
+    "archive_logic": "Explicit gzip wrapper plus streaming tar; exact per-member content SHA/size,unique membership/full expected coverage readback",
+    "no_execution": "Only inert packet verification and PIL asset byte inspection inside explicit main; no worker/runtime invocation"
+  },
+  "AST_Python3_10_grammar": true,
+  "actual_Python3_10_runtime_used": false,
+  "inert_import_pass": true,
+  "Torch_NumPy_PIL_import_attempts": [],
+  "main_called": false,
+  "real_build_verified": false,
+  "archive_members_actually_read": false,
+  "final_review_receipt_join_actual_values_verified": false,
+  "remaining": "Root must obtain current worker/helper review receipts and execute the byte-verified builder; successful source review does not prove a transfer archive or VM preflight.",
+  "source_changes": false,
+  "model_constructor_calls": 0,
+  "forward_gradient_optimizer_training_VM_calls": 0,
+  "new_file_written": "This exclusive source-review receipt only",
+  "packet_sealed_by_this_review": false,
+  "model_quality_or_numerical_runtime_claim": false
+}

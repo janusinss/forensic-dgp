@@ -1,0 +1,98 @@
+{
+  "complete": true,
+  "source_review_pass": true,
+  "reviewer": "separate design reviewer; revised source/inert audit only",
+  "model": {
+    "path": "research/codeformer_u96_postfusion_v1/model.py",
+    "bytes": 23240,
+    "sha256": "ca2b466161932068c01980bb41fcc08e12ee8f0120f17c8fdf47898f35934aa8"
+  },
+  "architecture_design": {
+    "path": "research/codeformer_u96_postfusion_v1/architecture_design_v1_r1.json",
+    "bytes": 15781,
+    "sha256": "cf4ce39beefa2bef41149de6399f4f8b86cac3bdddf5ab6818651631ef0567be"
+  },
+  "current_inference_comparator": {
+    "path": "research_spatial_restoration_v1.py",
+    "bytes": 20043,
+    "sha256": "08fa6d4d7d252c0c96d35c87c40ee1035d8e5a68e8ce42d62b1c8b7f721a9437"
+  },
+  "supersedes_current_source_binding_in": {
+    "path": "research/codeformer_u96_postfusion_v1/independent_source_review_v1.json",
+    "bytes": 3779,
+    "sha256": "fc6be10f48c27fa3beab457eb13098872eea17988d4df8e30bb1d7d4814691c6"
+  },
+  "compatibility_finding_addressed": {
+    "path": "research/codeformer_u96_postfusion_v1/independent_source_compatibility_addendum_v1.json",
+    "bytes": 1430,
+    "sha256": "6084920ec5eaf510a953e49612431903f5175ce56799dd9635d9981e141f0584"
+  },
+  "static_checks": {
+    "AST_Python3_10_grammar": true,
+    "actual_Python3_10_interpreter_used": false,
+    "inert_module_import_with_Torch_NumPy_import_block": true,
+    "Torch_NumPy_import_attempts": [],
+    "metadata_contract_and_source_pins_match": true,
+    "adapter_schema_and_forward_AST_match_current_inference": true,
+    "adapter_tensors": 24,
+    "adapter_parameters": 51328,
+    "head_tensors": 36,
+    "head_parameters": 168960,
+    "frozen_tensors": 539,
+    "prospective_total_tensors": 575,
+    "retained_architecture_hashes_match": true,
+    "decoder_and_fused_not_detached": true,
+    "observed_and_coarse_detached": true,
+    "forward_has_no_blanket_no_grad": true,
+    "extracted_streaming_helper_runs_without_hashlib_file_digest": true,
+    "streaming_helper_checks": [
+      {
+        "file": {
+          "path": "research/codeformer_u96_postfusion_v1/model.py",
+          "bytes": 23240,
+          "sha256": "ca2b466161932068c01980bb41fcc08e12ee8f0120f17c8fdf47898f35934aa8"
+        },
+        "streaming_matches_readbytes_sha256": true
+      },
+      {
+        "file": {
+          "path": "research/codeformer_u96_postfusion_v1/__init__.py",
+          "bytes": 66,
+          "sha256": "b294dfcc71d5358daccc4a7e02d475eae39c3c0a24952ef522062653a8ade54a"
+        },
+        "streaming_matches_readbytes_sha256": true
+      },
+      {
+        "file": {
+          "path": "outputs/codeformer_role_preserving_training_v1_r2_model/codeformer_role_preserving_r2.pth",
+          "bytes": 376609465,
+          "sha256": "d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896"
+        },
+        "streaming_matches_readbytes_sha256": true
+      }
+    ]
+  },
+  "source_design_findings": [
+    "Complete exactR2+U96initializerbinding/census matches currentinference source; both newheadschema and retained24adapter schema agree withdesign.",
+    "Oneownedhooklifecycle applies frozenU96preSFTadapters, capturesused32coarse and connecteddecoder, then newpostSFTheads in ordered sites.",
+    "Nonblocking wrapperlock/threadchecks andfinallycleanup are present in source; controlledexception/nested/concurrency behavior stillneedsactualruntimeproof.",
+    "CPUexplicitconstruction/fork_rng restore design remains; actualCPUCUDARNGequality and frozen539content remain futureVMchecks.",
+    "Python3.11file_digest dependency was removed using streamingSHA256, preserving hashes on extractedhelpertests withoutTorch. This is compatibilityevidence, not actualVMinterpreter/model execution."
+  ],
+  "remaining_integration_caveats": [
+    "Completecleanhooknamespace requirement prevents externally pre-attached generator/readout witnesshooks; futureworker must use guardedinternalwitnesses or independentreadoutreconstruction.",
+    "Factory acceptsCPU/CUDA; sealedmanualworker must enforceLinux/tmux/L4/environment and boundedoperationreservations beforefactory invocation.",
+    "Explicitfrozencontentdigestchecks required at reservedinitial/post-step/checkpoint boundaries; default perforward check isstructural.",
+    "Zeroheadprojections provide algebraicidentityonly; bit/numeric nativeRAWPNGparity, meaningfulactualimagegradients and correctionleverage remain unmeasured.",
+    "No generaldefenseagainst arbitraryexternalmonkeypatches or raw-baseuseoutsideownedforward; use freshlyowned guardedruntime objects."
+  ],
+  "factory_called": false,
+  "modules_constructed": 0,
+  "neural_calls": 0,
+  "gradient_queries": 0,
+  "optimizer_calls": 0,
+  "training_or_VM_or_browser_calls": 0,
+  "runtime_parity_gradient_hook_exception_behavior_or_model_quality_verified": false,
+  "packet_ready_or_sealed": false,
+  "prototype_edited_by_reviewer": false
+}
