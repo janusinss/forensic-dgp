@@ -62,10 +62,12 @@ NATIVE_CCTV_DEV_CASES = (
 
 PHASE1_SCHEDULE = {
     'epochs': 40,
-    'batch_size': 8,
-    'cases_per_epoch': 336,
-    'steps_per_epoch': 42,
-    'total_optimizer_updates': 1680,
+    'identities_per_batch': 2,
+    'active_roles_per_identity': 5,
+    'batch_size': 10,
+    'cases_per_epoch': 280,
+    'steps_per_epoch': 28,
+    'total_optimizer_updates': 1120,
     'optimizer': 'AdamW',
     'lr_max': 5e-4,
     'lr_min': 2e-5,
@@ -74,6 +76,7 @@ PHASE1_SCHEDULE = {
     'weight_decay': 1e-4,
     'grad_clip_norm': 1.0,
     'trainable_submodules': ['pyramid', 'dark_refiner'],
+    'feature_caching': 'zero_cpu_cache_on_the_fly_batched_gpu',
 }
 
 PHASE2_SCHEDULE = {

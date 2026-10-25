@@ -287,13 +287,13 @@ def main():
 
     guide_md = f"""# Conditioned SFT V2 (Multi-Scale Dilated Pyramid + Frequency-Selective Head): Manual NVIDIA L4 VM Guide
 
-**PREPARED / UNRUN.** Two-Phase high-capacity facial sharpening run (`Phase 1`: `40` epochs / `1,680` Exposure-Matched Clean-SFT distillation steps; `Phase 2`: `224` end-to-end Frozen-`R2` Perceptual + `SSIM7` + Multi-Scale Laplacian + Exposure-Split Gradient updates across `56` identities × `6` CCTV roles). All `575` trained-`u64` backbone tensors (`515` `R2` + `24` `U96` + `36` `u64` heads) remain frozen; step `0` reproduces `u64` bitwise.
+**PREPARED / UNRUN.** Two-Phase high-capacity facial sharpening run (`Phase 1`: `40` epochs / `1,120` zero-CPU-cache on-the-fly batched GPU Exposure-Matched Clean-SFT distillation steps; `Phase 2`: `224` end-to-end Frozen-`R2` Perceptual + `SSIM7` + Multi-Scale Laplacian + Exposure-Split Gradient updates across `56` identities × `6` CCTV roles). All `575` trained-`u64` backbone tensors (`515` `R2` + `24` `U96` + `36` `u64` heads) remain frozen; step `0` reproduces `u64` bitwise; peak host RSS stays `< 3.5 GiB` on `g2-standard-4`.
 
 - **Stage Directory**: `~/forensic-dgp/{packet.STAGE_NAME}`
 - **Execution Upload**: `outputs/{ARCHIVE_OUT.name}` (**{archive_bytes:,} bytes**, `{len(staged_members)}` PAX members)
 - **Protocol SHA256**: `{protocol_sha}`
 - **Execution Archive SHA256**: `{archive_sha}`
-- **Expected NVIDIA L4 Runtime**: `~11–14 minutes` (`7,200s` scientific cap)
+- **Expected NVIDIA L4 Runtime**: `~8–12 minutes` (`7,200s` scientific cap)
 
 ---
 

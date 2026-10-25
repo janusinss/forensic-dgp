@@ -3,11 +3,12 @@
 Executes Two-Phase training strictly inside ~/forensic-dgp/cctv_codeformer_conditioned_sft_learning_v2_vm:
 - Frozen 575-tensor trained-u64 backbone (515 R2 + 24 U96 + 36 u64 spatial heads)
 - Step-0 exact bitwise u64 parity verification
-- Phase 1: 40-epoch (1,680-step) Exposure-Matched Clean-SFT Pyramid distillation
+- Phase 1: 40-epoch (1,120-step) zero-CPU-cache on-the-fly batched GPU Exposure-Matched Clean-SFT Pyramid distillation
 - Phase 2: 224-update End-to-End Perceptual + SSIM7 + Multi-Scale Laplacian + Exposure-Split Gradient training
 - Checkpoints saved at u0000_init, p1_e040, p2_u0056, p2_u0112, p2_u0168, p2_u0224, and best_degraded_ssim
 """
 from datetime import datetime, timezone
+import gc
 import hashlib
 import io
 import json
@@ -22,6 +23,7 @@ import subprocess
 import sys
 import time
 import traceback
+import warnings
 
 PACKAGE = 'research/codeformer_conditioned_sft_learning_v2'
 SEED = 20261026
@@ -53,6 +55,19 @@ def _cosine_lr(step_idx: int, total_steps: int, warmup_steps: int, lr_max: float
     return lr_min + 0.5 * (lr_max - lr_min) * (1.0 + math.cos(math.pi * progress))
 
 
+def _current_rss_bytes() -> int:
+    statm = Path('/proc/self/statm')
+    if statm.is_file():
+        parts = statm.read_text(encoding='ascii').split()
+        if len(parts) >= 2:
+            return int(parts[1]) * int(os.sysconf('SC_PAGE_SIZE'))
+    try:
+        import resource
+        return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) * 1024
+    except Exception:
+        return 0
+
+
 def run(root, protocol, expected_sha):
     from . import (
         architecture_v2 as arch_v2,
@@ -65,6 +80,7 @@ def run(root, protocol, expected_sha):
     began = time.monotonic()
     out_dir = root / contract.OUTPUT_RELATIVE
     phase = 'static_guards'
+    cuda_tracker = {'fn': None}
 
     def write_json(rel_path: str, payload):
         target = out_dir / rel_path
@@ -88,11 +104,15 @@ def run(root, protocol, expected_sha):
             os.fsync(stream.fileno())
 
     def log_journal(kind: str, **fields):
+        mem_info = {'rss_mb': round(_current_rss_bytes() / (1024**2), 1)}
+        if cuda_tracker['fn'] is not None:
+            mem_info['cuda_mb'] = round(cuda_tracker['fn']() / (1024**2), 1)
         row = {
             'utc': datetime.now(timezone.utc).isoformat(),
             'elapsed_s': round(time.monotonic() - began, 3),
             'phase': phase,
             'kind': kind,
+            **mem_info,
             **fields,
         }
         append_jsonl('journal.jsonl', row)
@@ -163,12 +183,16 @@ def run(root, protocol, expected_sha):
         torch.backends.cudnn.allow_tf32 = False
         torch.use_deterministic_algorithms(True, warn_only=False)
         torch.cuda.reset_peak_memory_stats(0)
+        cuda_tracker['fn'] = lambda: int(torch.cuda.memory_reserved(0))
 
         def check_resources():
             elapsed = time.monotonic() - began
             need(elapsed < contract.LIMITS['worker_seconds'], 'Finite 7200s worker scientific deadline exceeded')
             free_b = shutil.disk_usage(root).free
             need(free_b >= contract.LIMITS['continuing_free_disk_bytes'], 'Disk reserve fell below 4 GiB')
+            rss_b = _current_rss_bytes()
+            need(rss_b <= contract.LIMITS['maximum_RSS_bytes'],
+                 f'Host RSS ({rss_b} bytes) exceeded 12 GiB cap')
             cuda_res = int(torch.cuda.memory_reserved(0))
             need(cuda_res <= contract.LIMITS['maximum_CUDA_reserved_bytes'], 'CUDA reserved exceeded 20 GiB')
 
@@ -255,20 +279,43 @@ def run(root, protocol, expected_sha):
             return feats
 
         @torch.no_grad()
-        def extract_u96_sft_detached_cpu(rgb_u8):
+        def compute_lightweight_cond_cpu(rgb_u8):
+            """Compute compact (< 1.1 KB) conditioning scalars & 16x16 spatial blur map on CPU."""
             inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
             t = torch.from_numpy(inp_f32.transpose(2, 0, 1).copy())[None].to(device)
-            enc = extract_r2_enc_connected(t)
-            sft_cpu = {s: u96_adapters[s](enc[s]).detach().cpu() for s in arch_v2.SITES}
-            enc_cpu = {s: enc[s].detach().cpu() for s in arch_v2.SITES}
             cond_t = cond_v2.compute_v2_conditioning_torch(t, torch=torch)
-            cond_cpu = {
-                'g_dark': cond_t['g_dark'],
-                'g_blur': cond_t['g_blur'],
-                'g_sensor_noise': cond_t['g_sensor_noise'],
-                'site_maps': {s: cond_t['site_maps'][s].detach().cpu() for s in arch_v2.SITES},
+            return {
+                'g_dark': float(cond_t['g_dark']),
+                'g_blur': float(cond_t['g_blur']),
+                'g_sensor_noise': float(cond_t['g_sensor_noise']),
+                'local_map_16': cond_t['local_map_16'].detach().cpu().contiguous(),
             }
-            return sft_cpu, enc_cpu, cond_cpu
+
+        @torch.no_grad()
+        def extract_u96_sft_batch_gpu(rgb_u8_list):
+            """On-the-fly batched frozen R2 + U96 SFT feature extraction directly on GPU (zero CPU cache)."""
+            stacked_u8 = np.stack([arr.transpose(2, 0, 1) for arr in rgb_u8_list], axis=0)
+            t = torch.from_numpy(stacked_u8).to(device=device, dtype=torch.float32) / 255.0
+            enc = extract_r2_enc_connected(t)
+            return {s: u96_adapters[s](enc[s]).detach() for s in arch_v2.SITES}
+
+        @torch.no_grad()
+        def extract_clean_sft_and_enc_single_gpu(rgb_u8):
+            """On-the-fly singleton clean target SFT + R2 perceptual feature extraction on GPU."""
+            t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=device, dtype=torch.float32)[None] / 255.0
+            enc = extract_r2_enc_connected(t)
+            sft_gpu = {s: u96_adapters[s](enc[s]).detach() for s in arch_v2.SITES}
+            enc_gpu = {s: enc[s].detach() for s in arch_v2.SITES}
+            return sft_gpu, enc_gpu
+
+        @torch.no_grad()
+        def site_maps_from_local16_batch_gpu(local16_list):
+            """Upsample compact (1, 1, 16, 16) local blur maps to (B, 1, S, S) on GPU."""
+            m16 = torch.cat(local16_list, dim=0).to(device=device, dtype=torch.float32)
+            return {
+                s: F.interpolate(m16, size=(int(s), int(s)), mode='bilinear', align_corners=False)
+                for s in arch_v2.SITES
+            }
 
         @torch.no_grad()
         def forward_u64_raw_f32(rgb_u8):
@@ -605,44 +652,46 @@ def run(root, protocol, expected_sha):
 
         summaries = {}
         summaries['u0000_init'] = evaluate_and_save_checkpoint('u0000_init', 'initializer')
+        gc.collect()
 
         # =====================================================================
-        # PHASE 1: Pre-Extract Frozen Encoder Features & 40-Epoch Pyramid Train
+        # PHASE 1: Lightweight Input Preparation & 40-Epoch On-The-Fly GPU Train
         # =====================================================================
-        phase = 'phase1_preextract_sft_features'
-        clean_target_sft = {}
-        clean_target_r2_enc = {}
+        phase = 'phase1_prepare_lightweight_inputs'
         clean_target_u8 = {}
         opt_by_ref = {}
         for row in cohorts['v2_optimization']:
             opt_by_ref.setdefault(row['reference_id'], {})[row['role']] = row
 
         for ref_id in cohorts['optimization_reference_order']:
-            t_u8 = load_rgb_u8(opt_by_ref[ref_id]['clear']['target'])
-            clean_target_u8[ref_id] = t_u8
-            sft_c, enc_c, _ = extract_u96_sft_detached_cpu(t_u8)
-            clean_target_sft[ref_id] = sft_c
-            clean_target_r2_enc[ref_id] = enc_c
+            clean_target_u8[ref_id] = load_rgb_u8(opt_by_ref[ref_id]['clear']['target'])
 
-        opt_cached = []
+        opt_lookup = {}
         u64_opt_raw = {}
         for row in cohorts['v2_optimization']:
             inp_u8 = load_rgb_u8(row['input'])
-            sft_deg, _, cond_c = extract_u96_sft_detached_cpu(inp_u8)
             u64_opt_raw[row['id']] = forward_u64_raw_f32(inp_u8)
-            opt_cached.append({
+            cond_c = compute_lightweight_cond_cpu(inp_u8)
+            opt_lookup[(row['reference_id'], row['role'])] = {
                 'id': row['id'],
                 'reference_id': row['reference_id'],
                 'role': row['role'],
                 'inp_u8': inp_u8,
-                'deg_sft': sft_deg,
                 'cond': cond_c,
-            })
-        log_journal('phase1_features_cached', opt_cases=len(opt_cached), clean_targets=len(clean_target_sft))
+            }
+        gc.collect()
+        check_resources()
+        log_journal('phase1_lightweight_inputs_prepared', opt_cases=len(opt_lookup), clean_targets=len(clean_target_u8))
 
         phase = 'phase1_clean_sft_distillation'
+        warnings.filterwarnings('ignore', message='.*does not have a deterministic implementation.*')
         torch.use_deterministic_algorithms(True, warn_only=True)
         p1_cfg = contract.PHASE1_SCHEDULE
+        active_roles = tuple(r for r in obj_v2.ROLES_V2 if r != 'clear')
+        need(len(active_roles) == p1_cfg['active_roles_per_identity'], 'Exact 5 active degraded roles required')
+        ids_per_batch = p1_cfg['identities_per_batch']
+        need(ids_per_batch * len(active_roles) == p1_cfg['batch_size'], 'Exact Phase-1 batch geometry required')
+
         p1_params = list(v2_bundle.pyramid.parameters()) + list(v2_bundle.dark_refiner.parameters())
         opt_p1 = torch.optim.AdamW(
             p1_params,
@@ -658,32 +707,33 @@ def run(root, protocol, expected_sha):
         v2_bundle.train()
         for epoch in range(1, p1_cfg['epochs'] + 1):
             check_resources()
-            order = list(range(len(opt_cached)))
-            rng_p1.shuffle(order)
+            ref_order = list(cohorts['optimization_reference_order'])
+            rng_p1.shuffle(ref_order)
             epoch_losses = []
-            for start_i in range(0, len(order), p1_cfg['batch_size']):
-                batch_idx = order[start_i:start_i + p1_cfg['batch_size']]
+            for start_i in range(0, len(ref_order), ids_per_batch):
+                batch_refs = ref_order[start_i:start_i + ids_per_batch]
+                batch_items = [
+                    opt_lookup[(ref_id, role_name)]
+                    for ref_id in batch_refs
+                    for role_name in active_roles
+                ]
                 lr_now = _cosine_lr(p1_step, total_p1_steps, warmup_p1_steps, p1_cfg['lr_max'], p1_cfg['lr_min'])
                 for pg in opt_p1.param_groups:
                     pg['lr'] = lr_now
 
-                deg_b = {
-                    s: torch.cat([opt_cached[i]['deg_sft'][s] for i in batch_idx], dim=0).to(device)
-                    for s in arch_v2.SITES
-                }
+                clean_b2 = extract_u96_sft_batch_gpu([clean_target_u8[ref_id] for ref_id in batch_refs])
                 clean_b = {
-                    s: torch.cat([clean_target_sft[opt_cached[i]['reference_id']][s] for i in batch_idx], dim=0).to(device)
+                    s: clean_b2[s].repeat_interleave(len(active_roles), dim=0)
                     for s in arch_v2.SITES
                 }
-                smaps_b = {
-                    s: torch.cat([opt_cached[i]['cond']['site_maps'][s] for i in batch_idx], dim=0).to(device)
-                    for s in arch_v2.SITES
-                }
+                del clean_b2
+                deg_b = extract_u96_sft_batch_gpu([it['inp_u8'] for it in batch_items])
+                smaps_b = site_maps_from_local16_batch_gpu([it['cond']['local_map_16'] for it in batch_items])
                 gdark_b = torch.tensor(
-                    [opt_cached[i]['cond']['g_dark'] for i in batch_idx], dtype=torch.float32, device=device
+                    [it['cond']['g_dark'] for it in batch_items], dtype=torch.float32, device=device
                 ).view(-1, 1, 1, 1)
                 gsn_b = torch.tensor(
-                    [opt_cached[i]['cond']['g_sensor_noise'] for i in batch_idx], dtype=torch.float32, device=device
+                    [it['cond']['g_sensor_noise'] for it in batch_items], dtype=torch.float32, device=device
                 ).view(-1, 1, 1, 1)
 
                 opt_p1.zero_grad(set_to_none=True)
@@ -696,8 +746,10 @@ def run(root, protocol, expected_sha):
                 loss_p1.backward()
                 torch.nn.utils.clip_grad_norm_(p1_params, max_norm=p1_cfg['grad_clip_norm'])
                 opt_p1.step()
+                opt_p1.zero_grad(set_to_none=True)
                 p1_step += 1
                 epoch_losses.append(float(loss_p1.detach().item()))
+                del deg_b, clean_b, smaps_b, gdark_b, gsn_b, pred_sft, loss_p1
 
             if epoch == 1 or epoch % 5 == 0 or epoch == p1_cfg['epochs']:
                 log_journal(
@@ -707,8 +759,12 @@ def run(root, protocol, expected_sha):
                     mean_sft_loss=round(float(np.mean(epoch_losses)), 6),
                     lr=round(lr_now, 7),
                 )
+        need(p1_step == total_p1_steps, f'Expected {total_p1_steps} Phase-1 steps, got {p1_step}')
+        del opt_p1
+        gc.collect()
 
         summaries['p1_e040'] = evaluate_and_save_checkpoint('p1_e040', 'u8')
+        gc.collect()
 
         # =====================================================================
         # PHASE 2: 224-Update End-to-End Perceptual + SSIM7 + Laplacian Training
@@ -724,7 +780,6 @@ def run(root, protocol, expected_sha):
             weight_decay=p2_cfg['weight_decay'],
         )
 
-        opt_lookup = {(it['reference_id'], it['role']): it for it in opt_cached}
         rng_p2 = random.Random(SEED + 202)
         p2_schedule_refs = []
         for pass_idx in range(p2_cfg['identity_passes']):
@@ -748,8 +803,7 @@ def run(root, protocol, expected_sha):
 
             targ_f32 = clean_target_u8[ref_id].astype(np.float32) / np.float32(255.0)
             targ_t = torch.from_numpy(targ_f32.transpose(2, 0, 1).copy())[None].to(device)
-            clean_sft_t = {s: clean_target_sft[ref_id][s].to(device) for s in arch_v2.SITES}
-            clean_enc_t = {s: clean_target_r2_enc[ref_id][s].to(device) for s in arch_v2.SITES}
+            clean_sft_t, clean_enc_t = extract_clean_sft_and_enc_single_gpu(clean_target_u8[ref_id])
 
             disp_cur = arch_v2.max_linf_displacement_from_init(v2_bundle, v2_init_dict, np=np)
             gamma_cur = max(0.05, cond_v2.displacement_gamma(disp_cur))
@@ -773,7 +827,7 @@ def run(root, protocol, expected_sha):
                 base_t = torch.from_numpy(u64_opt_raw[item['id']].transpose(2, 0, 1).copy())[None].to(device)
 
                 opt_p2.zero_grad(set_to_none=True)
-                _, cond_pred_t, used_f, deg_u96_f, cond_t = forward_v2_connected(inp_t, base_t, gamma_val=gamma_cur)
+                raw_t, cond_pred_t, used_f, deg_u96_f, cond_t = forward_v2_connected(inp_t, base_t, gamma_val=gamma_cur)
 
                 pred_enc = extract_r2_enc_connected(cond_pred_t)
                 r2_perc = sum(
@@ -797,6 +851,8 @@ def run(root, protocol, expected_sha):
                     )
                     for name, param in all_v2_named
                 }
+                opt_p2.zero_grad(set_to_none=True)
+                del inp_t, base_t, raw_t, cond_pred_t, used_f, deg_u96_f, cond_t, pred_enc, r2_perc, sft_ret, total_loss
 
             combined_grads, proj_info = obj_v2.project_exposure_split_gradients_numpy(role_grads, np=np)
             opt_p2.zero_grad(set_to_none=True)
@@ -804,6 +860,8 @@ def run(root, protocol, expected_sha):
                 param.grad = torch.from_numpy(combined_grads[name]).to(device=device, dtype=torch.float32)
             torch.nn.utils.clip_grad_norm_(all_v2_params, max_norm=p2_cfg['grad_clip_norm'])
             opt_p2.step()
+            opt_p2.zero_grad(set_to_none=True)
+            del targ_t, clean_sft_t, clean_enc_t, role_grads, combined_grads
 
             if u_idx == 1 or u_idx % 8 == 0 or u_idx == p2_cfg['total_optimizer_updates']:
                 log_journal(
@@ -816,21 +874,30 @@ def run(root, protocol, expected_sha):
                 )
 
             if u_idx in p2_cfg['snapshots']:
+                gc.collect()
                 tag = f'p2_u{u_idx:04d}'
                 inh_phase = 'u8' if u_idx == 56 else 'u16'
                 summaries[tag] = evaluate_and_save_checkpoint(tag, inh_phase)
+                gc.collect()
 
         # =====================================================================
         # SELECT BEST CHECKPOINT & RENDER L4 RESTORED OUTPUTS
         # =====================================================================
         phase = 'select_best_and_render_outputs'
         init_clear_mae = summaries['u0000_init']['v2_monitor_role_means']['clear']['native_png']['mae']
+        init_lowlight_mae = summaries['u0000_init']['v2_monitor_role_means']['lowlight_sensor_noise']['native_png']['mae']
         candidate_tags = ['p1_e040', 'p2_u0056', 'p2_u0112', 'p2_u0168', 'p2_u0224']
-        admissible = [
+        tier1 = [
             t for t in candidate_tags
-            if summaries[t]['v2_monitor_role_means']['clear']['native_png']['mae'] <= init_clear_mae + 1e-6
+            if summaries[t]['inherited_56_pass']
+            and summaries[t]['v2_monitor_role_means']['clear']['native_png']['mae'] <= init_clear_mae + 1e-5
+            and summaries[t]['v2_monitor_role_means']['lowlight_sensor_noise']['native_png']['mae'] <= init_lowlight_mae + 5e-4
         ]
-        pool = admissible if admissible else candidate_tags
+        tier2 = [
+            t for t in candidate_tags
+            if summaries[t]['v2_monitor_role_means']['clear']['native_png']['mae'] <= init_clear_mae + 1e-5
+        ]
+        pool = tier1 if tier1 else (tier2 if tier2 else candidate_tags)
         best_tag = max(pool, key=lambda t: summaries[t]['v2_degraded_4role_png_ssim7'])
 
         best_src = out_dir / f'checkpoints/{best_tag}/trainable_v2.npz'
