@@ -1,3 +1,40 @@
+# 25 October 2026: Conditioned SFT Learning V1 feasibility proven & manual L4 VM packet sealed
+
+STATUS: PREPARED_UNRUN_MANUAL_CONDITIONED_SFT_PACKET_INDEPENDENTLY_AUDITED.
+- **Goal Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V2.md](CCTV_CODEFORMER_RESTORATION_GOAL_V2.md).
+- **Stage 1 Saved-Array Feasibility Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v1_feasibility/feasibility_receipt_v1.json`. Proves on the retained `Matched V1` (`u64`, `A8`, `B8`) saved RAW/PNG outputs that channel-mean / block16-mean vs. zero-mean spatial decoupling + input-only degradation/luminance gating eliminates the `Matched V1` Arm-B clear-PNG RGB8 regression (`+1,126` codes → `-48,923` to `-57,169` codes) and passes **100% of all 56 inherited quality gates AND 100% of all 40 monitor gates** at both early (`u8`) and terminal (`u24`/`u48`) checkpoints. Input-only `top1pct_luma` separates all 176 normal-lit cases (`>= 0.6838`, `g_dark == 0.0`) from all 40 low-light/dark cases (`<= 0.6356`, `g_dark == 1.0`) with zero overlap across all 216 cases.
+- **Stage 2 Package & Unit Tests**: Implemented `research/codeformer_conditioned_sft_learning_v1/` (60 trainable tensors in Arm B: 24 `U96` pre-SFT residual adapters + 36 post-fusion spatial heads, 515 `R2` frozen; multi-site Clean-SFT feature distillation at `32/64/128/256`; role-balanced gradient projection `<g_role, g_clear> >= 0`) and `research/codeformer_conditioned_sft_inference_v1.py`, verified by 20 unit tests across `tests/test_codeformer_conditioned_sft_feasibility_v1.py`, `tests/test_codeformer_conditioned_sft_learning_v1.py`, and `tests/test_codeformer_conditioned_sft_inference_v1.py`.
+- **Stage 3 Sealed Manual NVIDIA L4 VM Packet**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md) and [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_PREPARATION.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_PREPARATION.md). Independently audited in `outputs/codeformer_conditioned_sft_learning_v1_source_preparation/independent_packet_audit_v1.json`:
+  - Stage directory: `outputs/cctv_codeformer_conditioned_sft_learning_v1_vm` (`691` static files)
+  - Protocol SHA256: `f54c37e8b6b05473b1530395549b31f89189445f642ecfc49b1280ba8442d7f0` (`1,248,212` bytes)
+  - Execution archive: `outputs/cctv-codeformer-conditioned-sft-learning-v1-execution.tar.gz` (`107,283,842` bytes, `690` PAX members, SHA256 `4e3d07432ea1951a60050bb5aba5dfbbf30f6ad7b2cdc5e54232f0fa62b7af64`).
+- **Stage 4 Visual Sheets & Local Review App**: Generated `conditioned_clear_comparison_v1.png` (8 clear monitors) and `conditioned_multi_role_comparison_v1.png` (5 paired roles + 2 native CCTV guard roles), served by `serve_conditioned_sft_review_v1.py`.
+
+---
+
+# 25 October 2026: RESTORATION uses an ordinary Git worktree
+
+Canonical folder: `C:\xampp\htdocs\YEAR 4\Testing_RESTORATION`. Open it directly in any editor or terminal.
+This source checkout is outside the Codex-managed directory. Git metadata remains linked to the original Testing repository; retain that repository.
+The path notes below are historical when they name the former .codex location. Read WORKSPACE_STATUS.md for current folder assignments.
+The active Codex completion checkout is temporarily retained detached at its former path because Windows refused its rename. Reopen the normal completion folder to continue there; the managed-only attachment tool cannot move this chat to it automatically.
+Ignored model assets, data and virtual environments remain in the original Testing folder and need explicit configuration. No model code, weights, inference or training changed.
+
+---
+
+# 25 October 2026: RESTORATION isolated code worktree ready
+
+Current branch: `RESTORATION`. Physical workspace: `C:\Users\janus\.codex\worktrees\restoration\Testing`.
+Current focus: restoration model development; covering development belongs to FACE_MASK_COMPLETION.
+Read [workspace status](WORKSPACE_STATUS.md) and [file ownership](WORKSPACE_BRANCHES.md).
+Two chats must use their separate worktree folders; switching branches in the same folder is not isolation.
+All original research source bytes were verified in both worktrees. Branch-specific handoff prefixes are the only intentional changes to existing source at setup closure.
+Ignored datasets, returned archives, model dependencies and virtual environments were not copied. Configure verified read-only assets and the branch environment before launching models.
+New model outputs/checkpoints must have separate filenames and directories. Existing weights, failures and qualification requirements remain intact.
+No model inference, training, VM operation or remote push occurred during this setup. Earlier setup-in-progress entries below are historical.
+
+---
+
 # 25 October 2026: separate restoration and covering development chats
 
 Latest user decision: this chat continues FACE MASK DETECTION + COMPLETION;
