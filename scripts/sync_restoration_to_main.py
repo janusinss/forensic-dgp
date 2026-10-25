@@ -1,5 +1,6 @@
 """Automatically sync RESTORATION branch commits and Conditioned SFT V1 outputs into main (Testing)."""
 import hashlib
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -53,13 +54,19 @@ def sync_outputs() -> int:
 
 
 def sync_git_main() -> str:
+    clean_env = {
+        k: v for k, v in os.environ.items()
+        if not k.startswith('GIT_')
+    }
     subprocess.run(
-        ['git', '-C', str(MAIN_ROOT), 'merge', '-X', 'theirs', 'RESTORATION', '-m',
+        ['git', '-C', str(MAIN_ROOT), 'merge', '-X', 'theirs', '--no-edit', 'RESTORATION', '-m',
          'chore: auto-sync RESTORATION into main'],
+        env=clean_env,
         check=True,
     )
     head = subprocess.check_output(
         ['git', '-C', str(MAIN_ROOT), 'rev-parse', '--short', 'HEAD'],
+        env=clean_env,
         text=True,
     ).strip()
     return head
