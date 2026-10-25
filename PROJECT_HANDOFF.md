@@ -1,3 +1,16 @@
+# 25 October 2026: RESTORATION isolated code worktree ready
+
+Current branch: `RESTORATION`. Physical workspace: `C:\Users\janus\.codex\worktrees\restoration\Testing`.
+Current focus: restoration model development; covering development belongs to FACE_MASK_COMPLETION.
+Read [workspace status](WORKSPACE_STATUS.md) and [file ownership](WORKSPACE_BRANCHES.md).
+Two chats must use their separate worktree folders; switching branches in the same folder is not isolation.
+All original research source bytes were verified in both worktrees. Branch-specific handoff prefixes are the only intentional changes to existing source at setup closure.
+Ignored datasets, returned archives, model dependencies and virtual environments were not copied. Configure verified read-only assets and the branch environment before launching models.
+New model outputs/checkpoints must have separate filenames and directories. Existing weights, failures and qualification requirements remain intact.
+No model inference, training, VM operation or remote push occurred during this setup. Earlier setup-in-progress entries below are historical.
+
+---
+
 # 25 October 2026: separate restoration and covering development chats
 
 Latest user decision: this chat continues FACE MASK DETECTION + COMPLETION;
