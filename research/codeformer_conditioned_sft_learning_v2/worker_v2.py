@@ -161,7 +161,7 @@ def run(root, protocol, expected_sha):
         torch.backends.cudnn.deterministic = True
         torch.backends.cuda.matmul.allow_tf32 = False
         torch.backends.cudnn.allow_tf32 = False
-        torch.use_deterministic_algorithms(True, warn_only=True)
+        torch.use_deterministic_algorithms(True, warn_only=False)
         torch.cuda.reset_peak_memory_stats(0)
 
         def check_resources():
@@ -239,6 +239,7 @@ def run(root, protocol, expected_sha):
             return arr
 
         out_block_indices = set(base.fuse_encoder_block[s] for s in base.connect_list)
+        max_out_block = max(out_block_indices)
 
         def extract_r2_enc_connected(rgb_nchw_256):
             """Extract connected multi-scale R2 encoder features (for perceptual loss)."""
@@ -249,6 +250,8 @@ def run(root, protocol, expected_sha):
                 h = block(h)
                 if idx in out_block_indices:
                     feats[str(h.shape[-1])] = h
+                if idx >= max_out_block:
+                    break
             return feats
 
         @torch.no_grad()
@@ -269,8 +272,7 @@ def run(root, protocol, expected_sha):
 
         @torch.no_grad()
         def forward_u64_raw_f32(rgb_u8):
-            inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
-            t = torch.from_numpy(inp_f32.transpose(2, 0, 1).copy())[None].to(device)
+            t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=device, dtype=torch.float32)[None] / 255.0
             s512 = F.interpolate(t, (512, 512), mode='bilinear', align_corners=False) * 2.0 - 1.0
             handles = []
             pending = {}
@@ -298,7 +300,8 @@ def run(root, protocol, expected_sha):
                     m = base.fuse_convs_dict[s]
                     handles.append(m.register_forward_pre_hook(pre_h(s)))
                     handles.append(m.register_forward_hook(post_h(s)))
-                triple = base(s512, w=1.0, detach_16=True, adain=True)
+                with torch.autocast(device_type='cuda', enabled=False):
+                    triple = base(s512, w=1.0, detach_16=True, adain=True)
             finally:
                 for h in reversed(handles):
                     h.remove()
@@ -343,7 +346,8 @@ def run(root, protocol, expected_sha):
                     m = base.fuse_convs_dict[s]
                     handles.append(m.register_forward_pre_hook(pre_h(s)))
                     handles.append(m.register_forward_hook(post_h(s)))
-                triple = base(s512, w=1.0, detach_16=True, adain=True)
+                with torch.autocast(device_type='cuda', enabled=False):
+                    triple = base(s512, w=1.0, detach_16=True, adain=True)
             finally:
                 for h in reversed(handles):
                     h.remove()
@@ -362,7 +366,7 @@ def run(root, protocol, expected_sha):
                 cond_np = cond_v2.compute_v2_conditioning_numpy(inp_f32, np=np)
                 u8 = (np.clip(u64_raw_cached, 0.0, 1.0) * np.float32(255.0)).astype(np.uint8)
                 return u64_raw_cached.copy(), u8, cond_np
-            t = torch.from_numpy(inp_f32.transpose(2, 0, 1).copy())[None].to(device)
+            t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=device, dtype=torch.float32)[None] / 255.0
             b_t = torch.from_numpy(u64_raw_cached.transpose(2, 0, 1).copy())[None].to(device)
             raw_neural_t, _, _, _, _ = forward_v2_connected(t, b_t, gamma_val=0.0)
             raw_neural_np = raw_neural_t[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
@@ -394,24 +398,38 @@ def run(root, protocol, expected_sha):
                 },
             }
 
+        def load_raw_npy(binding):
+            path = packet.regular(root / binding['path'])
+            need(packet.pin(root, path) == binding, 'RAW asset pin mismatch: ' + binding['path'])
+            arr = np.load(path, allow_pickle=False)
+            need(arr.dtype == np.float32 and arr.shape == (256, 256, 3) and np.isfinite(arr).all(),
+                 'Invalid cached RAW array: ' + binding['path'])
+            return arr
+
         # Load validation images & cache u64 baseline predictions
         phase = 'step0_u64_baseline_and_parity'
         cohorts = p['selection']
         parent_raw = (root / p['evidence']['u64_parent_protocol']['path']).read_bytes()
         audit_raw = (root / p['evidence']['u64_historical_pixel_audit']['path']).read_bytes()
-        frozen_U96_records = [
-            packet.strict_json((root / c['record']['path']).read_bytes())
-            for c in p['controls']
-        ]
+        controls_map = {c['id']: c for c in p['controls']}
         parity_witnesses = {
-            w['id']: np.load(root / w['raw']['path'], allow_pickle=False)
+            w['id']: load_raw_npy(w['raw'])
             for w in p['u64_parity']
         }
 
         val_inputs = {}
         val_targets = {}
         u64_val_raw = {}
-        initial_old_quality_records = []
+        frozen_pixels = {}
+        teacher_pixels = {}
+
+        for row in cohorts['old_quality']:
+            cid = row['id']
+            ctrl = controls_map[cid]
+            frozen_pixels[cid] = (load_raw_npy(ctrl['raw']), load_rgb_u8(ctrl['png']))
+            teacher = row.get('behavior_teacher')
+            if teacher is not None:
+                teacher_pixels[cid] = (load_raw_npy(teacher['raw']), load_rgb_u8(teacher['png']))
 
         for bank_name in ('old_quality', 'v1_monitors', 'v2_monitors', 'native_cctv_dev'):
             for row in cohorts[bank_name]:
@@ -426,34 +444,42 @@ def run(root, protocol, expected_sha):
                     max_w_diff = float(np.max(np.abs(u64_r - parity_witnesses[cid])))
                     need(max_w_diff <= 2e-5, f'Historical u64 parity witness exceeded tolerance: {cid} ({max_w_diff})')
 
-        # Build initial u64 old_quality records for exact inherited 56-case evaluation
-        for row in cohorts['old_quality']:
+        def build_old_quality_record(row, raw_f32, rgb_u8):
             cid = row['id']
-            u64_r = u64_val_raw[cid]
-            u64_u8 = (np.clip(u64_r, 0.0, 1.0) * np.float32(255.0)).astype(np.uint8)
-            inp_f32 = val_inputs[cid].astype(np.float32) / np.float32(255.0)
-            ref_f32 = (val_targets[cid].astype(np.float32) / np.float32(255.0)) if cid in val_targets else inp_f32
-            rec = {
+            f_raw, f_png = frozen_pixels[cid]
+            targ_f32 = (val_targets[cid].astype(np.float32) / np.float32(255.0)) if cid in val_targets else None
+            kwargs = {}
+            if cid in teacher_pixels:
+                t_raw, t_png = teacher_pixels[cid]
+                kwargs = {'teacher_raw': t_raw, 'teacher_png': t_png}
+            measured = u64_cont_metrics.record_metrics(
+                raw_f32, rgb_u8, targ_f32, row, np=np,
+                frozen_U96_raw=f_raw, frozen_U96_png=f_png, **kwargs,
+            )
+            return {
                 'id': cid,
                 'reference_id': row['reference_id'],
                 'role': row['role'],
                 'split': row['split'],
-                'metrics': {
-                    'raw': u96_metrics.case_view_metrics(u64_r, ref_f32, row['role'], np=np),
-                    'native_png': u96_metrics.case_view_metrics(
-                        u64_u8.astype(np.float32) / np.float32(255.0), ref_f32, row['role'], np=np
-                    ),
-                },
+                **measured,
             }
-            initial_old_quality_records.append(rec)
+
+        frozen_U96_records = {}
+        initial_old_quality_records = {}
+        for row in cohorts['old_quality']:
+            cid = row['id']
+            f_raw, f_png = frozen_pixels[cid]
+            frozen_U96_records[cid] = build_old_quality_record(row, f_raw, f_png)
+            u64_r = u64_val_raw[cid]
+            u64_u8 = (np.clip(u64_r, 0.0, 1.0) * np.float32(255.0)).astype(np.uint8)
+            initial_old_quality_records[cid] = build_old_quality_record(row, u64_r, u64_u8)
 
         # Verify step-0 bitwise parity of v2_bundle neural forward against u64
         v2_bundle.eval()
         max_step0_neural_diff = 0.0
         for row in cohorts['old_quality'][:8]:
             cid = row['id']
-            inp_f32 = val_inputs[cid].astype(np.float32) / np.float32(255.0)
-            t = torch.from_numpy(inp_f32.transpose(2, 0, 1).copy())[None].to(device)
+            t = torch.from_numpy(val_inputs[cid].transpose(2, 0, 1).copy()).to(device=device, dtype=torch.float32)[None] / 255.0
             b_t = torch.from_numpy(u64_val_raw[cid].transpose(2, 0, 1).copy())[None].to(device)
             with torch.no_grad():
                 raw_t, _, _, _, _ = forward_v2_connected(t, b_t, gamma_val=0.0)
@@ -479,24 +505,11 @@ def run(root, protocol, expected_sha):
             ckpt_pin = packet.pin(root, ckpt_path)
 
             # 1) Inherited 56-case old_quality bank
-            cur_old_records = []
+            cur_old_records = {}
             for row in cohorts['old_quality']:
                 cid = row['id']
                 r_f32, r_u8, _ = infer_v2_eval(val_inputs[cid], u64_val_raw[cid], gamma_now)
-                inp_f32 = val_inputs[cid].astype(np.float32) / np.float32(255.0)
-                ref_f32 = (val_targets[cid].astype(np.float32) / np.float32(255.0)) if cid in val_targets else inp_f32
-                cur_old_records.append({
-                    'id': cid,
-                    'reference_id': row['reference_id'],
-                    'role': row['role'],
-                    'split': row['split'],
-                    'metrics': {
-                        'raw': u96_metrics.case_view_metrics(r_f32, ref_f32, row['role'], np=np),
-                        'native_png': u96_metrics.case_view_metrics(
-                            r_u8.astype(np.float32) / np.float32(255.0), ref_f32, row['role'], np=np
-                        ),
-                    },
-                })
+                cur_old_records[cid] = build_old_quality_record(row, r_f32, r_u8)
             inherited_eval = u64_cont_metrics.evaluate_bank(
                 cur_old_records, initial_old_quality_records, frozen_U96_records,
                 parent_raw, phase=inherited_phase, saved_audit_bytes=audit_raw,
@@ -628,6 +641,7 @@ def run(root, protocol, expected_sha):
         log_journal('phase1_features_cached', opt_cases=len(opt_cached), clean_targets=len(clean_target_sft))
 
         phase = 'phase1_clean_sft_distillation'
+        torch.use_deterministic_algorithms(True, warn_only=True)
         p1_cfg = contract.PHASE1_SCHEDULE
         p1_params = list(v2_bundle.pyramid.parameters()) + list(v2_bundle.dark_refiner.parameters())
         opt_p1 = torch.optim.AdamW(
