@@ -1,3 +1,10 @@
+# Ordinary worktree: RESTORATION
+
+Both folders are ordinary Git worktrees, usable without Codex from an editor, terminal or another coding tool.
+They share the original Testing repository Git metadata, so keep that repository in place.
+Codex cannot attach this existing chat to an unmanaged folder through its attachment tool. Open the normal completion folder as your project before continuing model work.
+The previous managed completion checkout is a preserved detached copy for the still-active session, not the canonical development folder.
+
 # Branch workspace assignments
 
 Source isolation setup completed on 25 October 2026. These are local branches
@@ -5,11 +12,10 @@ with separate worktrees; changes transfer only through intentional Git actions.
 
 | Branch | Worktree folder |
 |---|---|
-| RESTORATION | C:\Users\janus\.codex\worktrees\restoration\Testing |
-| FACE_MASK_COMPLETION | C:\Users\janus\.codex\worktrees\face-mask-completion\Testing |
+| RESTORATION | C:\xampp\htdocs\YEAR 4\Testing_RESTORATION |
+| FACE_MASK_COMPLETION | C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION |
 
-This chat continues in FACE_MASK_COMPLETION. Use the RESTORATION folder in the
-restoration chat. Opening the original Testing folder in both chats still
+This worktree is for RESTORATION. Use the matching folder for its development chat. Opening the original Testing folder in both chats still
 shares files. A branch name alone does not provide physical separation.
 
 All 3,536 original source files were checked byte for byte in both checkouts.

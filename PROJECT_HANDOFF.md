@@ -1,3 +1,13 @@
+# 25 October 2026: RESTORATION uses an ordinary Git worktree
+
+Canonical folder: `C:\xampp\htdocs\YEAR 4\Testing_RESTORATION`. Open it directly in any editor or terminal.
+This source checkout is outside the Codex-managed directory. Git metadata remains linked to the original Testing repository; retain that repository.
+The path notes below are historical when they name the former .codex location. Read WORKSPACE_STATUS.md for current folder assignments.
+The active Codex completion checkout is temporarily retained detached at its former path because Windows refused its rename. Reopen the normal completion folder to continue there; the managed-only attachment tool cannot move this chat to it automatically.
+Ignored model assets, data and virtual environments remain in the original Testing folder and need explicit configuration. No model code, weights, inference or training changed.
+
+---
+
 # 25 October 2026: RESTORATION isolated code worktree ready
 
 Current branch: `RESTORATION`. Physical workspace: `C:\Users\janus\.codex\worktrees\restoration\Testing`.
