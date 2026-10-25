@@ -269,7 +269,7 @@ def load_conditioned_sft_v2_restorer(
         def restore_v2(self, rgb_u8, *, cached_u64_raw=None):
             self._validate_rgb_u8(rgb_u8)
             inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
-            inp_t = torch.from_numpy(inp_f32.transpose(2, 0, 1).copy())[None].to(dev)
+            inp_t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=dev, dtype=torch.float32)[None] / 255.0
             sample_512 = F.interpolate(inp_t, (512, 512), mode='bilinear', align_corners=False) * 2.0 - 1.0
             u64_raw = cached_u64_raw if cached_u64_raw is not None else self._forward_u64_or_b8_raw(sample_512, u96_adapters, u64_heads)
             if self.v2_gamma == 0.0:
@@ -296,7 +296,7 @@ def load_conditioned_sft_v2_restorer(
             """Run Input -> u64, V1-B8 (if loaded), and V2 side-by-side with full sharpness telemetry."""
             self._validate_rgb_u8(rgb_u8)
             inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
-            inp_t = torch.from_numpy(inp_f32.transpose(2, 0, 1).copy())[None].to(dev)
+            inp_t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=dev, dtype=torch.float32)[None] / 255.0
             sample_512 = F.interpolate(inp_t, (512, 512), mode='bilinear', align_corners=False) * 2.0 - 1.0
 
             u64_raw = self._forward_u64_or_b8_raw(sample_512, u96_adapters, u64_heads)

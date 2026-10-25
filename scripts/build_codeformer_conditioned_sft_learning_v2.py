@@ -312,7 +312,7 @@ cd ~ &&
 sha256sum -c {ARCHIVE_OUT.name}.sha256 &&
 test -d ~/forensic-dgp/cctv_dgp_vm_bundle/.venv &&
 test -d ~/forensic-dgp/cctv_codeformer_u96_postfusion_smoothanchors_lr_v1_vm/weights &&
-rm -rf ~/forensic-dgp/{packet.STAGE_NAME} &&
+rm -rf ~/forensic-dgp/{packet.STAGE_NAME} ~/{contract.PREFIX}-results.tar.gz ~/{contract.PREFIX}-results.tar.gz.sha256 ~/{contract.PREFIX}-export.json &&
 tar -xzf {ARCHIVE_OUT.name} -C ~/forensic-dgp &&
 cd ~/forensic-dgp/{packet.STAGE_NAME} &&
 python3 -B research/codeformer_conditioned_sft_learning_v2/install_weights_v2.py --root . --source-root ~/forensic-dgp/cctv_codeformer_u96_postfusion_smoothanchors_lr_v1_vm --protocol-sha {protocol_sha}

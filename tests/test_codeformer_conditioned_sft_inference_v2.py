@@ -94,6 +94,65 @@ class TestConditionedSFTInferenceV2(unittest.TestCase):
         self.assertIsNotNone(comp['v1_b8_rgb8'])
         self.assertGreater(comp['sharpness']['u64'], comp['sharpness']['input'])
 
+        # Verify CPU parity against all 4 saved historical L4 u64 RAW witnesses
+        import json
+        p_v1 = json.loads((V1_STAGE / 'protocol.json').read_text(encoding='utf-8'))
+        rows_by_id = {
+            row['id']: row
+            for bank in ('old_quality', 'new_monitors')
+            for row in p_v1['selection'][bank]
+        }
+        for witness in p_v1['u64_parity']:
+            wid = witness['id']
+            w_raw = np.load(V1_STAGE / witness['raw']['path'], allow_pickle=False)
+            inp_w = np.asarray(Image.open(V1_STAGE / rows_by_id[wid]['input']['path']).convert('RGB'), dtype=np.uint8)
+            cpu_u64 = restorer.restore_v2(inp_w)['u64_raw_f32']
+            max_diff = float(np.max(np.abs(cpu_u64 - w_raw)))
+            self.assertLessEqual(max_diff, 1e-5, f'Historical u64 witness mismatch on {wid}: {max_diff}')
+
+    def test_04_inherited_56_bank_record_schema_and_evaluator(self):
+        import json
+        from research.codeformer_u64_cleananchors_continuation_v1 import metrics as u64_cont_metrics
+
+        p_v1 = json.loads((V1_STAGE / 'protocol.json').read_text(encoding='utf-8'))
+        parent_raw = (V1_STAGE / 'evidence/u64_parent_protocol.json').read_bytes()
+        audit_raw = (V1_STAGE / 'evidence/u64_historical_pixel_audit.json').read_bytes()
+        hist = u64_cont_metrics.historical_controls(parent_raw, audit_raw)
+        controls_map = {c['id']: c for c in p_v1['controls']}
+
+        frozen_u96_rebuilt = {}
+        for row in p_v1['selection']['old_quality']:
+            cid = row['id']
+            ctrl = controls_map[cid]
+            f_raw = np.load(V1_STAGE / ctrl['raw']['path'], allow_pickle=False)
+            f_png = np.asarray(Image.open(V1_STAGE / ctrl['png']['path']).convert('RGB'), dtype=np.uint8)
+            targ_f32 = (
+                np.asarray(Image.open(V1_STAGE / row['target']['path']).convert('RGB'), dtype=np.float32) / np.float32(255.0)
+                if row.get('target') is not None else None
+            )
+            kwargs = {}
+            if row.get('behavior_teacher') is not None:
+                t_raw = np.load(V1_STAGE / row['behavior_teacher']['raw']['path'], allow_pickle=False)
+                t_png = np.asarray(Image.open(V1_STAGE / row['behavior_teacher']['png']['path']).convert('RGB'), dtype=np.uint8)
+                kwargs = {'teacher_raw': t_raw, 'teacher_png': t_png}
+            measured = u64_cont_metrics.record_metrics(
+                f_raw, f_png, targ_f32, row, np=np,
+                frozen_U96_raw=f_raw, frozen_U96_png=f_png, **kwargs,
+            )
+            frozen_u96_rebuilt[cid] = {
+                'id': cid,
+                'reference_id': row['reference_id'],
+                'role': row['role'],
+                'split': row['split'],
+                **measured,
+            }
+
+        res = u64_cont_metrics.evaluate_bank(
+            hist['saved_u64'], hist['saved_u64'], frozen_u96_rebuilt,
+            parent_raw, phase='initializer', saved_audit_bytes=audit_raw,
+        )
+        self.assertTrue(res['pass'])
+
 
 if __name__ == '__main__':
     unittest.main()

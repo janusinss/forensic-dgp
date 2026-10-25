@@ -90,16 +90,15 @@ def build_frozen_u96_and_u64_modules(*, torch):
             self.decoder = nn.Conv2d(channels, width, kernel_size=1, bias=False)
             self.fused = nn.Conv2d(channels, width, kernel_size=1, bias=False)
             self.coarse = nn.Conv2d(256, width, kernel_size=1, bias=False)
-            self.act = nn.SiLU()
             self.spatial = nn.Conv2d(width, width, kernel_size=3, padding=1, bias=True)
             self.output = nn.Conv2d(width, channels, kernel_size=1, bias=True)
+            self.activation = nn.GELU()
 
         def forward(self, used, decoder, fused, coarse):
-            coarse_term = self.coarse(coarse)
-            if coarse_term.shape[-2:] != fused.shape[-2:]:
-                coarse_term = F.interpolate(coarse_term, size=fused.shape[-2:], mode='bilinear', align_corners=False)
-            hidden = self.encoder(used) + self.decoder(decoder) + self.fused(fused) + coarse_term
-            logits = self.output(self.act(self.spatial(self.act(hidden))))
+            context = self.coarse(coarse.detach())
+            context = F.interpolate(context, size=used.shape[-2:], mode='bilinear', align_corners=False)
+            mixed = (self.encoder(used) + self.decoder(decoder) + self.fused(fused) + context) / 2.0
+            logits = self.output(self.activation(self.spatial(self.activation(mixed))))
             return fused + torch.tanh(logits) * (fused - decoder)
 
     u96_adapters = nn.ModuleDict({s: ResidualSkipAdapter(c, 32) for s, c in CHANNELS.items()})
