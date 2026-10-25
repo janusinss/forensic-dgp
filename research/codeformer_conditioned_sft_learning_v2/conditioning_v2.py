@@ -253,6 +253,7 @@ def compute_v2_conditioning_torch(input_nchw, *, torch):
             'central_smooth_laplacian': central_smooth_lap,
             'noise_hf_diff': noise_hf_diff,
             'max_local_blur': float(effective_16.max().item()),
+            'local_map_16': effective_16,
             'site_maps': site_maps,
         }
 

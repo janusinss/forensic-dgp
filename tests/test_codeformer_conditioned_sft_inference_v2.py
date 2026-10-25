@@ -78,6 +78,11 @@ class TestConditionedSFTInferenceV2(unittest.TestCase):
         self.assertAlmostEqual(c_np['g_blur'], c_th['g_blur'], places=5)
         self.assertAlmostEqual(c_np['g_sensor_noise'], c_th['g_sensor_noise'], places=5)
         self.assertGreater(c_np['g_blur'], 0.5)
+        self.assertEqual(tuple(c_th['local_map_16'].shape), (1, 1, 16, 16))
+        m16_b10 = torch.cat([c_th['local_map_16'].cpu()] * 10, dim=0)
+        for s in arch_v2.SITES:
+            up_b10 = torch.nn.functional.interpolate(m16_b10, size=(int(s), int(s)), mode='bilinear', align_corners=False)
+            self.assertEqual(float((up_b10[0:1] - c_th['site_maps'][s]).abs().max().item()), 0.0)
 
     def test_03_step0_real_u64_bitwise_parity(self):
         restorer = inf_v2.load_conditioned_sft_v2_restorer(
