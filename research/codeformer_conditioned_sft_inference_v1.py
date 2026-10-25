@@ -31,8 +31,8 @@ HEAD_FILE = {'bytes': 685818, 'sha256': '77c0e1f236eb70d37f3f81059b75580e92d606b
 R2_STATE = 'a3b0986c793cb7c937ca82efde6c9e23e70557d76b93406e0f53e51b938f9e7f'
 U96_STATE = 'fbfaa9d01c5ab04d2c4383485ba4e1eebb3d9f43cdab427773447248d14a586a'
 HEAD_STATE = '6629d8414321b0d2ba3a9cc476e415d31911fd4bd1fa121a1a8db9097ce235be'
-PROTOCOL_SHA = '273b8367fbe645206b4684cddeee6cbdc4435fd0587250855424d229d3843c53'
-ARCHIVE_SHA = '168d8c97d9352e381b69d531651b8e223e9440683b68b6a7e18e5812330a34e8'
+PROTOCOL_SHA = 'f54c37e8b6b05473b1530395549b31f89189445f642ecfc49b1280ba8442d7f0'
+ARCHIVE_SHA = '4e3d07432ea1951a60050bb5aba5dfbbf30f6ad7b2cdc5e54232f0fa62b7af64'
 _OWNER_ATTRIBUTE = '_forensic_conditioned_sft_exclusive_owner'
 
 
@@ -166,11 +166,19 @@ def source_contract():
 def apply_conditioned_postprocessing_numpy(raw_pred_rgb, input_rgb, *, np,
                                            baseline_rgb=None,
                                            beta=conditioning.DEFAULT_ANCHOR_BETA,
-                                           gamma=1.0):
+                                           gamma=1.0,
+                                           dark_drift_align=False):
     """Apply Conditioned SFT V1 postprocessing and floor RGB8 quantization in NumPy."""
     conditioned_raw, gates = conditioning.condition_output_numpy(
         raw_pred_rgb, input_rgb, np=np, baseline_rgb=baseline_rgb, beta=beta, gamma=gamma
     )
+    if dark_drift_align and baseline_rgb is not None and gates['g_dark'] > 0.0:
+        base_f32 = np.clip(baseline_rgb.astype(np.float32), 0.0, 1.0)
+        coarse_drift = conditioning.block16_mean_numpy(conditioned_raw - base_f32, np=np)
+        conditioned_raw = np.clip(
+            conditioned_raw - np.float32(2.0 * gates['g_dark']) * coarse_drift,
+            0.0, 1.0
+        ).astype(np.float32)
     rgb8 = (np.clip(conditioned_raw.astype(np.float32), 0.0, 1.0) * np.float32(255.0)).astype(np.uint8)
     return conditioned_raw, rgb8, gates
 

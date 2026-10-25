@@ -50,6 +50,16 @@ class TestConditionedSftInferenceV1(unittest.TestCase):
         self.assertEqual(rgb8_1.dtype, np.uint8)
         self.assertEqual(rgb8_1.shape, (256, 256, 3))
 
+        # Dark exposure coarse-drift sign alignment preserves fine detail while flipping 16x16 drift
+        dark_inp = np.full((256, 256, 3), 0.25, dtype=np.float32)
+        base_dark = np.full((256, 256, 3), 0.50, dtype=np.float32)
+        pred_dark = np.full((256, 256, 3), 0.49, dtype=np.float32)
+        raw_dark, _, gates_dark = inf.apply_conditioned_postprocessing_numpy(
+            pred_dark, dark_inp, np=np, baseline_rgb=base_dark, dark_drift_align=True
+        )
+        self.assertEqual(gates_dark['g_dark'], 1.0)
+        self.assertAlmostEqual(float(raw_dark.mean()), 0.51, places=5)
+
 
 if __name__ == '__main__':
     unittest.main()

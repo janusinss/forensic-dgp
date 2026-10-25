@@ -15,6 +15,11 @@ SYNC_OUTPUT_PATHS = (
     'outputs/codeformer_conditioned_sft_learning_v1_feasibility',
     'outputs/codeformer_conditioned_sft_learning_v1_source_preparation',
     'outputs/cctv_codeformer_conditioned_sft_learning_v1_vm',
+    'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/transport.json',
+    'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/pixels.json',
+    'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/member_index.json',
+    'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/visuals',
+    'outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/checkpoints',
 )
 
 
