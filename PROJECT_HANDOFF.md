@@ -1,3 +1,15 @@
+# 25 October 2026: Active Goal V3 aligned (`Conditioned SFT V2` — Multi-Scale Dilated SFT & Frequency-Selective Decoder Fusion)
+
+STATUS: GOAL_V3_LOCKED_READY_FOR_STAGE1_EXECUTION.
+- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) (supersedes V2 as active development target; all V1/V2 artifacts preserved).
+- **Aligned Decisions (`/grill-me`)**:
+  1. Target balanced forensic sharpening (visibly crisper eyes, brows, nose, lips, and jaw edges on blurred/compressed/lowlight CCTV inputs while strictly preserving identity geometry and `clear`/`dark` photometry).
+  2. Keep all `515` `R2` base tensors frozen with exact step-0 `u64` parity, adding zero-initialized multi-scale dilated pre-SFT residual pyramids (`dilations 1/2/4` at `32/64/128/256`) + degradation-gated high-frequency VQGAN `decoder` edge injection.
+  3. Unconstrained quality-first two-phase L4 GPU training across all `56` non-monitor root-admitted `TRAIN` identities (`6` realistic CCTV profiles including directional motion blur and `LR48-64` + `JPEG40-70`), combining Phase-1 multi-epoch Clean-SFT feature distillation (`LR=3e-4`) + Phase-2 joint Frozen-`R2` perceptual + 7-window SSIM + multi-scale Laplacian optimization (`LR=1e-4 -> 1e-5`) with exposure-decoupled gradient routing.
+  4. Ship full paired `DEV` + unpaired native CCTV (`SurvFace`, `ChokePoint`) sheets AND an interactive browser upload/multi-model comparison UI verified via inline Playwright (`375px`, `768px`, `1280px`).
+
+---
+
 # 25 October 2026: Conditioned SFT Learning V1 L4 GPU return audited; clear PNG regression solved & 96/96 gate alignment verified
 
 STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_CLEAR_GATE_PASSED_DARK_COARSE_ALIGNED_96_OF_96.
