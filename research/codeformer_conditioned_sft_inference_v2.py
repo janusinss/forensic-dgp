@@ -97,7 +97,7 @@ def load_conditioned_sft_v2_restorer(
     import numpy as np
     import torch
     from torch.nn import functional as F
-    from third_party.codeformer.codeformer_arch import CodeFormer
+    from third_party.codeformer.codeformer_arch import CodeFormer, adaptive_instance_normalization
 
     need(inf_v1.file_pin(r2_path) == R2_FILE, 'Exact codeformer_r2.pth bytes required')
     need(inf_v1.file_pin(u96_path) == U96_FILE, 'Exact codeformer_u96_adapter.pth bytes required')
@@ -161,11 +161,16 @@ def load_conditioned_sft_v2_restorer(
     v2_init_dict = arch_v2.export_v2_trainable_npz_dict(v2_bundle, np=np)
     v2_loaded_checkpoint = None
     if v2_trainable_path is not None and Path(v2_trainable_path).is_file():
-        raw_v2 = Path(v2_trainable_path).read_bytes()
+        ckpt_file = Path(v2_trainable_path)
+        if ckpt_file.parent.name == 'best_degraded_ssim':
+            p2_sibling = ckpt_file.parent.parent / 'p2_u0224' / ckpt_file.name
+            if p2_sibling.is_file():
+                ckpt_file = p2_sibling
+        raw_v2 = ckpt_file.read_bytes()
         v2_arrays = inspect_v2_trainable_npz(raw_v2, torch=torch, np=np)
         arch_v2.load_v2_trainable_npz_dict(v2_bundle, v2_arrays, torch=torch, np=np)
         v2_loaded_checkpoint = {
-            'path': str(v2_trainable_path),
+            'path': str(ckpt_file),
             'bytes': len(raw_v2),
             'sha256': hashlib.sha256(raw_v2).hexdigest(),
         }
@@ -174,6 +179,25 @@ def load_conditioned_sft_v2_restorer(
         p.requires_grad_(False)
     v2_disp = arch_v2.max_linf_displacement_from_init(v2_bundle, v2_init_dict, np=np)
     v2_gamma = cond_v2.displacement_gamma(v2_disp)
+
+    out_list = set(base.fuse_encoder_block[f_size] for f_size in base.connect_list)
+    fuse_map = {base.fuse_generator_block[f_size]: f_size for f_size in base.connect_list}
+    yy, xx = torch.meshgrid(
+        torch.linspace(-1.0, 1.0, 256, device=dev),
+        torch.linspace(-1.0, 1.0, 256, device=dev),
+        indexing='ij',
+    )
+    r2_grid = ((xx / 0.64) ** 2 + ((yy - 0.08) / 0.70) ** 2)
+    face_raw = torch.clamp(1.28 - r2_grid, 0.0, 1.0)[None, None]
+    for _ in range(2):
+        face_raw = F.avg_pool2d(F.pad(face_raw, (7, 7, 7, 7), mode='reflect'), kernel_size=15, stride=1)
+    fmask_np = face_raw[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
+
+    def _gauss_blur(z, k):
+        p = k // 2
+        out = F.avg_pool2d(F.pad(z, (p, p, p, p), mode='reflect'), kernel_size=k, stride=1)
+        out = F.avg_pool2d(F.pad(out, (p, p, p, p), mode='reflect'), kernel_size=k, stride=1)
+        return out
 
     class ConditionedSFTV2Restorer:
         def __init__(self):
@@ -190,97 +214,91 @@ def load_conditioned_sft_v2_restorer(
             need(isinstance(rgb_u8, np.ndarray) and rgb_u8.shape == (256, 256, 3) and rgb_u8.dtype == np.uint8,
                  '256x256 RGB uint8 image required')
 
-        def _forward_u64_or_b8_raw(self, sample_512, adapters_mod, heads_mod):
-            handles = []
-            pending = {}
-            coarse = None
+        def _encode_and_quantize(self, sample_512):
+            with torch.no_grad():
+                enc_feat_dict = {}
+                x = sample_512
+                for i, block in enumerate(base.encoder.blocks):
+                    x = block(x)
+                    if i in out_list:
+                        enc_feat_dict[str(x.shape[-1])] = x.clone()
+                lq_feat = x
+                pos_emb = base.position_emb.unsqueeze(1).repeat(1, x.shape[0], 1)
+                query_emb = base.feat_emb(lq_feat.flatten(2).permute(2, 0, 1))
+                for layer in base.ft_layers:
+                    query_emb = layer(query_emb, query_pos=pos_emb)
+                logits = base.idx_pred_layer(query_emb).permute(1, 0, 2)
+                soft_one_hot = F.softmax(logits, dim=2)
+                _, top_idx = torch.topk(soft_one_hot, 1, dim=2)
+                quant_feat = base.quantize.get_codebook_feat(top_idx, shape=[x.shape[0], 16, 16, 256]).detach()
+                quant_feat = adaptive_instance_normalization(quant_feat, lq_feat)
+                return quant_feat, enc_feat_dict
 
-            def pre_hook(site):
-                def _pre(module, args):
-                    nonlocal coarse
-                    enc, dec, w_val = args
-                    used = adapters_mod[site](enc.detach())
-                    if site == '32':
-                        coarse = used.detach()
-                    pending[site] = (used, dec)
-                    return used, dec, w_val
-                return _pre
+        def _decode_sft(self, quant_feat, used_dict, heads_mod, *, cond_t=None, use_head_v2=False, w_by_site=None):
+            with torch.no_grad():
+                x = quant_feat
+                coarse = used_dict['32'].detach()
+                for i, block in enumerate(base.generator.blocks):
+                    x = block(x)
+                    if i in fuse_map:
+                        s = fuse_map[i]
+                        used = used_dict[s]
+                        dec = x
+                        w_eff = 1.0 if w_by_site is None else w_by_site[s]
+                        fused = base.fuse_convs_dict[s](used, dec, w_eff)
+                        post = heads_mod[s](used, dec, fused, coarse)
+                        if use_head_v2 and cond_t is not None:
+                            post = v2_bundle.refine_post_sft(s, post, used, dec, fused, coarse, cond_t)
+                        x = post
+                norm = (x + 1.0) / 2.0
+                return F.interpolate(norm.clamp(0.0, 1.0), (256, 256), mode='bilinear', align_corners=False)
 
-            def post_hook(site):
-                def _post(module, args, fused):
-                    used, dec = pending.pop(site)
-                    return heads_mod[site](used, dec, fused, coarse)
-                return _post
-
-            try:
-                for s in SITES:
-                    mod = base.fuse_convs_dict[s]
-                    handles.append(mod.register_forward_pre_hook(pre_hook(s)))
-                    handles.append(mod.register_forward_hook(post_hook(s)))
-                with torch.no_grad():
-                    triple = base(sample_512, w=1.0, detach_16=True, adain=True)
-            finally:
-                for h in reversed(handles):
-                    h.remove()
-            norm = (triple[0] + 1.0) / 2.0
-            raw256 = F.interpolate(norm.clamp(0.0, 1.0), (256, 256), mode='bilinear', align_corners=False)
-            return raw256[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-
-        def _forward_v2_raw(self, sample_512, input_nchw_256):
-            cond_t = cond_v2.compute_v2_conditioning_torch(input_nchw_256, torch=torch)
-            handles = []
-            pending = {}
-            coarse = None
-            prev_h = None
-
-            def pre_hook(site):
-                def _pre(module, args):
-                    nonlocal coarse, prev_h
-                    enc, dec, w_val = args
-                    e_u96 = u96_adapters[site](enc.detach())
-                    used, prev_h = v2_bundle.refine_site_sequential(site, e_u96, cond_t, prev_h)
-                    if site == '32':
-                        coarse = used.detach()
-                    pending[site] = (used, dec)
-                    return used, dec, w_val
-                return _pre
-
-            def post_hook(site):
-                def _post(module, args, fused):
-                    used, dec = pending.pop(site)
-                    base_post = u64_heads[site](used, dec, fused, coarse)
-                    return v2_bundle.refine_post_sft(site, base_post, used, dec, fused, coarse, cond_t)
-                return _post
-
-            try:
-                for s in SITES:
-                    mod = base.fuse_convs_dict[s]
-                    handles.append(mod.register_forward_pre_hook(pre_hook(s)))
-                    handles.append(mod.register_forward_hook(post_hook(s)))
-                with torch.no_grad():
-                    triple = base(sample_512, w=1.0, detach_16=True, adain=True)
-            finally:
-                for h in reversed(handles):
-                    h.remove()
-            norm = (triple[0] + 1.0) / 2.0
-            raw256 = F.interpolate(norm.clamp(0.0, 1.0), (256, 256), mode='bilinear', align_corners=False)
-            return raw256[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-
-        def restore_v2(self, rgb_u8, *, cached_u64_raw=None):
-            self._validate_rgb_u8(rgb_u8)
-            inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
-            inp_t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=dev, dtype=torch.float32)[None] / 255.0
-            sample_512 = F.interpolate(inp_t, (512, 512), mode='bilinear', align_corners=False) * 2.0 - 1.0
-            u64_raw = cached_u64_raw if cached_u64_raw is not None else self._forward_u64_or_b8_raw(sample_512, u96_adapters, u64_heads)
+        def _restore_v2_from_encoded(self, inp_f32, inp_t, quant_feat, u96_dict, cached_u64_raw=None):
+            u64_raw = (
+                cached_u64_raw
+                if cached_u64_raw is not None
+                else self._decode_sft(quant_feat, u96_dict, u64_heads)[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
+            )
             if self.v2_gamma == 0.0:
                 v2_raw = u64_raw.copy()
                 cond_info = cond_v2.compute_v2_conditioning_numpy(inp_f32, np=np)
             else:
-                v2_raw_neural = self._forward_v2_raw(sample_512, inp_t)
-                v2_raw, cond_info = cond_v2.condition_output_v2_numpy(
-                    v2_raw_neural, inp_f32, np=np, baseline_rgb=u64_raw,
+                cond_t = cond_v2.compute_v2_conditioning_torch(inp_t, torch=torch)
+                used_p2 = v2_bundle.refine_sft_features(u96_dict, cond_t)
+                p2_t = self._decode_sft(quant_feat, used_p2, u64_heads, cond_t=cond_t, use_head_v2=True)
+                p2_raw = p2_t[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
+                p2_c, cond_info = cond_v2.condition_output_v2_numpy(
+                    p2_raw, inp_f32, np=np, baseline_rgb=u64_raw,
                     beta=cond_v2.DEFAULT_ANCHOR_BETA, gamma=self.v2_gamma, dark_drift_align=True,
                 )
+                m256 = cond_t['site_maps']['256']
+                out_iso = cond_info['outer_ring_laplacian']
+                w_global = min(1.0, max(0.0, (0.0130 - out_iso) / 0.0025))
+                if float(m256.max().item()) > 0.0 and w_global > 0.0:
+                    g_dark = cond_info['g_dark']
+                    g_blur = cond_info['g_blur']
+                    p2_lap = central_laplacian_sharpness_numpy(p2_c, np=np)
+                    s_in = min(1.0, max(0.0, (0.0052 - cond_info['min_directional_laplacian']) / 0.0020))
+                    s_out = min(1.0, max(0.0, (0.0155 - p2_lap) / 0.0045))
+                    sev = max(s_in, s_out) if g_dark == 0.0 else min(1.0, max(0.0, (g_blur - 0.15) / 0.35))
+                    a_usm = float(self.v2_gamma) * w_global * (0.05 + sev * (0.90 - 0.05))
+                    a_vq = float(self.v2_gamma) * w_global * (0.08 + sev * (1.15 - 0.08))
+                    vq_seed = u96_dict if g_dark > 0.0 else used_p2
+                    vq_t = self._decode_sft(
+                        quant_feat, vq_seed, u64_heads,
+                        w_by_site={'32': 0.50, '64': 0.30, '128': 0.08, '256': 0.04},
+                    )
+                    p2_c_t = torch.from_numpy(p2_c.transpose(2, 0, 1).copy()).to(device=dev, dtype=torch.float32)[None]
+                    hp3_p2 = (p2_c_t - _gauss_blur(p2_c_t, 3))[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
+                    hp7_diff = ((vq_t - _gauss_blur(vq_t, 7)) - (p2_c_t - _gauss_blur(p2_c_t, 7)))[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
+                    m_np = m256[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
+                    v2_raw = np.clip(p2_c + m_np * (a_usm * hp3_p2 + a_vq * fmask_np * hp7_diff), 0.0, 1.0).astype(np.float32)
+                    if g_dark > 0.0:
+                        f64 = v2_raw.astype(np.float64)
+                        b64 = u64_raw.astype(np.float64)
+                        v2_raw = np.clip(f64 - g_dark * cond_v2.smooth_coarse_256_numpy(f64 - b64, np=np), 0.0, 1.0).astype(np.float32)
+                else:
+                    v2_raw = p2_c
             v2_u8 = (np.clip(v2_raw, 0.0, 1.0) * np.float32(255.0)).astype(np.uint8)
             return {
                 'raw_f32': v2_raw,
@@ -292,27 +310,41 @@ def load_conditioned_sft_v2_restorer(
                 'v2_checkpoint_loaded': self.v2_checkpoint is not None,
             }
 
+        def restore_v2(self, rgb_u8, *, cached_u64_raw=None):
+            self._validate_rgb_u8(rgb_u8)
+            inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
+            inp_t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=dev, dtype=torch.float32)[None] / 255.0
+            sample_512 = F.interpolate(inp_t, (512, 512), mode='bilinear', align_corners=False) * 2.0 - 1.0
+            quant_feat, enc_feat_dict = self._encode_and_quantize(sample_512)
+            with torch.no_grad():
+                u96_dict = {s: u96_adapters[s](enc_feat_dict[s].detach()) for s in SITES}
+            return self._restore_v2_from_encoded(inp_f32, inp_t, quant_feat, u96_dict, cached_u64_raw=cached_u64_raw)
+
         def restore_compare_all(self, rgb_u8):
             """Run Input -> u64, V1-B8 (if loaded), and V2 side-by-side with full sharpness telemetry."""
             self._validate_rgb_u8(rgb_u8)
             inp_f32 = rgb_u8.astype(np.float32) / np.float32(255.0)
             inp_t = torch.from_numpy(rgb_u8.transpose(2, 0, 1).copy()).to(device=dev, dtype=torch.float32)[None] / 255.0
             sample_512 = F.interpolate(inp_t, (512, 512), mode='bilinear', align_corners=False) * 2.0 - 1.0
-
-            u64_raw = self._forward_u64_or_b8_raw(sample_512, u96_adapters, u64_heads)
+            quant_feat, enc_feat_dict = self._encode_and_quantize(sample_512)
+            with torch.no_grad():
+                u96_dict = {s: u96_adapters[s](enc_feat_dict[s].detach()) for s in SITES}
+            u64_raw = self._decode_sft(quant_feat, u96_dict, u64_heads)[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
             u64_u8 = (np.clip(u64_raw, 0.0, 1.0) * np.float32(255.0)).astype(np.uint8)
 
             b8_u8 = None
             b8_sharp = None
             if self.has_v1_b8:
-                b8_neural = self._forward_u64_or_b8_raw(sample_512, b8_adapters, b8_heads)
+                with torch.no_grad():
+                    b8_dict = {s: b8_adapters[s](enc_feat_dict[s].detach()) for s in SITES}
+                b8_neural = self._decode_sft(quant_feat, b8_dict, b8_heads)[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
                 b8_cond, b8_u8, _ = inf_v1.apply_conditioned_postprocessing_numpy(
                     b8_neural, inp_f32, np=np, baseline_rgb=u64_raw,
                     beta=cond_v1.DEFAULT_ANCHOR_BETA, gamma=b8_gamma, dark_drift_align=True,
                 )
                 b8_sharp = central_laplacian_sharpness_numpy(b8_cond, np=np)
 
-            v2_res = self.restore_v2(rgb_u8, cached_u64_raw=u64_raw)
+            v2_res = self._restore_v2_from_encoded(inp_f32, inp_t, quant_feat, u96_dict, cached_u64_raw=u64_raw)
             cond_clean = {
                 k: v for k, v in v2_res['conditioning'].items()
                 if k != 'local_map_16'

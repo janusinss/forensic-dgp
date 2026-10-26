@@ -1,3 +1,30 @@
+# 27 October 2026: Conditioned SFT Learning V2 (`Goal V3`) live NVIDIA L4 return audited, `56/56` forensic gates passed, and Stage 5 live workbench verified
+
+STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_V2_P2_U0224_ALL_56_FORENSIC_GATES_PASSED_UI_VERIFIED.
+- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) — **100% Complete across all 5 Stages**.
+- **Stage 1 Frequency-Selective & Exposure-Matched SFT Headroom Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`.
+- **Stage 2 Dataset, V2 Package & Unit Tests (`9/9` V2 + `12/12` V1 PASS)**:
+  - `56`-identity × `6`-profile realistic CCTV `TRAIN` dataset (`336` opt + `48` `monitor_v2` PNGs) pinned in `outputs/codeformer_conditioned_sft_learning_v2_preparation/v2_data_manifest.json` (`430,694` bytes, SHA256 `f060229847a70b80e8a833a49f4a0764b2e813caad58a991ed2d98d225793a15`).
+  - `research/codeformer_conditioned_sft_learning_v2/` + `research/codeformer_conditioned_sft_inference_v2.py` (`515` `R2` + `24` `U96` + `36` `u64` heads frozen; exact step-0 bitwise `u64` parity `0.0` diff; top-down `32->64->128->256` multi-scale dilated `1/2/4` pre-SFT pyramid + dark sensor-noise refiner + frequency-selective VQGAN decoder spatial head; smooth bilinear+Gaussian `16x16` dark coarse exposure alignment + outer-ring-gated anatomical VQGAN high-frequency detail synthesis).
+- **Stage 3 Sealed Manual NVIDIA L4 VM Packet**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md) and `outputs/codeformer_conditioned_sft_learning_v2_source_preparation/independent_packet_audit_v2.json` (`INDEPENDENT_V2_PACKET_AUDIT_PASSED`):
+  - Stage directory: `outputs/cctv_codeformer_conditioned_sft_learning_v2_vm` (`850` static files)
+  - Protocol SHA256: `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0` (`661,935` bytes)
+  - Execution archive: `outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz` (`124,224,129` bytes, `849` PAX members, SHA256 `f373cf3b1eb217a409381ff133c47061f4bf06a4db0bb99b34bc78af3eb01d1d`).
+- **Stage 4 Live NVIDIA L4 GPU Return Audit & Visual Qualification**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1/return_audit_v2.json`:
+  - Returned archive: `cctv-codeformer-conditioned-sft-learning-v2-results.tar.gz` (`158,864,004` bytes, `1,020` PAX members, SHA256 `8b9632c4f85b46deeb061e63cdefb4318aef48da06adbf07dead81e77b006c22`, `2731.7s` L4 runtime, `exit_code: 0`, `step0_exact_u64_max_abs_diff: 0.0`).
+  - Winning checkpoint `p2_u0224` (`checkpoints/p2_u0224/trainable_v2.npz`, `max_linf_displacement = 0.250982`) with smooth `16x16` dark exposure alignment and severity-gated VQGAN detail synthesis passes **`100%` of all `56` `old_quality` forensic checks** (`inherited_56_pass: true`) while achieving across all `48` held-out `v2_monitors`:
+    - **4-Role Degraded Mean MAE**: `0.04452 -> 0.02785` (**`-37.4%` error reduction**)
+    - **4-Role Degraded Mean SSIM7**: `0.83276 -> 0.85338` (**`+0.02062` structural similarity gain**)
+    - **4-Role Degraded Mean Central Laplacian Sharpness**: `0.01897 -> 0.01985` (**`+4.65%` higher central sharpness than `u64`**)
+    - **Clear Control**: `MAE 0.03172 -> 0.03160`, `SSIM7 0.92940 -> 0.92947`, `Central Lap 0.025480 -> 0.025485`
+    - **Unpaired Native CCTV (`ChokePoint` & `QMUL-SurvFace`) Sharpness**: `ChokePoint_C1_01` `0.00886 -> 0.01133` (`+27.9%`), `ChokePoint_C1_03` `0.01023 -> 0.01305` (`+27.6%`), `QMUL_SurvFace_24to39` `0.01253 -> 0.01844` (`+47.1%`), `QMUL_SurvFace_ge40` `0.00833 -> 0.01017` (`+22.1%`).
+  - Visual comparison sheets generated and inspected at `outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1/visuals/{v2_returned_paired_sheet_v1.png,v2_returned_multi_identity_sheet_v1.png,v2_returned_native_cctv_sheet_v1.png}`.
+- **Stage 5 Interactive Browser Workbench (`serve_conditioned_sft_review_v2.py`)**:
+  - Auto-loads `p2_u0224`, serves the Stage 4 L4 Return Audit tab (`#tab-return`) and live 256x256 PNG/JPEG upload & benchmark preset comparisons across `u64`, `V1 Arm B (u0008)`, and `Conditioned SFT V2 (L4 Trained)`.
+  - Verified via inline Playwright (`node .agents/skills/playwright-skill/run.js -e "..."`) across `375x667`, `768x1024`, and `1280x900` with `0` horizontal overflow, `0` console errors, and `0` page errors.
+
+---
+
 # 25 October 2026: Conditioned SFT Learning V2 (`Goal V3`) feasibility proven, manual L4 VM packet sealed, and live upload UI verified
 
 STATUS: PREPARED_UNRUN_MANUAL_CONDITIONED_SFT_V2_PACKET_INDEPENDENTLY_AUDITED_UI_VERIFIED.

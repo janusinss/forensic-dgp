@@ -189,6 +189,13 @@ def build_app():
             return FileResponse(p, media_type='image/png')
         return FileResponse(FEAS_V2_DIR / 'v2_paired_frequency_fusion_sheet_v1.png', media_type='image/png')
 
+    @app.get('/assets/v2-return-multi-id.png')
+    def asset_return_multi_id():
+        p = V2_RETURN_DIR / 'visuals/v2_returned_multi_identity_sheet_v1.png'
+        if p.is_file():
+            return FileResponse(p, media_type='image/png')
+        return FileResponse(FEAS_V2_DIR / 'v2_paired_frequency_fusion_sheet_v1.png', media_type='image/png')
+
     @app.get('/assets/v2-return-native.png')
     def asset_return_native():
         p = V2_RETURN_DIR / 'visuals/v2_returned_native_cctv_sheet_v1.png'
@@ -217,8 +224,31 @@ def build_app():
             </tr>
             """
 
+        ret_rows = ''
+        if ret.get('available') and 'init_summary' in ret and 'best_summary' in ret:
+            for rk in ('clear', 'global_defocus_blur', 'directional_motion_blur', 'local_soft_surroundings', 'compound_cctv_codec', 'lowlight_sensor_noise'):
+                im_r = ret['init_summary'][rk]['native_png']
+                bm_r = ret['best_summary'][rk]['native_png']
+                ret_rows += f"""
+                <tr>
+                  <td class="mono">{rk}</td>
+                  <td class="num">{im_r['mae']:.5f} / {im_r['ssim7']:.4f} / {im_r['central_lap']:.5f}</td>
+                  <td class="num highlight-val">{bm_r['mae']:.5f} / {bm_r['ssim7']:.4f} / {bm_r['central_lap']:.5f}</td>
+                </tr>
+                """
+            if 'degraded_4role_mean' in ret:
+                d_u64 = ret['degraded_4role_mean']['u64_init']
+                d_v2 = ret['degraded_4role_mean']['v2_p2_u0224']
+                ret_rows += f"""
+                <tr>
+                  <td class="mono"><strong>4-Role Degraded Mean</strong></td>
+                  <td class="num"><strong>{d_u64['mae']:.5f} / {d_u64['ssim7']:.4f} / {d_u64['central_lap']:.5f}</strong></td>
+                  <td class="num highlight-val"><strong>{d_v2['mae']:.5f} / {d_v2['ssim7']:.4f} / {d_v2['central_lap']:.5f}</strong></td>
+                </tr>
+                """
+
         ckpt_status_text = (
-            f"Loaded L4 Trained V2 ({ret.get('best_checkpoint_tag', 'best_degraded_ssim')})"
+            f"Loaded L4 Trained V2 ({ret.get('best_checkpoint_tag', 'p2_u0224')})"
             if st['v2_trained_checkpoint_present']
             else 'Step-0 Exact u64 Parity Initializer (Awaiting Manual NVIDIA L4 VM Run)'
         )
@@ -568,6 +598,7 @@ def build_app():
 
     <div class="tabs" role="tablist" aria-label="Restoration sections">
       <button type="button" class="tab-btn" role="tab" id="tab-live" aria-selected="true" aria-controls="panel-live">Live Upload &amp; Compare</button>
+      <button type="button" class="tab-btn" role="tab" id="tab-return" aria-selected="false" aria-controls="panel-return">Stage 4 L4 Return Audit</button>
       <button type="button" class="tab-btn" role="tab" id="tab-feas" aria-selected="false" aria-controls="panel-feas">Stage 1 SFT Headroom Proof</button>
       <button type="button" class="tab-btn" role="tab" id="tab-packet" aria-selected="false" aria-controls="panel-packet">V2 L4 Packet &amp; Provenance</button>
     </div>
@@ -618,6 +649,36 @@ def build_app():
           <a id="dl-strip" class="dl-link" download="v2_comparison_strip.png" href="#">Download Side-by-Side PNG</a>
           <a id="dl-json" class="dl-link" download="v2_comparison_receipt.json" href="#">Download Telemetry JSON</a>
         </div>
+      </div>
+    </section>
+
+    <section id="panel-return" class="panel" role="tabpanel" aria-labelledby="tab-return">
+      <div class="surface-box">
+        <h2>NVIDIA L4 Returned Monitor Evaluation (MAE / SSIM7 / Central Laplacian)</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>CCTV Role (8 held-out faces/role)</th>
+                <th>u64 Init (MAE / SSIM7 / Lap)</th>
+                <th>V2 Trained p2_u0224 (MAE / SSIM7 / Lap)</th>
+              </tr>
+            </thead>
+            <tbody>{ret_rows}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="surface-box">
+        <h2>Returned 6-Role Paired Monitor Sheet</h2>
+        <img class="sheet-img" src="/assets/v2-return-paired.png" width="1590" height="1634" alt="Returned L4 6-role paired comparison sheet" />
+      </div>
+      <div class="surface-box">
+        <h2>Returned Multi-Identity Degraded Monitor Sheet</h2>
+        <img class="sheet-img" src="/assets/v2-return-multi-id.png" width="1590" height="1102" alt="Returned L4 multi-identity degraded comparison sheet" />
+      </div>
+      <div class="surface-box">
+        <h2>Returned Unpaired Native CCTV (ChokePoint &amp; QMUL-SurvFace) Sheet</h2>
+        <img class="sheet-img" src="/assets/v2-return-native.png" width="1324" height="1102" alt="Returned L4 native CCTV comparison sheet" />
       </div>
     </section>
 
