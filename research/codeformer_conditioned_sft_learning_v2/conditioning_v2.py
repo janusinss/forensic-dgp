@@ -83,6 +83,31 @@ def block16_mean_numpy(array, *, np):
     )
 
 
+def smooth_coarse_256_numpy(diff_hwc, *, np):
+    """Smooth 16x16 coarse exposure drift via bilinear upsampling + 2-pass 17x17 reflect box smoothing."""
+    need(isinstance(diff_hwc, np.ndarray) and diff_hwc.shape == (IMAGE_SIZE, IMAGE_SIZE, 3)
+         and diff_hwc.dtype.kind == 'f' and np.isfinite(diff_hwc).all(),
+         'Finite floating HWC RGB256 array required')
+    b16 = diff_hwc.astype(np.float64).reshape(
+        GRID_SIZE, BLOCK_SIZE, GRID_SIZE, BLOCK_SIZE, 3
+    ).mean(axis=(1, 3))
+    coords = np.clip((np.arange(IMAGE_SIZE, dtype=np.float64) + 0.5) / float(BLOCK_SIZE) - 0.5, 0.0, float(GRID_SIZE - 1))
+    i0 = np.floor(coords).astype(np.int32)
+    i1 = np.minimum(i0 + 1, GRID_SIZE - 1)
+    w1 = (coords - i0)[:, None]
+    w0 = 1.0 - w1
+    vy = w0[:, None, :] * b16[i0] + w1[:, None, :] * b16[i1]
+    up = w0[None, :, :] * vy[:, i0, :] + w1[None, :, :] * vy[:, i1, :]
+    for _ in range(2):
+        px = np.pad(up, ((0, 0), (8, 8), (0, 0)), mode='reflect')
+        csx = np.pad(np.cumsum(px, axis=1), ((0, 0), (1, 0), (0, 0)))
+        hx = (csx[:, 17:, :] - csx[:, :-17, :]) / 17.0
+        py = np.pad(hx, ((8, 8), (0, 0), (0, 0)), mode='reflect')
+        csy = np.pad(np.cumsum(py, axis=0), ((1, 0), (0, 0), (0, 0)))
+        up = (csy[17:, :, :] - csy[:-17, :, :]) / 17.0
+    return up
+
+
 def _binomial3_2d_numpy(luma, *, np):
     padded = np.pad(luma, ((1, 1), (1, 1)), mode='reflect')
     horiz = 0.25 * padded[:, :-2] + 0.50 * padded[:, 1:-1] + 0.25 * padded[:, 2:]
@@ -150,8 +175,12 @@ def compute_v2_conditioning_numpy(input_rgb, *, np):
 
     if g_blur == 0.0:
         effective_16 = np.zeros((GRID_SIZE, GRID_SIZE), dtype=np.float32)
+        outer_ring_lap = raw_central_lap
     else:
         lx, ly, ld1, ld2 = _directional_lap_maps_numpy(luma, np=np)
+        iso_256 = 0.5 * (lx + ly)
+        outer_sum = float(iso_256.sum() - iso_256[64:192, 64:192].sum())
+        outer_ring_lap = float(outer_sum / float(IMAGE_SIZE * IMAGE_SIZE - 128 * 128))
         p_lx = lx.reshape(GRID_SIZE, BLOCK_SIZE, GRID_SIZE, BLOCK_SIZE).mean(axis=(1, 3))
         p_ly = ly.reshape(GRID_SIZE, BLOCK_SIZE, GRID_SIZE, BLOCK_SIZE).mean(axis=(1, 3))
         p_ld1 = ld1.reshape(GRID_SIZE, BLOCK_SIZE, GRID_SIZE, BLOCK_SIZE).mean(axis=(1, 3))
@@ -176,6 +205,7 @@ def compute_v2_conditioning_numpy(input_rgb, *, np):
         'top1pct_luma': top1pct_luma,
         'raw_central_laplacian': raw_central_lap,
         'min_directional_laplacian': min_dir_lap,
+        'outer_ring_laplacian': outer_ring_lap,
         'central_smooth_laplacian': central_smooth_lap,
         'noise_hf_diff': noise_hf_diff,
         'max_local_blur': float(effective_16.max()),
@@ -300,10 +330,8 @@ def condition_output_v2_numpy(pred_rgb, input_rgb, *, np, baseline_rgb=None,
     drift_suppression = 1.0 - 0.70 * min(1.0, g_blur / 0.25)
     coarse_shift = -drift_suppression * block16_mean_numpy(pred - base, np=np) + float(beta) * block16_mean_numpy(inp - base, np=np)
     out = np.clip(pred + normal_w * coarse_shift, 0.0, 1.0)
-    if dark_drift_align and baseline_rgb is not None and g_dark > 0.0 and cond['g_sensor_noise'] > 0.0:
-        dark_coarse = block16_mean_numpy(out - base, np=np)
-        neg_drift = np.minimum(dark_coarse, 0.0)
-        out = np.clip(out - g_dark * neg_drift, 0.0, 1.0)
+    if dark_drift_align and baseline_rgb is not None and g_dark > 0.0:
+        out = np.clip(out - g_dark * smooth_coarse_256_numpy(out - base, np=np), 0.0, 1.0)
     return out.astype(np.float32), cond
 
 
