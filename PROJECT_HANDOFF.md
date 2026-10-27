@@ -1,6 +1,9 @@
-# 27 October 2026: Conditioned SFT Learning V2 (`Goal V3`) live NVIDIA L4 return audited, `56/56` forensic gates passed, and Stage 5 live workbench verified
+# 27 October 2026: Conditioned SFT Learning V2 (`Goal V3`) live NVIDIA L4 return audited, `56/56` forensic gates passed, Stage 5 live workbench verified, and `p2_u0224` promoted to `IMPLEMENTATION` & `main`
 
-STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_V2_P2_U0224_ALL_56_FORENSIC_GATES_PASSED_UI_VERIFIED.
+STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_V2_P2_U0224_ALL_56_FORENSIC_GATES_PASSED_PROMOTED_TO_IMPLEMENTATION_AND_MAIN.
+- **Branch & Deployment Handoff (27 October 2026)**:
+  - **`main` (`C:\xampp\htdocs\YEAR 4\Testing`, pushed to `origin/main`)**: Consolidated 100% of `RESTORATION` commits and synced all `5,320/5,320` gitignored V1/V2 return-audit, checkpoint, and visual files in `outputs/`. `Testing_RESTORATION` is fully merged into `main` and safe to remove; `FACE_MASK_COMPLETION` (`C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION`) remains active and untouched.
+  - **`IMPLEMENTATION` (`C:\Users\janus\.codex\worktrees\implementation\Testing`, commit `320ec20`, pushed to `origin/IMPLEMENTATION`)**: Replaced `U96`/`u64` model switching with **Conditioned SFT V2 (`p2_u0224`)** (`787` frozen tensors: `515` `R2` + `24` `U96` + `36` `terminal_u0064_heads.npz` + `212` `v2_p2_u0224_heads.npz` tensors, `3,831,362` bytes, SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f`, canonical state SHA-256 `3faa78e15c2fb50bfaa523b5dc7ee64fa4c19a13c490760a7401ea43ab0269d7`) as the sole production restoration model. Verified `17/17` unit tests, `4/4` model SHA-256 checks, `787`-tensor runtime invariant validation, and inline Playwright (`375x667`, `768x1024`, `1280x900`, `0` overflow, `0` console/page errors).
 - **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) — **100% Complete across all 5 Stages**.
 - **Stage 1 Frequency-Selective & Exposure-Matched SFT Headroom Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`.
 - **Stage 2 Dataset, V2 Package & Unit Tests (`9/9` V2 + `12/12` V1 PASS)**:
