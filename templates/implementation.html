@@ -15,14 +15,14 @@
 <body>
   <div class="terminal-layout">
     <header class="terminal-header border-bottom">
-      <div class="logo-block border-right"><div class="logo-text"><h1>ZCPO // FORENSICS</h1><span class="mono-label">REVIEWED U96 RESTORATION</span></div></div>
+      <div class="logo-block border-right"><div class="logo-text"><h1>ZCPO // FORENSICS</h1><span class="mono-label">REVIEWED V2 RESTORATION</span></div></div>
       <div class="status-block"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div>
     </header>
     <main class="terminal-body">
       <section class="panel input-panel border-right" aria-labelledby="restoration-input-heading">
         <div class="panel-header border-bottom"><h2 id="restoration-input-heading">01 // FACE_INPUT</h2><span class="mono-label">ONE FRONTAL OR MILD-TURN CROP</span></div>
         <div class="panel-content">
-          <p class="help-text">Experimental U96 workflow. Native CCTV usefulness and final acceptance remain under review. This page restores visible information; completion and covering removal are separate.</p>
+          <p class="help-text">Conditioned SFT V2 (p2_u0224) workflow. Native CCTV usefulness and final acceptance remain under review. This page restores visible information; completion and covering removal are separate.</p>
           <form id="brush-form" class="context-form">
             <section aria-labelledby="brush-upload-heading">
               <h2 id="brush-upload-heading">1. Inspect the original</h2>
@@ -34,11 +34,10 @@
             </section>
             <section aria-labelledby="restoration-mode-heading">
               <h2 id="restoration-mode-heading">2. Choose restoration</h2>
-              <label for="brush-model">Restoration model</label>
-              <select id="brush-model"><option value="u96">U96 · conservative default</option><option value="u64">u64 · experimental comparison</option></select>
-              <label for="brush-restoration">Visible face restoration</label>
-              <select id="brush-restoration"><option value="auto">Auto · original-input blur/noise suggestion</option><option value="on">On · restore with the selected model</option><option value="off">Off · keep the original resized input</option></select>
-              <p class="help-text">Auto assesses the original before optional preparation. You can override it. On uses one selected-model inference call; Off uses none and skips preparation.</p>
+              <input id="brush-model" type="hidden" value="v2">
+              <label for="brush-restoration">Visible face restoration (Conditioned SFT V2)</label>
+              <select id="brush-restoration"><option value="auto">Auto · original-input blur/noise suggestion</option><option value="on">On · restore with Conditioned SFT V2</option><option value="off">Off · keep the original resized input</option></select>
+              <p class="help-text">Auto assesses the original before optional preparation. You can override it. On uses one V2 inference call; Off uses none and skips preparation.</p>
               <label for="brush-preparation">Input preparation</label>
               <select id="brush-preparation"><option value="bypass">Bypass · use the original upload</option><option value="manual">Optional manual Protect + Apply</option></select>
               <p class="help-text">Globally soft, unknown or mixed inputs can bypass. Surroundings blur helped some examples but was mixed or adverse in the paired study. Automatic blur detection and matching remain unavailable.</p>
@@ -86,14 +85,14 @@
           <div id="brush-results" class="results-container has-estimate hidden" aria-label="Original, selected input and one restoration result">
             <article class="result-card"><div class="result-card-header"><h3 class="rank-pill">ORIGINAL / RESIZE</h3><span class="mode-pill">256 × 256</span></div><div class="result-image-container"><img id="brush-result-input" class="result-image workflow-image" width="256" height="256" alt="Original input resized to 256 pixels"></div><div class="workflow-card-caption"><a id="brush-download-input" class="tool-btn" download="original-256.png">Download PNG</a></div></article>
             <article class="result-card"><div class="result-card-header"><h3 id="brush-selected-heading" class="rank-pill">SELECTED INPUT</h3><span class="mode-pill">256 × 256</span></div><div class="result-image-container"><img id="brush-result-prepared" class="result-image workflow-image" width="256" height="256" alt="Selected original or reviewed prepared input at 256 pixels"></div><div class="workflow-card-caption"><a id="brush-download-prepared" class="tool-btn" download="selected-input-256.png">Download PNG</a></div></article>
-            <article class="result-card primary-card"><div class="result-card-header"><h3 id="brush-output-heading" class="rank-pill">U96 RESULT</h3><span class="mode-pill">EXPERIMENTAL</span></div><div class="result-image-container"><img id="brush-result-output" class="result-image workflow-image" width="256" height="256" alt="One U96 restoration result or original resized input when restoration is off"></div><div class="workflow-card-caption"><a id="brush-download-output" class="tool-btn" download="U96-restoration.png">Download PNG</a></div></article>
+            <article class="result-card primary-card"><div class="result-card-header"><h3 id="brush-output-heading" class="rank-pill">V2 RESULT</h3><span class="mode-pill">CONDITIONED SFT V2</span></div><div class="result-image-container"><img id="brush-result-output" class="result-image workflow-image" width="256" height="256" alt="One V2 restoration result or original resized input when restoration is off"></div><div class="workflow-card-caption"><a id="brush-download-output" class="tool-btn" download="V2-restoration.png">Download PNG</a></div></article>
           </div>
           <p id="brush-result-summary" class="help-text hidden"></p>
-          <div id="brush-result-downloads" class="result-downloads hidden"><a id="brush-result-bundle" class="tool-btn" download="U96-restoration-evidence.zip">Download original + masks + preparation + result evidence</a></div>
+          <div id="brush-result-downloads" class="result-downloads hidden"><a id="brush-result-bundle" class="tool-btn" download="V2-restoration-evidence.zip">Download original + masks + preparation + result evidence</a></div>
         </div>
       </section>
     </main>
-    <footer class="terminal-footer border-top"><span class="mono-label">U96 · RESTORATION FIRST</span><span class="mono-label">LOCAL INFERENCE · REVIEWED INPUT · 256 × 256</span></footer>
+    <footer class="terminal-footer border-top"><span class="mono-label">V2 · RESTORATION FIRST</span><span class="mono-label">LOCAL INFERENCE · REVIEWED INPUT · 256 × 256</span></footer>
   </div>
   <script src="/static/implementation.js"></script>
 </body>

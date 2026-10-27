@@ -1,6 +1,6 @@
 # Forensic face restoration — IMPLEMENTATION
 
-This branch is for application development, deployment, and real-world testing of a local Windows face-restoration app. It accepts one already cropped frontal or mildly turned face and produces a 256×256 result. Research and training are maintained separately.
+This branch is for application development, deployment, and real-world testing of a local Windows face-restoration app powered by **Conditioned SFT V2 (`p2_u0224`)**. It accepts one already cropped frontal or mildly turned face and produces a 256×256 result. Research and training are maintained separately.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ install.bat
 start.bat
 ```
 
-Installation downloads three model files from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1). Each must match its complete size and SHA-256; existing mismatched files are preserved and reported.
+Installation downloads the three base model files from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1) and stages `v2_p2_u0224_heads.npz` from `implementation/assets/`. Each of the four model files must match its complete size and SHA-256; existing mismatched files are preserved and reported.
 
 The browser opens after the local health check passes, normally at http://127.0.0.1:8000. Keep the terminal open and press Ctrl+C to stop. If that port is occupied, use `start.bat --port 0`; the actual address is printed and recorded in `scratch/implementation_launch.json`. After setup, inference runs locally without model-download requests.
 
@@ -38,12 +38,12 @@ If the pull fails, resolve the reported local changes or branch divergence befor
 ## Use
 
 1. Upload one PNG/JPEG crop, up to 10 MiB and 1600 pixels per side, and inspect its visible facial structure.
-2. Keep U96 as the default or select optional experimental u64. Auto uses an input-quality suggestion; On requests restoration; Off keeps the resized original with no inference.
+2. Choose **Auto** (input-quality suggestion), **On** (restore with Conditioned SFT V2 `p2_u0224`), or **Off** (keep the resized original with no inference).
 3. Bypass preparation, or paint Protect over the face and its existing soft edges. Paint Apply only where added surroundings blur is permitted.
 4. Preview and confirm manual preparation. Edits invalidate confirmation; every preview rebuilds from the original. Protected pixels and pixels outside Apply stay exact during preparation.
-5. Restore the selected input and compare the original, selected input, and result. Download PNGs or an optional evidence ZIP containing the original, available masks, preparation records, result, and available RAW output.
+5. Restore the selected input and compare the original, selected input, and V2 result. Download PNGs or an optional evidence ZIP containing the original, available masks, preparation records, result, and available RAW output.
 
-Manual preparation is optional; there is no automatic blur matcher. Protection applies to preprocessing only. Generated facial details can change, and a sharper-looking result does not prove recovered identity. Request clearer or less-covered input when visible information is insufficient. Completion and covering removal are outside this app. Both models remain experimental; see [MODEL_CARD.md](MODEL_CARD.md).
+Manual preparation is optional; there is no automatic blur matcher. Protection applies to preprocessing only. Generated facial details can change, and a sharper-looking result does not prove recovered identity. Request clearer or less-covered input when visible information is insufficient. Completion and covering removal are outside this app. The model remains experimental; see [MODEL_CARD.md](MODEL_CARD.md).
 
 ## Privacy and troubleshooting
 

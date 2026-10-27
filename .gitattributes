@@ -8,3 +8,4 @@
 *.MD text eol=lf
 *.txt text eol=lf
 *.bat text eol=crlf
+*.npz binary

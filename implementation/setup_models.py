@@ -1,4 +1,4 @@
-"""Download the published frozen weights and verify them before use.
+"""Download or stage the published frozen weights and verify them before use.
 
 Uses only the Python standard library so setup failures remain easy to diagnose.
 Existing files are verified and never replaced by a download.
@@ -11,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import sys
 import urllib.error
 import urllib.parse
@@ -19,6 +20,7 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / "models" / "implementation"
+BUNDLED_DIR = ROOT / "implementation" / "assets"
 MANIFEST_PATH = Path(__file__).with_name("models.json")
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/"
 CHUNK_SIZE = 1024 * 1024
@@ -33,10 +35,15 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
         manifest = json.loads(path.read_text(encoding="utf-8"))
         if manifest.get("schema_version") != 1:
             raise ValueError("unsupported schema_version")
-        if manifest.get("default_model") not in {"u96", "u64"}:
-            raise ValueError("default_model must be u96 or u64")
+        if manifest.get("default_model") != "v2":
+            raise ValueError("default_model must be v2")
         assets = manifest["assets"]
-        if set(assets) != {"codeformer_r2", "codeformer_u96_adapter", "terminal_u0064_heads"}:
+        if set(assets) != {
+            "codeformer_r2",
+            "codeformer_u96_adapter",
+            "terminal_u0064_heads",
+            "v2_p2_u0224_heads",
+        }:
             raise ValueError("unexpected asset list")
         filenames = set()
         for asset in assets.values():
@@ -73,10 +80,27 @@ def verify_asset(path: Path, asset: dict) -> bool:
         return False
 
 
+def _stage_bundled_asset_if_needed(asset: dict, model_dir: Path = MODEL_DIR) -> None:
+    destination = model_dir / asset["filename"]
+    if destination.exists() or destination.is_symlink():
+        return
+    bundled = BUNDLED_DIR / asset["filename"]
+    if verify_asset(bundled, asset):
+        model_dir.mkdir(parents=True, exist_ok=True)
+        partial = model_dir / f".{destination.name}.{uuid.uuid4().hex}.partial"
+        try:
+            shutil.copyfile(bundled, partial)
+            if verify_asset(partial, asset):
+                _publish_without_overwrite(partial, destination)
+        finally:
+            partial.unlink(missing_ok=True)
+
+
 def verify_models(manifest: dict | None = None, model_dir: Path = MODEL_DIR) -> dict[str, Path]:
     manifest = manifest or load_manifest()
     verified = {}
     for key, asset in manifest["assets"].items():
+        _stage_bundled_asset_if_needed(asset, model_dir)
         path = model_dir / asset["filename"]
         if not verify_asset(path, asset):
             raise ModelSetupError(f"Model is missing or failed its size/SHA-256 check: {path}. Run install.bat.")
@@ -92,8 +116,6 @@ class _HTTPSRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 
 def _publish_without_overwrite(partial: Path, destination: Path) -> None:
-    # Windows rename fails if the destination exists. POSIX hard-link creation
-    # gives the same atomic no-overwrite guarantee on the shared filesystem.
     if os.name == "nt":
         partial.rename(destination)
     else:
@@ -102,6 +124,7 @@ def _publish_without_overwrite(partial: Path, destination: Path) -> None:
 
 
 def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
+    _stage_bundled_asset_if_needed(asset, model_dir)
     destination = model_dir / asset["filename"]
     if destination.exists() or destination.is_symlink():
         if verify_asset(destination, asset):
@@ -148,7 +171,6 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     except (OSError, ValueError, urllib.error.URLError) as exc:
         raise ModelSetupError(f"Could not download {destination.name}: {exc}") from exc
     finally:
-        # Only this invocation's unique incomplete file can be removed.
         partial.unlink(missing_ok=True)
 
 
@@ -160,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest = load_manifest()
         if args.verify_only:
             verify_models(manifest)
-            print("All 3 model files passed size and SHA-256 verification.")
+            print("All 4 model files passed size and SHA-256 verification.")
         else:
             for asset in manifest["assets"].values():
                 download_asset(asset)

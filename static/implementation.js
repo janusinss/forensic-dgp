@@ -1,4 +1,4 @@
-/* Unmounted app-style U96 workflow. Existing brush geometry and exact PNG
+/* Unmounted app-style V2 workflow. Existing brush geometry and exact PNG
    encoding are retained; this page never runs comparison or covering APIs. */
 (() => {
     'use strict';
@@ -14,7 +14,7 @@
     const progress = message => { byId('brush-progress').textContent = message; };
     const manual = () => byId('brush-preparation').value === 'manual';
     const off = () => byId('brush-restoration').value === 'off';
-    const modelName = () => byId('brush-model').value === 'u64' ? 'u64' : 'U96';
+    const modelName = () => 'V2';
     const clearResults = () => {
         byId('brush-results').classList.add('hidden');
         byId('brush-result-summary').classList.add('hidden');
@@ -245,7 +245,7 @@
             const result = await post('/restore', data);
             if (!current(token, version)) return;
             const metadata = result.metadata;
-            if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== (byId('brush-model').value === 'u64' ? 'postfusion_LR_u64' : 'incumbent_U96')) throw new Error('The selected-restoration receipt is invalid. Review service status before retrying.');
+            if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The selected-restoration receipt is invalid. Review service status before retrying.');
             const original = validPNG(result.original_input), prepared = validPNG(result.prepared_input), output = validPNG(result.result);
             const bundle = includeBundle ? validZIP(result.bundle) : undefined;
             byId('brush-result-input').src = original; byId('brush-result-prepared').src = prepared; byId('brush-result-output').src = output;
@@ -269,13 +269,13 @@
         const token = begin(), version = revision;
         try {
             const response = await fetch(api + '/status');
-            if (!response.ok) throw new Error('The reviewed U96 service is unavailable or not mounted.');
+            if (!response.ok) throw new Error('The reviewed V2 service is unavailable or not mounted.');
             const result = await response.json();
             if (!current(token, version)) return;
-            available = result.available === true && result.maximum_restore_forwards === 1 && result.maximum_off_forwards === 0 && result.automatic_preparation === false && result.controller?.selection === 'incumbent_U96';
-            if (!available) throw new Error('The selected U96 service contract differs from this workflow.');
-            error(''); byId('brush-service-status').textContent = 'U96 · EXPERIMENTAL'; byId('brush-status-indicator').classList.add('online');
-            progress('U96 is available. Inspect the original; choose bypass or optional reviewed preparation.');
+            available = result.available === true && result.maximum_restore_forwards === 1 && result.maximum_off_forwards === 0 && result.automatic_preparation === false && result.controller?.selection === 'conditioned_sft_v2_p2_u0224';
+            if (!available) throw new Error('The selected V2 service contract differs from this workflow.');
+            error(''); byId('brush-service-status').textContent = 'V2 · CONDITIONED SFT'; byId('brush-status-indicator').classList.add('online');
+            progress('V2 (p2_u0224) is available. Inspect the original; choose bypass or optional reviewed preparation.');
         } catch (problem) {
             if (current(token, version)) { available = false; byId('brush-service-status').textContent = 'SERVICE UNAVAILABLE'; byId('brush-status-indicator').classList.remove('online'); error(problem.message); progress('This workflow is not ready. Check service when the reviewed runtime is available.'); }
         } finally { finish(token); }

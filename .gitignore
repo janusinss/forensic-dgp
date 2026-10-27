@@ -22,6 +22,7 @@ htmlcov/
 *.pt
 *.h5
 *.npz
+!/implementation/assets/*.npz
 *.npy
 *.zip
 *.tar

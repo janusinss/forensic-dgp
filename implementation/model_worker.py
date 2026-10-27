@@ -42,7 +42,6 @@ def run_request(request):
     try:
         return _execute_request(request, contract, output, counters)
     except Exception as exc:
-        # The persisted phase is authoritative if inference or delivery failed.
         status = json.loads((output / "status.json").read_text(encoding="utf-8"))
         _write_status(output, status["phase"], counters, error=exc)
         raise
@@ -60,21 +59,16 @@ def _execute_request(request, contract, output, counters):
 
     import numpy as np
     import torch
-    from torch.nn import functional as F
     from PIL import Image
     torch.set_num_threads(4)
     started = time.monotonic()
     net = load_frozen_cpu_restorer(request["model"])
-    x = torch.from_numpy((canvas.astype(np.float32) / np.float32(255)).copy()).permute(2, 0, 1)[None]
     with torch.no_grad():
-        sample = F.interpolate(x, (512, 512), mode="bilinear", align_corners=False) * 2 - 1
         counters["forward_attempts"] = 1
         _write_status(output, "forward_entered", counters)
-        native = net(sample, w=1.0, detach_16=True, adain=True)[0]
+        raw = net.restore_canvas(canvas)
         counters["forward_returns"] = 1
         _write_status(output, "forward_returned", counters)
-        raw = F.interpolate(((native.float() + 1) / 2).clamp(0, 1), (256, 256), mode="bilinear",
-                            align_corners=False)[0].permute(1, 2, 0).contiguous().numpy().copy()
     raw, pixels = delivered_views(raw, canvas, observed)
     raw_path, png_path = output / "raw.npy", output / "restoration.png"
     with raw_path.open("xb") as stream:
@@ -90,7 +84,7 @@ def _execute_request(request, contract, output, counters):
         "forward_sites": list(net.last_forward_sites), "base_calls": net.last_base_calls,
         **counters,
         "outside_observed_support_RAW_and_PNG_match_input_exact": True,
-        "RAW_float_definition": "Native RGB clipped to[0,1], bilinear-resized to256; before RGB8 floor quantization.",
+        "RAW_float_definition": "Conditioned SFT V2 (p2_u0224) RGB clipped to [0,1] at 256x256; before RGB8 floor quantization.",
         "seconds": time.monotonic() - started,
     }
     _write_status(output, "complete", counters)
@@ -102,7 +96,6 @@ def main(argv=None):
     parser.add_argument("--request", required=True, type=Path)
     parser.add_argument("--result", required=True, type=Path)
     args = parser.parse_args(argv)
-    # Small local protocol, separate from uploaded image bytes.
     need(0 < args.request.stat().st_size <= 16384, "Bounded request JSON required.")
     request = json.loads(args.request.read_text(encoding="utf-8"))
     result = run_request(request)

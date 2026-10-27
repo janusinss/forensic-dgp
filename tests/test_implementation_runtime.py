@@ -40,11 +40,13 @@ class PortableRuntimeTests(unittest.TestCase):
         self.assertEqual(sum(math.prod(shape) for shape in runtime.adapter_shapes().values()), 51328)
         self.assertEqual(len(runtime.head_shapes()), 36)
         self.assertEqual(sum(math.prod(shape) for shape in runtime.head_shapes().values()), 168960)
-        self.assertEqual(runtime.model_contract("u96")["frozen_tensors"], 539)
-        self.assertEqual(runtime.model_contract("u64")["frozen_tensors"], 575)
-        self.assertNotIn("terminal_u0064_heads.npz", runtime.model_contract("u96")["assets"])
-        with self.assertRaises(ValueError):
-            runtime.model_contract("successor")
+        self.assertEqual(len(runtime.v2_shapes()), 212)
+        self.assertEqual(sum(math.prod(shape) for shape in runtime.v2_shapes().values()), 942272)
+        self.assertEqual(runtime.model_contract("v2")["frozen_tensors"], 787)
+        self.assertIn("v2_p2_u0224_heads.npz", runtime.model_contract("v2")["assets"])
+        for invalid in ("u96", "u64", "successor"):
+            with self.assertRaises(ValueError):
+                runtime.model_contract(invalid)
 
     def test_bounded_input_decoding(self):
         stream = io.BytesIO()
@@ -109,7 +111,7 @@ class PortableRuntimeTests(unittest.TestCase):
             image.write_bytes(b"invalid image")
             output = folder / "result"
             with self.assertRaises(ValueError):
-                run_request({"input_path": str(image), "model": "u96", "output_dir": str(output)})
+                run_request({"input_path": str(image), "model": "v2", "output_dir": str(output)})
             status = json.loads((output / "status.json").read_text(encoding="utf-8"))
             self.assertEqual(status["phase"], "loading")
             self.assertEqual(status["forward_attempts"], 0)

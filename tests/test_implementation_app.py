@@ -53,17 +53,17 @@ class ControllerTests(unittest.TestCase):
     def restore(self, **overrides):
         values = dict(file=self.upload(self.contents), input_review='usable', restoration='on',
                       preparation_mode='bypass', protect_mask=None, apply_mask=None, radius=1,
-                      preview_id='', confirmed=False, include_bundle=True, model='u96')
+                      preview_id='', confirmed=False, include_bundle=True, model='v2')
         values.update(overrides)
         return asyncio.run(controller.restore(**values))
 
     def test_inspect_and_off_do_not_call_a_worker(self):
         with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
             inspection = asyncio.run(controller.inspect(self.upload(self.contents)))
-            response = self.restore(restoration='off', model='u64')
+            response = self.restore(restoration='off', model='v2')
         self.assertEqual(inspection['neural_calls'], 0)
         self.assertEqual((inspection['width'], inspection['height']), (128, 96))
-        self.assertEqual(response['metadata']['model'], 'u64')
+        self.assertEqual(response['metadata']['model'], 'v2')
         self.assertEqual(response['metadata']['neural_forward_attempts'], 0)
         self.assertEqual(response['metadata']['neural_forward_returns'], 0)
         self.assertEqual(response['original_input'], response['result'])
@@ -156,7 +156,7 @@ class ControllerTests(unittest.TestCase):
     def test_fake_completed_worker_checks_raw_png_hashes_and_counts(self):
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker:
-            raw, pixels, metadata = controller.one_forward(self.contents, 'u64')
+            raw, pixels, metadata = controller.one_forward(self.contents, 'v2')
         self.assertGreater(len(raw), 0); self.assertGreater(len(pixels), 0)
         self.assertEqual(metadata['uploaded_bytes_sha256'], controller.digest(self.contents))
         self.assertEqual(controller.STATE['neural_forward_attempts'], 1)
@@ -167,7 +167,7 @@ class ControllerTests(unittest.TestCase):
         self.corrupt_padding = True
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker, self.assertRaises(ValueError):
-            controller.one_forward(self.contents, 'u96')
+            controller.one_forward(self.contents, 'v2')
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual(controller.STATE['neural_forward_attempts'], 1)
         self.assertEqual(controller.STATE['neural_forward_returns'], 1)
@@ -181,7 +181,7 @@ class ControllerTests(unittest.TestCase):
         self.worker_status = {'phase': 'forward_entered', 'forward_attempts': 1, 'forward_returns': 0}
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker, self.assertRaises(RuntimeError):
-            controller.one_forward(self.contents, 'u96')
+            controller.one_forward(self.contents, 'v2')
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
 
@@ -191,7 +191,7 @@ class ControllerTests(unittest.TestCase):
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker, patch.object(controller.time, 'monotonic', side_effect=[0, 361]):
             with self.assertRaisesRegex(RuntimeError, '360-second'):
-                controller.one_forward(self.contents, 'u96')
+                controller.one_forward(self.contents, 'v2')
         self.assertEqual(self.process.returncode, -15)
         self.assertTrue(controller.STATE['uncertain']); self.assertFalse(controller.STATE['active_worker'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
@@ -209,7 +209,7 @@ class ControllerTests(unittest.TestCase):
         with verify, memory, patch.object(controller.subprocess, 'Popen', side_effect=denied_worker), \
                 patch.object(controller.time, 'monotonic', side_effect=[0, 361]):
             with self.assertRaises((OSError, RuntimeError)):
-                controller.one_forward(self.contents, 'u96')
+                controller.one_forward(self.contents, 'v2')
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
 

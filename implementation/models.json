@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "default_model": "u96",
+  "default_model": "v2",
   "release": "https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1",
   "assets": {
     "codeformer_r2": {
@@ -20,6 +20,12 @@
       "size": 685818,
       "sha256": "77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17",
       "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/terminal_u0064_heads.npz"
+    },
+    "v2_p2_u0224_heads": {
+      "filename": "v2_p2_u0224_heads.npz",
+      "size": 3831362,
+      "sha256": "1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f",
+      "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/v2_p2_u0224_heads.npz"
     }
   }
 }
