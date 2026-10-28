@@ -29,7 +29,7 @@
   // Decorative only: no uploaded pixels or model output enter the shader.
   const workspace = document.getElementById('workspace');
   if (!workspace || !window.WebGLRenderingContext) return;
-  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  // The user requested this decorative background to animate, independently of OS effects.
   const canvas = document.createElement('canvas');
   canvas.className = 'ambient-shader';
   canvas.setAttribute('aria-hidden', 'true');
@@ -354,11 +354,11 @@ void main() {
     mouseX+=(pointerX-mouseX)*follow; mouseY+=(pointerY-mouseY)*follow;
     cursorPresence+=(pointerOn-cursorPresence)*follow;
     last=now;gl.viewport(0,0,canvas.width,canvas.height);
-    gl.uniform4f(uni.scene,canvas.width,canvas.height,motion.matches?0:(now-start)/1000*1.088,5);
+    gl.uniform4f(uni.scene,canvas.width,canvas.height,(now-start)/1000*1.088,5);
     gl.uniform4f(uni.space,-0.050,0.000,mouseX,mouseY);
-    gl.uniform4f(uni.cursor,motion.matches?0:cursorPresence,4.0,0.500,0.800);
+    gl.uniform4f(uni.cursor,cursorPresence,4.0,0.500,0.800);
     gl.drawArrays(gl.TRIANGLES,0,6);
-    raf=motion.matches?0:requestAnimationFrame(paint);
+    raf=requestAnimationFrame(paint);
   }
   function evaluate() {
     if(disposed)return;
@@ -366,19 +366,19 @@ void main() {
     const name=screen&&screen.dataset.screen;
     const candidate=['inspect','options','run'].includes(name)?screen.querySelector('.work-visual'):null;
     const visible=!!candidate&&!document.hidden&&candidate.getClientRects().length>0;
-    if(candidate!==host){if(host) resizeObserver.unobserve(host);host=candidate;if(host){host.prepend(canvas);resizeObserver.observe(host);}}
+    if(candidate!==host){if(host){resizeObserver.unobserve(host);host.classList.remove("has-ambient-shader");}host=candidate;if(host){host.prepend(canvas);if(!lost)host.classList.add("has-ambient-shader");resizeObserver.observe(host);}}
     if(!visible || lost){active=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0;return;}
     active=true;if(raf)cancelAnimationFrame(raf);raf=0;last=0;resize();paint(performance.now());
   }
-  const resizeObserver=new ResizeObserver(()=>{if(active){resize();if(motion.matches)paint(performance.now());}});
+  const resizeObserver=new ResizeObserver(()=>{if(active)resize();});
   const observer=new MutationObserver(evaluate);
   observer.observe(workspace,{subtree:true,attributes:true,attributeFilter:['class','hidden']});
-  function move(event) { if(!active||!host||motion.matches)return;const r=host.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom){pointerOn=0;return;}const x=(event.clientX-r.left)/r.width*2-1,y=1-(event.clientY-r.top)/r.height*2;if(!pointerOn&&cursorPresence<0.01){mouseX=x;mouseY=y;}pointerX=x;pointerY=y;pointerOn=1; }
+  function move(event) { if(!active||!host)return;const r=host.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom){pointerOn=0;return;}const x=(event.clientX-r.left)/r.width*2-1,y=1-(event.clientY-r.top)/r.height*2;if(!pointerOn&&cursorPresence<0.01){mouseX=x;mouseY=y;}pointerX=x;pointerY=y;pointerOn=1; }
   document.addEventListener('pointermove',move,{passive:true});
   document.addEventListener('visibilitychange',evaluate);
-  if(motion.addEventListener)motion.addEventListener('change',evaluate);else motion.addListener(evaluate);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;active=false;if(raf)cancelAnimationFrame(raf);canvas.style.display='none';});
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;active=false;if(raf)cancelAnimationFrame(raf);canvas.style.display='none';if(host)host.classList.remove('has-ambient-shader');});
   // A lost context falls back to the CSS background for this page session.
-  window.addEventListener('pagehide',()=>{disposed=true;if(raf)cancelAnimationFrame(raf);observer.disconnect();resizeObserver.disconnect();},{once:true});
+  window.addEventListener('pagehide',event=>{active=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0;if(!event.persisted){disposed=true;observer.disconnect();resizeObserver.disconnect();}});
+  window.addEventListener('pageshow',event=>{if(event.persisted)evaluate();});
   evaluate();
 })();

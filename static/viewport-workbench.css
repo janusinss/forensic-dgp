@@ -271,6 +271,13 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%);
 }
 .work-screen[data-screen=run].is-loading .restoration-visual { background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%); }
+/* A moving gradient keeps the background alive if WebGL cannot run. */
+.work-screen.is-active[data-screen=inspect] .work-visual:not(.has-ambient-shader),
+.work-screen.is-active[data-screen=options] .work-visual:not(.has-ambient-shader),
+.work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader) {
+  background-size:200% 200%; animation:ambient-fallback 9s ease-in-out infinite alternate;
+}
+@keyframes ambient-fallback { from { background-position:0% 35%; } to { background-position:100% 65%; } }
 .ambient-shader { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
 .work-screen[data-screen=inspect] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=options] .work-visual > :not(.ambient-shader),
