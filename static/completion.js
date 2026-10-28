@@ -263,16 +263,22 @@
         error(''); const token = begin(), version = revision;
         progress('Saving your selected area for this image.');
         try {
-            const data = new FormData(); data.append('session_id', session); data.append('mask', await maskPNG(mask.slice()), 'reviewed-mask.png');
+            const submittedMask = await maskPNG(mask.slice());
+            const data = new FormData(); data.append('session_id', session); data.append('mask', submittedMask, 'reviewed-mask.png');
             if (proposalId) data.append('proposal_id', proposalId);
             if (!current(token, version)) return;
             const result = await post('/review', data);
             if (!current(token, version)) return;
             if (typeof result.review_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.review_id)) throw new Error('Could not save the selected area. Please check and confirm it again.');
             if (result.visibility?.rejected === true) throw new Error('Too much of the face is hidden. Choose a clearer photo with more of the face visible.');
-            const checked = await readMask(pngURL(result.mask_png));
+            // The service validates the binary mask and returns its original PNG
+            // bytes. Compare those bytes directly: canvas image decoding can alter
+            // colours on some displays, even when the PNG itself is valid.
+            const echoed = pngBlob(pngURL(result.mask_png));
+            const [sentBytes, returnedBytes] = await Promise.all([submittedMask.arrayBuffer(), echoed.arrayBuffer()]);
             if (!current(token, version)) return;
-            if (checked.some((value, index) => value !== mask[index])) throw new Error('The saved area does not match your selection. Please check and confirm it again.');
+            const sent = new Uint8Array(sentBytes), returned = new Uint8Array(returnedBytes);
+            if (sent.length !== returned.length || sent.some((value, index) => value !== returned[index])) throw new Error('The saved area does not match your selection. Please check and confirm it again.');
             reviewId = result.review_id;
             progress('Area saved. Confirm that enough of the face is visible, then continue.');
         } catch (problem) { if (current(token, version)) { reviewId = undefined; byId('completion-mask-confirm').checked = false; error(problem.message); progress('Could not save the area. Adjust it or choose a clearer photo.'); } }
