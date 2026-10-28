@@ -266,11 +266,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                  'Bypass uses the original. Remove manual preparation fields.')
         elif applied:
             need(protect is not None and apply is not None and confirmed,
-                 'Preview and confirm both Protect and Apply areas first.')
+                 'Preview and confirm the selected areas first.')
             response, prepared_payloads = preview(contents, protect, apply, radius)
             need(preview_id == response['preview_id'], 'The preview is stale. Preview and confirm the current areas again.')
-            need(response['metadata']['no_effect'] or response['metadata']['protected_native_pixels'] > 0,
-                 'Protect the existing facial blur and soft edges, or bypass preparation.')
             payloads.update(prepared_payloads)
             selected, preparation = prepared_payloads['derived-native.png'], response['metadata']
             prepared, _, _, _ = prepare_crop(decode_original(selected))

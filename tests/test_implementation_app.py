@@ -85,23 +85,111 @@ class ControllerTests(unittest.TestCase):
                 controller.LOCK.release()
         self.assertEqual(controller.STATE['neural_forward_attempts'], 0)
 
-    def test_manual_stale_and_unprotected_effect_reject_before_worker(self):
+    def test_manual_unconfirmed_or_stale_preview_rejects_before_worker(self):
         protect = np.zeros(self.rgb.shape[:2], np.uint8)
-        apply = np.full(self.rgb.shape[:2], 255, np.uint8)
+        apply = np.zeros(self.rgb.shape[:2], np.uint8); apply[10:80, 15:100] = 255
         preview, _ = build_preview(self.contents, png(protect), png(apply), nominal_radius=1)
         self.assertFalse(preview['metadata']['no_effect'])
-        def manual(identity):
+        def manual(identity, confirmed=True):
             return self.restore(preparation_mode='manual', protect_mask=self.upload(png(protect)),
-                                apply_mask=self.upload(png(apply)), preview_id=identity, confirmed=True)
+                                apply_mask=self.upload(png(apply)), preview_id=identity, confirmed=confirmed)
         with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
-            with self.assertRaises(HTTPException) as stale:
-                manual('stale')
-            self.assertEqual(stale.exception.status_code, 422)
-            self.assertIn('stale', stale.exception.detail)
-            with self.assertRaises(HTTPException) as unprotected:
-                manual(preview['preview_id'])
-            self.assertEqual(unprotected.exception.status_code, 422)
-            self.assertIn('Protect', unprotected.exception.detail)
+            for identity, confirmed in [('stale', True), (preview['preview_id'], False)]:
+                with self.subTest(identity=identity, confirmed=confirmed):
+                    with self.assertRaises(HTTPException) as error:
+                        manual(identity, confirmed)
+                    self.assertEqual(error.exception.status_code, 422)
+            changed_apply = apply.copy(); changed_apply[85:90, 110:120] = 255
+            with self.assertRaises(HTTPException) as error:
+                self.restore(preparation_mode='manual', protect_mask=self.upload(png(protect)),
+                             apply_mask=self.upload(png(changed_apply)), preview_id=preview['preview_id'], confirmed=True)
+            self.assertEqual(error.exception.status_code, 422)
+
+    def test_protect_only_selects_surroundings_and_preserves_protected_area(self):
+        protect = np.zeros(self.rgb.shape[:2], np.uint8); protect[32:64, 40:88] = 255
+        apply = np.zeros_like(protect)
+        preview, payload = build_preview(self.contents, png(protect), png(apply), nominal_radius=3)
+        def array(name):
+            with Image.open(io.BytesIO(payload[name])) as image:
+                return np.asarray(image).copy()
+        derived = array('derived-native.png')
+        submitted = array('Apply-native.png')
+        resolved = array('resolved-Apply-native.png')
+        guarded = array('effective-Protect-native.png') > 0
+        effective = array('effective-Apply-native.png') > 0
+        self.assertFalse(submitted.any())
+        self.assertTrue(np.array_equal(resolved > 0, protect == 0))
+        self.assertEqual(preview['metadata']['Apply_selection_mode'], 'automatic_surroundings')
+        self.assertTrue(np.array_equal(derived[guarded], self.rgb[guarded]))
+        self.assertTrue(np.any(derived[effective] != self.rgb[effective]))
+        self.assertFalse(np.any(effective & guarded))
+        rebuilt, again = build_preview(self.contents, png(protect), png(apply), nominal_radius=3)
+        self.assertEqual(preview['preview_id'], rebuilt['preview_id'])
+        self.assertEqual(payload['derived-native.png'], again['derived-native.png'])
+        self.assertEqual(preview['metadata']['preprocessing_neural_optimizer_training_VM_calls'], 0)
+        def fake_forward(selected, model):
+            self.assertEqual(selected, payload['derived-native.png'])
+            return None, png(np.zeros((256, 256, 3), dtype=np.uint8)), {'fake': True}
+        with patch.object(controller, 'one_forward', side_effect=fake_forward) as worker:
+            result = self.restore(preparation_mode='manual', protect_mask=self.upload(png(protect)),
+                                  apply_mask=self.upload(png(apply)), radius=3,
+                                  preview_id=preview['preview_id'], confirmed=True)
+        worker.assert_called_once()
+        self.assertEqual(result['metadata']['preparation']['preview_id'], preview['preview_id'])
+        self.assertEqual(result['metadata']['preparation']['Apply_selection_mode'], 'automatic_surroundings')
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('Apply-native.png'), payload['Apply-native.png'])
+            self.assertEqual(archive.read('resolved-Apply-native.png'), payload['resolved-Apply-native.png'])
+            self.assertEqual(archive.read('derived-native.png'), payload['derived-native.png'])
+
+    def test_apply_only_preview_and_restore_use_reviewed_blur(self):
+        protect = np.zeros(self.rgb.shape[:2], np.uint8)
+        apply = np.zeros_like(protect); apply[5:90, 5:90] = 255
+        preview, payload = build_preview(self.contents, png(protect), png(apply), nominal_radius=3)
+        with Image.open(io.BytesIO(payload['derived-native.png'])) as image:
+            derived = np.asarray(image).copy()
+        self.assertEqual(preview['metadata']['Apply_selection_mode'], 'manual')
+        self.assertTrue(np.array_equal(derived[apply == 0], self.rgb[apply == 0]))
+        self.assertTrue(np.any(derived[apply > 0] != self.rgb[apply > 0]))
+        def fake_forward(selected, model):
+            self.assertEqual(selected, payload['derived-native.png'])
+            return None, png(np.zeros((256, 256, 3), dtype=np.uint8)), {'fake': True}
+        with patch.object(controller, 'one_forward', side_effect=fake_forward) as worker:
+            result = self.restore(preparation_mode='manual', protect_mask=self.upload(png(protect)),
+                                  apply_mask=self.upload(png(apply)), radius=3,
+                                  preview_id=preview['preview_id'], confirmed=True)
+        worker.assert_called_once()
+        self.assertEqual(result['metadata']['preparation']['preview_id'], preview['preview_id'])
+        self.assertEqual(result['metadata']['preparation']['Apply_selection_mode'], 'manual')
+        self.assertTrue(result['metadata']['preparation_applied'])
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('Apply-native.png'), payload['Apply-native.png'])
+            self.assertEqual(archive.read('derived-native.png'), payload['derived-native.png'])
+
+    def test_empty_masks_and_zero_radius_leave_image_unchanged(self):
+        empty = np.zeros(self.rgb.shape[:2], np.uint8)
+        preview, payload = build_preview(self.contents, png(empty), png(empty), nominal_radius=3)
+        self.assertTrue(preview['metadata']['no_effect'])
+        with Image.open(io.BytesIO(payload['derived-native.png'])) as image:
+            self.assertTrue(np.array_equal(np.asarray(image), self.rgb))
+        protect = empty.copy(); protect[32:64, 40:88] = 255
+        preview, payload = build_preview(self.contents, png(protect), png(empty), nominal_radius=0)
+        self.assertTrue(preview['metadata']['no_effect'])
+        with Image.open(io.BytesIO(payload['derived-native.png'])) as image:
+            self.assertTrue(np.array_equal(np.asarray(image), self.rgb))
+
+    def test_explicit_apply_limits_blur_and_protect_wins_overlap(self):
+        protect = np.zeros(self.rgb.shape[:2], np.uint8); protect[32:64, 40:88] = 255
+        apply = np.zeros_like(protect); apply[5:90, 5:110] = 255
+        preview, payload = build_preview(self.contents, png(protect), png(apply), nominal_radius=3)
+        with Image.open(io.BytesIO(payload['derived-native.png'])) as image:
+            derived = np.asarray(image).copy()
+        with Image.open(io.BytesIO(payload['effective-Protect-native.png'])) as image:
+            guarded = np.asarray(image) > 0
+        self.assertEqual(preview['metadata']['Apply_selection_mode'], 'manual')
+        self.assertTrue(np.array_equal(derived[guarded], self.rgb[guarded]))
+        self.assertTrue(np.array_equal(derived[apply == 0], self.rgb[apply == 0]))
+        self.assertTrue(np.any(derived[(apply > 0) & ~guarded] != self.rgb[(apply > 0) & ~guarded]))
 
     def test_manual_preparation_preserves_protect_and_outside_apply(self):
         protect = np.zeros(self.rgb.shape[:2], np.uint8); protect[32:64, 40:88] = 255

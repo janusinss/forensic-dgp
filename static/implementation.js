@@ -216,7 +216,7 @@
     byId('brush-preview').addEventListener('click', async () => {
         if (busy || !planes || !sourceFile || !manual() || byId('brush-review').value !== 'usable') return;
         const radius = byId('brush-radius').value;
-        if (radius.trim() === '' || !Number.isFinite(Number(radius)) || Number(radius) < 0 || Number(radius) > 12 || Number(radius) * 2 % 1 !== 0) { error('Choose a transition width from 0 to 12 in steps of 0.5.'); return; }
+        if (radius.trim() === '' || !Number.isFinite(Number(radius)) || Number(radius) < 0 || Number(radius) > 12 || Number(radius) * 2 % 1 !== 0) { error('Choose a blur radius from 0 to 12 in steps of 0.5.'); return; }
         invalidate(); error(''); const token = begin(), version = revision;
         const file = sourceFile, nativeWidth = width, nativeHeight = height;
         const savedPlanes = { protect: planes.protect.slice(), apply: planes.apply.slice() };
@@ -232,7 +232,7 @@
             previewId = result.preview_id; masks = savedMasks;
             byId('brush-original').src = original; byId('brush-overlay').src = overlay; byId('brush-derived').src = prepared;
             byId('brush-prepared-download').href = prepared; byId('brush-preview-download').href = bundle;
-            byId('brush-preservation').textContent = `During preparation, protected areas and areas outside Apply stayed unchanged. ${result.metadata.changed_native_pixels} pixels changed. ${result.metadata.no_effect ? 'These selections made no changes; you can choose Bypass.' : 'Review the prepared picture and its edges before confirming.'} Restoration can still change facial appearance.`;
+            byId('brush-preservation').textContent = `Protected areas stayed unchanged during preparation. ${result.metadata.changed_native_pixels} pixels changed. ${result.metadata.no_effect ? 'These selections made no changes; you can choose Bypass.' : 'Review the prepared picture and its edges before confirming.'} Restoration can still change facial appearance.`;
             byId('brush-preview-section').classList.remove('hidden');
             progress('Preview ready. Review it and confirm your selections before continuing.');
         } catch (problem) { if (current(token, version)) { invalidate(); error(problem.message); progress('Could not prepare the picture. Review the selected areas or choose Bypass.'); } }

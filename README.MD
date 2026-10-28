@@ -73,22 +73,25 @@ The picture must be a PNG or JPEG, no larger than **10 MiB**, and no wider or ta
 
 ## Restore a face
 
-1. In **Inspect the original**, upload the picture and look at it. If you can clearly make out the face, select **One face with readable visible facial structure**, then click **Choose restoration**. If you cannot, use a clearer picture.
+1. In **Inspect the original**, upload the picture and look at it. If you can clearly make out the face, select **One face is clear enough to review**, then click **Choose restoration**. If you cannot, use a clearer picture.
 2. Under **Choose restoration**, select **Auto** for the app's suggestion, **On** to request restoration, or **Off** to keep a resized copy without running restoration. Auto can decide to keep the original instead of restoring it.
 3. For the easiest start, leave input preparation on **Bypass**. This uses the picture as uploaded. Click **Continue**. If you want to adjust the surroundings first, see [Optional: prepare the picture](#optional-prepare-the-picture).
-4. Click **Restore selected input**. Compare the original, the selected input, and the result. Use **Download PNG** under an image to save it. You can also select **Download evidence ZIP**, which contains the original and available records and results.
+4. Click **Restore selected input**. Compare the original, the selected input, and the result. Use **Download PNG** under an image to save it. You can also select **Download review files (ZIP)**, which contains the original and available records and results.
 
 Restoration can change visible facial features. Compare the result carefully with the original.
 
 ### Optional: prepare the picture
 
-Choose **Manual Protect + Apply** if you want to add blur to selected surroundings before restoration:
+Choose **Choose areas to protect** if you want to prepare the picture before restoration:
 
-1. Paint **Protect** in green over the face and its existing soft edges.
-2. Paint **Apply** in blue only over surroundings where added blur is acceptable.
-3. Click **Preview areas**. Review the preview, check the confirmation box, and click **Continue**. If you edit either area, preview and confirm again.
+- **Protect only:** Paint green over the face and any other areas you want to keep unchanged. The app selects the remaining surroundings for blur automatically.
+- **Blur only:** Paint blue over the areas you want to blur. You do not need to mark a green area.
+- **Both:** Paint green areas to protect and blue areas to blur. Green takes priority where they overlap.
+- **Neither:** The picture stays unchanged during preparation.
 
-During this preparation step, protected areas and areas outside Apply stay unchanged. Restoration itself can still change the face. There is no automatic blur matching.
+Click **Preview areas** and check the picture and marked areas. Confirm the preview before continuing; if you change a selection, preview and confirm it again. Automatic surroundings blur can also blur areas that were already blurry, so mark them green if you want to keep them unchanged. There is no automatic matching of existing blur.
+
+Protection applies to preparation only. Restoration can still change the face. If restoration is Off, or Auto keeps the original, preparation is skipped.
 
 ## Optional: review a covering
 
@@ -96,7 +99,7 @@ Use this after restoration only if something such as a mask, sunglasses, hand, o
 
 1. Click **Review covering removal**, then **Start removal review**. Orange marks the area the app proposes to replace.
 2. Check the area carefully. Paint over any missed covering and erase any orange covering visible facial features, clear glasses, or hair that is not blocking the face. The automatic suggestion can miss a covering entirely.
-3. Click **Review**. Read and check both confirmation boxes if they are true, then click **Generate one R1 estimate**. If too much of the face is hidden, use a clearer or less-covered picture instead.
+3. Click **Review**. Read and check both confirmation boxes if they are true, then click **Generate result**. If too much of the face is hidden, use a clearer or less-covered picture instead.
 4. Compare the original, restoration, selected area, and estimate. Download the PNG images or the evidence ZIP if needed.
 
 The app changes only the selected area during this covering step. Everything outside it stays the same as the **restoration result**, which may already differ from the original picture. Hidden features are guesses and cannot be verified from the covered picture. An empty selected area skips the completion model.

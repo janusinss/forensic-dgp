@@ -1,7 +1,9 @@
 """Pure optional Protect/Apply preview; no model, HTTP or training entrypoint.
 
-Protect always wins. Exact-pixel guarantees concern preprocessing only. Blur
-reads neighboring original context but never writes protected/outside-Apply RGB.
+Protect always wins. With Protect alone, Apply resolves to its surroundings;
+otherwise the submitted Apply selection is used. Exact-pixel guarantees concern
+preprocessing only. Blur reads neighboring original context but never writes
+protected or outside-resolved-Apply RGB.
 """
 import base64
 import hashlib
@@ -20,7 +22,7 @@ MAX_UPLOAD_BYTES = 10 * 1024 ** 2
 MAX_MASK_BYTES = 3 * 1024 ** 2
 MAX_SIDE = 1600
 MAX_PIXELS = 2_560_000
-POLICY = 'reviewed-native-Protect-Apply-brush-preview-v1'
+POLICY = 'reviewed-native-Protect-Apply-brush-preview-v2'
 PREPARE_SOURCE = 'implementation/runtime.py'
 # Runtime geometry source is bound into each preview identity below.
 
@@ -128,16 +130,20 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
     rgb = decode_original(contents); height, width = rgb.shape[:2]
     protect = decode_mask(protect_png_bytes, (width, height), 'Protect')
     apply = decode_mask(apply_png_bytes, (width, height), 'Apply')
-    guarded, effective, alpha = mask_weights(protect, apply, guard, feather)
+    # A Protect-only selection means blur the surrounding image. Explicit Apply
+    # strokes always take precedence over that automatic surroundings selection.
+    auto_surroundings = bool(protect.any() and not apply.any())
+    resolved_apply = ~protect if auto_surroundings else apply
+    guarded, effective, alpha = mask_weights(protect, resolved_apply, guard, feather)
     native_radius = radius * max(width, height) / 256.
     # Filtering is computed from the original once. It can read protected context;
     # this is not a no-sampling or unknown-kernel-isolation guarantee.
     blurred = np.asarray(Image.fromarray(rgb).filter(ImageFilter.GaussianBlur(radius=native_radius)))
     mixed = np.rint(rgb.astype(np.float64) * (1 - alpha[..., None].astype(np.float64))
                     + blurred.astype(np.float64) * alpha[..., None].astype(np.float64)).clip(0, 255).astype(np.uint8)
-    unchanged = guarded | ~apply
+    unchanged = guarded | ~resolved_apply
     mixed[unchanged] = rgb[unchanged]
-    need(np.array_equal(mixed[guarded], rgb[guarded]) and np.array_equal(mixed[~apply], rgb[~apply]),
+    need(np.array_equal(mixed[guarded], rgb[guarded]) and np.array_equal(mixed[~resolved_apply], rgb[~resolved_apply]),
          'Every protected and outside-Apply native RGB pixel must stay exact.')
 
     source = ROOT / PREPARE_SOURCE
@@ -147,7 +153,7 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
     derived256, derived_observed, _, derived_geometry = prepare_crop(mixed)
     need(np.array_equal(observed, derived_observed), 'Prepared observed support changed.')
     interiors = {'protected': conservative_256(guarded, observed),
-                 'outside_apply': conservative_256(~apply, observed),
+                 'outside_apply': conservative_256(~resolved_apply, observed),
                  'unchanged_union': conservative_256(unchanged, observed)}
     for interior in interiors.values():
         need(np.array_equal(original256[interior], derived256[interior]), 'Conservative prepared256 interior changed.')
@@ -157,6 +163,7 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
                  'transition': 'smoothstep(min(distanceOutsideGuard,distanceInsideApply)/feather); alpha0outsideApplyandinsideGuard',
                  'Apply_edge_boundary': 'one-zero-pixel pad before Euclidean distance transform',
                  'empty_Protect_distance': 'infinite; no implicit image-edge protection',
+                 'Apply_resolution': 'Protect only: all outside Protect; otherwise: submitted Apply',
                  'quantization': 'float64 blend with float32 alpha; np.rint ties-to-even clipRGB8; exact native unchanged assignment',
                  'kernel': 'Pillow GaussianBlur approximation; original context may be sampled',
                  'Pillow': PILLOW_VERSION, 'NumPy': np.__version__, 'SciPy': scipy.__version__}
@@ -165,12 +172,15 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
     identity = {'original_upload_sha256': sha(contents), 'original_RGB_sha256': sha(rgb.tobytes()),
                 'native_size': [width, height], 'Protect_upload_sha256': sha(protect_png_bytes),
                 'Apply_upload_sha256': sha(apply_png_bytes), 'Protect_binary_sha256': sha(protect.tobytes()),
-                'Apply_binary_sha256': sha(apply.tobytes()), 'effective_Protect_sha256': sha(guarded.tobytes()),
+                'Apply_binary_sha256': sha(apply.tobytes()), 'resolved_Apply_sha256': sha(resolved_apply.tobytes()),
+                'effective_Protect_sha256': sha(guarded.tobytes()),
                 'effective_Apply_sha256': sha(effective.tobytes()), 'alpha_float32_sha256': sha(alpha.tobytes()),
                 'algorithm': algorithm, 'sources': sources}
     preview_id = sha(json_bytes(identity))
     metadata = {'policy': POLICY, 'preview_id': preview_id, **identity,
                 'protected_native_pixels': int(guarded.sum()), 'Apply_native_pixels': int(apply.sum()),
+                'resolved_Apply_native_pixels': int(resolved_apply.sum()),
+                'Apply_selection_mode': 'automatic_surroundings' if auto_surroundings else 'manual',
                 'effective_Apply_native_pixels': int(effective.sum()), 'positive_alpha_pixels': int((alpha > 0).sum()),
                 'changed_native_pixels': int(np.any(mixed != rgb, axis=2).sum()),
                 'no_effect': bool(np.array_equal(mixed, rgb)), 'Protect_wins_overlap': True,
@@ -186,11 +196,12 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
                 'main_app_default_changed': False}
     mask = lambda value: png(value.astype(np.uint8) * 255)
     stream = io.BytesIO(); np.save(stream, alpha, allow_pickle=False)
-    colors = rgb.copy(); colors[apply] = (55, 125, 220); colors[(alpha > 0) & (alpha < 1)] = (245, 180, 45)
+    colors = rgb.copy(); colors[resolved_apply] = (55, 125, 220); colors[(alpha > 0) & (alpha < 1)] = (245, 180, 45)
     colors[guarded] = (45, 185, 90)
     overlay = np.rint(rgb.astype(np.float64) * .60 + colors.astype(np.float64) * .40).astype(np.uint8)
     payloads = {'uploaded-original.bin': contents, 'original-decoded-rgb.png': png(rgb),
                 'Protect-native.png': mask(protect), 'Apply-native.png': mask(apply),
+                'resolved-Apply-native.png': mask(resolved_apply),
                 'effective-Protect-native.png': mask(guarded), 'effective-Apply-native.png': mask(effective),
                 'alpha-float32.npy': stream.getvalue(), 'derived-native.png': png(mixed),
                 'prepared-original-256.png': png(original256), 'prepared-derived-256.png': png(derived256),
