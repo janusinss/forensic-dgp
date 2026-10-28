@@ -330,7 +330,7 @@ void main() {
     uni[name]=gl.getUniformLocation(program,name==='colors'?'u_colors[0]':'u_'+name);
   }
   const hex = value => [parseInt(value.slice(1,3),16)/255,parseInt(value.slice(3,5),16)/255,parseInt(value.slice(5,7),16)/255];
-  const palette=['#171717','#a0b5a7','#53896b','#315f4b','#1d4a38'];
+  const palette=['#171717','#789886','#53896b','#315f4b','#1d4a38'];
   const colors=palette.map(hex); while(colors.length<8)colors.push(colors[4]);
   gl.uniform3fv(uni.colors,new Float32Array(colors.flat()));
   gl.uniform4f(uni.shape,1.260,0.350,0.280,0.000);
@@ -364,7 +364,7 @@ void main() {
     if(disposed)return;
     const screen=workspace.querySelector('.work-screen.is-active');
     const name=screen&&screen.dataset.screen;
-    const candidate=['inspect','options','run','completion-intro','completion-paint'].includes(name)?screen.querySelector('.work-visual'):null;
+    const candidate=['inspect','options','run','result','completion-intro','completion-paint','completion-result'].includes(name)?screen.querySelector('.work-visual'):null;
     const visible=!!candidate&&!document.hidden&&candidate.getClientRects().length>0;
     if(candidate!==host){if(host){resizeObserver.unobserve(host);host.classList.remove("has-ambient-shader");}host=candidate;if(host){host.prepend(canvas);if(!lost)host.classList.add("has-ambient-shader");resizeObserver.observe(host);}}
     if(!visible || lost){active=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0;return;}

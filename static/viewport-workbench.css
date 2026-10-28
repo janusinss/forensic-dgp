@@ -276,7 +276,9 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   .work-screen.is-active[data-screen=options] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-intro] .work-visual:not(.has-ambient-shader),
-  .work-screen.is-active[data-screen=completion-paint] .work-visual:not(.has-ambient-shader) { animation:ambient-fallback 9s ease-in-out infinite alternate !important; }
+  .work-screen.is-active[data-screen=completion-paint] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=result] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=completion-result] .work-visual:not(.has-ambient-shader) { animation:ambient-fallback 9s ease-in-out infinite alternate !important; }
 }
 @media (max-width:800px) {
   .work-screen[data-screen=run].is-loading { grid-template-rows:minmax(0,1fr) auto; }
@@ -290,7 +292,9 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=options] .work-visual,
 .work-screen[data-screen=run] .restoration-visual,
 .work-screen[data-screen=completion-intro] .work-visual,
-.work-screen[data-screen=completion-paint] .work-visual {
+.work-screen[data-screen=completion-paint] .work-visual,
+.work-screen[data-screen=result] .work-visual,
+.work-screen[data-screen=completion-result] .work-visual {
   position:relative; isolation:isolate; overflow:hidden;
   background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%);
 }
@@ -300,7 +304,9 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen.is-active[data-screen=options] .work-visual:not(.has-ambient-shader),
 .work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-intro] .work-visual:not(.has-ambient-shader),
-  .work-screen.is-active[data-screen=completion-paint] .work-visual:not(.has-ambient-shader) {
+  .work-screen.is-active[data-screen=completion-paint] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=result] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=completion-result] .work-visual:not(.has-ambient-shader) {
   background-size:200% 200%; animation:ambient-fallback 9s ease-in-out infinite alternate;
 }
 @keyframes ambient-fallback { from { background-position:0% 35%; } to { background-position:100% 65%; } }
@@ -309,7 +315,9 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=options] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=run] .restoration-visual > :not(.ambient-shader),
 .work-screen[data-screen=completion-intro] .work-visual > :not(.ambient-shader),
-.work-screen[data-screen=completion-paint] .work-visual > :not(.ambient-shader) { position:relative; z-index:1; }
+.work-screen[data-screen=completion-paint] .work-visual > :not(.ambient-shader),
+.work-screen[data-screen=result] .work-visual > :not(.ambient-shader),
+.work-screen[data-screen=completion-result] .work-visual > :not(.ambient-shader) { position:relative; z-index:1; }
 @media (max-width:800px) {
   .work-screen[data-screen=inspect]:has(.inspect-visual #upload-preview.hidden) { grid-template-rows:minmax(0,1fr) 120px; }
   .work-screen[data-screen=inspect] .inspect-visual:has(#upload-preview.hidden) { display:flex; }
@@ -382,3 +390,14 @@ body { margin:0; overflow:hidden; background:#101d1d; }
     grid-template-rows:minmax(0,3fr) minmax(160px,2fr);
   }
 }
+/* Keep result labels and actions readable as the background moves. */
+.work-screen[data-screen=result] .visual-gallery figcaption,
+.work-screen[data-screen=completion-result] .visual-gallery figcaption { text-shadow:0 1px 3px #101d1d; }
+.work-screen[data-screen=result] .visual-gallery .tool-btn,
+.work-screen[data-screen=result] .visual-gallery .zoom-btn,
+.work-screen[data-screen=completion-result] .visual-gallery .tool-btn,
+.work-screen[data-screen=completion-result] .visual-gallery .zoom-btn { background:#101d1d; }
+.work-screen[data-screen=result] .visual-gallery .tool-btn:hover,
+.work-screen[data-screen=result] .visual-gallery .zoom-btn:hover,
+.work-screen[data-screen=completion-result] .visual-gallery .tool-btn:hover,
+.work-screen[data-screen=completion-result] .visual-gallery .zoom-btn:hover { background:#294238; }
