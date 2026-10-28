@@ -7,6 +7,12 @@
     let reviewId, reviewedMask, busy = false, revision = 0, operation = 0, drawing = false, previous;
     const error = message => { byId('completion-error').textContent = message; byId('completion-error').classList.toggle('hidden', !message); };
     const progress = message => { byId('completion-progress').textContent = message; };
+    const setGenerating = active => {
+        byId('completion-confirm-preview').classList.toggle('hidden', active);
+        byId('completion-loading').classList.toggle('hidden', !active);
+        byId('completion-loading').setAttribute('aria-hidden', String(!active));
+        byId('completion-loading').closest('.work-screen').classList.toggle('is-loading', active);
+    };
     const pngURL = value => {
         if (typeof value !== 'string' || !value.startsWith('data:image/png;base64,')) throw new Error('The image could not be read. Please try again.');
         return value;
@@ -72,6 +78,8 @@
         clearResult(); update();
     };
     const reset = () => {
+        setGenerating(false);
+        byId('completion-confirm-preview').removeAttribute('src');
         operation++; revision++; source = undefined; session = undefined; imagePixels = undefined; bounds = undefined;
         reviewId = undefined; reviewedMask = undefined; busy = false; drawing = false; undo = []; mask.fill(0);
         byId('completion-mask-confirm').checked = false; byId('completion-visible-confirm').checked = false;
@@ -267,6 +275,7 @@
     byId('completion-generate').addEventListener('click', async () => {
         if (busy || !session || !reviewId || !reviewedMask || !byId('completion-mask-confirm').checked || !byId('completion-visible-confirm').checked) return;
         error(''); clearResult(); const token = begin(), version = revision, fixed = source, fixedMask = mask.slice(), fixedReview = reviewId, fixedReviewedMask = reviewedMask;
+        setGenerating(true);
         progress(mask.some(Boolean) ? 'Creating an estimate of the covered area. Please keep the app open.' : 'No area is selected, so your restored image will stay the same.');
         try {
             const data = new FormData(); data.append('session_id', session); data.append('mask', fixedReviewedMask, 'reviewed-mask.png');
@@ -294,7 +303,7 @@
             byId('completion-mask-confirm').checked = false;
             byId('completion-visible-confirm').checked = false;
         } catch (problem) { if (current(token, version)) { clearResult(); error(problem.message); progress('Covering removal stopped. Your saved files are still available. Check the message before trying again.'); } }
-        finally { finish(token); }
+        finally { if (token === operation) setGenerating(false); finish(token); }
     });
     window.addEventListener('restoration:completed', event => {
         reset();

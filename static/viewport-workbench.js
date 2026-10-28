@@ -73,7 +73,7 @@
     canvas.style.height = (canvas.height * scale) + 'px';
   }
   // Fit all input previews like the editor without changing image pixels.
-  const previews = ['upload-preview', 'options-preview', 'restoration-idle', 'completion-intro-preview'].map(byId);
+  const previews = ['upload-preview', 'options-preview', 'restoration-idle', 'completion-intro-preview', 'completion-confirm-preview'].map(byId);
   function fitInputPreview(image) {
     const visual = image.closest('.work-visual');
     if (image.classList.contains('hidden') || !image.naturalWidth || !image.naturalHeight || !visual.getClientRects().length) return;
@@ -129,6 +129,11 @@
       const source = byId('brush-result-output').getAttribute('src');
       if (source) byId('completion-intro-preview').setAttribute('src', source);
       else byId('completion-intro-preview').removeAttribute('src');
+    }
+    if (name === 'completion-confirm') {
+      const source = byId('brush-result-output').getAttribute('src');
+      if (source) byId('completion-confirm-preview').setAttribute('src', source);
+      else byId('completion-confirm-preview').removeAttribute('src');
     }
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Check your picture before continuing.';

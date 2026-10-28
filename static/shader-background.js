@@ -364,7 +364,7 @@ void main() {
     if(disposed)return;
     const screen=workspace.querySelector('.work-screen.is-active');
     const name=screen&&screen.dataset.screen;
-    const candidate=['inspect','options','run','result','completion-intro','completion-paint','completion-result'].includes(name)?screen.querySelector('.work-visual'):null;
+    const candidate=['inspect','options','run','result','completion-intro','completion-paint','completion-confirm','completion-result'].includes(name)?screen.querySelector('.work-visual'):null;
     const visible=!!candidate&&!document.hidden&&candidate.getClientRects().length>0;
     if(candidate!==host){if(host){resizeObserver.unobserve(host);host.classList.remove("has-ambient-shader");}host=candidate;if(host){host.prepend(canvas);if(!lost)host.classList.add("has-ambient-shader");resizeObserver.observe(host);}}
     if(!visible || lost){active=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0;return;}

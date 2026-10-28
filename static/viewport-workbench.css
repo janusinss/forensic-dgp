@@ -47,7 +47,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .empty-state h2 { margin:22px 0 14px; color:#f1f5eb; font:400 clamp(32px,3.4vw,50px)/1.08 Georgia,serif; letter-spacing:-.03em; }
 .empty-state p { color:#b9cbc0; font-size:16px; line-height:1.6; max-width:38ch; }
 .inspect-visual:has(#upload-preview:not(.hidden)) #brush-standby { display:none; }
-#upload-preview, #options-preview, #restoration-idle, #completion-intro-preview { display:block; width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; border:1px solid #6b8274; background:#0b1412; }
+#upload-preview, #options-preview, #restoration-idle, #completion-intro-preview, #completion-confirm-preview { display:block; width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; border:1px solid #6b8274; background:#0b1412; }
 .editor-visual canvas:not(.ambient-shader) { display:block; width:auto; height:auto; max-width:100%; object-fit:contain; border:1px solid #668477; box-shadow:none !important; margin:0 !important; touch-action:none; }
 .visual-caption { color:#bfd0c2; font-size:14px; line-height:1.4; margin:0; text-align:center; max-width:70ch; }
 #completion-cursor { height:1.4em; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -279,6 +279,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   .work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-intro] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-paint] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=completion-confirm] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=result] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-result] .work-visual:not(.has-ambient-shader) { animation:ambient-fallback 9s ease-in-out infinite alternate !important; }
 }
@@ -295,6 +296,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=run] .restoration-visual,
 .work-screen[data-screen=completion-intro] .work-visual,
 .work-screen[data-screen=completion-paint] .work-visual,
+.work-screen[data-screen=completion-confirm] .work-visual,
 .work-screen[data-screen=result] .work-visual,
 .work-screen[data-screen=completion-result] .work-visual {
   position:relative; isolation:isolate; overflow:hidden;
@@ -307,6 +309,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-intro] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-paint] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=completion-confirm] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=result] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=completion-result] .work-visual:not(.has-ambient-shader) {
   background-size:200% 200%; animation:ambient-fallback 9s ease-in-out infinite alternate;
@@ -318,6 +321,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=run] .restoration-visual > :not(.ambient-shader),
 .work-screen[data-screen=completion-intro] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=completion-paint] .work-visual > :not(.ambient-shader),
+.work-screen[data-screen=completion-confirm] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=result] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=completion-result] .work-visual > :not(.ambient-shader) { position:relative; z-index:1; }
 @media (max-width:800px) {
@@ -330,6 +334,8 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   .work-screen[data-screen=options]:has(.choice-group) { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
   .work-screen[data-screen=run] { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
   .work-screen[data-screen=completion-intro] { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
+  .work-screen[data-screen=completion-confirm] { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
+  .work-screen[data-screen=completion-confirm].is-loading { grid-template-rows:minmax(0,3fr) minmax(204px,2fr); }
   .work-screen[data-screen=completion-paint]:has(.choice-group) { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
 }
 

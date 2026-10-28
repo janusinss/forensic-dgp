@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=14">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=15">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
 </head>
 <body>
@@ -138,7 +138,12 @@
           <label class="context-confirm" for="completion-visible-confirm"><input id="completion-visible-confirm" type="checkbox">Enough of the face is visible to make a guess. I understand that hidden features cannot be verified.</label>
           <p class="field-hint">If no area is selected, the restoration result stays unchanged.</p><div class="feedback-slot"></div>
           <div class="work-actions"><button class="tool-btn" type="button" data-nav="completion-paint" data-wizard-nav>Back to editor</button><button id="completion-generate" class="execute-btn" type="button" disabled>Generate result</button></div>
-        </div><aside class="work-visual decorative-visual"><div class="empty-state"><span class="work-kicker">HIDDEN FEATURES ARE ESTIMATES</span><h2>Review before generating.</h2><p>Your selection applies to this result.</p></div></aside>
+        </div><aside class="work-visual completion-confirm-visual" aria-label="Restoration result preview">
+          <img id="completion-confirm-preview" alt="Restored picture before covering removal">
+          <div id="completion-loading" class="restoration-loading hidden" aria-hidden="true">
+            <div class="loading-orb"><span class="orb-label"><span>G</span><span>e</span><span>n</span><span>e</span><span>r</span><span>a</span><span>t</span><span>i</span><span>n</span><span>g</span></span><div class="orb-sheen"></div></div>
+          </div>
+        </aside>
       </section>
     </div>
     <section id="completion-result-section" class="work-screen hidden" data-screen="completion-result" aria-labelledby="completion-result-heading">
@@ -152,8 +157,8 @@
 <dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips it, and Auto may skip it if it keeps the original. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><h2 id="image-dialog-title">Image detail</h2><img id="image-dialog-view" alt=""><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <script src="/static/implementation.js?v=6"></script>
-<script src="/static/completion.js?v=7"></script>
-<script src="/static/viewport-workbench.js?v=7"></script>
-<script src="/static/shader-background.js?v=13"></script>
+<script src="/static/completion.js?v=8"></script>
+<script src="/static/viewport-workbench.js?v=8"></script>
+<script src="/static/shader-background.js?v=14"></script>
 </body>
 </html>
