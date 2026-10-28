@@ -355,7 +355,9 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-controls input:not([type=checkbox]):not([type=hidden]):not([type=radio]),
 .work-controls select { border:1px solid #c6d6ca; border-radius:10px; background:#fff; color:#18352c; font-size:16px; }
 .work-controls input[type=file] { padding:9px; border:1px dashed #a9c4b2; background:#fff; font-size:14px; }
-.work-controls input[type=file]::file-selector-button { border-radius:7px; padding:9px 13px; margin-right:10px; color:#175640; background:#e3f1e8; font-weight:700; }
+.work-controls input[type=file]::file-selector-button { min-height:44px; border:1px solid #176b52; border-radius:7px; padding:10px 16px; margin-right:12px; color:#fff; background:#176b52; font:700 14px/1.2 "Loader Inter",var(--font-sans); cursor:pointer; }
+.work-controls input[type=file]:hover:not(:disabled)::file-selector-button { background:#10543e; border-color:#10543e; }
+.work-controls input[type=file]:disabled::file-selector-button { color:#879990; background:#e5ece6; border-color:#d8e3d9; cursor:not-allowed; }
 .work-controls .choice-list { gap:8px; }
 .work-controls .choice-content { min-height:46px; border:1px solid #d1dfd5; border-radius:10px; background:#fff; color:#294638; font-size:14px; font-weight:600; }
 .work-controls .choice-option:hover .choice-content { background:#f1f8f3; border-color:#78aa8f; }
