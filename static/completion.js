@@ -4,7 +4,7 @@
     const byId = id => document.getElementById(id), api = '/face/completion';
     const canvas = byId('completion-editor'), context = canvas.getContext('2d');
     let source, session, imagePixels, bounds, mask = new Uint8Array(256 * 256), undo = [];
-    let proposalId, reviewId, busy = false, revision = 0, operation = 0, drawing = false, previous;
+    let proposalId, reviewId, reviewedMask, busy = false, revision = 0, operation = 0, drawing = false, previous;
     const error = message => { byId('completion-error').textContent = message; byId('completion-error').classList.toggle('hidden', !message); };
     const progress = message => { byId('completion-progress').textContent = message; };
     const pngURL = value => {
@@ -21,6 +21,7 @@
     };
     const friendlyServiceError = (detail, route) => {
         if (typeof detail !== 'string') return 'The request stopped. Check the image and selected area, then try again.';
+        if (route === '/review' && /exact RGB256 image or opaque black-and-white L256 mask|Removal masks must contain only black and white/i.test(detail)) return 'The app could not save the selected area. Clear it, paint it again, and review it.';
         if (/could not be confirmed stopped|do not retry/i.test(detail)) return 'The previous task may still be running. Do not retry. Check the saved request and stop the task before restarting the app.';
         if (/worker needs review|previous restoration worker error/i.test(detail)) return 'The previous task needs review. Check the saved request and restart the app before trying again.';
         const messages = [
@@ -66,14 +67,14 @@
         canvas.setAttribute('aria-disabled', String(busy || !ready));
     };
     const invalidateReview = () => {
-        revision++; reviewId = undefined;
+        revision++; reviewId = undefined; reviewedMask = undefined;
         byId('completion-mask-confirm').checked = false;
         byId('completion-visible-confirm').checked = false;
         clearResult(); update();
     };
     const reset = () => {
         operation++; revision++; source = undefined; session = undefined; imagePixels = undefined; bounds = undefined;
-        proposalId = undefined; reviewId = undefined; busy = false; drawing = false; undo = []; mask.fill(0);
+        proposalId = undefined; reviewId = undefined; reviewedMask = undefined; busy = false; drawing = false; undo = []; mask.fill(0);
         byId('completion-mask-confirm').checked = false; byId('completion-visible-confirm').checked = false;
         byId('completion-editor-section').classList.add('hidden'); byId('completion-stage').classList.add('hidden');
         byId('completion-import').value = ''; clearResult(); error(''); context.clearRect(0, 0, 256, 256); update();
@@ -220,7 +221,9 @@
         progress('Finding an area to remove. Please check and correct it before continuing.');
         const result = await post('/propose', data);
         if (!current(token, version)) return;
-        const values = await readMask(pngURL(result.proposal_png));
+        let values;
+        try { values = await readMask(pngURL(result.proposal_png)); }
+        catch { throw new Error('The suggested area could not be loaded. Please paint the area yourself.'); }
         if (!current(token, version)) return;
         if (typeof result.proposal_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.proposal_id)) throw new Error('The suggested area could not be loaded. Please select it yourself.');
         remember(); mask = values; proposalId = result.proposal_id; render();
@@ -258,7 +261,7 @@
         finally { finish(token); }
     });
     byId('completion-mask-confirm').addEventListener('change', async () => {
-        reviewId = undefined; clearResult(); update();
+        reviewId = undefined; reviewedMask = undefined; clearResult(); update();
         if (!byId('completion-mask-confirm').checked || busy || !session) return;
         error(''); const token = begin(), version = revision;
         progress('Saving your selected area for this image.');
@@ -279,18 +282,18 @@
             if (!current(token, version)) return;
             const sent = new Uint8Array(sentBytes), returned = new Uint8Array(returnedBytes);
             if (sent.length !== returned.length || sent.some((value, index) => value !== returned[index])) throw new Error('The saved area does not match your selection. Please check and confirm it again.');
-            reviewId = result.review_id;
+            reviewId = result.review_id; reviewedMask = submittedMask;
             progress('Area saved. Confirm that enough of the face is visible, then continue.');
-        } catch (problem) { if (current(token, version)) { reviewId = undefined; byId('completion-mask-confirm').checked = false; error(problem.message); progress('Could not save the area. Adjust it or choose a clearer photo.'); } }
+        } catch (problem) { if (current(token, version)) { reviewId = undefined; reviewedMask = undefined; byId('completion-mask-confirm').checked = false; error(problem.message); progress('Could not save the area. Adjust it or choose a clearer photo.'); } }
         finally { finish(token); }
     });
     byId('completion-visible-confirm').addEventListener('change', () => { clearResult(); update(); });
     byId('completion-generate').addEventListener('click', async () => {
-        if (busy || !session || !reviewId || !byId('completion-mask-confirm').checked || !byId('completion-visible-confirm').checked) return;
-        error(''); clearResult(); const token = begin(), version = revision, fixed = source, fixedMask = mask.slice(), fixedReview = reviewId;
+        if (busy || !session || !reviewId || !reviewedMask || !byId('completion-mask-confirm').checked || !byId('completion-visible-confirm').checked) return;
+        error(''); clearResult(); const token = begin(), version = revision, fixed = source, fixedMask = mask.slice(), fixedReview = reviewId, fixedReviewedMask = reviewedMask;
         progress(mask.some(Boolean) ? 'Creating an estimate of the covered area. Please keep the app open.' : 'No area is selected, so your restored image will stay the same.');
         try {
-            const data = new FormData(); data.append('session_id', session); data.append('mask', await maskPNG(fixedMask), 'reviewed-mask.png');
+            const data = new FormData(); data.append('session_id', session); data.append('mask', fixedReviewedMask, 'reviewed-mask.png');
             data.append('review_id', fixedReview); data.append('mask_confirmed', 'true'); data.append('visible_confirmed', 'true');
             if (proposalId) data.append('proposal_id', proposalId);
             if (!current(token, version)) return;
@@ -312,7 +315,7 @@
             byId('completion-summary').textContent = summary; byId('completion-result-section').classList.remove('hidden'); progress(summary);
             // The server consumes a review after one successful generation.
             // Keep this result visible, but require a fresh review for another.
-            reviewId = undefined;
+            reviewId = undefined; reviewedMask = undefined;
             byId('completion-mask-confirm').checked = false;
             byId('completion-visible-confirm').checked = false;
         } catch (problem) { if (current(token, version)) { clearResult(); error(problem.message); progress('Covering removal stopped. Your saved files are still available. Check the message before trying again.'); } }
