@@ -87,14 +87,9 @@
         <div class="work-actions"><button class="tool-btn" type="button" data-nav="run-back">Back</button><button id="brush-run" class="execute-btn" type="submit" disabled>Restore selected input</button><button id="brush-refresh" class="text-btn" type="button">Check service</button></div>
       </div>
       <aside class="work-visual decorative-visual restoration-visual">
-        <div id="restoration-idle" class="empty-state"><span class="work-kicker">REVIEW BEFORE INTERPRETATION</span><h2>Compare, then decide.</h2><p>Original, selected input and result remain separate.</p></div>
+        <div id="restoration-idle" aria-hidden="true"></div>
         <div id="restoration-loading" class="restoration-loading hidden" aria-hidden="true">
-          <div class="loading-indicator"><span></span></div>
-          <div class="loading-copy">
-            <span class="work-kicker">PROCESSING YOUR REQUEST</span>
-            <h2>Processing your image</h2>
-            <p>Please keep this page open. Your result will appear when it is ready.</p>
-          </div>
+          <div class="loading-orb"><span></span></div>
         </div>
       </aside>
     </section>
