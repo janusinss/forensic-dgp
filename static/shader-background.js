@@ -355,7 +355,7 @@ void main() {
     mouseX+=(pointerX-mouseX)*follow; mouseY+=(pointerY-mouseY)*follow;
     cursorPresence+=(pointerOn-cursorPresence)*follow;
     last=now;gl.viewport(0,0,canvas.width,canvas.height);
-    gl.uniform4f(uni.scene,canvas.width,canvas.height,motion.matches?0:elapsed*2.500,5);
+    gl.uniform4f(uni.scene,canvas.width,canvas.height,motion.matches?0:elapsed*1.088,5);
     gl.uniform4f(uni.space,-0.050,0.000,mouseX,mouseY);
     gl.uniform4f(uni.cursor,motion.matches?0:cursorPresence,4.0,0.120,0.800);
     gl.drawArrays(gl.TRIANGLES,0,6);
