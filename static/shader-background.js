@@ -330,7 +330,7 @@ void main() {
     uni[name]=gl.getUniformLocation(program,name==='colors'?'u_colors[0]':'u_'+name);
   }
   const hex = value => [parseInt(value.slice(1,3),16)/255,parseInt(value.slice(3,5),16)/255,parseInt(value.slice(5,7),16)/255];
-  const palette=['#171717','#00de63','#079855','#097e50','#0d6948'];
+  const palette=['#171717','#32a96a','#207e53','#1a6949','#174f3b'];
   const colors=palette.map(hex); while(colors.length<8)colors.push(colors[4]);
   gl.uniform3fv(uni.colors,new Float32Array(colors.flat()));
   gl.uniform4f(uni.shape,1.260,0.350,0.280,0.000);
