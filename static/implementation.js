@@ -46,8 +46,9 @@
     const finish = token => { if (token === operation) { busy = false; update(); } };
     const current = (token, version) => token === operation && version === revision;
     const restorationLoading = active => {
-        byId('restoration-controls').classList.toggle('hidden', active);
+        byId('restoration-idle').classList.toggle('hidden', active);
         byId('restoration-loading').classList.toggle('hidden', !active);
+        byId('restoration-loading').closest('.work-screen').classList.toggle('is-loading', active);
     };
     const validPNG = value => {
         if (typeof value !== 'string' || !value.startsWith('data:image/png;base64,')) throw new Error('The service returned an invalid image.');
