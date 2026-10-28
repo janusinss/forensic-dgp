@@ -35,7 +35,7 @@
     };
     const update = () => {
         const ready = Boolean(session && imagePixels);
-        document.querySelectorAll('#completion-stage input, #completion-stage select, #completion-stage button').forEach(item => { item.disabled = busy || !ready; });
+        document.querySelectorAll('#completion-stage input, #completion-stage select, #completion-stage button:not([data-wizard-nav])').forEach(item => { item.disabled = busy || !ready; });
         byId('completion-start').disabled = busy || !source;
         byId('completion-undo').disabled = busy || !ready || !undo.length;
         byId('completion-generate').disabled = busy || !ready || !reviewId || !byId('completion-mask-confirm').checked || !byId('completion-visible-confirm').checked;
@@ -201,7 +201,7 @@
         if (typeof result.proposal_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.proposal_id)) throw new Error('The proposal reference is invalid. Paint the removal area manually.');
         remember(); mask = values; proposalId = result.proposal_id; render();
         const empty = !mask.some(Boolean);
-        progress(empty ? 'The automatic proposal is empty. This does not prove the face is uncovered. Paint any covering that needs completion, or confirm an empty area to skip R1.' : 'Automatic proposal ready. Inspect orange pixels, paint missed coverings and erase visible features. Nothing has been approved for generation.');
+        progress(empty ? 'Empty proposal does not prove the face is uncovered. Review or paint the removal area.' : 'Automatic proposal ready. Inspect orange pixels, paint missed coverings and erase visible features. Nothing has been approved for generation.');
     };
     byId('completion-start').addEventListener('click', async () => {
         if (busy || !source) return;

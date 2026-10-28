@@ -72,10 +72,10 @@ The picture must be a PNG or JPEG, no larger than **10 MiB**, and no wider or ta
 
 ## Restore a face
 
-1. In **Inspect the original**, upload the picture and look at it. If you can clearly make out the face, select **One face with readable visible facial structure**. If you cannot, use a clearer picture.
+1. In **Inspect the original**, upload the picture and look at it. If you can clearly make out the face, select **One face with readable visible facial structure**, then click **Choose restoration**. If you cannot, use a clearer picture.
 2. Under **Choose restoration**, select **Auto** for the app's suggestion, **On** to request restoration, or **Off** to keep a resized copy without running restoration. Auto can decide to keep the original instead of restoring it.
-3. For the easiest start, leave input preparation on **Bypass**. This uses the picture as uploaded. If you want to adjust the surroundings first, see [Optional: prepare the picture](#optional-prepare-the-picture).
-4. Click **Restore selected input**. Compare the original, the selected input, and the result. Use **Download PNG** under an image to save it. You can also download the evidence ZIP, which contains the original and available records and results.
+3. For the easiest start, leave input preparation on **Bypass**. This uses the picture as uploaded. Click **Continue**. If you want to adjust the surroundings first, see [Optional: prepare the picture](#optional-prepare-the-picture).
+4. Click **Restore selected input**. Compare the original, the selected input, and the result. Use **Download PNG** under an image to save it. You can also select **Download evidence ZIP**, which contains the original and available records and results.
 
 Restoration can change visible facial features. Compare the result carefully with the original.
 
@@ -85,7 +85,7 @@ Choose **Optional manual Protect + Apply** if you want to add blur to selected s
 
 1. Paint **Protect** in green over the face and its existing soft edges.
 2. Paint **Apply** in blue only over surroundings where added blur is acceptable.
-3. Click **Preview permitted surroundings**. Review the preview and check the confirmation box. If you edit either area, preview and confirm again.
+3. Click **Preview areas**. Review the preview, check the confirmation box, and click **Continue**. If you edit either area, preview and confirm again.
 
 During this preparation step, protected areas and areas outside Apply stay unchanged. Restoration itself can still change the face. There is no automatic blur matching.
 
@@ -93,9 +93,9 @@ During this preparation step, protected areas and areas outside Apply stay uncha
 
 Use this after restoration only if something such as a mask, sunglasses, hand, or hair is hiding part of the face. If there is no covering to remove, keep the restoration result.
 
-1. Click **Review covering removal**. Orange marks the area the app proposes to replace.
+1. Click **Review covering removal**, then **Start removal review**. Orange marks the area the app proposes to replace.
 2. Check the area carefully. Paint over any missed covering and erase any orange covering visible facial features, clear glasses, or hair that is not blocking the face. The automatic suggestion can miss a covering entirely.
-3. Read and check both confirmation boxes if they are true, then click **Generate one R1 estimate**. If too much of the face is hidden, use a clearer or less-covered picture instead.
+3. Click **Review**. Read and check both confirmation boxes if they are true, then click **Generate one R1 estimate**. If too much of the face is hidden, use a clearer or less-covered picture instead.
 4. Compare the original, restoration, selected area, and estimate. Download the PNG images or the evidence ZIP if needed.
 
 The app changes only the selected area during this covering step. Everything outside it stays the same as the **restoration result**, which may already differ from the original picture. Hidden features are guesses and cannot be verified from the covered picture. An empty selected area skips the completion model.
