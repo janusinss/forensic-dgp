@@ -265,10 +265,11 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   40% { opacity:.7; transform:translateY(0); }
 }
 /* Reveal the verified result as soon as its images are ready. */
-.result-screen.is-active { animation:result-reveal 400ms ease-out both; }
-@keyframes result-reveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.work-screen.is-active.result-enter .work-visual { animation:result-reveal 650ms ease-out both; }
+@keyframes result-reveal { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion:reduce) {
-  .result-screen.is-active { animation:none; }
+  /* Keep the explicitly requested result transition visible on this device. */
+  .work-screen.is-active.result-enter .work-visual { animation:result-reveal 650ms ease-out both !important; }
   /* This loader and background are explicitly requested to animate. */
   .loading-orb .orb-sheen { animation:loaderCircle 5s linear infinite !important; }
   .loading-orb .orb-label span { animation-name:loaderLetter !important; animation-duration:3s !important; animation-iteration-count:infinite !important; }

@@ -109,7 +109,7 @@
     notice.classList.toggle('hidden', !message);
   }
   byId('brush-file').addEventListener('change', () => showNotice(''));
-  function show(name, focus = true) {
+  function show(name, focus = true, revealResult = false) {
     const screen = screens.find(item => item.dataset.screen === name);
     if (!screen || screen.closest('.hidden')) return false;
     if (name === 'options') {
@@ -134,7 +134,19 @@
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Check your picture before continuing.';
     current = name;
     syncProgress();
-    screens.forEach(item => item.classList.toggle('is-active', item === screen));
+    screens.forEach(item => { item.classList.remove('result-enter'); item.classList.toggle('is-active', item === screen); });
+    if (revealResult) {
+      screen.classList.add('result-enter');
+      const visual = screen.querySelector('.work-visual');
+      if (visual) {
+        const finishReveal = event => {
+          if (event.target !== visual || event.animationName !== 'result-reveal') return;
+          screen.classList.remove('result-enter');
+          visual.removeEventListener('animationend', finishReveal);
+        };
+        visual.addEventListener('animationend', finishReveal);
+      }
+    }
     const slot = screen.querySelector('.feedback-slot');
     if (slot && form.contains(screen)) slot.append(brushFeedback);
     if (slot && byId('completion-stage').contains(screen)) slot.append(completionFeedback);
@@ -192,7 +204,7 @@
   }).observe(byId(id), { attributes: true, attributeFilter: ['class'] });
   observe('brush-preview-section', () => { if (pendingPreview) { pendingPreview = false; show('brush-preview'); } });
   observe('completion-editor-section', () => { if (pendingCompletion) { pendingCompletion = false; show('completion-paint'); } });
-  observe('completion-result-section', () => { if (pendingEstimate) { pendingEstimate = false; show('completion-result'); } });
-  window.addEventListener('restoration:completed', () => show('result'));
+  observe('completion-result-section', () => { if (pendingEstimate) { pendingEstimate = false; show('completion-result', true, true); } });
+  window.addEventListener('restoration:completed', () => show('result', true, true));
   show('inspect', false);
 })();

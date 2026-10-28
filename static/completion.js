@@ -298,6 +298,8 @@
             byId('completion-result').src = output; byId('completion-result-download').href = output; byId('completion-bundle').href = evidence;
             const calls = result.neural_calls ?? result.metadata?.neural_calls;
             if (![0, 1].includes(calls) || calls !== Number(fixedMask.some(Boolean))) throw new Error('The result did not match the selected area. Please review the area and try again.');
+            await Promise.all(['completion-original', 'completion-input', 'completion-result-mask', 'completion-result'].map(id => byId(id).decode()));
+            if (!current(token, version)) return;
             const seconds = result.metadata?.seconds;
             const timing = Number.isFinite(seconds) ? `${seconds.toFixed(1)} seconds. ` : '';
             const summary = `${timing}${calls ? 'The image outside the selected area is unchanged. Hidden features are estimated and may not match the real person.' : 'Nothing was selected, so the restored image is unchanged.'}`;
