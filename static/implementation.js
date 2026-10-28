@@ -128,7 +128,7 @@
     });
     byId('brush-stamp').addEventListener('click', () => edit(() => disk(coordinate('brush-x', width - 1), coordinate('brush-y', height - 1))));
     byId('brush-fill').addEventListener('click', () => edit(() => { for (let i = 0; i < planes.apply.length; i++) planes.apply[i] = planes.protect[i] ? 0 : 255; }));
-    byId('brush-clear').addEventListener('click', () => edit(() => planes[byId('brush-plane').value].fill(0)));
+    byId('brush-clear').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); }));
     byId('brush-reset').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); }));
     byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); invalidate(); render(); });
     byId('brush-rectangle').addEventListener('click', () => edit(() => {
