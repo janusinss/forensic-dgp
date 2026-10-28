@@ -56,10 +56,10 @@
   document.querySelectorAll('.editor-visual').forEach(visual => editorObserver.observe(visual));
   function syncProgress() {
     const progress = byId('brush-progress');
-    const redundant = progress.textContent.startsWith('Inspect visible facial structure before continuing.') ||
+    const redundant = progress.textContent.startsWith('Check the face before continuing.') ||
       (current === 'inspect' && (
-        progress.textContent.startsWith('V2 (p2_u0224) is available.') ||
-        progress.textContent === 'Inspect the original crop before continuing.'
+        progress.textContent.startsWith('Ready. Check your picture before continuing.') ||
+        progress.textContent === 'Check your picture before continuing.'
       ));
     progress.classList.toggle('quiet-status', redundant);
   }
@@ -92,7 +92,7 @@
       else byId('completion-intro-preview').removeAttribute('src');
     }
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
-    if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Inspect the original crop before continuing.';
+    if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Check your picture before continuing.';
     current = name;
     syncProgress();
     screens.forEach(item => item.classList.toggle('is-active', item === screen));
@@ -110,9 +110,9 @@
   }
   function go(name) {
     if (name === 'options') {
-      if (byId('upload-preview').classList.contains('hidden')) return showNotice('Choose and inspect one crop before continuing.');
+      if (byId('upload-preview').classList.contains('hidden')) return showNotice('Choose a picture before continuing.');
       const review = byId('brush-review').value;
-      if (review !== 'usable') return showNotice(review ? 'Choose a clearer, less-covered, single face crop before continuing.' : 'Review the visible facial information before continuing.');
+      if (review !== 'usable') return showNotice(review ? 'Use a clearer close-up of one face before continuing.' : 'Choose how clearly you can see the face before continuing.');
     }
     if (name === 'options-next') {
       name = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off' ? 'brush-paint' : 'run';
@@ -121,7 +121,7 @@
       name = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off' ? 'brush-preview' : 'options';
     }
     if (name === 'run' && byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off') {
-      if (byId('brush-preview-section').classList.contains('hidden') || !byId('brush-confirm').checked) return showNotice('Review and confirm the current preparation preview first.');
+      if (byId('brush-preview-section').classList.contains('hidden') || !byId('brush-confirm').checked) return showNotice('Check and confirm the prepared picture before continuing.');
     }
     show(name);
   }
