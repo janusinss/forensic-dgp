@@ -255,7 +255,15 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 /* Reveal the verified result as soon as its images are ready. */
 .result-screen.is-active { animation:result-reveal 400ms ease-out both; }
 @keyframes result-reveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-@media (prefers-reduced-motion:reduce) { .loading-orb,.loading-orb .orb-sheen,.result-screen.is-active { animation:none; } }
+@media (prefers-reduced-motion:reduce) {
+  .result-screen.is-active { animation:none; }
+  /* This loader and background are explicitly requested to animate. */
+  .loading-orb { animation:orb-breathe 3s ease-in-out infinite !important; }
+  .loading-orb .orb-sheen { animation:orb-light 2.8s ease-in-out infinite alternate !important; }
+  .work-screen.is-active[data-screen=inspect] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=options] .work-visual:not(.has-ambient-shader),
+  .work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader) { animation:ambient-fallback 9s ease-in-out infinite alternate !important; }
+}
 @media (max-width:800px) {
   .work-screen[data-screen=run].is-loading { grid-template-rows:minmax(0,1fr) auto; }
   .work-screen[data-screen=run].is-loading .work-controls { overflow-y:auto; justify-content:safe center; }
