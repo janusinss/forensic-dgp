@@ -335,7 +335,7 @@ void main() {
   gl.uniform3fv(uni.colors,new Float32Array(colors.flat()));
   gl.uniform4f(uni.shape,1.260,0.350,0.280,0.000);
   gl.uniform4f(uni.surface,1.824,1.374,-0.020,0.680);
-  gl.uniform4f(uni.finish,0.0000,0.540,0.0000,0.220);
+  gl.uniform4f(uni.finish,0.0000,0.540,0.0000,0.075);
   gl.uniform4f(uni.transform,1.0,0.0000,0.060,1.0);
   let host=null, raf=0, last=0, elapsed=0, active=false, disposed=false, lost=false;
   let pointerX=0,pointerY=0,pointerOn=0,mouseX=0,mouseY=0,cursorPresence=0;
@@ -355,9 +355,9 @@ void main() {
     mouseX+=(pointerX-mouseX)*follow; mouseY+=(pointerY-mouseY)*follow;
     cursorPresence+=(pointerOn-cursorPresence)*follow;
     last=now;gl.viewport(0,0,canvas.width,canvas.height);
-    gl.uniform4f(uni.scene,canvas.width,canvas.height,motion.matches?0:elapsed*1.088,5);
+    gl.uniform4f(uni.scene,canvas.width,canvas.height,motion.matches?0:elapsed*0.680,5);
     gl.uniform4f(uni.space,-0.050,0.000,mouseX,mouseY);
-    gl.uniform4f(uni.cursor,motion.matches?0:cursorPresence,4.0,0.500,0.800);
+    gl.uniform4f(uni.cursor,motion.matches?0:cursorPresence,4.0,0.220,0.800);
     gl.drawArrays(gl.TRIANGLES,0,6);
     raf=motion.matches?0:requestAnimationFrame(paint);
   }
