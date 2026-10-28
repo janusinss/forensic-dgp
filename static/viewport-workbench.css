@@ -403,3 +403,10 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=result] .visual-gallery .zoom-btn:hover,
 .work-screen[data-screen=completion-result] .visual-gallery .tool-btn:hover,
 .work-screen[data-screen=completion-result] .visual-gallery .zoom-btn:hover { background:#294238; }
+
+/* Native range input keeps brush sizing precise and keyboard accessible. */
+.brush-size-control { min-width:0; display:grid; gap:6px; }
+.work-controls .brush-size-control .brush-size-label { display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.brush-size-control output { color:#176b52; font-size:13px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.work-controls .brush-size-control input[type=range] { width:100%; min-height:44px; margin:0; padding:0; border:0; border-radius:0; background:transparent; accent-color:#176b52; cursor:pointer; }
+.work-controls .brush-size-control input[type=range]:disabled { cursor:not-allowed; opacity:.55; }

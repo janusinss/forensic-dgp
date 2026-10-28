@@ -137,6 +137,7 @@
         if (right < left || bottom < top) throw new Error('The right and bottom edges must come after the left and top edges.');
         for (let y = top; y <= bottom; y++) planes.protect.fill(255, y * width + left, y * width + right + 1);
     }));
+    byId('brush-size').addEventListener('input', event => { byId('brush-size-value').textContent = `${event.target.value} px`; });
     for (const id of ['brush-radius', 'brush-size']) byId(id).addEventListener('input', invalidate);
     for (const id of ['brush-plane', 'brush-action', 'brush-review', 'brush-restoration', 'brush-preparation']) byId(id).addEventListener('change', () => { drawing = false; invalidate(); });
     byId('brush-confirm').addEventListener('change', () => { revision++; clearResults(); update(); });
