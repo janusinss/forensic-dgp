@@ -33,6 +33,22 @@
     canvas.style.width = (canvas.width * scale) + 'px';
     canvas.style.height = (canvas.height * scale) + 'px';
   }
+  // Match the editor's display size while preserving the oriented image pixels.
+  const uploadPreview = byId('upload-preview');
+  const inspectVisual = uploadPreview.closest('.inspect-visual');
+  function fitUploadPreview() {
+    if (uploadPreview.classList.contains('hidden') || !uploadPreview.naturalWidth || !uploadPreview.naturalHeight || !inspectVisual.getClientRects().length) return;
+    const styles = getComputedStyle(inspectVisual);
+    const availableWidth = Math.max(0, inspectVisual.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight));
+    const availableHeight = Math.max(0, inspectVisual.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom));
+    const scale = Math.min(availableWidth / uploadPreview.naturalWidth, availableHeight / uploadPreview.naturalHeight, 600 / uploadPreview.naturalWidth, 600 / uploadPreview.naturalHeight);
+    if (!(scale > 0)) return;
+    uploadPreview.style.width = (uploadPreview.naturalWidth * scale) + 'px';
+    uploadPreview.style.height = (uploadPreview.naturalHeight * scale) + 'px';
+  }
+  uploadPreview.addEventListener('load', fitUploadPreview);
+  new ResizeObserver(fitUploadPreview).observe(inspectVisual);
+  new MutationObserver(fitUploadPreview).observe(uploadPreview, { attributes: true, attributeFilter: ['class'] });
   const editorObserver = new ResizeObserver(entries => entries.forEach(entry => fitEditor(entry.target)));
   document.querySelectorAll('.editor-visual').forEach(visual => editorObserver.observe(visual));
   function syncProgress() {
@@ -69,7 +85,7 @@
     if (slot && byId('completion-stage').contains(screen)) slot.append(completionFeedback);
     showNotice('');
     screen.querySelectorAll('.editor-visual').forEach(fitEditor);
-    requestAnimationFrame(() => screen.querySelectorAll('.editor-visual').forEach(fitEditor));
+    requestAnimationFrame(() => { screen.querySelectorAll('.editor-visual').forEach(fitEditor); if (name === 'inspect') fitUploadPreview(); });
     if (focus) {
       const heading = screen.querySelector('h1');
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
