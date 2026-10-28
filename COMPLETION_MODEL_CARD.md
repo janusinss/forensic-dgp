@@ -44,6 +44,14 @@ required assistance. The grayscale hair example still has visible blue false
 color. These failures remain recorded; no automatic-detection or full-family
 quality claim follows from the working editor, model loader or downloads.
 
+
+The 28 October 2026 integration audit reported 1,212 saved-output checks, ZIP
+CRC and manifest checks, raw-to-PNG replay, provenance and worker receipts.
+All planned comparison sheets were reviewed. The full historical integration
+report, including installation observations and failed transfer evidence, remains
+[available in Git history](https://github.com/janusinss/forensic-dgp/blob/d1fc262942754f44c188b4f318ebde970d3010a1/INTEGRATION_STATUS.md).
+These functional and preservation checks do not establish model quality.
+
 The separate compact detector is extracted from the retained trained epoch-2
 segmenter, without its old completion generator. It thresholds at 0.5 and adds
 one reviewable 3-pixel proposal margin, clipped to captured image support.

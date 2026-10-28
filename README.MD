@@ -18,7 +18,7 @@ This app helps you inspect and restore a picture of one face on your Windows com
 
 For the commands below, download and install [Git for Windows](https://git-scm.com/download/win). Its default installation options are suitable. Python does not need to be installed separately: the app installer will set it up if necessary.
 
-**Without Git:** Open the [IMPLEMENTATION branch on GitHub](https://github.com/janusinss/forensic-dgp/tree/IMPLEMENTATION), click **Code → Download ZIP**, and extract the ZIP. Open the extracted folder, double-click `install.bat`, and wait for setup to finish. Then double-click `start.bat`.
+**Without Git:** [Download the IMPLEMENTATION ZIP](https://github.com/janusinss/forensic-dgp/archive/refs/heads/IMPLEMENTATION.zip) and extract it. Open the extracted folder, double-click `install.bat`, and wait for setup to finish. Then double-click `start.bat`.
 
 ### 2. Download the app
 
@@ -104,9 +104,27 @@ The app changes only the selected area during this covering step. Everything out
 ## Common problems
 
 - **Python setup failed:** Check the error, internet connection, and available storage. Run `.\install.bat` again. The installer preserves existing files rather than replacing a damaged private Python folder.
-- **Installation failed:** Check the error in PowerShell, your internet connection, and available storage. Run `.\install.bat` again. Existing model files that do not match are kept for inspection. For local completion model files, see [completion installation details](COMPLETION_INSTALL.md).
+- **Installation failed:** Check the error in PowerShell, your internet connection, and available storage. Run `.\install.bat` again. Existing model files that do not match are kept for inspection. For local completion model files, see [Use local completion files](#use-local-completion-files-advanced).
 - **The app says there is not enough memory:** Close other programs and try again.
 - **The browser did not open:** Open the **Application URL** printed in PowerShell. If port 8000 is already in use, run `.\start.bat --port 0` and use the printed address.
+
+## Use local completion files (advanced)
+
+Normally `install.bat` downloads the two completion files automatically. If you already have the exact files and need to stage them without downloading them again, first run `install.bat` until the restoration setup finishes. Then open PowerShell in the app folder and run the following, replacing the example paths with your files:
+
+```powershell
+$python = (Get-Content -Raw .implementation-env.json | ConvertFrom-Json).python
+& $python -B -m implementation.completion_install --local-r1 "C:\verified-assets\codeformer_completion_r1.pth" --local-detector "C:\verified-assets\covering_detector_segmenter_v1.pth"
+```
+
+The local completion step does not download files. You may omit a file's option only if its installed copy has already passed verification. Both files are checked against their expected size and SHA-256; mismatched existing files and failed partial copies are kept. To check installed completion files without changing them, run:
+
+```powershell
+$python = (Get-Content -Raw .implementation-env.json | ConvertFrom-Json).python
+& $python -B -m implementation.completion_install --verify-only
+```
+
+A successful new installation writes a receipt in `models/completion/`. Verifying the files does not establish completion quality.
 
 ## Your pictures and updates
 
