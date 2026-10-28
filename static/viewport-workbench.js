@@ -7,6 +7,45 @@
   const completionFeedback = byId('completion-feedback');
   let current = 'inspect', pendingPreview = false, pendingCompletion = false, pendingEstimate = false;
 
+  // This guide describes the current screen; it does not change the workflow.
+  const journey = [
+    { label: 'Picture', names: ['inspect'] },
+    { label: 'Settings', names: ['options', 'brush-paint', 'brush-tools', 'brush-preview'] },
+    { label: 'Restore', names: ['run'] },
+    { label: 'Review', names: ['result'] },
+    { label: 'Removal', names: ['completion-intro', 'completion-paint', 'completion-tools', 'completion-confirm', 'completion-result'], optional: true }
+  ];
+  screens.forEach(screen => {
+    const controls = screen.querySelector('.work-controls');
+    const currentStep = journey.findIndex(step => step.names.includes(screen.dataset.screen));
+    if (!controls || currentStep < 0) return;
+    const progress = document.createElement('nav');
+    progress.className = 'journey-progress';
+    progress.setAttribute('aria-label', 'Workflow progress');
+    const list = document.createElement('ol');
+    journey.forEach((step, index) => {
+      const item = document.createElement('li');
+      item.className = index === currentStep ? 'is-current' : index < currentStep ? 'is-complete' : 'is-upcoming';
+      if (index === currentStep) item.setAttribute('aria-current', 'step');
+      const marker = document.createElement('span');
+      marker.className = 'journey-marker';
+      marker.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.className = 'journey-label';
+      label.textContent = step.label;
+      if (step.optional) {
+        const optional = document.createElement('span');
+        optional.className = 'journey-optional';
+        optional.textContent = 'Optional';
+        label.append(' ', optional);
+      }
+      item.append(marker, label);
+      list.append(item);
+    });
+    progress.append(list);
+    controls.prepend(progress);
+  });
+
   // Native radios provide keyboard-accessible button choices while the existing
   // controls remain the source of truth for the restoration/completion logic.
   document.querySelectorAll('.choice-input').forEach(input => {

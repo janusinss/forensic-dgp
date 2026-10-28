@@ -1,0 +1,11 @@
+/* The workflow guide is informational: navigation stays with the existing buttons. */
+.journey-progress { width:100%; max-width:680px; margin:0 0 4px; }
+.journey-progress ol { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; list-style:none; padding:0; margin:0; }
+.journey-progress li { min-width:0; display:flex; flex-direction:column; gap:7px; color:#71847a; font:600 11px/1.2 var(--font-sans); letter-spacing:.01em; }
+.journey-marker { display:block; width:100%; height:3px; border-radius:99px; background:#dbe4dd; }
+.journey-progress .is-complete .journey-marker { background:#8eb9a6; }
+.journey-progress .is-current { color:#175d49; }
+.journey-progress .is-current .journey-marker { background:#176c56; }
+.journey-label { overflow-wrap:anywhere; }
+.journey-optional { display:block; margin-top:2px; color:#71847a; font-size:10px; font-weight:400; }
+@media (max-width:800px) { .journey-progress { margin-bottom:0; } .journey-progress li { gap:5px; font-size:10px; } .journey-optional { font-size:9px; } }

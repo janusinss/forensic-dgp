@@ -322,3 +322,63 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   .work-screen[data-screen=completion-intro] { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
   .work-screen[data-screen=completion-paint]:has(.choice-group) { grid-template-rows:minmax(0,3fr) minmax(160px,2fr); }
 }
+
+/* A calm, readable control panel for each step of the workflow. */
+.work-controls {
+  --panel-ink:#18352c;
+  --panel-green:#176b52;
+  background:#f7f9f5;
+  color:var(--panel-ink);
+  padding:clamp(24px,3.2vw,52px);
+  gap:clamp(12px,1.6vh,19px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-color:#b9ccc0 transparent;
+}
+.work-controls .work-heading { gap:9px; }
+.work-controls .work-heading h1 {
+  font:700 clamp(30px,2.5vw,42px)/1.12 'Loader Inter',var(--font-sans);
+  letter-spacing:-.04em;
+  color:#153a2e;
+}
+.work-controls .work-heading p { color:#53685d; font-size:16px; line-height:1.55; max-width:48ch; }
+.work-controls .work-kicker { color:#367960; font:700 11px/1.3 'Loader Inter',var(--font-sans); letter-spacing:.13em; }
+.work-controls .field > label,.work-controls .field-row label,.work-controls .choice-group > legend,.work-controls .brush-size-label { color:#29493b; font-size:14px; font-weight:650; }
+.work-controls input:not([type=checkbox]):not([type=hidden]):not([type=radio]),
+.work-controls select { border:1px solid #c6d6ca; border-radius:10px; background:#fff; color:#18352c; font-size:16px; }
+.work-controls input[type=file] { padding:9px; border:1px dashed #a9c4b2; background:#fff; font-size:14px; }
+.work-controls input[type=file]::file-selector-button { border-radius:7px; padding:9px 13px; margin-right:10px; color:#175640; background:#e3f1e8; font-weight:700; }
+.work-controls .choice-list { gap:8px; }
+.work-controls .choice-content { min-height:46px; border:1px solid #d1dfd5; border-radius:10px; background:#fff; color:#294638; font-size:14px; font-weight:600; }
+.work-controls .choice-option:hover .choice-content { background:#f1f8f3; border-color:#78aa8f; }
+.work-controls .choice-input:checked + .choice-content { border:2px solid #277c5b; background:#e5f3e9; color:#15573d; }
+.work-controls .choice-input:focus-visible + .choice-content,
+.work-controls button:focus-visible,.work-controls input:focus-visible,.work-controls a:focus-visible { outline:3px solid #bf8b1e; outline-offset:2px; }
+.work-controls .work-note { padding:12px 14px; border:1px solid #dce8de; border-radius:8px; background:#edf4ee; color:#425d4d; font-size:14px; line-height:1.5; }
+.work-controls .field-hint { color:#5d7064; font-size:13px; line-height:1.5; }
+.work-controls .context-confirm { color:#345143; font-size:14px; line-height:1.5; }
+.work-controls .work-actions,.work-controls .compact-actions { gap:9px; }
+.work-controls .work-actions .execute-btn,.work-controls .work-actions .tool-btn,
+.work-controls .compact-actions .tool-btn,.work-controls > .tool-btn { min-height:46px; border-radius:9px; padding:11px 16px; font-size:14px; font-weight:700; letter-spacing:0; }
+.work-controls .execute-btn { color:#fff; background:#176b52; border-color:#176b52; box-shadow:none; }
+.work-controls .execute-btn:hover:not(:disabled) { background:#10543e; border-color:#10543e; }
+.work-controls .execute-btn:disabled { color:#879990; background:#e5ece6; border-color:#d8e3d9; box-shadow:none; }
+.work-controls .tool-btn { color:#345b46; background:#fff; border:1px solid #c6d8ca; }
+.work-controls .tool-btn:hover:not(:disabled) { color:#154f39; background:#edf6ef; border-color:#8bb29a; }
+.work-controls .text-btn { color:#176b52; font-size:14px; text-decoration-thickness:1px; }
+.work-controls .feedback { font-size:13px; }
+.work-controls .feedback #brush-progress,.work-controls .feedback #completion-progress { border-left:2px solid #68a587; color:#395f4b; }
+@media (max-width:800px) {
+  .work-controls { padding:20px; gap:12px; justify-content:flex-start; }
+  .work-controls input:not([type=checkbox]):not([type=hidden]):not([type=radio]), .work-controls select { font-size:16px; }
+  .work-controls .work-heading h1 { font-size:29px; }
+  .work-controls .work-heading p { font-size:14px; line-height:1.45; }
+  .work-controls .work-note { padding:9px 11px; font-size:13px; }
+  .work-controls .choice-content { min-height:44px; font-size:13px; }
+  .work-controls .work-actions .execute-btn,.work-controls .work-actions .tool-btn,.work-controls .compact-actions .tool-btn { min-height:44px; }
+}
+@media (max-width:800px) {
+  .work-screen[data-screen=result], .work-screen[data-screen=completion-result] {
+    grid-template-rows:minmax(0,3fr) minmax(160px,2fr);
+  }
+}
