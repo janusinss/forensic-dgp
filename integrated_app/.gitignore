@@ -1,0 +1,65 @@
+# Local Python installation and caches
+/.implementation-env.json
+/.implementation-env.json.*.tmp
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Downloaded model assets and private testing records
+/models/
+/scratch/
+/uploads/
+/test_images/
+/results/
+*.pth
+*.pt
+*.h5
+*.npz
+!/implementation/assets/*.npz
+*.npy
+*.zip
+*.tar
+*.tar.gz
+*.partial
+
+# Research and training belong in the research branch
+/research/
+/scripts/
+/pilots/
+/dataset/
+/checkpoints/
+/outputs/
+
+# Local tools and browser dependencies
+/.codex/
+/.agents/
+/.agent/
+/.claude/
+/.impeccable/
+/AGENTS.md
+/AGENTS.MD
+node_modules/
+playwright-report/
+test-results/
+
+# Local settings, secrets and operating-system files
+.env
+.env.*
+*.pem
+*.key
+credentials.json
+token.json
+secrets.json
+.vscode/
+.idea/
+*.log
+Thumbs.db
+desktop.ini
+.DS_Store

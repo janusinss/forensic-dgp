@@ -1,0 +1,12 @@
+.brush-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.75rem; max-width:800px; align-items:end; }
+.brush-controls label { display:grid; gap:.35rem; }
+#brush-editor { display:block; width:min(100%,600px); height:auto; border:0; padding:0; box-shadow:0 0 0 1px var(--color-border-highlight); touch-action:none; cursor:crosshair; }
+.brush-previews { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.brush-previews figure { margin:0; min-width:0; }
+.brush-previews img { display:block; width:100%; height:auto; }
+.brush-previews figcaption { font-size:.875rem; line-height:1.6; }
+.context-form details { min-width:0; }
+.context-form summary { cursor:pointer; padding:.7rem 0; min-height:44px; }
+.context-form details .tool-btn { margin-top:.75rem; }
+#brush-results .tool-btn { min-height:44px; display:inline-flex; align-items:center; padding:.6rem .9rem; max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+@media(max-width:767px) { .brush-controls,.brush-previews { grid-template-columns:1fr; } }

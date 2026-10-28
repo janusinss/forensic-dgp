@@ -1,0 +1,783 @@
+{
+  "format": "completion-codeformer-r1-training-attribution-v1",
+  "protocol_sha256": "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d",
+  "terms": {
+    "experiment": "Noncommercial thesis/research; retain CodeFormer S-Lab and per-photo FFHQ source licenses/attribution",
+    "source_license_counts": {
+      "Attribution License": 21,
+      "Attribution-NonCommercial License": 18,
+      "Public Domain Dedication (CC0)": 1
+    },
+    "no_blanket_license_or_identity_clearance": true
+  },
+  "reference_attributions": [
+    {
+      "id": "tr_ffhq_00084",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/80038275@N00/32958708742/",
+        "photo_title": "Secretary of Education Betsy DeVos at CPAC 2017 Feb 23rd 2017 by Michael Vadon",
+        "author": "Michael Vadon",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2017-02-25",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_counterparts_v1\\images1024\\00084.png",
+        "bytes": 1300355,
+        "sha256": "88e387bb051fa8d830f1c821db4731bc5f46b570117b24e7df8cc7ec85f99dd3"
+      }
+    },
+    {
+      "id": "tr_ffhq_00178",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/peiphotos/2723596319/",
+        "photo_title": "20080717-151517_01",
+        "author": "peiflickr",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2008-08-02",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\00178.png",
+        "bytes": 1258692,
+        "sha256": "4f77ecad82d0fccff5f940a5baeba0ac1a0a66a613dbb609e2bd3362763af22a"
+      }
+    },
+    {
+      "id": "tr_ffhq_00323",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/krystynahaywood/25316976317/",
+        "photo_title": "_DSC0446",
+        "author": "Krystyna Haywood",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2018-02-10",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\00323.png",
+        "bytes": 1323947,
+        "sha256": "fa8e161711d6280a41b4f444d0eeacfe61a4047beba2754b041af46e5041519c"
+      }
+    },
+    {
+      "id": "tr_ffhq_00616",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/colacaoufg/27470923721/",
+        "photo_title": "Universidade Federal de Goi\u00e1s",
+        "author": "Cola\u00e7\u00f5es de Grau UFG",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2016-06-08",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\00616.png",
+        "bytes": 1184218,
+        "sha256": "3e6101f1917890a5573352934c6ce22b93a842b60709bc9ec5ca18854e6675d6"
+      }
+    },
+    {
+      "id": "tr_ffhq_01210",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/28613992@N07/2966709746/",
+        "photo_title": "Azade and David in Historical Village",
+        "author": "derhun",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2008-10-23",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\01210.png",
+        "bytes": 1331663,
+        "sha256": "ddd45ab30f0a9dd2d87836d38fca07ca14939eee8ff185103f000e5a5859bb01"
+      }
+    },
+    {
+      "id": "tr_ffhq_01639",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/singapore2010/4925788003/",
+        "photo_title": "CEP @ YOV (25 August 2010)",
+        "author": "Singapore 2010 Youth Olympic Games",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2010-08-25",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\01639.png",
+        "bytes": 1098750,
+        "sha256": "e4d87e20ea22e80a4b3f47164d5b99c7b211632e57abab6179b93ad6df8892f8"
+      }
+    },
+    {
+      "id": "tr_ffhq_01672",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/23104721@N08/14050351822/",
+        "photo_title": "SAM_0371",
+        "author": "MindField Group",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2014-04-28",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\01672.png",
+        "bytes": 1124665,
+        "sha256": "0cdbbf8673adfcbac85869a23d20bd810b001edca048e937da22d38c4ffbcaca"
+      }
+    },
+    {
+      "id": "tr_ffhq_01926",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/au_unistphotostream/35235791391/",
+        "photo_title": "2017_06_17_The_Day_of_The_African_Child-8",
+        "author": "AMISOM Public Information",
+        "country": "",
+        "license": "Public Domain Dedication (CC0)",
+        "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "date_uploaded": "2017-06-17",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\01926.png",
+        "bytes": 1092637,
+        "sha256": "76b741454ea3d7acd0c7410593af88d4e1a1afdcaf1eb3d1d6f879ddd5b6b8cf"
+      }
+    },
+    {
+      "id": "tr_ffhq_02068",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/kathmandu/15242829480/",
+        "photo_title": "DC Turkish Festival 2014",
+        "author": "S Pakhrin",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2014-10-03",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02068.png",
+        "bytes": 1470538,
+        "sha256": "bd5c1d33a48f830999389fe64f5dd783a42683f95d14c671814759698e9f89c7"
+      }
+    },
+    {
+      "id": "tr_ffhq_02147",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/caitlinmscott/3068852305/",
+        "photo_title": "DSC_0062",
+        "author": "Cait S",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2008-11-30",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02147.png",
+        "bytes": 1371305,
+        "sha256": "d59f91d7e1d34397bb05291dfeefedfeb1b5963dc4ecd4ee1f4592b2e911318a"
+      }
+    },
+    {
+      "id": "tr_ffhq_02421",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/sedsucsd/40649445260/",
+        "photo_title": "IMG_0474",
+        "author": "SEDS UCSD",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2018-05-30",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02421.png",
+        "bytes": 1279202,
+        "sha256": "10a444e2ed87cc6aa86d99b1e3e9faa8da32d8e14cf0df2e9f565ae373c816a7"
+      }
+    },
+    {
+      "id": "tr_ffhq_02473",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/solardecathlonaut2013/8352265611/",
+        "photo_title": "LISI | Christmas party 2012",
+        "author": "Solar Decathlon Team Austria",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2013-01-06",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02473.png",
+        "bytes": 1460063,
+        "sha256": "3127c18c573a9c435aa743866581a5e35816549509eb87e559e5e02adc8d4547"
+      }
+    },
+    {
+      "id": "tr_ffhq_02665",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/swissmeetings/41261268900/",
+        "photo_title": "D05_3660.JPG",
+        "author": "SCIB - Switzerland Convention and Incentive Bureau",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2018-06-28",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02665.png",
+        "bytes": 1335596,
+        "sha256": "59b2471cf1811a9f09321f41e29e82147971496f511e2faf50fd16d33411bc78"
+      }
+    },
+    {
+      "id": "tr_ffhq_02932",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/tedconference/10300629273/",
+        "photo_title": "TED@NYC_RL5D5915_1920",
+        "author": "TED Conference",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2013-10-15",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02932.png",
+        "bytes": 1581482,
+        "sha256": "9291447fc3b6677e78651f957c0378ed6da9fbb4c9b3feac6d3656978a19bbd6"
+      }
+    },
+    {
+      "id": "tr_ffhq_02983",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/passion_in_action/3375102958/",
+        "photo_title": "Zook Family-94",
+        "author": "sagriffin305",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2009-03-22",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\02983.png",
+        "bytes": 1412883,
+        "sha256": "1395348ee5d67eefe5a4dd95c86e0741ea764d0f917057ebccd8a68b457266d3"
+      }
+    },
+    {
+      "id": "tr_ffhq_03089",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/rohit_saxena/34368072851/",
+        "photo_title": "timo seppa-5",
+        "author": "The.Rohit",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2017-05-07",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03089.png",
+        "bytes": 1179325,
+        "sha256": "cfba243632d02d7ee502a38801e22bc595846c06f162c3d0243625e5c16dd5e8"
+      }
+    },
+    {
+      "id": "tr_ffhq_03147",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/carmelanava/11938749255/",
+        "photo_title": "Alex Moreno",
+        "author": "Carmela Nava",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2014-01-14",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03147.png",
+        "bytes": 1152744,
+        "sha256": "d15dd71d3a9768d9d4c347df01c301c75d325398f3cd94932c9bae4e83c6a167"
+      }
+    },
+    {
+      "id": "tr_ffhq_03212",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/151908459@N04/27539928048/",
+        "photo_title": "AMBER",
+        "author": "Mauran Verniers",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2018-04-12",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03212.png",
+        "bytes": 1304689,
+        "sha256": "6846b395dc26e3dddab50026a2196e14898ce956e88af825375073fdaeb560cc"
+      }
+    },
+    {
+      "id": "tr_ffhq_03313",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/vancouverfilmschool/8033912012/",
+        "photo_title": "VFS Makeup Design Helps Age Host of Finding Stuff Out",
+        "author": "Vancouver Film School",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2012-09-28",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03313.png",
+        "bytes": 1171008,
+        "sha256": "4a8ac17a84009f0ea6eb57ff308255d7d0cfd2056aac0d79cf2832e14a0cfc27"
+      }
+    },
+    {
+      "id": "tr_ffhq_03437",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/foto4go/39949944051/",
+        "photo_title": "CorriamoAmonteSanBiagio 2018_ (41)",
+        "author": "foto4go",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2018-01-28",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03437.png",
+        "bytes": 1058130,
+        "sha256": "ec0d0d8e5af1d5af53a9d48f1d71f93f7e8ad83090df9ba0643e8d80571cc379"
+      }
+    },
+    {
+      "id": "tr_ffhq_03483",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/tukulti/27276922099/",
+        "photo_title": "PASocial ER",
+        "author": "Francesco Pierantoni",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2017-12-14",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03483.png",
+        "bytes": 1219468,
+        "sha256": "dc36760a4f521c5daf3c807362ab66ade760ca7314501be86f931dd2f69b4ed4"
+      }
+    },
+    {
+      "id": "tr_ffhq_03497",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/127774774@N08/33642918726/",
+        "photo_title": "_7509100",
+        "author": "Tien Le Dinh",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2017-03-27",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03497.png",
+        "bytes": 1316073,
+        "sha256": "4f057890a4616e59531007578855ef9ed20de2602c66a024a388c9bfe50a3717"
+      }
+    },
+    {
+      "id": "tr_ffhq_03735",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/nickwebb/10522756695/",
+        "photo_title": "Me",
+        "author": "Nick Webb",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2013-10-27",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03735.png",
+        "bytes": 1311718,
+        "sha256": "7846a364d605a061f232868ad2671a895a75e2c0bd6c5f0c6c32f62051b833b5"
+      }
+    },
+    {
+      "id": "tr_ffhq_03761",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/joelosfeliz/5591486338/",
+        "photo_title": "Sharon & Baby",
+        "author": "Joe",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2011-04-05",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03761.png",
+        "bytes": 1393771,
+        "sha256": "08107af601ad48b3f664b738e01e81c29dcdf41600d48f7777bc3d593813d242"
+      }
+    },
+    {
+      "id": "tr_ffhq_03917",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/mrbakke/41689934512/",
+        "photo_title": "DSC_0790",
+        "author": "Jeff Bakke",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2018-04-27",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\03917.png",
+        "bytes": 1560187,
+        "sha256": "e298c18b1ba6996be6b6ffdccf5b394847152ece4d3f4f6f93c38476853985b2"
+      }
+    },
+    {
+      "id": "tr_ffhq_04169",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/robert_trudeau/40474847160/",
+        "photo_title": "Tulane graduation",
+        "author": "Robert and Talbot Trudeau",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2018-05-22",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\04169.png",
+        "bytes": 1289396,
+        "sha256": "99afca738aa142808c85c410026a85b5b51881c08dc76efc2f4f659147b61dc0"
+      }
+    },
+    {
+      "id": "tr_ffhq_04436",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/m_kajo/28305673959/",
+        "photo_title": "DSC_2006",
+        "author": "Marion Paul Baylado",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2018-02-04",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\04436.png",
+        "bytes": 1426053,
+        "sha256": "ba5c44594a9133f7c125e479cd086cee9db095d842bdad4fe45cf48f638289a8"
+      }
+    },
+    {
+      "id": "tr_ffhq_04454",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/bcplphoto/24419593398/",
+        "photo_title": "A Toast Among Ghosts 2017",
+        "author": "Baltimore County Public Library",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2017-11-09",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\04454.png",
+        "bytes": 1485759,
+        "sha256": "26941d98016343c3a8b3215931dd47f15e8e3b462f4ce7904598d7976a954660"
+      }
+    },
+    {
+      "id": "tr_ffhq_04476",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/attig/4902195812/",
+        "photo_title": "Cecilia \u00d6dman",
+        "author": "Gitta Wil\u00e9n",
+        "country": "Sweden",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2010-08-17",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\04476.png",
+        "bytes": 1470164,
+        "sha256": "6017faf7aee16a01852b9debe2af6bc641ac56df2100bf5ef4778613a53d1c5b"
+      }
+    },
+    {
+      "id": "tr_ffhq_04498",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/p_d_gibson/469546155/",
+        "photo_title": "Rob at Cafe Solstice",
+        "author": "Paul David Gibson",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2007-04-23",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\04498.png",
+        "bytes": 1358061,
+        "sha256": "1975c4d8414b41798702287fae63edb7656d9580bc5733bb208cf3ddc5b70cd6"
+      }
+    },
+    {
+      "id": "tr_ffhq_04759",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/bigfoot/33645194194/",
+        "photo_title": "ECS_9454_PP",
+        "author": "bigfoot",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2017-05-06",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\04759.png",
+        "bytes": 1182022,
+        "sha256": "c91bfd4f00c3086aa1154513d903ff6581f26a904e15c9b0c356fb538a72f791"
+      }
+    },
+    {
+      "id": "tr_ffhq_05002",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/lobinhoot/3278020263/",
+        "photo_title": "F-Day-116",
+        "author": "Tommy Low",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2009-02-14",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\05002.png",
+        "bytes": 788261,
+        "sha256": "3cb8176d202db94c2f0a096829ec634d23824b33e830bd18aaf53f5eb6950f77"
+      }
+    },
+    {
+      "id": "tr_ffhq_05179",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/moneyconf/27908190717/",
+        "photo_title": "SM2_5541",
+        "author": "MoneyConf",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2018-06-13",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\05179.png",
+        "bytes": 1240748,
+        "sha256": "f17722b08deb45c31fb5212bf270d99dcf49381de0728d387e1b16183b2e5b74"
+      }
+    },
+    {
+      "id": "tr_ffhq_05302",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/j_benson/34799293061/",
+        "photo_title": "Farmers market",
+        "author": "John Benson",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2017-05-27",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\05302.png",
+        "bytes": 1445981,
+        "sha256": "54d844667b0c34c142bba08e2d6d297dfefc9b24bd3892f50cf91a272a1b67bf"
+      }
+    },
+    {
+      "id": "tr_ffhq_06781",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/mn_francis/2332516783/",
+        "photo_title": "Cindy, looking gorgeous as ever",
+        "author": "Mark Norman Francis",
+        "country": "",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2008-03-14",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\06781.png",
+        "bytes": 1393249,
+        "sha256": "8adaa11778a8dbde9097e09ed9eecb45f2a59147b5cedb08d11aa102dfd59504"
+      }
+    },
+    {
+      "id": "tr_ffhq_06809",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/13990523@N07/15718552045/",
+        "photo_title": "Hawaii_041",
+        "author": "Paige Portraits",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2014-11-05",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\06809.png",
+        "bytes": 1377524,
+        "sha256": "7bc9253a606c7341f0351ec8cca1103daae1cc2e4536fa4373b85de02c37ea91"
+      }
+    },
+    {
+      "id": "tr_ffhq_06995",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/benidormone/27932776589/",
+        "photo_title": "Olympic Stadium",
+        "author": "William Helsen",
+        "country": "Spain",
+        "license": "Attribution-NonCommercial License",
+        "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+        "date_uploaded": "2018-01-15",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\06995.png",
+        "bytes": 1044253,
+        "sha256": "8b399f768791698c4e5ca66a3657cb821d6935fd625dbb81e4e0ece672bfc654"
+      }
+    },
+    {
+      "id": "tr_ffhq_07087",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/davidspinks/5159864356/",
+        "photo_title": "Headshot 7",
+        "author": "David Spinks",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2010-11-09",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\07087.png",
+        "bytes": 1377946,
+        "sha256": "30271e128879aa3bd67e365c485e5461d36ee3ab7bc04c48fbc030e5ffd5741d"
+      }
+    },
+    {
+      "id": "tr_ffhq_07202",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/usfsregion5/37818051065/",
+        "photo_title": "Sonny Perdue, Secretary of Agriculture",
+        "author": "Pacific Southwest Region 5",
+        "country": "",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2017-11-28",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\07202.png",
+        "bytes": 1226121,
+        "sha256": "b76ae442d3d9a99ec01f420f5591d2d97faf49afd9a0fe85deda254f97a8ee3e"
+      }
+    },
+    {
+      "id": "tr_ffhq_07386",
+      "original_role": "train",
+      "attribution": {
+        "photo_url": "https://www.flickr.com/photos/shalynn/15105964251/",
+        "photo_title": "xDSC_0016",
+        "author": "ShaLynn Wren",
+        "country": "United States",
+        "license": "Attribution License",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/",
+        "date_uploaded": "2014-09-01",
+        "date_crawled": "2018-10-10"
+      },
+      "source1024": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv_dgp_hq_cohort_v2\\images1024\\07386.png",
+        "bytes": 1474641,
+        "sha256": "7318bd62d8ed1ffc751ecce453b6044c7106e2a499193939f47a837d3c25be17"
+      }
+    }
+  ],
+  "limits": [
+    "Clear paired TRAIN contexts only in this first pilot; no degraded paired fit/monitor simulation",
+    "Monitor is originalTRAIN source-disjoint from fit by ID/file, not established independent identity orFINAL",
+    "CodeFormer FFHQ pretraining overlap unknown; historical project exposure preserved",
+    "PublicDEV32 retains original/synthetic-degraded photographs; native suffix is not CCTV; no hiddenPSNR/SSIM",
+    "OriginalVAL and reservedFINAL pixels are not accessed or transferred"
+  ],
+  "model_pretraining_overlap": "Unknown; no independent identity or blanket license clearance"
+}

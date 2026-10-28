@@ -1,0 +1,10 @@
+# install.bat installs torch from the official CPU wheel index first.
+torch==2.13.0
+numpy==2.5.2
+Pillow==12.3.0
+scipy==1.18.0
+opencv-python==5.0.0.93
+fastapi==0.141.1
+uvicorn==0.52.4
+python-multipart==0.0.32
+psutil==7.0.0
