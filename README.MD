@@ -43,14 +43,47 @@ If the pull fails, resolve the reported local changes or branch divergence befor
 4. Preview and confirm manual preparation. Edits invalidate confirmation; every preview rebuilds from the original. Protected pixels and pixels outside Apply stay exact during preparation.
 5. Restore the selected input and compare the original, selected input, and V2 result. Download PNGs or an optional evidence ZIP containing the original, available masks, preparation records, result, and available RAW output.
 
-Manual preparation is optional; there is no automatic blur matcher. Protection applies to preprocessing only. Generated facial details can change, and a sharper-looking result does not prove recovered identity. Request clearer or less-covered input when visible information is insufficient. Completion and covering removal are outside this app. The model remains experimental; see [MODEL_CARD.md](MODEL_CARD.md).
+Manual preparation is optional; there is no automatic blur matcher. Protection applies to preprocessing only. Generated facial details can change, and a sharper-looking result does not prove recovered identity. Request clearer or less-covered input when visible information is insufficient. Optional reviewed covering completion is described below. The models remain experimental; see [MODEL_CARD.md](MODEL_CARD.md).
+
+## Optional covering removal and completion
+
+The Conditioned SFT V2 restoration stage is unchanged. After reviewing its result,
+choose **Review covering removal** if a mask, sunglasses, strong lens glare,
+hand, obstructing hair, scarf or object still hides the face. An uncovered face
+can finish with the restoration result.
+
+The separate detector proposes an orange removal area. Correct it with Paint,
+Erase, Undo, the rectangle tool or a binary mask PNG. Keep clear glasses,
+non-obstructing hair and visible features outside that area. The detector can
+miss coverings or select visible features; an empty proposal does not establish
+an uncovered face. Manual painting remains available when proposals fail.
+
+Confirm the exact removal area and sufficient visible facial structure, then
+generate one estimate with **trained CodeFormer completion R1**. Edits invalidate
+confirmation. Empty reviewed masks skip R1. Excessive coverage requests a
+clearer or less-covered crop.
+
+Completion changes only the reviewed area of the restoration result. Every
+pixel outside it stays exactly equal to that result; this is different from
+preserving the original upload, because restoration may already have changed
+visible appearance. Completion does not rerun restoration or apply it to the
+generated face. Original upload, restoration, mask and final estimate remain
+separate, with PNG and evidence ZIP downloads. Automatic proposals and corrected
+assisted masks are recorded separately.
+
+Both models run locally in separate CPU workers and unload between stages.
+The completion and proposal stages each have a 120-second process cap; the
+existing restoration limit remains unchanged. These limits are not performance
+guarantees for arbitrary Windows hardware. No inference API or training VM is
+required. See [completion model limits](COMPLETION_MODEL_CARD.md) and
+[verified assets/offline setup](COMPLETION_INSTALL.md).
 
 ## Privacy and troubleshooting
 
-The service listens on loopback. Uploaded images and retained request records stay locally under `scratch/implementation_requests`; downloaded ZIPs also contain image data. Remove your own records and downloads when no longer needed.
+The service listens on loopback. Restoration records stay locally under `scratch/implementation_requests`; covering proposals, reviewed masks and completion records stay under `scratch/completion_requests`. Downloaded ZIPs also contain image data. Remove your own records and downloads when no longer needed.
 
 - Missing dependency or model: rerun `install.bat` and inspect the failing step.
-- Low memory: close unused applications before retrying. Each worker has a 6 GiB RSS limit.
+- Low memory: close unused applications before retrying. Restoration retains its 6 GiB RSS limit; completion uses a separate 6 GiB owned-process commitment limit. These are different measurements, not minimum RAM specifications.
 - Worker failure: review the retained request directory before restarting `start.bat`. Requests have a 360-second limit and no automatic retry.
 - Busy port: stop your own earlier server or use `start.bat --port 0`. The launcher does not kill other applications.
 

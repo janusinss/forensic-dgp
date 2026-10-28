@@ -30,6 +30,10 @@ goto finish
 :install_environment
 %SETUP_PYTHON% -B -m implementation.environment install
 if errorlevel 1 goto failed
+echo.
+echo Installing separate R1 completion and reviewed covering-proposal assets...
+%SETUP_PYTHON% -B -m implementation.completion_install
+if errorlevel 1 goto failed
 set "SETUP_EXIT=0"
 goto finish
 

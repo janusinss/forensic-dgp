@@ -1,0 +1,25 @@
+/* Completion is an additive stage; restoration styles and controls stay intact. */
+.completion-stage { margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--color-border); min-width: 0; }
+.completion-stage h2, .completion-stage h3 { font-family: var(--font-mono); font-size: .95rem; line-height: 1.5; font-weight: 500; margin-bottom: .65rem; }
+.completion-stage p, .completion-stage .context-actions { margin-bottom: .85rem; }
+.completion-stage label { display: grid; gap: .35rem; font-size: .875rem; min-width: 0; }
+.completion-stage input:not([type="checkbox"]), .completion-stage select { width: 100%; min-width: 0; min-height: 44px; padding: .6rem; color: var(--color-foreground); background: var(--color-card); border: 1px solid var(--color-border); border-radius: var(--radius-sm); font: inherit; }
+.completion-stage input[type="file"] { white-space: normal; overflow-wrap: anywhere; }
+.completion-stage input[type="checkbox"] { width: 18px; height: 18px; flex-shrink: 0; }
+.completion-stage .context-confirm { display: flex; gap: .7rem; align-items: flex-start; margin: 1rem 0; min-height: 44px; }
+.completion-stage .tool-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: .6rem .85rem; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: center; }
+.completion-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; align-items: end; margin: .8rem 0; }
+.completion-rectangle { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .65rem; margin: .65rem 0; }
+#completion-editor { display: block; width: min(100%, 384px); height: auto; aspect-ratio: 1; box-shadow: 0 0 0 1px var(--color-border-highlight); touch-action: none; cursor: crosshair; margin: 1rem 0 .65rem; }
+#completion-editor[aria-disabled="true"] { cursor: wait; }
+.completion-stage details { margin: .85rem 0; min-width: 0; }
+.completion-stage summary { cursor: pointer; min-height: 44px; padding: .6rem 0; }
+.completion-stage details > label { margin-top: .85rem; }
+.completion-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1rem 0; }
+.completion-results figure { margin: 0; min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-sm); overflow: hidden; }
+.completion-results img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: contain; background: var(--color-background); }
+.completion-results figcaption { padding: .6rem .7rem; font-family: var(--font-mono); font-size: .75rem; overflow-wrap: anywhere; }
+.completion-results .tool-btn { margin: 0 .5rem .5rem; }
+#completion-result-section { margin-top: 1.5rem; }
+#completion-bundle { border: 1px solid var(--color-border-highlight); }
+@media (max-width: 767px) { .completion-controls, .completion-results { grid-template-columns: 1fr; } .completion-rectangle { grid-template-columns: repeat(2, minmax(0, 1fr)); } .completion-stage input, .completion-stage select { font-size: 16px; } }

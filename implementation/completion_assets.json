@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "component": "reviewed-r1-face-completion",
+  "model_directory": "models/completion",
+  "default_model": "completion_r1",
+  "assets": {
+    "completion_r1": {
+      "filename": "codeformer_completion_r1.pth",
+      "size": 370764381,
+      "sha256": "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0",
+      "logical_sha256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+      "tensors": 497,
+      "architecture": "CodeFormer inpainting dim512/codebook512/heads8/layers9/fusion32,64,128",
+      "source_revision": "b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b",
+      "training_protocol_sha256": "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d",
+      "original_checkpoint_sha256": "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797",
+      "license": "third_party/codeformer_completion/LICENSE",
+      "notice": "third_party/codeformer_completion/NOTICE.md",
+      "training_attribution": "third_party/codeformer_completion/TRAINING_ATTRIBUTION.json",
+      "url": null,
+      "model_qualified": false
+    },
+    "covering_detector": {
+      "filename": "covering_detector_segmenter_v1.pth",
+      "size": 2681549,
+      "sha256": "ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf",
+      "logical_sha256": "888250f7a54aa95dac5789943bb09a8c3763ca9e986940421ed9aa400986dd0f",
+      "tensors": 50,
+      "format": "covering-segmenter-portable-v1",
+      "width": 24,
+      "size_pixels": 256,
+      "source_checkpoint_sha256": "c2d4cd180226413af63bcfc2a3e17461cfa95f87aff9a8998b893fc3afc42e93",
+      "url": null,
+      "model_qualified": false,
+      "automatic_review_required": true
+    }
+  },
+  "terms": "Noncommercial thesis/research adaptation. Retain S-Lab source license, notice and per-photo training attribution. Pretraining identity overlap is unknown.",
+  "generation_claim": "One plausible estimate inside the reviewed removal area, not verified hidden identity."
+}

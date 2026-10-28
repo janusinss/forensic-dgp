@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="/static/restoration.css">
   <link rel="stylesheet" href="/static/surroundings.css">
   <link rel="stylesheet" href="/static/protection_editor.css">
+  <link rel="stylesheet" href="/static/completion.css">
 </head>
 <body>
   <div class="terminal-layout">
@@ -89,11 +90,64 @@
           </div>
           <p id="brush-result-summary" class="help-text hidden"></p>
           <div id="brush-result-downloads" class="result-downloads hidden"><a id="brush-result-bundle" class="tool-btn" download="V2-restoration-evidence.zip">Download original + masks + preparation + result evidence</a></div>
+          <section id="completion-stage" class="completion-stage hidden" aria-labelledby="completion-heading">
+            <h2 id="completion-heading">5. Optional covering removal</h2>
+            <p class="help-text">No covering? Keep the restoration result above. For a covered face, review an automatic removal proposal before R1 estimates the hidden region. This separate step does not rerun or change V2 restoration.</p>
+            <div class="context-actions"><button id="completion-start" class="tool-btn" type="button">Review covering removal</button></div>
+            <p id="completion-progress" class="help-text" role="status" aria-live="polite">The restoration result is ready for optional completion.</p>
+            <p id="completion-error" class="workflow-error hidden" role="alert"></p>
+            <section id="completion-editor-section" class="hidden" aria-labelledby="completion-editor-heading">
+              <h3 id="completion-editor-heading">Review the removal area</h3>
+              <p class="help-text">Orange marks pixels R1 may replace. Automatic proposals can miss coverings or include visible features. Paint missed masks, sunglasses, strong glare, hands, obstructing hair, scarves or objects. Erase clear glasses, non-obstructing hair and visible features. Padding cannot be selected.</p>
+              <div class="completion-controls">
+                <label for="completion-action">Action<select id="completion-action"><option value="paint">Paint removal</option><option value="erase">Erase removal</option></select></label>
+                <label for="completion-size">Brush diameter, 256-canvas pixels<input id="completion-size" type="number" min="1" max="80" step="1" value="17"></label>
+                <button id="completion-propose" class="tool-btn" type="button">Propose area again</button>
+              </div>
+              <canvas id="completion-editor" width="256" height="256" tabindex="0" role="img" aria-label="Removal-area editor. Arrow keys move the cursor. Space paints or erases. Coordinate and rectangle controls are available below."></canvas>
+              <p id="completion-cursor" class="help-text" aria-live="polite">No removal pixels selected.</p>
+              <div class="completion-controls">
+                <label for="completion-x">Cursor X<input id="completion-x" type="number" min="0" max="255" step="1" value="128"></label>
+                <label for="completion-y">Cursor Y<input id="completion-y" type="number" min="0" max="255" step="1" value="128"></label>
+                <button id="completion-stamp" class="tool-btn" type="button">Use brush at cursor</button>
+              </div>
+              <div class="context-actions"><button id="completion-undo" class="tool-btn" type="button" disabled>Undo removal edit</button><button id="completion-clear" class="tool-btn" type="button">Clear removal area</button><button id="completion-download-mask" class="tool-btn" type="button">Download reviewed mask</button></div>
+              <details>
+                <summary>Paint a rectangle or import a binary mask</summary>
+                <div class="completion-rectangle">
+                  <label for="completion-left">Left<input id="completion-left" type="number" min="0" max="255" step="1" value="64"></label>
+                  <label for="completion-top">Top<input id="completion-top" type="number" min="0" max="255" step="1" value="128"></label>
+                  <label for="completion-right">Right, included<input id="completion-right" type="number" min="0" max="255" step="1" value="191"></label>
+                  <label for="completion-bottom">Bottom, included<input id="completion-bottom" type="number" min="0" max="255" step="1" value="223"></label>
+                </div>
+                <button id="completion-rectangle" class="tool-btn" type="button">Apply rectangle</button>
+                <label for="completion-import">Import a 256 × 256 opaque binary PNG mask</label><input id="completion-import" type="file" accept="image/png">
+                <p class="help-text">White means removal; black means preserve. The mask must contain only black and white pixels. Importing replaces the current removal area.</p>
+              </details>
+              <label class="context-confirm" for="completion-mask-confirm"><input id="completion-mask-confirm" type="checkbox">I reviewed this removal area. Only the selected covering and a small reviewed margin may be replaced.</label>
+              <label class="context-confirm" for="completion-visible-confirm"><input id="completion-visible-confirm" type="checkbox">Enough visible facial structure remains for a plausible estimate. I understand the hidden face cannot be verified.</label>
+              <p class="help-text">Use a clearer or less-covered crop when meaningful facial structure is unavailable. An empty reviewed area keeps the restoration result exactly and skips R1.</p>
+              <button id="completion-generate" class="execute-btn" type="button" disabled>GENERATE ONE R1 ESTIMATE</button>
+            </section>
+            <section id="completion-result-section" class="hidden" aria-labelledby="completion-result-heading">
+              <h3 id="completion-result-heading">6. Review the plausible estimate</h3>
+              <p class="help-text">Completion preserves every restored input pixel outside the reviewed removal area. Restored pixels can differ from the original upload. Generated hidden features are estimates, not recovered identity.</p>
+              <div class="completion-results">
+                <figure><img id="completion-original" width="256" height="256" alt="Original upload prepared at 256 pixels"><figcaption>Original / resize</figcaption><a id="completion-original-download" class="tool-btn" download="original-256.png">Download PNG</a></figure>
+                <figure><img id="completion-input" width="256" height="256" alt="Unchanged restoration result supplied to completion"><figcaption>Restoration result / R1 input</figcaption><a id="completion-input-download" class="tool-btn" download="restoration-before-completion.png">Download PNG</a></figure>
+                <figure><img id="completion-result-mask" width="256" height="256" alt="Reviewed binary removal mask"><figcaption>Reviewed removal area</figcaption><a id="completion-mask-download" class="tool-btn" download="reviewed-removal-mask.png">Download PNG</a></figure>
+                <figure><img id="completion-result" width="256" height="256" alt="One plausible R1 completion estimate"><figcaption>R1 plausible estimate</figcaption><a id="completion-result-download" class="tool-btn" download="R1-completion.png">Download PNG</a></figure>
+              </div>
+              <p id="completion-summary" class="help-text"></p>
+              <a id="completion-bundle" class="tool-btn" download="restoration-completion-evidence.zip">Download original + restoration + mask + result evidence</a>
+            </section>
+          </section>
         </div>
       </section>
     </main>
     <footer class="terminal-footer border-top"><span class="mono-label">V2 · RESTORATION FIRST</span><span class="mono-label">LOCAL INFERENCE · REVIEWED INPUT · 256 × 256</span></footer>
   </div>
   <script src="/static/implementation.js"></script>
+  <script src="/static/completion.js"></script>
 </body>
 </html>

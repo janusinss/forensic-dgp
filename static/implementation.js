@@ -261,6 +261,7 @@
             const bypass = metadata.preparation_applied ? 'Reviewed manual preparation was used.' : metadata.preparation_bypass_reason === 'Auto_did_not_suggest_restoration' ? 'Auto kept the original resized input; preparation was bypassed.' : 'The original upload was used; preparation was bypassed.';
             const summary = `${seconds}${metadata.neural_forward_returns} ${modelName()} model call${metadata.neural_forward_returns === 1 ? '' : 's'}. ${bypass} Experimental result; visible appearance and identity need review.`;
             byId('brush-result-summary').textContent = summary; byId('brush-result-summary').classList.remove('hidden'); progress(summary);
+            window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile: sourceFile } }));
         } catch (problem) { if (current(token, version)) { clearResults(); error(problem.message); progress('The request stopped. Review the message before another request. No automatic retry was made.'); } }
         finally { finish(token); }
     });

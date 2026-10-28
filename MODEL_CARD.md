@@ -21,7 +21,7 @@ The installer verifies these four assets in `models/implementation` (`codeformer
 
 Use one already cropped frontal or mildly turned face with readable visible structure. Auto provides an input-quality suggestion, not a usefulness or identity score. Conditioned SFT V2 remains experimental and can change facial appearance; application operation does not establish restoration accuracy or recovered identity.
 
-Preparation can be bypassed or reviewed manually with Protect/Apply masks. Exact protected and outside-Apply pixels concern preprocessing only. The generated result has no corresponding facial-pixel guarantee. Neutral padding remains preserved. Completion, covering removal, automatic blur matching, and recovery of hidden identity are outside this app.
+Preparation can be bypassed or reviewed manually with Protect/Apply masks. Exact protected and outside-Apply pixels concern preprocessing only. The generated result has no corresponding facial-pixel guarantee. Neutral padding remains preserved. Optional completion is a separate R1 stage described in [COMPLETION_MODEL_CARD.md](COMPLETION_MODEL_CARD.md). Automatic blur matching and recovery of hidden identity are not supported.
 
 Review the original, selected input, and result together. Prefer clearer or less-covered input when information is insufficient. Optional evidence ZIPs contain the original and available masks, preparation records, RAW output, and result. Request records remain locally in `scratch/implementation_requests`; downloaded evidence also contains image data.
 

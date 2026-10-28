@@ -103,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Press Ctrl+C in this window to stop the server.", flush=True)
         if not args.no_browser and os.environ.get("IMPLEMENTATION_NO_BROWSER", "").lower() not in {"1", "true", "yes"}:
             threading.Thread(target=_open_when_ready, args=(url,), daemon=True, name="browser-after-health").start()
-        config = uvicorn.Config("implementation.app:app", host=HOST, port=actual_port, reload=False, workers=1)
+        config = uvicorn.Config("app:app", host=HOST, port=actual_port, reload=False, workers=1)
         server = uvicorn.Server(config)
         server.run(sockets=[listener])
         return 0 if server.started else 1
