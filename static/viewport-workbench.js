@@ -20,7 +20,7 @@
   });
 
   function fitEditor(visual) {
-    const canvas = visual.querySelector('canvas');
+    const canvas = visual.querySelector('canvas:not(.ambient-shader)');
     const caption = visual.querySelector('.visual-caption');
     if (!canvas || !canvas.width || !canvas.height || !visual.getClientRects().length) return;
     const styles = getComputedStyle(visual);
@@ -34,7 +34,7 @@
     canvas.style.height = (canvas.height * scale) + 'px';
   }
   // Fit all input previews like the editor without changing image pixels.
-  const previews = ['upload-preview', 'options-preview', 'restoration-idle'].map(byId);
+  const previews = ['upload-preview', 'options-preview', 'restoration-idle', 'completion-intro-preview'].map(byId);
   function fitInputPreview(image) {
     const visual = image.closest('.work-visual');
     if (image.classList.contains('hidden') || !image.naturalWidth || !image.naturalHeight || !visual.getClientRects().length) return;
@@ -85,6 +85,11 @@
       if (source) byId('restoration-idle').setAttribute('src', source);
       else byId('restoration-idle').removeAttribute('src');
       byId('restoration-idle').alt = manual ? 'Reviewed prepared input before restoration' : 'Original input before restoration';
+    }
+    if (name === 'completion-intro') {
+      const source = byId('brush-result-output').getAttribute('src');
+      if (source) byId('completion-intro-preview').setAttribute('src', source);
+      else byId('completion-intro-preview').removeAttribute('src');
     }
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Inspect the original crop before continuing.';

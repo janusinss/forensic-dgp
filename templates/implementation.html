@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=6">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=7">
 </head>
 <body>
 <main class="viewport-workspace" id="workspace" aria-label="Face restoration workspace">
@@ -112,7 +112,7 @@
   <div id="completion-stage" class="hidden">
     <section class="work-screen" data-screen="completion-intro" aria-labelledby="completion-heading">
       <div class="work-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-heading">Review covering removal</h1><p>Keep the restoration result if no covering needs removal.</p></div><p class="work-note">The proposed removal area must be reviewed. R1 estimates hidden features and does not rerun V2 restoration.</p><div class="feedback-slot"></div><div class="work-actions"><button class="tool-btn" type="button" data-nav="result" data-wizard-nav>Back to result</button><button id="completion-start" class="execute-btn" type="button">Start removal review</button></div></div>
-      <aside class="work-visual decorative-visual"><div class="empty-state"><span class="work-kicker">REVIEWED AREA ONLY</span><h2>Keep visible features.</h2><p>The automatic proposal can miss coverings or include visible details.</p></div></aside>
+      <aside class="work-visual completion-intro-visual" aria-label="Restoration result preview"><img id="completion-intro-preview" alt="Restoration result selected for optional completion"></aside>
     </section>
     <div id="completion-editor-section" class="hidden">
       <section class="work-screen" data-screen="completion-paint" aria-labelledby="completion-editor-heading">
@@ -152,7 +152,7 @@
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><h2 id="image-dialog-title">Image detail</h2><img id="image-dialog-view" alt=""><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <script src="/static/implementation.js"></script>
 <script src="/static/completion.js"></script>
-<script src="/static/viewport-workbench.js?v=3"></script>
-<script src="/static/shader-background.js?v=11"></script>
+<script src="/static/viewport-workbench.js?v=4"></script>
+<script src="/static/shader-background.js?v=12"></script>
 </body>
 </html>
