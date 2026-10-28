@@ -330,12 +330,12 @@ void main() {
     uni[name]=gl.getUniformLocation(program,name==='colors'?'u_colors[0]':'u_'+name);
   }
   const hex = value => [parseInt(value.slice(1,3),16)/255,parseInt(value.slice(3,5),16)/255,parseInt(value.slice(5,7),16)/255];
-  const palette=['#171717','#56866c','#4a9d76','#267553','#14513d'];
+  const palette=['#171717','#365f4c','#3c7658','#1f5f43','#123c2d'];
   const colors=palette.map(hex); while(colors.length<8)colors.push(colors[4]);
   gl.uniform3fv(uni.colors,new Float32Array(colors.flat()));
   gl.uniform4f(uni.shape,1.260,0.350,0.280,0.000);
-  gl.uniform4f(uni.surface,1.824,1.374,-0.020,0.680);
-  gl.uniform4f(uni.finish,0.0000,0.540,0.0000,0.220);
+  gl.uniform4f(uni.surface,1.824,1.374,-0.020,0.900);
+  gl.uniform4f(uni.finish,0.0000,0.540,0.0000,0.060);
   gl.uniform4f(uni.transform,1.0,0.0000,0.060,1.0);
   let host=null, raf=0, last=0, elapsed=0, active=false, disposed=false, lost=false;
   let pointerX=0,pointerY=0,pointerOn=0,mouseX=0,mouseY=0,cursorPresence=0;
@@ -357,7 +357,7 @@ void main() {
     last=now;gl.viewport(0,0,canvas.width,canvas.height);
     gl.uniform4f(uni.scene,canvas.width,canvas.height,motion.matches?0:elapsed*1.088,5);
     gl.uniform4f(uni.space,-0.050,0.000,mouseX,mouseY);
-    gl.uniform4f(uni.cursor,motion.matches?0:cursorPresence,4.0,0.500,0.800);
+    gl.uniform4f(uni.cursor,motion.matches?0:cursorPresence,4.0,0.120,0.800);
     gl.drawArrays(gl.TRIANGLES,0,6);
     raf=motion.matches?0:requestAnimationFrame(paint);
   }
