@@ -4,7 +4,7 @@
     const byId = id => document.getElementById(id), api = '/face/completion';
     const canvas = byId('completion-editor'), context = canvas.getContext('2d');
     let source, session, imagePixels, bounds, mask = new Uint8Array(256 * 256), undo = [];
-    let proposalId, reviewId, reviewedMask, busy = false, revision = 0, operation = 0, drawing = false, previous;
+    let reviewId, reviewedMask, busy = false, revision = 0, operation = 0, drawing = false, previous;
     const error = message => { byId('completion-error').textContent = message; byId('completion-error').classList.toggle('hidden', !message); };
     const progress = message => { byId('completion-progress').textContent = message; };
     const pngURL = value => {
@@ -30,7 +30,6 @@
             [/Cannot read this PNG/i, 'The PNG could not be read. Choose another file.'],
             [/Removal must not include neutral padding/i, 'Keep the selected area inside the photo.'],
             [/Too little visible face remains/i, 'Too much of the face is hidden. Choose a clearer photo with more of the face visible.'],
-            [/proposal is stale/i, 'The suggested area has changed. Check and confirm the area again.'],
             [/Confirm the removal area and sufficient visible facial structure/i, 'Confirm the selected area and that enough of the face is visible.'],
             [/not produced in the current app session/i, 'This result is from an earlier session. Restore the photo again or choose Off.'],
             [/Completion review is full/i, 'Too many images are open for review. Restart the app to continue.'],
@@ -40,7 +39,7 @@
         ];
         for (const [pattern, message] of messages) if (pattern.test(detail)) return message;
         if (/\b(?:R1|V2|model|detector|worker|provenance|fingerprint|sha256|metadata|artifact|mask|binary|padding|bounds|receipt|session|review_id|proposal_id|neural)\b/i.test(detail)) {
-            return route === '/propose' ? 'Could not suggest an area automatically. You can mark it yourself.' : 'The request could not be completed. Please review your image and try again.';
+            return 'The request could not be completed. Please review your image and try again.';
         }
         return detail;
     };
@@ -74,7 +73,7 @@
     };
     const reset = () => {
         operation++; revision++; source = undefined; session = undefined; imagePixels = undefined; bounds = undefined;
-        proposalId = undefined; reviewId = undefined; reviewedMask = undefined; busy = false; drawing = false; undo = []; mask.fill(0);
+        reviewId = undefined; reviewedMask = undefined; busy = false; drawing = false; undo = []; mask.fill(0);
         byId('completion-mask-confirm').checked = false; byId('completion-visible-confirm').checked = false;
         byId('completion-editor-section').classList.add('hidden'); byId('completion-stage').classList.add('hidden');
         byId('completion-import').value = ''; clearResult(); error(''); context.clearRect(0, 0, 256, 256); update();
@@ -216,20 +215,6 @@
             setTimeout(() => URL.revokeObjectURL(objectURL), 1000);
         } catch (problem) { error(problem.message); }
     });
-    const propose = async (token, version) => {
-        const data = new FormData(); data.append('session_id', session);
-        progress('Finding an area to remove. Please check and correct it before continuing.');
-        const result = await post('/propose', data);
-        if (!current(token, version)) return;
-        let values;
-        try { values = await readMask(pngURL(result.proposal_png)); }
-        catch { throw new Error('The suggested area could not be loaded. Please paint the area yourself.'); }
-        if (!current(token, version)) return;
-        if (typeof result.proposal_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.proposal_id)) throw new Error('The suggested area could not be loaded. Please select it yourself.');
-        remember(); mask = values; proposalId = result.proposal_id; render();
-        const empty = !mask.some(Boolean);
-        progress(empty ? 'No area was selected automatically. Check the photo and mark any covering yourself.' : 'A suggested area is ready. Add any missed covering and remove marks from visible features.');
-    };
     byId('completion-start').addEventListener('click', async () => {
         if (busy || !source) return;
         invalidateReview(); error(''); const token = begin(), version = revision, fixed = source;
@@ -245,19 +230,11 @@
             const image = new Image(); image.src = pngURL(result.input_png); await image.decode();
             if (!current(token, version)) return;
             if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The restored image has an unexpected size. Please restore it again.');
-            session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = []; proposalId = undefined;
+            session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = [];
             context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); render();
             byId('completion-editor-section').classList.remove('hidden'); update();
-            try { await propose(token, version); }
-            catch (problem) { if (current(token, version)) { error(problem.message); progress('We could not suggest an area automatically. You can still mark or import the area yourself.'); } }
+            progress('Paint the covering you want to remove, then review your selection.');
         } catch (problem) { if (current(token, version)) { error(problem.message); progress('Could not prepare covering removal. You can keep your result or check the error and try again.'); } }
-        finally { finish(token); }
-    });
-    byId('completion-propose').addEventListener('click', async () => {
-        if (busy || !session) return;
-        invalidateReview(); error(''); const token = begin(), version = revision;
-        try { await propose(token, version); }
-        catch (problem) { if (current(token, version)) { error(problem.message); progress('We could not suggest an area automatically. You can still adjust the selected area yourself.'); } }
         finally { finish(token); }
     });
     byId('completion-mask-confirm').addEventListener('change', async () => {
@@ -268,7 +245,6 @@
         try {
             const submittedMask = await maskPNG(mask.slice());
             const data = new FormData(); data.append('session_id', session); data.append('mask', submittedMask, 'reviewed-mask.png');
-            if (proposalId) data.append('proposal_id', proposalId);
             if (!current(token, version)) return;
             const result = await post('/review', data);
             if (!current(token, version)) return;
@@ -295,7 +271,6 @@
         try {
             const data = new FormData(); data.append('session_id', session); data.append('mask', fixedReviewedMask, 'reviewed-mask.png');
             data.append('review_id', fixedReview); data.append('mask_confirmed', 'true'); data.append('visible_confirmed', 'true');
-            if (proposalId) data.append('proposal_id', proposalId);
             if (!current(token, version)) return;
             const result = await post('/generate', data);
             if (!current(token, version)) return;

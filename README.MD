@@ -97,8 +97,8 @@ Protection applies to preparation only. Restoration can still change the face. I
 
 Use this after restoration only if something such as a mask, sunglasses, hand, or hair is hiding part of the face. If there is no covering to remove, keep the restoration result.
 
-1. Click **Review covering removal**, then **Start removal review**. Orange marks the area the app proposes to replace.
-2. Check the area carefully. Paint over any missed covering and erase any orange covering visible facial features, clear glasses, or hair that is not blocking the face. The automatic suggestion can miss a covering entirely.
+1. Click **Review covering removal**, then **Start removal review**. The image starts with nothing selected.
+2. Paint over the covering you want to remove. The painted area appears orange. Erase any orange marks over visible facial features, clear glasses, or hair that is not blocking the face.
 3. Click **Review**. Read and check both confirmation boxes if they are true, then click **Generate result**. If too much of the face is hidden, use a clearer or less-covered picture instead.
 4. Compare the original, restoration, selected area, and estimate. Download the PNG images or the evidence ZIP if needed.
 

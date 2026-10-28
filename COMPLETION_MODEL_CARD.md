@@ -4,7 +4,7 @@ R1 is our trained adaptation of S-Lab CodeFormer **inpainting**, separate from
 Conditioned SFT V2 restoration. The restoration model, preparation, weights,
 inference and output quantization are unchanged by this integration.
 
-The guided application uses restoration, an editable covering proposal, and R1
+The guided application uses restoration, a manually selected covering area, and R1
 completion in that order. R1 receives the exact reviewed restoration-result
 RGB256 canvas and a binary removal mask. It uses the retained 512-code inpainting
 architecture, 512 internal inference, fidelity 1 and AdaIN off, then the admitted
@@ -52,7 +52,8 @@ report, including installation observations and failed transfer evidence, remain
 [available in Git history](https://github.com/janusinss/forensic-dgp/blob/d1fc262942754f44c188b4f318ebde970d3010a1/INTEGRATION_STATUS.md).
 These functional and preservation checks do not establish model quality.
 
-The separate compact detector is extracted from the retained trained epoch-2
+The guided editor no longer requests automatic proposals. The separate compact
+detector remains available through the underlying API and is extracted from the retained trained epoch-2
 segmenter, without its old completion generator. It thresholds at 0.5 and adds
 one reviewable 3-pixel proposal margin, clipped to captured image support.
 It can miss coverings and mark visible regions incorrectly. Every proposal
