@@ -7,17 +7,18 @@ This app helps you inspect and restore a picture of one face on your Windows com
 ## What you need
 
 - A **64-bit Windows** computer. A graphics card is not required.
-- **64-bit Python 3.12 or 3.13** and **Git for Windows**. Installation links are below.
+- An app folder downloaded from GitHub. You can use **Git for Windows** or download the ZIP in your browser. The installer uses an existing 64-bit Python 3.12 or 3.13, or downloads a private Python copy if needed.
 - An internet connection for the first setup. After setup, the app processes images on your computer.
 - At least **2.5 GiB of free memory (RAM)** when starting a restoration. Close other programs if needed. This is a required check, not a guarantee that every computer with that amount will run the app.
 - Free storage space for the app, its programs, and model files. The model files alone use about **720 MiB**.
 
 ## Set up the app for the first time
 
-### 1. Install Python and Git
+### 1. Install Git
 
-1. Download and install [Python for Windows](https://www.python.org/downloads/windows/). Choose **Python 3.12 or 3.13, 64-bit**. During installation, enable the Python launcher or choose **Add Python to PATH**.
-2. Download and install [Git for Windows](https://git-scm.com/download/win). Its default installation options are suitable.
+For the commands below, download and install [Git for Windows](https://git-scm.com/download/win). Its default installation options are suitable. Python does not need to be installed separately: the app installer will set it up if necessary.
+
+**Without Git:** Open the [IMPLEMENTATION branch on GitHub](https://github.com/janusinss/forensic-dgp/tree/IMPLEMENTATION), click **Code → Download ZIP**, and extract the ZIP. Open the extracted folder, double-click `install.bat`, and wait for setup to finish. Then double-click `start.bat`.
 
 ### 2. Download the app
 
@@ -39,7 +40,7 @@ In the same PowerShell window, run:
 .\install.bat
 ```
 
-Keep the window open and wait for the installer to finish. It downloads the programs and model files needed for both restoration and the optional covering-removal feature. Follow any prompt to press a key when it finishes. If you see an error, read the message and check [Common problems](#common-problems).
+Keep the window open and wait for the installer to finish. It downloads the programs and model files needed for both restoration and the optional covering-removal feature. If Python is missing, it also downloads a private copy under `%LOCALAPPDATA%\DGP`; it does not replace your existing Python or change your PATH. Follow any prompt to press a key when it finishes. If you see an error, read the message and check [Common problems](#common-problems).
 
 ## Open the app
 
@@ -102,7 +103,7 @@ The app changes only the selected area during this covering step. Everything out
 
 ## Common problems
 
-- **Python was not found:** Install 64-bit Python 3.12 or 3.13, enable the Python launcher or PATH, and run `.\install.bat` again.
+- **Python setup failed:** Check the error, internet connection, and available storage. Run `.\install.bat` again. The installer preserves existing files rather than replacing a damaged private Python folder.
 - **Installation failed:** Check the error in PowerShell, your internet connection, and available storage. Run `.\install.bat` again. Existing model files that do not match are kept for inspection. For local completion model files, see [completion installation details](COMPLETION_INSTALL.md).
 - **The app says there is not enough memory:** Close other programs and try again.
 - **The browser did not open:** Open the **Application URL** printed in PowerShell. If port 8000 is already in use, run `.\start.bat --port 0` and use the printed address.
@@ -111,7 +112,7 @@ The app changes only the selected area during this covering step. Everything out
 
 The app runs on your computer. It saves restoration records in `scratch/implementation_requests` and covering-removal records in `scratch/completion_requests` inside the app folder. Downloaded images and evidence ZIPs can contain private pictures. Delete your own records and downloads when you no longer need them.
 
-To update the app, stop it first. In PowerShell, open the app folder and run:
+To update a Git checkout, stop the app first. In PowerShell, open the app folder and run:
 
 ```powershell
 git pull --ff-only origin IMPLEMENTATION
@@ -119,7 +120,7 @@ git pull --ff-only origin IMPLEMENTATION
 .\start.bat
 ```
 
-Save any changes you made to the app's files before updating. If the update reports a conflict, resolve it before running the installer.
+For a ZIP download, get and extract a fresh ZIP instead, then run `install.bat` in the new folder. Save any changes you made to the app's files before updating. If the update reports a conflict, resolve it before running the installer.
 
 ## More information and license
 

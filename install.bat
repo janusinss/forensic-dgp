@@ -22,10 +22,22 @@ python -c "import struct,sys; sys.exit(0 if sys.version_info[:2] in ((3,12),(3,1
 if not errorlevel 1 set "SETUP_PYTHON=python"
 if defined SETUP_PYTHON goto install_environment
 
-echo [ERROR] Python 3.12 or 3.13 64-bit was not found.
-echo Install it from https://www.python.org/downloads/windows/
-echo Enable the Python launcher or Add Python to PATH, then run install.bat again.
-goto finish
+if not defined LOCALAPPDATA (
+  echo [ERROR] LOCALAPPDATA is not set. Cannot install a private Python runtime.
+  goto failed
+)
+if exist "%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe" goto check_private_python
+echo No supported Python found. Downloading a private Python runtime for this user...
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0implementation\bootstrap_python.ps1"
+if errorlevel 1 goto failed
+:check_private_python
+"%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe" -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,13) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
+if errorlevel 1 (
+  echo [ERROR] Private Python is missing or invalid. Existing files were preserved.
+  goto failed
+)
+set SETUP_PYTHON="%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe"
+goto install_environment
 
 :install_environment
 %SETUP_PYTHON% -B -m implementation.environment install
@@ -34,6 +46,8 @@ echo.
 echo Installing separate R1 completion and reviewed covering-proposal assets...
 %SETUP_PYTHON% -B -m implementation.completion_install
 if errorlevel 1 goto failed
+echo.
+echo Installation complete. Run start.bat to open the application.
 set "SETUP_EXIT=0"
 goto finish
 

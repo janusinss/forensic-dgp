@@ -124,7 +124,7 @@ def install() -> int:
     if result:
         return result
     write_record(record)
-    print('[4/4] Installation complete. Run start.bat to open the application.', flush=True)
+    print('[4/4] Restoration setup complete. Continuing to completion setup...', flush=True)
     return 0
 
 
