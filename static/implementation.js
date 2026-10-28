@@ -255,6 +255,8 @@
             const original = validPNG(result.original_input), prepared = validPNG(result.prepared_input), output = validPNG(result.result);
             const bundle = includeBundle ? validZIP(result.bundle) : undefined;
             byId('brush-result-input').src = original; byId('brush-result-prepared').src = prepared; byId('brush-result-output').src = output;
+            await Promise.all(['brush-result-input', 'brush-result-prepared', 'brush-result-output'].map(id => byId(id).decode()));
+            if (!current(token, version)) return;
             byId('brush-download-input').href = original; byId('brush-download-prepared').href = prepared; byId('brush-download-output').href = output;
             byId('brush-download-output').download = modelName() + '-restoration.png';
             byId('brush-result-bundle').download = modelName() + '-restoration-evidence.zip';
