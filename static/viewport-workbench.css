@@ -50,6 +50,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 #upload-preview, #options-preview, #restoration-idle, #completion-intro-preview { display:block; width:auto; height:auto; max-width:100%; max-height:100%; object-fit:contain; border:1px solid #6b8274; background:#0b1412; }
 .editor-visual canvas:not(.ambient-shader) { display:block; width:auto; height:auto; max-width:100%; object-fit:contain; border:1px solid #668477; box-shadow:none !important; margin:0 !important; touch-action:none; }
 .visual-caption { color:#bfd0c2; font-size:14px; line-height:1.4; margin:0; text-align:center; max-width:70ch; }
+#completion-cursor { height:1.4em; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .visual-gallery { display:grid; gap:clamp(8px, 1.4vw, 18px); align-items:start; width:100%; }
 .visual-gallery.three-up { grid-template-columns:repeat(3,minmax(0,1fr)); }
 .visual-gallery.four-up { grid-template-columns:repeat(4,minmax(0,1fr)); }

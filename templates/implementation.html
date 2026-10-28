@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=13">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=14">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
 </head>
 <body>
@@ -122,7 +122,7 @@
           <div class="compact-actions"><button id="completion-undo" class="tool-btn" type="button" disabled>Undo</button><button id="completion-clear" class="tool-btn" type="button">Clear area</button></div>
           <div class="feedback-slot"></div><div class="work-actions"><button class="tool-btn" type="button" data-nav="result" data-wizard-nav>Back</button><button class="tool-btn" type="button" data-nav="completion-tools" data-wizard-nav>More tools</button><button class="execute-btn" type="button" data-nav="completion-confirm" data-wizard-nav>Review</button></div>
         </div>
-        <aside class="work-visual editor-visual"><canvas id="completion-editor" width="256" height="256" tabindex="0" role="img" aria-label="Removal-area editor. Arrow keys move the cursor. Space paints or erases. Coordinate and rectangle controls are available in More tools."></canvas><p id="completion-cursor" class="visual-caption" aria-live="polite">No area selected for removal.</p></aside>
+        <aside class="work-visual editor-visual"><canvas id="completion-editor" width="256" height="256" tabindex="0" role="img" aria-label="Removal-area editor. Arrow keys move the cursor. Space paints or erases. Coordinate and rectangle controls are available in More tools."></canvas><p id="completion-cursor" class="visual-caption" aria-live="polite">0 pixels selected</p></aside>
       </section>
       <section class="work-screen" data-screen="completion-tools" aria-labelledby="completion-tools-heading">
         <div class="work-controls wide-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-tools-heading">Precise controls</h1><p>Choose the edges of a rectangle. Imported masks must use only black and white.</p></div>
@@ -152,7 +152,7 @@
 <dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips it, and Auto may skip it if it keeps the original. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><h2 id="image-dialog-title">Image detail</h2><img id="image-dialog-view" alt=""><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <script src="/static/implementation.js?v=6"></script>
-<script src="/static/completion.js?v=6"></script>
+<script src="/static/completion.js?v=7"></script>
 <script src="/static/viewport-workbench.js?v=7"></script>
 <script src="/static/shader-background.js?v=13"></script>
 </body>

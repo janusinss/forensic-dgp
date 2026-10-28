@@ -93,7 +93,7 @@
             for (let channel = 0; channel < 3; channel++) pixels[i * 4 + channel] = Math.round(pixels[i * 4 + channel] * .55 + [238, 151, 55][channel] * .45);
         }
         context.putImageData(new ImageData(pixels, 256, 256), 0, 0);
-        byId('completion-cursor').textContent = `${count.toLocaleString()} pixels selected. ${byId('completion-action').value === 'erase' ? 'Erase' : 'Paint'}; position ${byId('completion-x').value}, ${byId('completion-y').value}. ${count ? 'Check all orange areas before continuing.' : 'Nothing is selected. Check for any coverings that need to be marked.'}`;
+        byId('completion-cursor').textContent = `${count.toLocaleString()} pixels selected`;
     };
     const coordinate = id => {
         const value = Number(byId(id).value);
