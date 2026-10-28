@@ -87,7 +87,7 @@
     };
     const disk = (x, y) => {
         const size = Number(byId('brush-size').value);
-        if (!Number.isInteger(size) || size < 1 || size > 160) throw new Error('Choose a brush size from 1 to 160 pixels.');
+        if (!Number.isInteger(size) || size < 1 || size > 25) throw new Error('Choose a brush size from 1 to 25 pixels.');
         const radius = (size - 1) / 2, plane = planes[byId('brush-plane').value], value = byId('brush-action').value === 'erase' ? 0 : 255;
         for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(height - 1, Math.floor(y + radius)); yy++) {
             for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(width - 1, Math.floor(x + radius)); xx++) {
