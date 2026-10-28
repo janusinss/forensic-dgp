@@ -33,22 +33,25 @@
     canvas.style.width = (canvas.width * scale) + 'px';
     canvas.style.height = (canvas.height * scale) + 'px';
   }
-  // Match the editor's display size while preserving the oriented image pixels.
-  const uploadPreview = byId('upload-preview');
-  const inspectVisual = uploadPreview.closest('.inspect-visual');
-  function fitUploadPreview() {
-    if (uploadPreview.classList.contains('hidden') || !uploadPreview.naturalWidth || !uploadPreview.naturalHeight || !inspectVisual.getClientRects().length) return;
-    const styles = getComputedStyle(inspectVisual);
-    const availableWidth = Math.max(0, inspectVisual.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight));
-    const availableHeight = Math.max(0, inspectVisual.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom));
-    const scale = Math.min(availableWidth / uploadPreview.naturalWidth, availableHeight / uploadPreview.naturalHeight, 600 / uploadPreview.naturalWidth, 600 / uploadPreview.naturalHeight);
+  // Fit all input previews like the editor without changing image pixels.
+  const previews = ['upload-preview', 'options-preview', 'restoration-idle'].map(byId);
+  function fitInputPreview(image) {
+    const visual = image.closest('.work-visual');
+    if (image.classList.contains('hidden') || !image.naturalWidth || !image.naturalHeight || !visual.getClientRects().length) return;
+    const styles = getComputedStyle(visual);
+    const caption = visual.querySelector('.visual-caption');
+    const availableWidth = Math.max(0, visual.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight));
+    const availableHeight = Math.max(0, visual.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom) - (caption?.offsetHeight || 0) - (caption ? parseFloat(styles.rowGap || 0) : 0));
+    const scale = Math.min(availableWidth / image.naturalWidth, availableHeight / image.naturalHeight, 600 / image.naturalWidth, 600 / image.naturalHeight);
     if (!(scale > 0)) return;
-    uploadPreview.style.width = (uploadPreview.naturalWidth * scale) + 'px';
-    uploadPreview.style.height = (uploadPreview.naturalHeight * scale) + 'px';
+    image.style.width = (image.naturalWidth * scale) + 'px';
+    image.style.height = (image.naturalHeight * scale) + 'px';
   }
-  uploadPreview.addEventListener('load', fitUploadPreview);
-  new ResizeObserver(fitUploadPreview).observe(inspectVisual);
-  new MutationObserver(fitUploadPreview).observe(uploadPreview, { attributes: true, attributeFilter: ['class'] });
+  previews.forEach(image => {
+    image.addEventListener('load', () => fitInputPreview(image));
+    new ResizeObserver(() => fitInputPreview(image)).observe(image.closest('.work-visual'));
+    new MutationObserver(() => fitInputPreview(image)).observe(image, { attributes: true, attributeFilter: ['class'] });
+  });
   const editorObserver = new ResizeObserver(entries => entries.forEach(entry => fitEditor(entry.target)));
   document.querySelectorAll('.editor-visual').forEach(visual => editorObserver.observe(visual));
   function syncProgress() {
@@ -75,6 +78,14 @@
       if (original) byId('options-preview').setAttribute('src', original);
       else byId('options-preview').removeAttribute('src');
     }
+    if (name === 'run') {
+      const manual = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off';
+      const image = byId(manual ? 'brush-derived' : 'upload-preview');
+      const source = image.getAttribute('src');
+      if (source) byId('restoration-idle').setAttribute('src', source);
+      else byId('restoration-idle').removeAttribute('src');
+      byId('restoration-idle').alt = manual ? 'Reviewed prepared input before restoration' : 'Original input before restoration';
+    }
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Inspect the original crop before continuing.';
     current = name;
@@ -85,7 +96,7 @@
     if (slot && byId('completion-stage').contains(screen)) slot.append(completionFeedback);
     showNotice('');
     screen.querySelectorAll('.editor-visual').forEach(fitEditor);
-    requestAnimationFrame(() => { screen.querySelectorAll('.editor-visual').forEach(fitEditor); if (name === 'inspect') fitUploadPreview(); });
+    requestAnimationFrame(() => { screen.querySelectorAll('.editor-visual').forEach(fitEditor); previews.filter(image => screen.contains(image)).forEach(fitInputPreview); });
     if (focus) {
       const heading = screen.querySelector('h1');
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }

@@ -13,14 +13,14 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=5">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=6">
 </head>
 <body>
 <main class="viewport-workspace" id="workspace" aria-label="Face restoration workspace">
   <form id="brush-form" class="work-form">
     <section class="work-screen is-active" data-screen="inspect" aria-labelledby="brush-upload-heading">
       <div class="work-controls">
-        <div class="status-block"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div>
+        <span class="work-kicker">INPUT / 01</span><div class="status-block quiet-status"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div>
         <div class="work-heading"><h1 id="brush-upload-heading">Inspect the original</h1><p>Use one frontal or mildly turned face crop.</p></div>
         <div class="field"><label for="brush-file">PNG or JPEG, up to 10 MiB</label><input id="brush-file" type="file" accept="image/png,image/jpeg"></div>
         <fieldset class="choice-group"><legend>Visible facial information</legend><select id="brush-review" hidden><option value="">Inspect the original first</option><option value="usable">One face with readable visible facial structure</option><option value="needs_clearer">Too degraded or covered to read the face</option><option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option></select><div class="choice-list review"><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="usable" data-select="brush-review"><span class="choice-content">One face with readable visible facial structure</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="needs_clearer" data-select="brush-review"><span class="choice-content">Too degraded or covered to read the face</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="out_of_scope" data-select="brush-review"><span class="choice-content">Strong profile, multiple faces or uncropped scene</span></label></div></fieldset>
@@ -87,7 +87,7 @@
         <div class="work-actions"><button class="tool-btn" type="button" data-nav="run-back">Back</button><button id="brush-run" class="execute-btn" type="submit" disabled>Restore selected input</button><button id="brush-refresh" class="text-btn" type="button">Check service</button></div>
       </div>
       <aside class="work-visual decorative-visual restoration-visual">
-        <div id="restoration-idle" aria-hidden="true"></div>
+        <img id="restoration-idle" alt="Selected input before restoration">
         <div id="restoration-loading" class="restoration-loading hidden" aria-hidden="true">
           <div class="loading-orb"><span class="orb-label"><span>G</span><span>e</span><span>n</span><span>e</span><span>r</span><span>a</span><span>t</span><span>i</span><span>n</span><span>g</span></span><div class="orb-sheen"></div></div>
         </div>
@@ -152,7 +152,7 @@
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><h2 id="image-dialog-title">Image detail</h2><img id="image-dialog-view" alt=""><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <script src="/static/implementation.js"></script>
 <script src="/static/completion.js"></script>
-<script src="/static/viewport-workbench.js?v=2"></script>
+<script src="/static/viewport-workbench.js?v=3"></script>
 <script src="/static/shader-background.js?v=11"></script>
 </body>
 </html>
