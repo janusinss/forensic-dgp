@@ -242,24 +242,39 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   background:linear-gradient(180deg,#1c4034 0%,#132a25 58%,#101d1d 100%);
 }
 .restoration-loading { display:grid; place-items:center; width:100%; height:100%; }
-.loading-orb {
-  position:relative; width:clamp(130px,18vw,200px); aspect-ratio:1; border-radius:50%;
-  background:radial-gradient(ellipse at 50% 38%,#102824 14%,#163d32 48%,#237a5b 78%,#57bd8d 97%);
-  box-shadow:inset 0 -10px 18px rgba(75,190,139,.75),inset 0 2px 7px rgba(162,224,185,.4),0 0 12px rgba(75,190,139,.3);
-  animation:orb-breathe 3s ease-in-out infinite;
+/* Faithful adaptation of the supplied AI loader, contained in the visual pane. */
+@font-face { font-family:"Loader Inter"; src:url("/static/fonts/InterVariable.woff2") format("woff2"); font-style:normal; font-weight:100 900; font-display:swap; }
+.loading-orb { position:relative; display:flex; align-items:center; justify-content:center; width:180px; height:180px; flex:none; font-family:"Loader Inter",var(--font-sans); user-select:none; }
+.loading-orb .orb-label { display:flex; color:#fff; font-size:16px; font-weight:400; line-height:1.5; }
+.loading-orb .orb-label span { display:inline-block; opacity:.4; animation:loaderLetter 3s infinite; }
+.loading-orb .orb-label span:nth-child(2) { animation-delay:.1s; }
+.loading-orb .orb-label span:nth-child(3) { animation-delay:.2s; }
+.loading-orb .orb-label span:nth-child(4) { animation-delay:.3s; }
+.loading-orb .orb-label span:nth-child(5) { animation-delay:.4s; }
+.loading-orb .orb-label span:nth-child(6) { animation-delay:.5s; }
+.loading-orb .orb-label span:nth-child(7) { animation-delay:.6s; }
+.loading-orb .orb-label span:nth-child(8) { animation-delay:.7s; }
+.loading-orb .orb-label span:nth-child(9) { animation-delay:.8s; }
+.loading-orb .orb-label span:nth-child(10) { animation-delay:.9s; }
+.loading-orb .orb-sheen { position:absolute; inset:0; border-radius:50%; animation:loaderCircle 5s linear infinite; }
+@keyframes loaderCircle {
+  0% { transform:rotate(90deg); box-shadow:0 6px 12px 0 #65d7a1 inset,0 12px 18px 0 #17966c inset,0 36px 36px 0 #126447 inset,0 0 3px 1.2px rgba(101,215,161,.3),0 0 6px 1.8px rgba(23,150,108,.2); }
+  50% { transform:rotate(270deg); box-shadow:0 6px 12px 0 #8ae3b1 inset,0 12px 6px 0 #28aa78 inset,0 24px 36px 0 #17966c inset,0 0 3px 1.2px rgba(101,215,161,.3),0 0 6px 1.8px rgba(23,150,108,.2); }
+  100% { transform:rotate(450deg); box-shadow:0 6px 12px 0 #75ddb0 inset,0 12px 18px 0 #17966c inset,0 36px 36px 0 #126447 inset,0 0 3px 1.2px rgba(101,215,161,.3),0 0 6px 1.8px rgba(23,150,108,.2); }
 }
-.loading-orb .orb-sheen { position:absolute; inset:0; border-radius:inherit; border:1px solid rgba(152,220,176,.45); box-shadow:inset 0 -4px 13px rgba(61,172,121,.6); animation:orb-light 2.8s ease-in-out infinite alternate; }
-.loading-orb .orb-label { position:absolute; inset:0; display:grid; place-items:center; color:#e5f3e8; font:600 16px/1 var(--font-sans); letter-spacing:.02em; }
-@keyframes orb-breathe { 0%,100% { transform:scale(.97); } 50% { transform:scale(1.03); } }
-@keyframes orb-light { from { opacity:.6; transform:rotate(-20deg); } to { opacity:1; transform:rotate(20deg); } }
+@keyframes loaderLetter {
+  0%,100% { opacity:.4; transform:translateY(0); }
+  20% { opacity:1; transform:scale(1.15); }
+  40% { opacity:.7; transform:translateY(0); }
+}
 /* Reveal the verified result as soon as its images are ready. */
 .result-screen.is-active { animation:result-reveal 400ms ease-out both; }
 @keyframes result-reveal { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
 @media (prefers-reduced-motion:reduce) {
   .result-screen.is-active { animation:none; }
   /* This loader and background are explicitly requested to animate. */
-  .loading-orb { animation:orb-breathe 3s ease-in-out infinite !important; }
-  .loading-orb .orb-sheen { animation:orb-light 2.8s ease-in-out infinite alternate !important; }
+  .loading-orb .orb-sheen { animation:loaderCircle 5s linear infinite !important; }
+  .loading-orb .orb-label span { animation-name:loaderLetter !important; animation-duration:3s !important; animation-iteration-count:infinite !important; }
   .work-screen.is-active[data-screen=inspect] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=options] .work-visual:not(.has-ambient-shader),
   .work-screen.is-active[data-screen=run] .work-visual:not(.has-ambient-shader) { animation:ambient-fallback 9s ease-in-out infinite alternate !important; }
@@ -268,7 +283,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
   .work-screen[data-screen=run].is-loading { grid-template-rows:minmax(0,1fr) auto; }
   .work-screen[data-screen=run].is-loading .work-controls { overflow-y:auto; justify-content:safe center; }
   .work-screen[data-screen=run].is-loading .restoration-visual { display:flex; min-height:140px; padding:12px 20px; }
-  .loading-orb { width:110px; }
+  .work-screen[data-screen=run].is-loading .restoration-visual { min-height:204px; }
 }
 
 /* The decorative mesh stays behind the original preview and the loading orb. */
@@ -290,12 +305,11 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=inspect] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=options] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=run] .restoration-visual > :not(.ambient-shader) { position:relative; z-index:1; }
-.loading-orb { background:radial-gradient(ellipse at 50% 38%,#102824 14%,#163d32 48%,#237a5b 78%,#57bd8d 97%); box-shadow:inset 0 -10px 18px rgba(75,190,139,.75),inset 0 2px 7px rgba(162,224,185,.4),0 0 12px rgba(75,190,139,.3); }
-.loading-orb .orb-sheen { border-color:rgba(152,220,176,.45); box-shadow:inset 0 -4px 13px rgba(61,172,121,.6); }
 @media (max-width:800px) {
   .work-screen[data-screen=inspect]:has(.inspect-visual #upload-preview.hidden) { grid-template-rows:minmax(0,1fr) 120px; }
   .work-screen[data-screen=inspect] .inspect-visual:has(#upload-preview.hidden) { display:flex; }
   .work-screen[data-screen=run] { grid-template-rows:minmax(0,1fr) minmax(140px,0.35fr); }
+  .work-screen[data-screen=run].is-loading { grid-template-rows:minmax(0,1fr) minmax(204px,0.35fr); }
   .work-screen[data-screen=run] .work-controls { overflow-y:auto; }
   .work-screen[data-screen=run] .restoration-visual { display:flex; min-height:140px; }
 }
