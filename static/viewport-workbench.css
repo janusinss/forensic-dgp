@@ -268,10 +268,10 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-screen[data-screen=options] .work-visual,
 .work-screen[data-screen=run] .restoration-visual {
   position:relative; isolation:isolate; overflow:hidden;
-  background:radial-gradient(ellipse at 68% 25%,#204736 0%,#142f26 45%,#101d1d 100%);
+  background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%);
 }
-.work-screen[data-screen=run].is-loading .restoration-visual { background:radial-gradient(ellipse at 68% 25%,#204736 0%,#142f26 45%,#101d1d 100%); }
-.ambient-shader { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; opacity:.5; }
+.work-screen[data-screen=run].is-loading .restoration-visual { background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%); }
+.ambient-shader { position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
 .work-screen[data-screen=inspect] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=options] .work-visual > :not(.ambient-shader),
 .work-screen[data-screen=run] .restoration-visual > :not(.ambient-shader) { position:relative; z-index:1; }
