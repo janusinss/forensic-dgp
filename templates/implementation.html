@@ -79,12 +79,20 @@
       </section>
     </div>
     <section class="work-screen" data-screen="run" aria-labelledby="brush-run-heading">
-      <div class="work-controls">
+      <div id="restoration-controls" class="work-controls">
         <div class="work-heading"><span class="work-kicker">RESTORATION / 03</span><h1 id="brush-run-heading">Restore the input</h1><p>Keep the source and result together for review.</p></div>
         <label class="context-confirm" for="brush-include-bundle"><input id="brush-include-bundle" type="checkbox" checked>Include original, masks, preparation, result and available RAW records in a ZIP.</label>
         <p class="work-note">Input protection applies to preparation only. Generated facial appearance can change, and the result is an experimental estimate.</p>
         <div class="feedback-slot"></div>
         <div class="work-actions"><button class="tool-btn" type="button" data-nav="run-back">Back</button><button id="brush-run" class="execute-btn" type="submit" disabled>Restore selected input</button><button id="brush-refresh" class="text-btn" type="button">Check service</button></div>
+      </div>
+      <div id="restoration-loading" class="work-controls restoration-loading hidden" role="status" aria-live="polite" aria-atomic="true">
+        <div class="loading-indicator" aria-hidden="true"><span></span></div>
+        <div class="loading-copy">
+          <span class="work-kicker">PROCESSING YOUR REQUEST</span>
+          <h1>Processing your image</h1>
+          <p>Please keep this page open. Your result will appear when it is ready.</p>
+        </div>
       </div>
       <aside class="work-visual decorative-visual"><div class="empty-state"><span class="work-kicker">REVIEW BEFORE INTERPRETATION</span><h2>Compare, then decide.</h2><p>Original, selected input and result remain separate.</p></div></aside>
     </section>

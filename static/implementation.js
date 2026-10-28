@@ -45,6 +45,10 @@
     const begin = () => { busy = true; const token = ++operation; update(); return token; };
     const finish = token => { if (token === operation) { busy = false; update(); } };
     const current = (token, version) => token === operation && version === revision;
+    const restorationLoading = active => {
+        byId('restoration-controls').classList.toggle('hidden', active);
+        byId('restoration-loading').classList.toggle('hidden', !active);
+    };
     const validPNG = value => {
         if (typeof value !== 'string' || !value.startsWith('data:image/png;base64,')) throw new Error('The service returned an invalid image.');
         return value;
@@ -240,6 +244,7 @@
         data.append('include_bundle', includeBundle ? 'true' : 'false');
         if (mode === 'manual') { data.append('preview_id', previewId); data.append('confirmed', 'true'); }
         error(''); clearResults(); const token = begin(), version = revision;
+        restorationLoading(true);
         progress(restoration === 'off' ? 'Keeping the original resized input. No model runs.' : `Restoring the selected input with at most one ${modelName()} call. Auto can keep the original.`);
         try {
             const result = await post('/restore', data);
@@ -262,8 +267,8 @@
             const summary = `${seconds}${metadata.neural_forward_returns} ${modelName()} model call${metadata.neural_forward_returns === 1 ? '' : 's'}. ${bypass} Experimental result; visible appearance and identity need review.`;
             byId('brush-result-summary').textContent = summary; byId('brush-result-summary').classList.remove('hidden'); progress(summary);
             window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile: sourceFile } }));
-        } catch (problem) { if (current(token, version)) { clearResults(); error(problem.message); progress('The request stopped. Review the message before another request. No automatic retry was made.'); } }
-        finally { finish(token); }
+        } catch (problem) { if (current(token, version)) { restorationLoading(false); clearResults(); error(problem.message); progress('The request stopped. Review the message before another request. No automatic retry was made.'); } }
+        finally { if (token === operation) restorationLoading(false); finish(token); }
     });
     const checkService = async () => {
         if (busy) return;
