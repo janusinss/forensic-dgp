@@ -267,7 +267,7 @@
             const sent = new Uint8Array(sentBytes), returned = new Uint8Array(returnedBytes);
             if (sent.length !== returned.length || sent.some((value, index) => value !== returned[index])) throw new Error('The saved area does not match your selection. Please check and confirm it again.');
             reviewId = result.review_id; reviewedMask = submittedMask;
-            progress('Area saved. Confirm that enough of the face is visible, then continue.');
+            progress('Selection saved.');
         } catch (problem) { if (current(token, version)) { reviewId = undefined; reviewedMask = undefined; byId('completion-mask-confirm').checked = false; error(problem.message); progress('Could not save the area. Adjust it or choose a clearer photo.'); } }
         finally { finish(token); }
     });

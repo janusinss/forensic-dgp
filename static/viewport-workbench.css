@@ -375,6 +375,14 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-controls .work-note { padding:0 0 0 12px; border:0; border-left:3px solid #a8bcb0; border-radius:0; background:transparent; color:#425d4d; font-size:14px; line-height:1.5; }
 .work-controls .field-hint { color:#5d7064; font-size:13px; line-height:1.5; }
 .work-controls .context-confirm { color:#345143; font-size:14px; line-height:1.5; }
+.review-checks { min-width:0; margin:0; padding:0; border:0; }
+.review-checks legend { padding:0; margin:0 0 5px; color:#29493b; font-size:14px; font-weight:700; }
+.work-controls .review-check { min-height:44px; padding:10px 0; gap:12px; align-items:flex-start; cursor:pointer; }
+.review-check + .review-check { border-top:1px solid #d7e3da; }
+.review-check > span { min-width:0; display:grid; gap:2px; }
+.review-check strong { color:#183e30; font-weight:700; }
+.review-check > span > span { color:#526b5b; }
+.review-check:has(input:disabled) { cursor:not-allowed; opacity:.65; }
 .work-controls .work-actions,.work-controls .compact-actions { gap:9px; }
 .work-controls .work-actions .execute-btn,.work-controls .work-actions .tool-btn,
 .work-controls .compact-actions .tool-btn,.work-controls > .tool-btn { min-height:46px; border-radius:9px; padding:11px 16px; font-size:14px; font-weight:700; letter-spacing:0; }
