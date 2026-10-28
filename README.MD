@@ -82,7 +82,7 @@ Restoration can change visible facial features. Compare the result carefully wit
 
 ### Optional: prepare the picture
 
-Choose **Optional manual Protect + Apply** if you want to add blur to selected surroundings before restoration:
+Choose **Manual Protect + Apply** if you want to add blur to selected surroundings before restoration:
 
 1. Paint **Protect** in green over the face and its existing soft edges.
 2. Paint **Apply** in blue only over surroundings where added blur is acceptable.

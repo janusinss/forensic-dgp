@@ -173,7 +173,7 @@
         sourceFile = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
         canvas.width = 0; canvas.height = 0;
         byId('upload-preview').removeAttribute('src'); byId('upload-preview').classList.add('hidden');
-        byId('brush-review').value = ''; invalidate();
+        byId('brush-review').value = ''; byId('brush-review').dispatchEvent(new Event('change', { bubbles: true }));
     };
     byId('brush-file').addEventListener('change', async () => {
         const file = byId('brush-file').files[0];

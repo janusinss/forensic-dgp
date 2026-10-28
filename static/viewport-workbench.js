@@ -7,6 +7,18 @@
   const completionFeedback = byId('completion-feedback');
   let current = 'inspect', pendingPreview = false, pendingCompletion = false, pendingEstimate = false;
 
+  // Native radios provide keyboard-accessible button choices while the existing
+  // controls remain the source of truth for the restoration/completion logic.
+  document.querySelectorAll('.choice-input').forEach(input => {
+    const select = byId(input.dataset.select);
+    input.addEventListener('change', () => {
+      if (!input.checked || select.value === input.value) return;
+      select.value = input.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    select.addEventListener('change', () => { input.checked = select.value === input.value; });
+  });
+
   function fitEditor(visual) {
     const canvas = visual.querySelector('canvas');
     const caption = visual.querySelector('.visual-caption');
@@ -25,11 +37,11 @@
   document.querySelectorAll('.editor-visual').forEach(visual => editorObserver.observe(visual));
   function syncProgress() {
     const progress = byId('brush-progress');
-    const redundant = current === 'inspect' && (
-      progress.textContent.startsWith('V2 (p2_u0224) is available.') ||
-      progress.textContent.startsWith('Inspect visible facial structure before continuing.') ||
-      progress.textContent === 'Inspect the original crop before continuing.'
-    );
+    const redundant = progress.textContent.startsWith('Inspect visible facial structure before continuing.') ||
+      (current === 'inspect' && (
+        progress.textContent.startsWith('V2 (p2_u0224) is available.') ||
+        progress.textContent === 'Inspect the original crop before continuing.'
+      ));
     progress.classList.toggle('quiet-status', redundant);
   }
   new MutationObserver(syncProgress).observe(byId('brush-progress'), {childList: true, characterData: true, subtree: true});
@@ -38,6 +50,7 @@
     notice.textContent = message;
     notice.classList.toggle('hidden', !message);
   }
+  byId('brush-file').addEventListener('change', () => showNotice(''));
   function show(name, focus = true) {
     const screen = screens.find(item => item.dataset.screen === name);
     if (!screen || screen.closest('.hidden')) return false;
