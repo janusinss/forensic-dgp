@@ -2,20 +2,20 @@
 
 This branch packages the frozen **Conditioned SFT V2 (`p2_u0224`)** model for application development, deployment, and real-world testing. Research and training are maintained separately.
 
-**Conditioned SFT V2 (`p2_u0224`) is the sole production restoration model.** It builds on the frozen 575-tensor CodeFormer R2 + U96 adapter + terminal-update-64 spatial head backbone (`codeformer_r2.pth`, `codeformer_u96_adapter.pth`, `terminal_u0064_heads.npz`) and adds the 212-tensor V2 top-down dilated SFT pyramid, dark-noise refiner, and frequency-selective VQGAN spatial head (`v2_p2_u0224_heads.npz`, 787 frozen tensors total) with input-only conditioning and outer-ring-gated high-frequency detail synthesis.
+**Conditioned SFT V2 (`p2_u0224`) is the only restoration model in the app.** It builds on the frozen 575-tensor CodeFormer R2 + U96 adapter + terminal-update-64 spatial head backbone (`codeformer_r2.pth`, `codeformer_u96_adapter.pth`, `terminal_u0064_heads.npz`) and adds the 212-tensor V2 top-down dilated SFT pyramid, dark-noise refiner, and frequency-selective VQGAN spatial head (`v2_p2_u0224_heads.npz`, 787 frozen tensors total) with input-only conditioning and outer-ring-gated high-frequency detail synthesis.
 
 ## Runtime and assets
 
 The model loads in disposable CPU workers only when restoration is required. Each request permits at most one inference call. Processing uses FP32 at 512×512, fidelity 1 and AdaIN, followed by 256×256 conditioned delivery. PNG uses floor quantization while preserving exact neutral padding outside observed support. Off returns the resized original without inference.
 
-The installer verifies these four assets in `models/implementation` (`codeformer_r2.pth`, `codeformer_u96_adapter.pth`, and `terminal_u0064_heads.npz` from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1), plus `v2_p2_u0224_heads.npz` staged from `implementation/assets/`). All four files must pass complete size and SHA-256 verification.
+The installer verifies these four assets in `models/implementation` (`codeformer_r2.pth`, `codeformer_u96_adapter.pth`, and `terminal_u0064_heads.npz` from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1), plus `v2_p2_u0224_heads.npz` staged from `implementation/assets/`). All four files must pass complete size and SHA-256 verification. These labeled components are loaded together as one V2 restoration model, not as separate restoration options.
 
-| Asset | Bytes | SHA-256 |
-| --- | ---: | --- |
-| `codeformer_r2.pth` | 376609465 | `d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896` |
-| `codeformer_u96_adapter.pth` | 212827 | `958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0` |
-| `terminal_u0064_heads.npz` | 685818 | `77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17` |
-| `v2_p2_u0224_heads.npz` | 3831362 | `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f` |
+| Component label | Asset | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| **Base Model** | `codeformer_r2.pth` | 376609465 | `d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896` |
+| **U96 Adaptation** | `codeformer_u96_adapter.pth` | 212827 | `958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0` |
+| **Spatial Head** | `terminal_u0064_heads.npz` | 685818 | `77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17` |
+| **V2 Components** | `v2_p2_u0224_heads.npz` | 3831362 | `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f` |
 
 ## Intended use and limits
 

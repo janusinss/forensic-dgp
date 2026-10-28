@@ -24,6 +24,12 @@ BUNDLED_DIR = ROOT / "implementation" / "assets"
 MANIFEST_PATH = Path(__file__).with_name("models.json")
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/"
 CHUNK_SIZE = 1024 * 1024
+COMPONENT_LABELS = {
+    "codeformer_r2.pth": "Base Model",
+    "codeformer_u96_adapter.pth": "U96 Adaptation",
+    "terminal_u0064_heads.npz": "Spatial Head",
+    "v2_p2_u0224_heads.npz": "V2 Components",
+}
 
 
 class ModelSetupError(RuntimeError):
@@ -126,9 +132,11 @@ def _publish_without_overwrite(partial: Path, destination: Path) -> None:
 def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     _stage_bundled_asset_if_needed(asset, model_dir)
     destination = model_dir / asset["filename"]
+    label = COMPONENT_LABELS.get(destination.name)
+    display = f"{label} ({destination.name})" if label else destination.name
     if destination.exists() or destination.is_symlink():
         if verify_asset(destination, asset):
-            print(f"Verified {destination.name}", flush=True)
+            print(f"Verified {display}", flush=True)
             return destination
         raise ModelSetupError(
             f"Existing file failed its size/SHA-256 check and was preserved: {destination}. "
@@ -141,7 +149,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     next_progress = 0
     request = urllib.request.Request(asset["url"], headers={"User-Agent": "Forensic-DGP-Implementation/1"})
     opener = urllib.request.build_opener(_HTTPSRedirectHandler())
-    print(f"Downloading {destination.name} ({asset['size'] / 1048576:.1f} MiB)...", flush=True)
+    print(f"Downloading {display} ({asset['size'] / 1048576:.1f} MiB)...", flush=True)
     try:
         with opener.open(request, timeout=30) as response, partial.open("xb") as stream:
             content_length = response.headers.get("Content-Length")
@@ -161,7 +169,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
         if downloaded != asset["size"] or digest.hexdigest() != asset["sha256"]:
             raise ModelSetupError(f"Download failed its complete size/SHA-256 check for {destination.name}.")
         _publish_without_overwrite(partial, destination)
-        print(f"Verified and saved {destination.name}", flush=True)
+        print(f"Verified and saved {display}", flush=True)
         return destination
     except urllib.error.HTTPError as exc:
         raise ModelSetupError(

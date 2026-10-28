@@ -140,6 +140,19 @@ git pull --ff-only origin IMPLEMENTATION
 
 For a ZIP download, get and extract a fresh ZIP instead, then run `install.bat` in the new folder. Save any changes you made to the app's files before updating. If the update reports a conflict, resolve it before running the installer.
 
+## What makes up the restoration model
+
+The app uses one restoration model, V2. Its four files work together:
+
+| Component | File |
+| --- | --- |
+| **Base Model** | `codeformer_r2.pth` |
+| **U96 Adaptation** | `codeformer_u96_adapter.pth` |
+| **Spatial Head** | `terminal_u0064_heads.npz` |
+| **V2 Components** | `v2_p2_u0224_heads.npz` |
+
+These are labels for parts of the same model, not four choices in the app. The separate completion model and covering detector are used only for the optional covering-removal step.
+
 ## More information and license
 
 The restoration and covering models are experimental and not qualified for identifying people. See the [restoration model card](MODEL_CARD.md) and [completion model card](COMPLETION_MODEL_CARD.md) for their limits. The app uses adaptations of S-Lab's CodeFormer; its **non-commercial terms** apply. Keep the [CodeFormer license](third_party/codeformer/LICENSE), [notices](third_party/codeformer/NOTICE.md), [completion license](third_party/codeformer_completion/LICENSE), and [completion notices](third_party/codeformer_completion/NOTICE.md). Training datasets are not included.
