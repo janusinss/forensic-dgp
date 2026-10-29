@@ -6,6 +6,24 @@
   const brushFeedback = byId('brush-feedback');
   const completionFeedback = byId('completion-feedback');
   let current = 'inspect', pendingPreview = false, pendingCompletion = false, pendingEstimate = false;
+  const stageTitles = {
+    inspect: 'Choose a picture', options: 'Restoration settings',
+    'brush-paint': 'Protect and blur', 'brush-preview': 'Review preparation',
+    run: 'Restore the picture', result: 'Review restoration',
+    'completion-intro': 'Covering removal', 'completion-paint': 'Select the removal area',
+    'completion-tools': 'Removal tools', 'completion-confirm': 'Confirm removal',
+    'completion-result': 'Review removal'
+  };
+  function updateTabTitle() {
+    const screen = screens.find(item => item.dataset.screen === current);
+    const loading = screen?.classList.contains('is-loading');
+    const stage = loading && current === 'run' ? 'Restoring…'
+      : loading && current === 'completion-confirm' ? 'Generating…' : stageTitles[current];
+    document.title = stage ? `Forensic DGP · ${stage}` : 'Forensic DGP';
+  }
+  const titleObserver = new MutationObserver(updateTabTitle);
+  screens.filter(screen => ['run', 'completion-confirm'].includes(screen.dataset.screen))
+    .forEach(screen => titleObserver.observe(screen, { attributes: true, attributeFilter: ['class'] }));
 
   // This guide describes the current screen; it does not change the workflow.
   const journey = [
@@ -138,6 +156,7 @@
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Check your picture before continuing.';
     current = name;
+    updateTabTitle();
     syncProgress();
     screens.forEach(item => { item.classList.remove('result-enter'); item.classList.toggle('is-active', item === screen); });
     if (revealResult) {
