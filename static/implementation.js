@@ -67,9 +67,14 @@
             Math.max(0, Math.min(height - 1, Math.floor((event.clientY - rect.top) * height / rect.height)))];
     };
     const brushMode = () => byId('brush-action').value === 'erase' ? 'Erasing green and blue marks' : byId('brush-plane').value === 'protect' ? 'Painting green protection' : 'Painting blue blur';
+    const cursorStatus = () => {
+        const caption = byId('brush-cursor');
+        caption.textContent = `${brushMode()} · ${cursorX}, ${cursorY}`;
+        caption.title = caption.textContent;
+    };
     const cursor = (x, y) => {
         cursorX = x; cursorY = y;
-        byId('brush-cursor').textContent = `${brushMode()}; position ${x}, ${y}.`;
+        cursorStatus();
     };
     const render = () => {
         if (!planes) return;
@@ -79,7 +84,8 @@
             if (color) for (let c = 0; c < 3; c++) pixels[i * 4 + c] = Math.round(pixels[i * 4 + c] * .6 + color[c] * .4);
         }
         context.putImageData(new ImageData(pixels, width, height), 0, 0);
-        byId('brush-cursor').textContent = `${brushMode()}; position ${cursorX}, ${cursorY}. ${planes.protect.reduce((n, v) => n + (v > 0), 0)} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0)} selected pixels. Protected areas take priority where they overlap.`;
+        cursorStatus();
+        byId('brush-cursor').title += `. ${planes.protect.reduce((n, v) => n + (v > 0), 0).toLocaleString()} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0).toLocaleString()} selected for blur. Green protection takes priority.`;
     };
     const disk = (x, y) => {
         const size = Number(byId('brush-size').value);

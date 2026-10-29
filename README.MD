@@ -156,7 +156,7 @@ The app uses one restoration model, V2. Its four files work together:
 | **Spatial Head** | `terminal_u0064_heads.npz` |
 | **V2 Components** | `v2_p2_u0224_heads.npz` |
 
-These are labels for parts of the same model, not four choices in the app. The separate completion model and covering detector are used only for the optional covering-removal step.
+These are labels for parts of the same model, not four choices in the app. The optional covering-removal step uses a separate completion model and the area you paint manually. A covering detector is installed for the underlying API; the guided app does not use it to select an area.
 
 ## More information and license
 
