@@ -406,7 +406,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 /* The selected area matches the color painted on the image. */
 .work-controls .brush-area-choice input[value=protect]:checked + .choice-content { color:#fff; background:#176b52; border-color:#176b52; }
 .work-controls .brush-area-choice input[value=apply]:checked + .choice-content { color:#fff; background:#245f9b; border-color:#245f9b; }
-.work-controls .brush-action-choice input[value=erase]:checked + .choice-content { color:#fff; background:#29493b; border-color:#29493b; }
+.work-controls .brush-action-choice input[value=erase]:checked + .choice-content { color:#fff; background:linear-gradient(135deg,#176b52 0%,#245f9b 100%); border-color:#24676f; }
 .work-controls .brush-choices:has(.brush-area-choice input[value=protect]:checked) .brush-action-choice input[value=paint]:checked + .choice-content { color:#fff; background:#176b52; border-color:#176b52; }
 .work-controls .brush-choices:has(.brush-area-choice input[value=apply]:checked) .brush-action-choice input[value=paint]:checked + .choice-content { color:#fff; background:#245f9b; border-color:#245f9b; }
 .work-controls .completion-choices input[value=paint]:checked + .choice-content { color:#fff; background:#984509; border-color:#984509; }
