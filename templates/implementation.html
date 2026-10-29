@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=16">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=17">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
 </head>
 <body>
@@ -50,23 +50,13 @@
         <div class="work-controls">
           <div class="work-heading"><span class="work-kicker">OPTIONAL PREPARATION</span><h1 id="brush-edit-heading">Protect and Apply</h1><p id="brush-dimensions" class="field-hint"></p></div>
           <div class="brush-choices"><fieldset class="choice-group"><legend>Area</legend><select id="brush-plane" hidden><option value="protect">Protect · green</option><option value="apply">Blur · blue</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-plane-choice" value="protect" data-select="brush-plane" checked><span class="choice-content">Protect · green</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-plane-choice" value="apply" data-select="brush-plane"><span class="choice-content">Blur · blue</span></label></div></fieldset><fieldset class="choice-group"><legend>Action</legend><select id="brush-action" hidden><option value="paint">Paint</option><option value="erase">Erase</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-action-choice" value="paint" data-select="brush-action" checked><span class="choice-content">Paint</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-action-choice" value="erase" data-select="brush-action"><span class="choice-content">Erase</span></label></div></fieldset><div class="brush-size-control"><label class="brush-size-label" for="brush-size">Brush size <output id="brush-size-value" for="brush-size">10 px</output></label><input id="brush-size" type="range" min="1" max="25" step="1" value="10"></div></div>
+          <div class="brush-size-control"><label class="brush-size-label" for="brush-radius">Blur strength <output id="brush-radius-value" for="brush-radius">1 px</output></label><input id="brush-radius" type="range" min="0" max="12" step="0.5" value="1" aria-describedby="brush-radius-hint"><p id="brush-radius-hint" class="field-hint">Higher values add more blur; 0 means no blur. Radius is measured on a 256-pixel picture.</p></div>
           <p class="work-note">Green protects an area; green alone selects the rest for blur, including already blurry areas. Mark any blur you want to keep in green. Blue selects only the areas you want to blur, with or without green. Green takes priority where they overlap. Check the preview before continuing.</p>
           <div class="compact-actions"><button id="brush-undo" class="tool-btn" type="button" disabled>Undo</button><button id="brush-clear" class="tool-btn" type="button">Clear both areas</button></div>
           <div class="feedback-slot"></div>
-          <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Back</button><button class="tool-btn" type="button" data-nav="brush-tools">More tools</button><button id="brush-preview" class="execute-btn" type="button" disabled>Preview areas</button></div>
+          <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Back</button><button id="brush-preview" class="execute-btn" type="button" disabled>Preview areas</button></div>
         </div>
-        <aside class="work-visual editor-visual"><canvas id="brush-editor" tabindex="0" role="img" aria-label="Protect and Apply editor. Arrow keys move the cursor. Space paints or erases. Coordinate controls are available in More tools."></canvas><p id="brush-cursor" class="visual-caption" aria-live="polite">Paint or use the coordinate controls.</p></aside>
-      </section>
-      <section class="work-screen" data-screen="brush-tools" aria-labelledby="brush-tools-heading">
-        <div class="work-controls wide-controls">
-          <div class="work-heading"><span class="work-kicker">OPTIONAL PREPARATION</span><h1 id="brush-tools-heading">Precise controls</h1><p>Enter picture coordinates to place the brush or draw a protected rectangle.</p></div>
-          <div class="field-row three"><label for="brush-x">Cursor X<input id="brush-x" type="number" min="0" step="1" value="0"></label><label for="brush-y">Cursor Y<input id="brush-y" type="number" min="0" step="1" value="0"></label><button id="brush-stamp" class="tool-btn" type="button">Use brush</button></div>
-          <div class="field-row four"><label for="brush-left">Left<input id="brush-left" type="number" min="0" step="1" value="0"></label><label for="brush-top">Top<input id="brush-top" type="number" min="0" step="1" value="0"></label><label for="brush-right">Right<input id="brush-right" type="number" min="0" step="1" value="0"></label><label for="brush-bottom">Bottom<input id="brush-bottom" type="number" min="0" step="1" value="0"></label></div>
-          <div class="compact-actions"><button id="brush-rectangle" class="tool-btn" type="button">Add Protect rectangle</button><button id="brush-fill" class="tool-btn" type="button">Permit surroundings</button><button id="brush-reset" class="tool-btn" type="button">Reset both</button></div>
-          <div class="field inline-field"><label for="brush-radius">Blur radius at 256 px</label><input id="brush-radius" type="number" min="0" max="12" step="0.5" value="1"></div>
-          <div class="feedback-slot"></div><div class="work-actions"><button class="execute-btn" type="button" data-nav="brush-paint">Return to editor</button></div>
-        </div>
-        <aside class="work-visual decorative-visual"><div class="empty-state"><span class="work-kicker">PRECISE EDITING</span><h2>Review every edge.</h2><p>Protected areas stay unchanged during preparation. If you use only green, the rest is selected for blur.</p></div></aside>
+        <aside class="work-visual editor-visual"><canvas id="brush-editor" tabindex="0" role="img" aria-label="Protect and Apply editor. Arrow keys move the cursor. Space paints or erases."></canvas><p id="brush-cursor" class="visual-caption" aria-live="polite">Paint on the picture, or use the arrow keys and Space.</p></aside>
       </section>
       <section id="brush-preview-section" class="work-screen hidden" data-screen="brush-preview" aria-labelledby="brush-preview-heading">
         <div class="work-controls">
@@ -158,9 +148,9 @@
 <dialog id="about-dialog" class="work-dialog" aria-labelledby="about-heading"><h2 id="about-heading">About this workflow</h2><p>This app tries to improve a face picture. Its results are experimental and are still being reviewed. Removing a covering is an optional extra step.</p><p>Use a clearer or less-covered picture if the face is hard to see. A sharper face is not proof of identity.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips it, and Auto may skip it if it keeps the original. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><h2 id="image-dialog-title">Image detail</h2><img id="image-dialog-view" alt=""><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
-<script src="/static/implementation.js?v=6"></script>
+<script src="/static/implementation.js?v=7"></script>
 <script src="/static/completion.js?v=10"></script>
-<script src="/static/viewport-workbench.js?v=8"></script>
+<script src="/static/viewport-workbench.js?v=9"></script>
 <script src="/static/shader-background.js?v=14"></script>
 </body>
 </html>

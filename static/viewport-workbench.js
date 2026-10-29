@@ -10,7 +10,7 @@
   // This guide describes the current screen; it does not change the workflow.
   const journey = [
     { label: 'Picture', names: ['inspect'] },
-    { label: 'Settings', names: ['options', 'brush-paint', 'brush-tools', 'brush-preview'] },
+    { label: 'Settings', names: ['options', 'brush-paint', 'brush-preview'] },
     { label: 'Restore', names: ['run'] },
     { label: 'Review', names: ['result'] },
     { label: 'Removal', names: ['completion-intro', 'completion-paint', 'completion-tools', 'completion-confirm', 'completion-result'], optional: true }

@@ -82,14 +82,14 @@ Restoration can change visible facial features. Compare the result carefully wit
 
 ### Optional: prepare the picture
 
-Choose **Choose areas to protect** if you want to prepare the picture before restoration:
+Choose **Choose areas to protect or blur** if you want to prepare the picture before restoration:
 
 - **Protect only:** Paint green over the face and any other areas you want to keep unchanged. The app selects the remaining surroundings for blur automatically.
 - **Blur only:** Paint blue over the areas you want to blur. You do not need to mark a green area.
 - **Both:** Paint green areas to protect and blue areas to blur. Green takes priority where they overlap.
 - **Neither:** The picture stays unchanged during preparation.
 
-Click **Preview areas** and check the picture and marked areas. Confirm the preview before continuing; if you change a selection, preview and confirm it again. Automatic surroundings blur can also blur areas that were already blurry, so mark them green if you want to keep them unchanged. There is no automatic matching of existing blur.
+Use **Blur strength** to adjust how much blur is applied during preparation. A higher value adds more blur; 0 means no blur. Click **Preview areas** and check the picture and marked areas. Confirm the preview before continuing; if you change a selection or blur strength, preview and confirm it again. Automatic surroundings blur can also blur areas that were already blurry, so mark them green if you want to keep them unchanged. There is no automatic matching of existing blur.
 
 Protection applies to preparation only. Restoration can still change the face. If restoration is Off, or Auto keeps the original, preparation is skipped.
 

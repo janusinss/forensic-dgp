@@ -6,7 +6,7 @@
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
     let sourceFile, originalPixels, width = 0, height = 0, planes, undo = [];
     let available = false, busy = false, revision = 0, operation = 0;
-    let previewId, masks, drawing = false, previous;
+    let previewId, masks, drawing = false, previous, cursorX = 0, cursorY = 0;
     const error = message => {
         byId('brush-error').textContent = message;
         byId('brush-error').classList.toggle('hidden', !message);
@@ -67,7 +67,7 @@
             Math.max(0, Math.min(height - 1, Math.floor((event.clientY - rect.top) * height / rect.height)))];
     };
     const cursor = (x, y) => {
-        byId('brush-x').value = x; byId('brush-y').value = y;
+        cursorX = x; cursorY = y;
         byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; position ${x}, ${y}.`;
     };
     const render = () => {
@@ -78,12 +78,7 @@
             if (color) for (let c = 0; c < 3; c++) pixels[i * 4 + c] = Math.round(pixels[i * 4 + c] * .6 + color[c] * .4);
         }
         context.putImageData(new ImageData(pixels, width, height), 0, 0);
-        byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; position ${byId('brush-x').value}, ${byId('brush-y').value}. ${planes.protect.reduce((n, v) => n + (v > 0), 0)} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0)} selected pixels. Protected areas take priority where they overlap.`;
-    };
-    const coordinate = (id, max) => {
-        const value = Number(byId(id).value);
-        if (byId(id).value.trim() === '' || !Number.isInteger(value) || value < 0 || value > max) throw new Error('Choose whole numbers within the picture.');
-        return value;
+        byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; position ${cursorX}, ${cursorY}. ${planes.protect.reduce((n, v) => n + (v > 0), 0)} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0)} selected pixels. Protected areas take priority where they overlap.`;
     };
     const disk = (x, y) => {
         const size = Number(byId('brush-size').value);
@@ -119,25 +114,15 @@
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, () => { drawing = false; });
     canvas.addEventListener('keydown', event => {
         if (busy || !planes || !manual()) return;
-        let x, y;
-        try { x = coordinate('brush-x', width - 1); y = coordinate('brush-y', height - 1); }
-        catch (problem) { error(problem.message); return; }
+        const x = cursorX, y = cursorY;
         const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
         if (moves[event.key]) { event.preventDefault(); cursor(Math.max(0, Math.min(width - 1, x + moves[event.key][0])), Math.max(0, Math.min(height - 1, y + moves[event.key][1]))); }
         if (event.key === ' ') { event.preventDefault(); edit(() => disk(x, y)); }
     });
-    byId('brush-stamp').addEventListener('click', () => edit(() => disk(coordinate('brush-x', width - 1), coordinate('brush-y', height - 1))));
-    byId('brush-fill').addEventListener('click', () => edit(() => { for (let i = 0; i < planes.apply.length; i++) planes.apply[i] = planes.protect[i] ? 0 : 255; }));
     byId('brush-clear').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); }));
-    byId('brush-reset').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); }));
     byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); invalidate(); render(); });
-    byId('brush-rectangle').addEventListener('click', () => edit(() => {
-        const left = coordinate('brush-left', width - 1), top = coordinate('brush-top', height - 1);
-        const right = coordinate('brush-right', width - 1), bottom = coordinate('brush-bottom', height - 1);
-        if (right < left || bottom < top) throw new Error('The right and bottom edges must come after the left and top edges.');
-        for (let y = top; y <= bottom; y++) planes.protect.fill(255, y * width + left, y * width + right + 1);
-    }));
     byId('brush-size').addEventListener('input', event => { byId('brush-size-value').textContent = `${event.target.value} px`; });
+    byId('brush-radius').addEventListener('input', event => { byId('brush-radius-value').textContent = `${event.target.value} px`; });
     for (const id of ['brush-radius', 'brush-size']) byId(id).addEventListener('input', invalidate);
     for (const id of ['brush-plane', 'brush-action', 'brush-review', 'brush-restoration', 'brush-preparation']) byId(id).addEventListener('change', () => { drawing = false; invalidate(); });
     byId('brush-confirm').addEventListener('change', () => { revision++; clearResults(); update(); });
@@ -207,9 +192,7 @@
             planes = { protect: new Uint8Array(width * height), apply: new Uint8Array(width * height) };
             byId('upload-preview').src = image.src; byId('upload-preview').classList.remove('hidden');
             byId('brush-dimensions').textContent = `Picture size: ${width} × ${height} pixels. No areas are marked yet.`;
-            for (const id of ['brush-x', 'brush-left', 'brush-right']) byId(id).max = width - 1;
-            for (const id of ['brush-y', 'brush-top', 'brush-bottom']) byId(id).max = height - 1;
-            for (const id of ['brush-x', 'brush-y', 'brush-left', 'brush-top', 'brush-right', 'brush-bottom']) byId(id).value = 0;
+            cursorX = 0; cursorY = 0;
             render(); progress('Check the face before continuing. Marking areas is optional.');
         } catch (problem) { if (current(token, version)) { resetInput(); error(problem.message); progress('The picture could not be checked. Choose a clear face picture.'); } }
         finally { finish(token); }
