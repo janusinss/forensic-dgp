@@ -89,6 +89,8 @@ Choose **Choose areas to protect or blur** if you want to prepare the picture be
 - **Both:** Paint green areas to protect and blue areas to blur. Green takes priority where they overlap.
 - **Neither:** The picture stays unchanged during preparation.
 
+Choose **Paint** to mark the selected color. **Erase both** removes green and blue marks wherever you brush.
+
 Use **Blur strength** to adjust how much blur is applied during preparation. A higher value adds more blur; 0 means no blur. Click **Preview areas** and check the picture and marked areas. Confirm the preview before continuing; if you change a selection or blur strength, preview and confirm it again. Automatic surroundings blur can also blur areas that were already blurry, so mark them green if you want to keep them unchanged. There is no automatic matching of existing blur.
 
 Protection applies to preparation only. Restoration can still change the face. If restoration is Off, or Auto keeps the original, preparation is skipped.

@@ -66,9 +66,10 @@
         return [Math.max(0, Math.min(width - 1, Math.floor((event.clientX - rect.left) * width / rect.width))),
             Math.max(0, Math.min(height - 1, Math.floor((event.clientY - rect.top) * height / rect.height)))];
     };
+    const brushMode = () => byId('brush-action').value === 'erase' ? 'Erasing green and blue marks' : byId('brush-plane').value === 'protect' ? 'Painting green protection' : 'Painting blue blur';
     const cursor = (x, y) => {
         cursorX = x; cursorY = y;
-        byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; position ${x}, ${y}.`;
+        byId('brush-cursor').textContent = `${brushMode()}; position ${x}, ${y}.`;
     };
     const render = () => {
         if (!planes) return;
@@ -78,15 +79,20 @@
             if (color) for (let c = 0; c < 3; c++) pixels[i * 4 + c] = Math.round(pixels[i * 4 + c] * .6 + color[c] * .4);
         }
         context.putImageData(new ImageData(pixels, width, height), 0, 0);
-        byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; position ${cursorX}, ${cursorY}. ${planes.protect.reduce((n, v) => n + (v > 0), 0)} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0)} selected pixels. Protected areas take priority where they overlap.`;
+        byId('brush-cursor').textContent = `${brushMode()}; position ${cursorX}, ${cursorY}. ${planes.protect.reduce((n, v) => n + (v > 0), 0)} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0)} selected pixels. Protected areas take priority where they overlap.`;
     };
     const disk = (x, y) => {
         const size = Number(byId('brush-size').value);
         if (!Number.isInteger(size) || size < 1 || size > 100) throw new Error('Choose a brush size from 1 to 100 pixels.');
-        const radius = (size - 1) / 2, plane = planes[byId('brush-plane').value], value = byId('brush-action').value === 'erase' ? 0 : 255;
+        const radius = (size - 1) / 2, erase = byId('brush-action').value === 'erase';
+        const plane = planes[byId('brush-plane').value];
         for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(height - 1, Math.floor(y + radius)); yy++) {
             for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(width - 1, Math.floor(x + radius)); xx++) {
-                if ((xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) plane[yy * width + xx] = value;
+                if ((xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) {
+                    const index = yy * width + xx;
+                    if (erase) { planes.protect[index] = 0; planes.apply[index] = 0; }
+                    else plane[index] = 255;
+                }
             }
         }
         cursor(x, y);
@@ -123,6 +129,11 @@
     byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); invalidate(); render(); });
     byId('brush-size').addEventListener('input', event => { byId('brush-size-value').textContent = `${event.target.value} px`; });
     byId('brush-radius').addEventListener('input', event => { byId('brush-radius-value').textContent = `${event.target.value} px`; });
+    const updateBrushMode = () => {
+        byId('brush-mode-summary').textContent = brushMode();
+        if (planes) render();
+    };
+    for (const id of ['brush-plane', 'brush-action']) byId(id).addEventListener('change', updateBrushMode);
     for (const id of ['brush-radius', 'brush-size']) byId(id).addEventListener('input', invalidate);
     for (const id of ['brush-plane', 'brush-action', 'brush-review', 'brush-restoration', 'brush-preparation']) byId(id).addEventListener('change', () => { drawing = false; invalidate(); });
     byId('brush-confirm').addEventListener('change', () => { revision++; clearResults(); update(); });
