@@ -341,7 +341,7 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-controls .choice-list { gap:8px; }
 .work-controls .choice-content { min-height:46px; border:1px solid #d1dfd5; border-radius:10px; background:#fff; color:#294638; font-size:14px; font-weight:600; }
 .work-controls .choice-option:hover .choice-content { background:#f1f8f3; border-color:#78aa8f; }
-.work-controls .choice-input:checked + .choice-content { border:2px solid #277c5b; background:#e5f3e9; color:#15573d; }
+.work-controls .choice-input:checked + .choice-content { border:2px solid #176b52; background:#176b52; color:#fff; }
 .work-controls .choice-input:focus-visible + .choice-content,
 .work-controls button:focus-visible,.work-controls input:focus-visible,.work-controls a:focus-visible { outline:3px solid #bf8b1e; outline-offset:2px; }
 .work-controls .work-note { padding:0 0 0 12px; border:0; border-left:3px solid #a8bcb0; border-radius:0; background:transparent; color:#425d4d; font-size:14px; line-height:1.5; }
@@ -406,7 +406,11 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 /* The selected area matches the color painted on the image. */
 .work-controls .brush-area-choice input[value=protect]:checked + .choice-content { color:#fff; background:#176b52; border-color:#176b52; }
 .work-controls .brush-area-choice input[value=apply]:checked + .choice-content { color:#fff; background:#245f9b; border-color:#245f9b; }
-.work-controls .brush-action-choice .choice-input:checked + .choice-content { color:#fff; background:#29493b; border-color:#29493b; }
+.work-controls .brush-action-choice input[value=erase]:checked + .choice-content { color:#fff; background:#29493b; border-color:#29493b; }
+.work-controls .brush-choices:has(.brush-area-choice input[value=protect]:checked) .brush-action-choice input[value=paint]:checked + .choice-content { color:#fff; background:#176b52; border-color:#176b52; }
+.work-controls .brush-choices:has(.brush-area-choice input[value=apply]:checked) .brush-action-choice input[value=paint]:checked + .choice-content { color:#fff; background:#245f9b; border-color:#245f9b; }
+.work-controls .completion-choices input[value=paint]:checked + .choice-content { color:#fff; background:#984509; border-color:#984509; }
+.work-controls .completion-choices input[value=erase]:checked + .choice-content { color:#fff; background:#29493b; border-color:#29493b; }
 .brush-mode-summary { margin:0; color:#29493b; font-size:14px; font-weight:700; line-height:1.3; }
 @media (min-width:801px) and (max-height:760px) {
   .work-screen[data-screen=brush-paint] .work-controls { gap:8px; padding-top:14px; padding-bottom:14px; }
