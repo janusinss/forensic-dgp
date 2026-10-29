@@ -3,8 +3,10 @@
     'use strict';
     const byId = id => document.getElementById(id), api = '/face/completion';
     const canvas = byId('completion-editor'), context = canvas.getContext('2d');
+    const cursorX = byId('completion-x'), cursorY = byId('completion-y'), cursorLabel = byId('completion-cursor');
     let source, session, imagePixels, bounds, mask = new Uint8Array(256 * 256), undo = [];
     let reviewId, reviewedMask, busy = false, revision = 0, operation = 0, drawing = false, previous;
+    let overlayPixels, selectedCount = 0, dirty, renderFrame = 0;
     const error = message => { byId('completion-error').textContent = message; byId('completion-error').classList.toggle('hidden', !message); };
     const progress = message => { byId('completion-progress').textContent = message; };
     const setGenerating = active => {
@@ -78,6 +80,8 @@
         clearResult(); update();
     };
     const reset = () => {
+        if (renderFrame) cancelAnimationFrame(renderFrame);
+        renderFrame = 0; overlayPixels = undefined; selectedCount = 0; dirty = undefined;
         setGenerating(false);
         byId('completion-confirm-preview').removeAttribute('src');
         operation++; revision++; source = undefined; session = undefined; imagePixels = undefined; bounds = undefined;
@@ -91,17 +95,57 @@
     const finish = token => { if (token === operation) { busy = false; update(); } };
     const remember = () => { undo.push(mask.slice()); if (undo.length > 10) undo.shift(); };
     const inside = (x, y) => Boolean(bounds && x >= bounds[0] && y >= bounds[1] && x < bounds[2] && y < bounds[3]);
-    const setCursor = (x, y) => { byId('completion-x').value = x; byId('completion-y').value = y; };
+    const setCursor = (x, y) => { cursorX.value = x; cursorY.value = y; };
+    const markDirty = (x, y) => {
+        if (!dirty) dirty = [x, y, x, y];
+        else { dirty[0] = Math.min(dirty[0], x); dirty[1] = Math.min(dirty[1], y); dirty[2] = Math.max(dirty[2], x); dirty[3] = Math.max(dirty[3], y); }
+    };
+    // Mask edits remain synchronous; only their visual presentation is batched.
     const render = () => {
+        if (!imagePixels || !overlayPixels || !dirty || renderFrame) return;
+        renderFrame = requestAnimationFrame(() => {
+            renderFrame = 0;
+            if (!imagePixels || !overlayPixels || !dirty) return;
+            const [left, top, right, bottom] = dirty;
+            dirty = undefined;
+            const original = imagePixels.data, pixels = overlayPixels.data;
+            for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) {
+                const i = y * 256 + x, offset = i * 4;
+                pixels[offset] = mask[i] ? Math.round(original[offset] * .55 + 238 * .45) : original[offset];
+                pixels[offset + 1] = mask[i] ? Math.round(original[offset + 1] * .55 + 151 * .45) : original[offset + 1];
+                pixels[offset + 2] = mask[i] ? Math.round(original[offset + 2] * .55 + 55 * .45) : original[offset + 2];
+            }
+            context.putImageData(overlayPixels, 0, 0, left, top, right - left + 1, bottom - top + 1);
+            const label = `${selectedCount.toLocaleString()} pixels selected`;
+            if (cursorLabel.textContent !== label) cursorLabel.textContent = label;
+        });
+    };
+    const rebuildOverlay = () => {
         if (!imagePixels) return;
-        const pixels = new Uint8ClampedArray(imagePixels.data);
-        let count = 0;
-        for (let i = 0; i < mask.length; i++) if (mask[i]) {
-            count++;
-            for (let channel = 0; channel < 3; channel++) pixels[i * 4 + channel] = Math.round(pixels[i * 4 + channel] * .55 + [238, 151, 55][channel] * .45);
+        overlayPixels = new ImageData(new Uint8ClampedArray(imagePixels.data), 256, 256);
+        selectedCount = 0;
+        for (let i = 0; i < mask.length; i++) if (mask[i]) selectedCount++;
+        dirty = [0, 0, 255, 255];
+        render();
+    };
+    const paintPixel = (x, y, value) => {
+        const i = y * 256 + x;
+        if (mask[i] === value) return;
+        selectedCount += value ? 1 : -1;
+        mask[i] = value;
+        markDirty(x, y);
+    };
+    const brushSettings = () => {
+        const size = Number(byId('completion-size').value);
+        if (byId('completion-size').value.trim() === '' || !Number.isInteger(size) || size < 1 || size > 100) throw new Error('Choose a brush size from 1 to 100.');
+        return { radius: (size - 1) / 2, value: byId('completion-action').value === 'erase' ? 0 : 255 };
+    };
+    const paintDisk = (x, y, { radius, value }) => {
+        for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(255, Math.floor(y + radius)); yy++) {
+            for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(255, Math.floor(x + radius)); xx++) {
+                if (inside(xx, yy) && (xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) paintPixel(xx, yy, value);
+            }
         }
-        context.putImageData(new ImageData(pixels, 256, 256), 0, 0);
-        byId('completion-cursor').textContent = `${count.toLocaleString()} pixels selected`;
     };
     const coordinate = id => {
         const value = Number(byId(id).value);
@@ -109,14 +153,7 @@
         return value;
     };
     const disk = (x, y) => {
-        const size = Number(byId('completion-size').value);
-        if (byId('completion-size').value.trim() === '' || !Number.isInteger(size) || size < 1 || size > 100) throw new Error('Choose a brush size from 1 to 100.');
-        const radius = (size - 1) / 2, value = byId('completion-action').value === 'erase' ? 0 : 255;
-        for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(255, Math.floor(y + radius)); yy++) {
-            for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(255, Math.floor(x + radius)); xx++) {
-                if (inside(xx, yy) && (xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) mask[yy * 256 + xx] = value;
-            }
-        }
+        paintDisk(x, y, brushSettings());
         setCursor(x, y);
     };
     const point = event => {
@@ -125,7 +162,7 @@
     };
     const edit = callback => {
         if (busy || !session || !imagePixels) return;
-        try { remember(); callback(); invalidateReview(); render(); error(''); progress('The selected area changed. Check it and confirm your choices again.'); }
+        try { remember(); callback(); invalidateReview(); rebuildOverlay(); error(''); progress('The selected area changed. Check it and confirm your choices again.'); }
         catch (problem) { error(problem.message); }
     };
     canvas.addEventListener('pointerdown', event => {
@@ -140,8 +177,9 @@
         const next = point(event), count = Math.max(Math.abs(next[0] - previous[0]), Math.abs(next[1] - previous[1]), 1);
         try {
             if (reviewId || byId('completion-mask-confirm').checked || byId('completion-visible-confirm').checked) invalidateReview();
-            for (let i = 1; i <= count; i++) disk(Math.round(previous[0] + (next[0] - previous[0]) * i / count), Math.round(previous[1] + (next[1] - previous[1]) * i / count));
-            previous = next; render();
+            const brush = brushSettings();
+            for (let i = 1; i <= count; i++) paintDisk(Math.round(previous[0] + (next[0] - previous[0]) * i / count), Math.round(previous[1] + (next[1] - previous[1]) * i / count), brush);
+            previous = next; setCursor(...next); render();
         } catch (problem) { drawing = false; error(problem.message); }
     });
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, () => { drawing = false; });
@@ -151,14 +189,14 @@
         try { x = coordinate('completion-x'); y = coordinate('completion-y'); }
         catch (problem) { error(problem.message); return; }
         const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
-        if (moves[event.key]) { event.preventDefault(); setCursor(Math.max(0, Math.min(255, x + moves[event.key][0])), Math.max(0, Math.min(255, y + moves[event.key][1]))); render(); }
+        if (moves[event.key]) { event.preventDefault(); setCursor(Math.max(0, Math.min(255, x + moves[event.key][0])), Math.max(0, Math.min(255, y + moves[event.key][1]))); }
         if (event.key === ' ') { event.preventDefault(); edit(() => disk(x, y)); }
     });
     byId('completion-stamp').addEventListener('click', () => edit(() => disk(coordinate('completion-x'), coordinate('completion-y'))));
     byId('completion-clear').addEventListener('click', () => edit(() => mask.fill(0)));
     byId('completion-undo').addEventListener('click', () => {
         if (busy || !session || !undo.length) return;
-        mask = undo.pop(); invalidateReview(); render(); error(''); progress('Your last change was undone. Check the area again.');
+        mask = undo.pop(); invalidateReview(); rebuildOverlay(); error(''); progress('Your last change was undone. Check the area again.');
     });
     byId('completion-rectangle').addEventListener('click', () => edit(() => {
         const left = coordinate('completion-left'), top = coordinate('completion-top'), right = coordinate('completion-right'), bottom = coordinate('completion-bottom');
@@ -167,7 +205,6 @@
         const value = byId('completion-action').value === 'erase' ? 0 : 255;
         for (let y = top; y <= bottom; y++) mask.fill(value, y * 256 + left, y * 256 + right + 1);
     }));
-    byId('completion-action').addEventListener('change', render);
     // Only pixel changes invalidate a reviewed mask; changing brush size does not.
     const crcTable = Uint32Array.from({ length: 256 }, (_, n) => { for (let i = 0; i < 8; i++) n = n & 1 ? 0xedb88320 ^ (n >>> 1) : n >>> 1; return n >>> 0; });
     const chunk = (type, bytes) => {
@@ -208,7 +245,7 @@
         try {
             const values = await readMask(objectURL);
             if (!current(token, version)) return;
-            remember(); mask = values; render(); error(''); progress('Area imported. Check all selected parts before continuing.');
+            remember(); mask = values; rebuildOverlay(); error(''); progress('Area imported. Check all selected parts before continuing.');
         } catch (problem) { if (current(token, version)) error(problem.message); }
         finally { URL.revokeObjectURL(objectURL); byId('completion-import').value = ''; finish(token); }
     });
@@ -239,7 +276,7 @@
             if (!current(token, version)) return;
             if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The restored image has an unexpected size. Please restore it again.');
             session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = [];
-            context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); render();
+            context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); rebuildOverlay();
             byId('completion-editor-section').classList.remove('hidden'); update();
             progress('Paint the covering you want to remove, then review your selection.');
         } catch (problem) { if (current(token, version)) { error(problem.message); progress('Could not prepare covering removal. You can keep your result or check the error and try again.'); } }

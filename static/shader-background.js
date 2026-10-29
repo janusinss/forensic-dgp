@@ -338,22 +338,55 @@ void main() {
   gl.uniform4f(uni.finish,0.0000,0.540,0.0000,0.100);
   gl.uniform4f(uni.transform,1.0,0.0000,0.060,1.0);
   const start=performance.now();
-  let host=null, raf=0, last=0, active=false, disposed=false, lost=false;
+  // This is a soft decorative field, so high-DPI rendering spends GPU time
+  // without adding useful detail. Leave more of the frame for the editors.
+  const maxPixels=750000, minPixels=187500;
+  let pixelBudget=maxPixels, qualityStart=0, qualityFrames=0, slowWindows=0, healthyWindows=0;
+  let host=null, bounds=null, raf=0, evaluateRaf=0, last=0, active=false, disposed=false, lost=false;
   let pointerX=0,pointerY=0,pointerOn=0,mouseX=0,mouseY=0,cursorPresence=0;
-  function resize() {
-    if (!host) return;
-    const rect=host.getBoundingClientRect();
-    const dpr=Math.min(window.devicePixelRatio||1,2,Math.sqrt(2000000/Math.max(1,rect.width*rect.height)));
-    const w=Math.max(1,Math.round(rect.width*dpr)),h=Math.max(1,Math.round(rect.height*dpr));
-    if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+  function resize(rect=bounds) {
+    if (!rect) return;
+    bounds=rect;
+    const dpr=Math.min(window.devicePixelRatio||1,1,Math.sqrt(pixelBudget/Math.max(1,rect.width*rect.height)));
+    const w=Math.max(1,Math.floor(rect.width*dpr)),h=Math.max(1,Math.floor(rect.height*dpr));
+    if(canvas.width!==w||canvas.height!==h){
+      canvas.width=w;canvas.height=h;
+      gl.viewport(0,0,w,h);
+    }
+  }
+  function resetTiming() {
+    last=0;qualityStart=0;qualityFrames=0;slowWindows=0;healthyWindows=0;
+  }
+  function stop() {
+    active=false;
+    if(raf)cancelAnimationFrame(raf);
+    raf=0;resetTiming();
+  }
+  function adapt(now) {
+    if(!qualityStart){qualityStart=now;return;}
+    qualityFrames++;
+    const elapsed=now-qualityStart;
+    if(elapsed<1000)return;
+    const average=elapsed/qualityFrames;
+    slowWindows=average>25?slowWindows+1:0;
+    healthyWindows=average<19?healthyWindows+1:0;
+    if(slowWindows>=2&&pixelBudget>minPixels){
+      pixelBudget=Math.max(minPixels,Math.floor(pixelBudget*.7));
+      resize();slowWindows=0;healthyWindows=0;
+    }else if(healthyWindows>=8&&pixelBudget<maxPixels){
+      pixelBudget=Math.min(maxPixels,Math.ceil(pixelBudget/ .7));
+      resize();slowWindows=0;healthyWindows=0;
+    }
+    qualityStart=now;qualityFrames=0;
   }
   function paint(now) {
+    raf=0;
     if (!active || disposed || lost) return;
     const dt=last?Math.min((now-last)/1000,0.1):0;
     const follow=1-Math.exp(-12*dt);
     mouseX+=(pointerX-mouseX)*follow; mouseY+=(pointerY-mouseY)*follow;
     cursorPresence+=(pointerOn-cursorPresence)*follow;
-    last=now;gl.viewport(0,0,canvas.width,canvas.height);
+    last=now;adapt(now);
     gl.uniform4f(uni.scene,canvas.width,canvas.height,(now-start)/1000*1.088,5);
     gl.uniform4f(uni.space,-0.050,0.000,mouseX,mouseY);
     gl.uniform4f(uni.cursor,cursorPresence,4.0,0.300,0.800);
@@ -364,20 +397,55 @@ void main() {
     if(disposed)return;
     const screen=workspace.querySelector('.work-screen.is-active');
     const candidate=screen?screen.querySelector('.work-visual'):null;
-    const visible=!!candidate&&!document.hidden&&candidate.getClientRects().length>0;
-    if(candidate!==host){if(host){resizeObserver.unobserve(host);host.classList.remove("has-ambient-shader");}host=candidate;if(host){host.prepend(canvas);if(!lost)host.classList.add("has-ambient-shader");resizeObserver.observe(host);}}
-    if(!visible || lost){active=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0;return;}
-    active=true;if(raf)cancelAnimationFrame(raf);raf=0;last=0;resize();paint(performance.now());
+    const rect=candidate&&!document.hidden?candidate.getBoundingClientRect():null;
+    const visible=!!rect&&rect.width>0&&rect.height>0;
+    if(candidate!==host){
+      if(host){resizeObserver.unobserve(host);host.classList.remove('has-ambient-shader');}
+      host=candidate;bounds=null;pointerOn=0;cursorPresence=0;
+      if(host){host.prepend(canvas);if(!lost)host.classList.add('has-ambient-shader');resizeObserver.observe(host);}
+    }
+    if(!visible||lost){stop();return;}
+    resize(rect);
+    if(!active){active=true;resetTiming();raf=requestAnimationFrame(paint);}
   }
-  const resizeObserver=new ResizeObserver(()=>evaluate());
-  const observer=new MutationObserver(evaluate);
-  observer.observe(workspace,{subtree:true,attributes:true,attributeFilter:['class','hidden']});
-  function move(event) { if(!active||!host)return;const r=host.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom){pointerOn=0;return;}const x=(event.clientX-r.left)/r.width*2-1,y=1-(event.clientY-r.top)/r.height*2;if(!pointerOn&&cursorPresence<0.01){mouseX=x;mouseY=y;}pointerX=x;pointerY=y;pointerOn=1; }
+  function scheduleEvaluate() {
+    if(disposed||evaluateRaf)return;
+    evaluateRaf=requestAnimationFrame(()=>{evaluateRaf=0;evaluate();});
+  }
+  const resizeObserver=new ResizeObserver(scheduleEvaluate);
+  const observer=new MutationObserver(scheduleEvaluate);
+  // Painting/status classes elsewhere do not change which panel owns the shader.
+  workspace.querySelectorAll('.work-screen,#brush-edit-section,#completion-stage,#completion-editor-section')
+    .forEach(target=>observer.observe(target,{attributes:true,attributeFilter:['class','hidden']}));
+  function move(event) {
+    if(!active||!bounds)return;
+    const r=bounds;
+    if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom){pointerOn=0;return;}
+    const x=(event.clientX-r.left)/r.width*2-1,y=1-(event.clientY-r.top)/r.height*2;
+    if(!pointerOn&&cursorPresence<0.01){mouseX=x;mouseY=y;}
+    pointerX=x;pointerY=y;pointerOn=1;
+  }
+  function visibilityChanged() {
+    if(document.hidden){stop();if(evaluateRaf)cancelAnimationFrame(evaluateRaf);evaluateRaf=0;}
+    else scheduleEvaluate();
+  }
   document.addEventListener('pointermove',move,{passive:true});
-  document.addEventListener('visibilitychange',evaluate);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;active=false;if(raf)cancelAnimationFrame(raf);canvas.style.display='none';if(host)host.classList.remove('has-ambient-shader');});
+  document.addEventListener('visibilitychange',visibilityChanged);
+  window.addEventListener('resize',scheduleEvaluate,{passive:true});
+  window.addEventListener('scroll',scheduleEvaluate,{capture:true,passive:true});
+  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();lost=true;stop();canvas.style.display='none';if(host)host.classList.remove('has-ambient-shader');});
   // A lost context falls back to the CSS background for this page session.
-  window.addEventListener('pagehide',event=>{active=false;if(raf)cancelAnimationFrame(raf);raf=0;last=0;if(!event.persisted){disposed=true;observer.disconnect();resizeObserver.disconnect();}});
+  window.addEventListener('pagehide',event=>{
+    stop();if(evaluateRaf)cancelAnimationFrame(evaluateRaf);evaluateRaf=0;
+    if(!event.persisted){
+      disposed=true;observer.disconnect();resizeObserver.disconnect();
+      document.removeEventListener('pointermove',move);
+      document.removeEventListener('visibilitychange',visibilityChanged);
+      window.removeEventListener('resize',scheduleEvaluate);
+      window.removeEventListener('scroll',scheduleEvaluate,true);
+      if(!lost){gl.deleteBuffer(buffer);gl.deleteProgram(program);}
+    }
+  });
   window.addEventListener('pageshow',event=>{if(event.persisted)evaluate();});
   evaluate();
 })();

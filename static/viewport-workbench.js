@@ -76,41 +76,59 @@
     select.addEventListener('change', () => { input.checked = select.value === input.value; });
   });
 
-  function fitEditor(visual) {
-    const canvas = visual.querySelector('canvas:not(.ambient-shader)');
-    const caption = visual.querySelector('.visual-caption');
-    if (!canvas || !canvas.width || !canvas.height || !visual.getClientRects().length) return;
-    const styles = getComputedStyle(visual);
-    const horizontal = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
-    const vertical = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
-    const availableWidth = Math.max(0, visual.clientWidth - horizontal);
-    const availableHeight = Math.max(0, visual.clientHeight - vertical - (caption?.offsetHeight || 0) - parseFloat(styles.rowGap || 0));
-    const scale = Math.min(availableWidth / canvas.width, availableHeight / canvas.height, 600 / canvas.width, 600 / canvas.height);
-    if (!(scale > 0)) return;
-    canvas.style.width = (canvas.width * scale) + 'px';
-    canvas.style.height = (canvas.height * scale) + 'px';
-  }
-  // Fit all input previews like the editor without changing image pixels.
+  // Batch fitting into one frame: measure every affected panel before writing
+  // sizes, so load, navigation and resize events do not repeatedly force layout.
   const previews = ['upload-preview', 'options-preview', 'restoration-idle', 'completion-intro-preview', 'completion-confirm-preview'].map(byId);
-  function fitInputPreview(image) {
-    const visual = image.closest('.work-visual');
-    if (image.classList.contains('hidden') || !image.naturalWidth || !image.naturalHeight || !visual.getClientRects().length) return;
-    const styles = getComputedStyle(visual);
-    const caption = visual.querySelector('.visual-caption');
-    const availableWidth = Math.max(0, visual.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight));
-    const availableHeight = Math.max(0, visual.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom) - (caption?.offsetHeight || 0) - (caption ? parseFloat(styles.rowGap || 0) : 0));
-    const scale = Math.min(availableWidth / image.naturalWidth, availableHeight / image.naturalHeight, 600 / image.naturalWidth, 600 / image.naturalHeight);
-    if (!(scale > 0)) return;
-    image.style.width = (image.naturalWidth * scale) + 'px';
-    image.style.height = (image.naturalHeight * scale) + 'px';
+  const previewByVisual = new Map(previews.map(image => [image.closest('.work-visual'), image]));
+  const pendingFits = new Set();
+  let fitFrame = 0;
+  function queueFit(visual) {
+    if (!visual) return;
+    pendingFits.add(visual);
+    if (!fitFrame) fitFrame = requestAnimationFrame(flushFits);
   }
+  function flushFits() {
+    fitFrame = 0;
+    const sizes = [];
+    pendingFits.forEach(visual => {
+      if (!visual.getClientRects().length) return;
+      const image = previewByVisual.get(visual);
+      const canvas = visual.querySelector('canvas:not(.ambient-shader)');
+      const element = image && !image.classList.contains('hidden') ? image : canvas;
+      const width = element === image ? image.naturalWidth : canvas?.width;
+      const height = element === image ? image.naturalHeight : canvas?.height;
+      if (!element || !width || !height) return;
+      const styles = getComputedStyle(visual);
+      const caption = visual.querySelector('.visual-caption');
+      const gap = parseFloat(styles.rowGap) || 0;
+      const availableWidth = Math.max(0, visual.clientWidth - parseFloat(styles.paddingLeft) - parseFloat(styles.paddingRight));
+      const availableHeight = Math.max(0, visual.clientHeight - parseFloat(styles.paddingTop) - parseFloat(styles.paddingBottom) - (caption?.offsetHeight || 0) - (caption || canvas ? gap : 0));
+      const scale = Math.min(availableWidth / width, availableHeight / height, 600 / width, 600 / height);
+      if (scale > 0) sizes.push({ element, width: width * scale, height: height * scale });
+    });
+    pendingFits.clear();
+    sizes.forEach(({ element, width, height }) => {
+      // CSSOM normalizes fractional pixel strings, so compare their numeric
+      // values rather than rewriting an unchanged size after serialization.
+      const previousWidth = parseFloat(element.style.width), previousHeight = parseFloat(element.style.height);
+      if (!Number.isFinite(previousWidth) || Math.abs(previousWidth - width) > .001) element.style.width = width + 'px';
+      if (!Number.isFinite(previousHeight) || Math.abs(previousHeight - height) > .001) element.style.height = height + 'px';
+    });
+  }
+  const fitObserver = new ResizeObserver(entries => entries.forEach(entry => queueFit(entry.target)));
+  const previewObserver = new MutationObserver(entries => entries.forEach(entry => queueFit(entry.target.closest('.work-visual'))));
+  new Set([...previewByVisual.keys(), ...document.querySelectorAll('.editor-visual')]).forEach(visual => fitObserver.observe(visual));
   previews.forEach(image => {
-    image.addEventListener('load', () => fitInputPreview(image));
-    new ResizeObserver(() => fitInputPreview(image)).observe(image.closest('.work-visual'));
-    new MutationObserver(() => fitInputPreview(image)).observe(image, { attributes: true, attributeFilter: ['class'] });
+    image.addEventListener('load', () => queueFit(image.closest('.work-visual')));
+    previewObserver.observe(image, { attributes: true, attributeFilter: ['class'] });
   });
-  const editorObserver = new ResizeObserver(entries => entries.forEach(entry => fitEditor(entry.target)));
-  document.querySelectorAll('.editor-visual').forEach(visual => editorObserver.observe(visual));
+  // One permanent handler also covers revisits interrupted before the reveal ends.
+  screens.forEach(screen => {
+    const visual = screen.querySelector('.work-visual');
+    visual?.addEventListener('animationend', event => {
+      if (event.target === visual && event.animationName === 'result-reveal') screen.classList.remove('result-enter');
+    });
+  });
   function syncProgress() {
     const progress = byId('brush-progress');
     const redundant = progress.textContent.startsWith('Check the face before continuing.') ||
@@ -127,31 +145,33 @@
     notice.classList.toggle('hidden', !message);
   }
   byId('brush-file').addEventListener('change', () => showNotice(''));
+  function setPreviewSource(image, source) {
+    const previous = image.getAttribute('src');
+    if (source) {
+      if (previous !== source) image.setAttribute('src', source);
+    } else if (previous !== null) image.removeAttribute('src');
+  }
   function show(name, focus = true, revealResult = false) {
     const screen = screens.find(item => item.dataset.screen === name);
     if (!screen || screen.closest('.hidden')) return false;
     if (name === 'options') {
       const original = byId('upload-preview').getAttribute('src');
-      if (original) byId('options-preview').setAttribute('src', original);
-      else byId('options-preview').removeAttribute('src');
+      setPreviewSource(byId('options-preview'), original);
     }
     if (name === 'run') {
       const manual = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off';
       const image = byId(manual ? 'brush-derived' : 'upload-preview');
       const source = image.getAttribute('src');
-      if (source) byId('restoration-idle').setAttribute('src', source);
-      else byId('restoration-idle').removeAttribute('src');
+      setPreviewSource(byId('restoration-idle'), source);
       byId('restoration-idle').alt = manual ? 'Reviewed prepared input before restoration' : 'Original input before restoration';
     }
     if (name === 'completion-intro') {
       const source = byId('brush-result-output').getAttribute('src');
-      if (source) byId('completion-intro-preview').setAttribute('src', source);
-      else byId('completion-intro-preview').removeAttribute('src');
+      setPreviewSource(byId('completion-intro-preview'), source);
     }
     if (name === 'completion-confirm') {
       const source = byId('brush-result-output').getAttribute('src');
-      if (source) byId('completion-confirm-preview').setAttribute('src', source);
-      else byId('completion-confirm-preview').removeAttribute('src');
+      setPreviewSource(byId('completion-confirm-preview'), source);
     }
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Check your picture before continuing.';
@@ -159,24 +179,12 @@
     updateTabTitle();
     syncProgress();
     screens.forEach(item => { item.classList.remove('result-enter'); item.classList.toggle('is-active', item === screen); });
-    if (revealResult) {
-      screen.classList.add('result-enter');
-      const visual = screen.querySelector('.work-visual');
-      if (visual) {
-        const finishReveal = event => {
-          if (event.target !== visual || event.animationName !== 'result-reveal') return;
-          screen.classList.remove('result-enter');
-          visual.removeEventListener('animationend', finishReveal);
-        };
-        visual.addEventListener('animationend', finishReveal);
-      }
-    }
+    if (revealResult) screen.classList.add('result-enter');
     const slot = screen.querySelector('.feedback-slot');
     if (slot && form.contains(screen)) slot.append(brushFeedback);
     if (slot && byId('completion-stage').contains(screen)) slot.append(completionFeedback);
     showNotice('');
-    screen.querySelectorAll('.editor-visual').forEach(fitEditor);
-    requestAnimationFrame(() => { screen.querySelectorAll('.editor-visual').forEach(fitEditor); previews.filter(image => screen.contains(image)).forEach(fitInputPreview); });
+    screen.querySelectorAll('.work-visual').forEach(queueFit);
     if (focus) {
       const heading = screen.querySelector('h1');
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }

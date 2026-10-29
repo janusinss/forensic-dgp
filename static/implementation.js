@@ -4,9 +4,11 @@
     'use strict';
     const api = '/face/restoration', byId = id => document.getElementById(id);
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
+    const protectColor = [45, 185, 90], applyColor = [55, 125, 220];
     let sourceFile, originalPixels, width = 0, height = 0, planes, undo = [];
     let available = false, busy = false, revision = 0, operation = 0;
     let previewId, masks, drawing = false, previous, cursorX = 0, cursorY = 0;
+    let overlayPixels, dirty, renderFrame = 0, protectCount = 0, applyCount = 0;
     const error = message => {
         byId('brush-error').textContent = message;
         byId('brush-error').classList.toggle('hidden', !message);
@@ -69,38 +71,74 @@
     const brushMode = () => byId('brush-action').value === 'erase' ? 'Erasing green and blue marks' : byId('brush-plane').value === 'protect' ? 'Painting green protection' : 'Painting blue blur';
     const cursorStatus = () => {
         const caption = byId('brush-cursor');
-        caption.textContent = `${brushMode()} · ${cursorX}, ${cursorY}`;
-        caption.title = caption.textContent;
+        const label = `${brushMode()} · ${cursorX}, ${cursorY}`;
+        const title = `${label}. ${protectCount.toLocaleString()} protected pixels; ${applyCount.toLocaleString()} selected for blur. Green protection takes priority.`;
+        if (caption.textContent !== label) caption.textContent = label;
+        if (caption.title !== title) caption.title = title;
     };
     const cursor = (x, y) => {
         cursorX = x; cursorY = y;
-        cursorStatus();
+        render();
     };
+    const markDirty = (left, top, right, bottom) => {
+        if (!dirty) dirty = [left, top, right, bottom];
+        else { dirty[0] = Math.min(dirty[0], left); dirty[1] = Math.min(dirty[1], top); dirty[2] = Math.max(dirty[2], right); dirty[3] = Math.max(dirty[3], bottom); }
+    };
+    // Update masks immediately, but paint only touched pixels once per frame.
     const render = () => {
-        if (!planes) return;
-        const pixels = new Uint8ClampedArray(originalPixels.data);
-        for (let i = 0; i < width * height; i++) {
-            const color = planes.protect[i] ? [45, 185, 90] : (planes.apply[i] ? [55, 125, 220] : null);
-            if (color) for (let c = 0; c < 3; c++) pixels[i * 4 + c] = Math.round(pixels[i * 4 + c] * .6 + color[c] * .4);
-        }
-        context.putImageData(new ImageData(pixels, width, height), 0, 0);
-        cursorStatus();
-        byId('brush-cursor').title += `. ${planes.protect.reduce((n, v) => n + (v > 0), 0).toLocaleString()} protected pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0).toLocaleString()} selected for blur. Green protection takes priority.`;
+        if (!planes || !overlayPixels || renderFrame) return;
+        renderFrame = requestAnimationFrame(() => {
+            renderFrame = 0;
+            if (!planes || !overlayPixels || !originalPixels) return;
+            if (dirty) {
+                const [left, top, right, bottom] = dirty;
+                dirty = undefined;
+                const original = originalPixels.data, pixels = overlayPixels.data;
+                for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) {
+                    const i = y * width + x, offset = i * 4;
+                    const color = planes.protect[i] ? protectColor : (planes.apply[i] ? applyColor : null);
+                    for (let channel = 0; channel < 3; channel++) pixels[offset + channel] = color ? Math.round(original[offset + channel] * .6 + color[channel] * .4) : original[offset + channel];
+                }
+                context.putImageData(overlayPixels, 0, 0, left, top, right - left + 1, bottom - top + 1);
+            }
+            cursorStatus();
+        });
     };
-    const disk = (x, y) => {
+    const repaintAll = () => {
+        protectCount = 0; applyCount = 0;
+        for (let i = 0; i < planes.protect.length; i++) {
+            if (planes.protect[i]) protectCount++;
+            if (planes.apply[i]) applyCount++;
+        }
+        markDirty(0, 0, width - 1, height - 1);
+        render();
+    };
+    const brushSettings = () => {
         const size = Number(byId('brush-size').value);
         if (!Number.isInteger(size) || size < 1 || size > 100) throw new Error('Choose a brush size from 1 to 100 pixels.');
-        const radius = (size - 1) / 2, erase = byId('brush-action').value === 'erase';
-        const plane = planes[byId('brush-plane').value];
-        for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(height - 1, Math.floor(y + radius)); yy++) {
-            for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(width - 1, Math.floor(x + radius)); xx++) {
+        return { radius: (size - 1) / 2, erase: byId('brush-action').value === 'erase', planeName: byId('brush-plane').value };
+    };
+    const disk = (x, y, { radius, erase, planeName } = brushSettings()) => {
+        const plane = planes[planeName];
+        const left = Math.max(0, Math.ceil(x - radius)), right = Math.min(width - 1, Math.floor(x + radius));
+        const top = Math.max(0, Math.ceil(y - radius)), bottom = Math.min(height - 1, Math.floor(y + radius));
+        let changed = false;
+        for (let yy = top; yy <= bottom; yy++) {
+            for (let xx = left; xx <= right; xx++) {
                 if ((xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) {
                     const index = yy * width + xx;
-                    if (erase) { planes.protect[index] = 0; planes.apply[index] = 0; }
-                    else plane[index] = 255;
+                    if (erase) {
+                        if (planes.protect[index]) { protectCount--; changed = true; }
+                        if (planes.apply[index]) { applyCount--; changed = true; }
+                        planes.protect[index] = 0; planes.apply[index] = 0;
+                    } else if (!plane[index]) {
+                        plane[index] = 255; changed = true;
+                        if (planeName === 'protect') protectCount++; else applyCount++;
+                    }
                 }
             }
         }
+        if (changed) markDirty(left, top, right, bottom);
         cursor(x, y);
     };
     const edit = callback => {
@@ -119,7 +157,8 @@
         if (!drawing || busy) return;
         const next = point(event), count = Math.max(Math.abs(next[0] - previous[0]), Math.abs(next[1] - previous[1]), 1);
         try {
-            for (let i = 1; i <= count; i++) disk(Math.round(previous[0] + (next[0] - previous[0]) * i / count), Math.round(previous[1] + (next[1] - previous[1]) * i / count));
+            const brush = brushSettings();
+            for (let i = 1; i <= count; i++) disk(Math.round(previous[0] + (next[0] - previous[0]) * i / count), Math.round(previous[1] + (next[1] - previous[1]) * i / count), brush);
             previous = next; render();
         } catch (problem) { drawing = false; error(problem.message); }
     });
@@ -131,8 +170,8 @@
         if (moves[event.key]) { event.preventDefault(); cursor(Math.max(0, Math.min(width - 1, x + moves[event.key][0])), Math.max(0, Math.min(height - 1, y + moves[event.key][1]))); }
         if (event.key === ' ') { event.preventDefault(); edit(() => disk(x, y)); }
     });
-    byId('brush-clear').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); }));
-    byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); invalidate(); render(); });
+    byId('brush-clear').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); protectCount = 0; applyCount = 0; markDirty(0, 0, width - 1, height - 1); }));
+    byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); invalidate(); repaintAll(); });
     byId('brush-size').addEventListener('input', event => { byId('brush-size-value').textContent = `${event.target.value} px`; });
     byId('brush-radius').addEventListener('input', event => { byId('brush-radius-value').textContent = `${event.target.value} px`; });
     const updateBrushMode = () => {
@@ -184,6 +223,8 @@
         data.append('radius', radius); return data;
     };
     const resetInput = () => {
+        if (renderFrame) cancelAnimationFrame(renderFrame);
+        renderFrame = 0; overlayPixels = undefined; dirty = undefined; protectCount = 0; applyCount = 0;
         sourceFile = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
         canvas.width = 0; canvas.height = 0;
         byId('upload-preview').removeAttribute('src'); byId('upload-preview').classList.add('hidden');
@@ -206,6 +247,7 @@
             if (image.naturalWidth !== result.width || image.naturalHeight !== result.height) throw new Error('The picture could not be prepared correctly. Please choose it again.');
             sourceFile = file; width = result.width; height = result.height; canvas.width = width; canvas.height = height;
             context.drawImage(image, 0, 0); originalPixels = context.getImageData(0, 0, width, height);
+            overlayPixels = new ImageData(new Uint8ClampedArray(originalPixels.data), width, height);
             planes = { protect: new Uint8Array(width * height), apply: new Uint8Array(width * height) };
             byId('upload-preview').src = image.src; byId('upload-preview').classList.remove('hidden');
             byId('brush-dimensions').textContent = `Picture size: ${width} × ${height} pixels. No areas are marked yet.`;
