@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=22">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=23">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
 </head>
 <body>
@@ -38,7 +38,15 @@
         <div class="work-actions"><button class="execute-btn" type="button" data-nav="options">Choose restoration <span aria-hidden="true">→</span></button><button class="text-btn" type="button" data-dialog="about-dialog">About</button></div>
       </div>
       <aside class="work-visual inspect-visual" aria-label="Original input preview">
-        <div id="brush-standby" class="empty-state"><span class="work-kicker">THE ORIGINAL</span><h2>One image. A closer look.</h2><p>Upload a face picture to begin.</p></div>
+        <div id="brush-standby" class="empty-state opening-dialogue">
+          <div class="opening-dialogue-brand">FORENSIC DGP<span>A CLOSER LOOK STARTS HERE</span></div>
+          <div class="opening-dialogue-stage">
+            <svg class="opening-dialogue-art" viewBox="0 0 835 900" aria-hidden="true" focusable="false"><path class="dialogue-question" d="M65 180H625V405H235L160 476V405H65Z"/><path class="dialogue-answer" d="M280 510H770V730H680V795L605 730H280Z"/></svg>
+            <h2>Your<br>picture.</h2>
+            <div class="opening-dialogue-reply">Let's look<br>closer.</div>
+          </div>
+          <p class="opening-dialogue-foot">Upload a face picture to begin.</p>
+        </div>
         <img id="upload-preview" class="hidden" width="160" height="160" alt="Original uploaded picture">
       </aside>
     </section>
