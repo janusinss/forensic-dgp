@@ -216,7 +216,16 @@
             previewId = result.preview_id; masks = savedMasks;
             byId('brush-original').src = original; byId('brush-overlay').src = overlay; byId('brush-derived').src = prepared;
             byId('brush-prepared-download').href = prepared; byId('brush-preview-download').href = bundle;
-            byId('brush-preservation').textContent = `Protected areas stayed unchanged during preparation. ${result.metadata.changed_native_pixels} pixels changed. ${result.metadata.no_effect ? 'These selections made no changes; you can choose Bypass.' : 'Review the prepared picture and its edges before confirming.'} Restoration can still change facial appearance.`;
+            let explanation;
+            if (result.metadata.no_effect) {
+                if (Number(radius) === 0) explanation = 'Blur strength is 0, so the picture did not change. Increase the strength to add blur.';
+                else if (!savedPlanes.protect.some(Boolean) && !savedPlanes.apply.some(Boolean)) explanation = 'No area was selected. Paint blue where you want blur, or paint green to protect an area and blur its surroundings.';
+                else if (result.metadata.effective_Apply_native_pixels === 0) explanation = 'No area is available to blur. Green protection or its border covers the selection. Erase some green or paint blue outside it.';
+                else explanation = 'The picture did not change. Try a larger blue area or a higher blur strength.';
+            } else {
+                explanation = `Blur strength: ${radius} px. ${result.metadata.changed_native_pixels.toLocaleString()} pixels changed. Review the prepared picture and its edges.`;
+            }
+            byId('brush-preservation').textContent = `${explanation} Protected areas stay unchanged during preparation; restoration can still change facial appearance.`;
             byId('brush-preview-section').classList.remove('hidden');
             progress('Preview ready. Review it and confirm your selections before continuing.');
         } catch (problem) { if (current(token, version)) { invalidate(); error(problem.message); progress('Could not prepare the picture. Review the selected areas or choose Bypass.'); } }

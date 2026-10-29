@@ -178,6 +178,21 @@ class ControllerTests(unittest.TestCase):
         with Image.open(io.BytesIO(payload['derived-native.png'])) as image:
             self.assertTrue(np.array_equal(np.asarray(image), self.rgb))
 
+    def test_blur_strength_changes_preview_and_keeps_protected_pixels(self):
+        protect = np.zeros(self.rgb.shape[:2], np.uint8); protect[32:64, 40:88] = 255
+        apply = np.full_like(protect, 255)
+        outputs = []
+        for radius in (0, 1, 4, 12):
+            preview, payload = build_preview(self.contents, png(protect), png(apply), nominal_radius=radius)
+            with Image.open(io.BytesIO(payload['derived-native.png'])) as image:
+                derived = np.asarray(image).copy()
+            self.assertEqual(preview['metadata']['algorithm']['nominal_Gaussian_radius_at256'], radius)
+            self.assertTrue(np.array_equal(derived[protect > 0], self.rgb[protect > 0]))
+            self.assertEqual(preview['metadata']['no_effect'], radius == 0)
+            outputs.append(derived)
+        self.assertTrue(np.array_equal(outputs[0], self.rgb))
+        self.assertTrue(all(not np.array_equal(a, b) for a, b in zip(outputs, outputs[1:])))
+
     def test_explicit_apply_limits_blur_and_protect_wins_overlap(self):
         protect = np.zeros(self.rgb.shape[:2], np.uint8); protect[32:64, 40:88] = 255
         apply = np.zeros_like(protect); apply[5:90, 5:110] = 255
