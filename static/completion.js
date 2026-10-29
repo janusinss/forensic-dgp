@@ -110,7 +110,7 @@
     };
     const disk = (x, y) => {
         const size = Number(byId('completion-size').value);
-        if (byId('completion-size').value.trim() === '' || !Number.isInteger(size) || size < 1 || size > 80) throw new Error('Choose a brush size from 1 to 80.');
+        if (byId('completion-size').value.trim() === '' || !Number.isInteger(size) || size < 1 || size > 100) throw new Error('Choose a brush size from 1 to 100.');
         const radius = (size - 1) / 2, value = byId('completion-action').value === 'erase' ? 0 : 255;
         for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(255, Math.floor(y + radius)); yy++) {
             for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(255, Math.floor(x + radius)); xx++) {
