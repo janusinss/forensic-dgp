@@ -7,7 +7,7 @@
   const completionFeedback = byId('completion-feedback');
   let current = 'inspect', pendingPreview = false, pendingCompletion = false, pendingEstimate = false;
   const stageTitles = {
-    inspect: 'Choose a picture', options: 'Restoration settings',
+    inspect: '', options: 'Restoration settings',
     'brush-paint': 'Protect and blur', 'brush-preview': 'Review preparation',
     run: 'Restore the picture', result: 'Review restoration',
     'completion-intro': 'Covering removal', 'completion-paint': 'Select the removal area',
