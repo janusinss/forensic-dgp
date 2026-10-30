@@ -27,11 +27,28 @@ function Valid-Relative([string]$path) {
   }
   return $true
 }
-function Git-Blob([string]$path) {
-  $bytes = [IO.File]::ReadAllBytes($path)
+function Git-BlobBytes([byte[]]$bytes) {
   $header = [Text.Encoding]::ASCII.GetBytes("blob $($bytes.Length)`0")
   $sha = [Security.Cryptography.SHA1]::Create()
   try { $sha.TransformBlock($header,0,$header.Length,$header,0) | Out-Null; $sha.TransformFinalBlock($bytes,0,$bytes.Length) | Out-Null; return ([BitConverter]::ToString($sha.Hash)).Replace('-','').ToLowerInvariant() } finally { $sha.Dispose() }
+}
+function Git-Blob([string]$path) { return Git-BlobBytes ([IO.File]::ReadAllBytes($path)) }
+function Verify-SourceBlob([string]$path,[string]$name,[string]$expected) {
+  $raw = [IO.File]::ReadAllBytes($path)
+  if ((Git-BlobBytes $raw) -ceq $expected) { return }
+  # GitHub archives can apply .gitattributes eol=crlf to tracked batch files.
+  # Only accept the exact canonical Git blob after reversing CRLF to LF.
+  if (!$name.EndsWith('.bat',[StringComparison]::OrdinalIgnoreCase)) { throw "Git blob mismatch: $name" }
+  $canonical = New-Object IO.MemoryStream
+  try {
+    for ($i=0; $i -lt $raw.Length; $i++) {
+      if ($raw[$i] -eq 13 -and $i+1 -lt $raw.Length -and $raw[$i+1] -eq 10) { continue }
+      $canonical.WriteByte($raw[$i])
+    }
+    $bytes = $canonical.ToArray()
+  } finally { $canonical.Dispose() }
+  if ((Git-BlobBytes $bytes) -cne $expected) { throw "Git blob mismatch: $name" }
+  [IO.File]::WriteAllBytes($path,$bytes)
 }
 function File-Sha([string]$path) {
   $stream = [IO.File]::OpenRead($path); $sha = [Security.Cryptography.SHA256]::Create()
@@ -176,7 +193,7 @@ try {
         New-Item -ItemType Directory -Path $parent -Force | Out-Null
         $input = $entry.Open(); $file = [IO.File]::Open($output,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
         try { $input.CopyTo($file) } finally { $file.Dispose(); $input.Dispose() }
-        if ((Git-Blob $output) -cne $manifest[$name]) { throw "Git blob mismatch: $name" }
+        Verify-SourceBlob $output $name $manifest[$name]
       }
     } finally { $archive.Dispose() }
     Check-Path (Join-Path $root 'versions'); Check-Path (Join-Path $root 'receipts')

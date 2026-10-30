@@ -48,6 +48,24 @@ foreach ($p in @('README.MD','static/capture.js','implementation/assets/file.npz
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), expected)
 
+    def test_archive_batch_crlf_must_match_canonical_git_blob(self):
+        canonical = b'@echo off\necho fixture\n'
+        expected = hashlib.sha1(b'blob ' + str(len(canonical)).encode() + b'\0' + canonical).hexdigest()
+        path = self.root / 'fixture.bat'
+        path.write_bytes(canonical.replace(b'\n', b'\r\n'))
+        body = "Verify-SourceBlob (Join-Path $env:DISTRIBUTION_TEST_ROOT 'fixture.bat') 'fixture.bat' '" + expected + "'"
+        result = self.run_ps(body)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(path.read_bytes(), canonical)
+        tampered = b'@echo off\r\necho changed\r\n'
+        path.write_bytes(tampered)
+        result = self.run_ps(body)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(path.read_bytes(), tampered)
+        path.write_bytes(canonical.replace(b'\n', b'\r\n'))
+        non_batch = body.replace("'fixture.bat' '", "'fixture.txt' '")
+        self.assertNotEqual(self.run_ps(non_batch).returncode, 0)
+
     def test_check_path_rejects_reparse_parent_even_when_leaf_exists(self):
         actual = self.root / 'actual'
         actual.mkdir()
