@@ -1,5 +1,5 @@
-# install.bat installs torch from the official CPU wheel index first.
-torch==2.13.0
+# install.bat uses uv with --torch-backend cpu and PyPI for other packages.
+torch==2.13.0+cpu
 numpy==2.5.2
 Pillow==12.3.0
 scipy==1.18.0

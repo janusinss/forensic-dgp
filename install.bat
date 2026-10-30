@@ -8,7 +8,8 @@ if /i "%~1"=="--no-pause" set "IMPLEMENTATION_NO_PAUSE=1"
 echo ===================================================
 echo Forensic DGP - Windows installation
 echo ===================================================
-echo Uses Python 3.12 or 3.13, 64-bit, and CPU PyTorch.
+echo Uses Python 3.12 or 3.13, 64-bit, CPU PyTorch, and cached uv installs.
+echo Dependencies and both model families install in parallel.
 echo.
 
 set "SETUP_PYTHON="
@@ -41,10 +42,6 @@ goto install_environment
 
 :install_environment
 %SETUP_PYTHON% -B -m implementation.environment install
-if errorlevel 1 goto failed
-echo.
-echo Installing separate R1 completion and reviewed covering-proposal assets...
-%SETUP_PYTHON% -B -m implementation.completion_install
 if errorlevel 1 goto failed
 echo.
 echo Installation complete. Run start.bat to open the application.

@@ -1,6 +1,6 @@
 # Face restoration app
 
-This app helps you inspect and restore a picture of one face on your Windows computer. It can also make an estimate of a part of the face hidden by a covering, such as a mask. The finished images are 256 × 256 pixels.
+This app helps you inspect and restore a picture of one face on your Windows computer. It can also make an estimate of a part of the face hidden by a covering, such as a mask. The finished images are 256 Ã— 256 pixels.
 
 **Please read:** This is experimental research software. A sharper image or a generated face is not proof of someone's identity or what was hidden. If the face is too blurry or covered to see its features, use a clearer or less-covered picture.
 
@@ -41,6 +41,8 @@ In the same PowerShell window, run:
 ```
 
 Keep the window open and wait for the installer to finish. It downloads the programs and model files needed for both restoration and the optional covering-removal feature. If Python is missing, it also downloads a private copy under `%LOCALAPPDATA%\DGP`; it does not replace your existing Python or change your PATH. Follow any prompt to press a key when it finishes. If you see an error, read the message and check [Common problems](#common-problems).
+
+Setup uses pinned uv 0.13.1 and installs dependencies and both model families concurrently. Model files are checked against their expected size and SHA-256. Existing mismatched files are preserved and reported. Setup succeeds only after all tasks and the dependency check pass. First setup downloads about 755 MB of model assets, plus dependencies.
 
 ## Open the app
 

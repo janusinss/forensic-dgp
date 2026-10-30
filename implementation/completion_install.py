@@ -259,10 +259,9 @@ def main(argv=None):
     parser.add_argument("--configured-child", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(arguments)
     try:
-        # install.bat invokes this through its bootstrap Python after the existing
-        # environment installation succeeds. Use only that checkout's validated
-        # environment for the ordinary download path. Verification/offline file
-        # copying are standard-library-only and can be performed independently.
+        # This standalone command uses the validated checkout environment for
+        # ordinary downloads. Unified setup calls install_assets() independently
+        # of dependency installation; asset acquisition is standard-library-only.
         if not args.verify_only and args.local_r1 is None and args.local_detector is None:
             from .environment import configured_python, check_python, run_foreground
             configured = configured_python()
