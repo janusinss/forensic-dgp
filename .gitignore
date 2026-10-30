@@ -178,3 +178,8 @@ strix_runs/
 *.db
 sec_test_cookies*.txt
 verify_cookie*.txt
+
+# Local Codex skills, instructions, and workflow artifacts
+/.codex/*
+!/.codex/rules/
+!/.codex/agents/
