@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import threading
 import unittest
 from unittest.mock import patch
@@ -24,13 +25,16 @@ class DependencyInstallationTests(unittest.TestCase):
         self.assertIn("install", command)
         for flag, value in (("--torch-backend", "cpu"), ("--python", str(self.python)),
                             ("--default-index", "https://pypi.org/simple"),
-                            ("--only-binary", ":all:"), ("--link-mode", "copy")):
+                            ("--only-binary", ":all:")):
             self.assertIn(flag, command)
             self.assertEqual(command[command.index(flag) + 1], value)
         for flag in ("--strict", "--no-config", "--no-python-downloads"):
             self.assertIn(flag, command)
         self.assertEqual(Path(command[command.index("-r") + 1]), environment.ROOT / "requirements.txt")
         self.assertNotIn("--upgrade", command)
+        if "--link-mode" in command:
+            self.assertNotEqual(command[command.index("--link-mode") + 1], "copy",
+                                "allow uv to reuse wheel files instead of forcing full copies")
 
     def assert_uv_check(self, command):
         self.assertEqual(command[0], str(self.python))
@@ -178,6 +182,70 @@ class ConcurrentModelInstallationTests(unittest.TestCase):
                 result = 1
         self.assertNotEqual(result, 0)
         self.assertTrue(restoration_finished.is_set())
+
+
+class SeededCacheSelectionTests(unittest.TestCase):
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name)
+        self.seeded = self.root / "implementation" / "uv_cache"
+
+    def package_environment(self, inherited):
+        with patch.object(environment, "ROOT", self.root), \
+                patch.dict(environment.os.environ, inherited, clear=True), \
+                patch.object(environment.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)), \
+                patch.object(environment, "run_foreground", return_value=0) as run:
+            self.assertEqual(environment.install_dependencies(Path(sys.executable)), 0)
+        self.assertEqual(run.call_count, 2)
+        self.assertIn("install", run.call_args_list[0].args[0])
+        self.assertIn("check", run.call_args_list[1].args[0])
+        return [call.kwargs["env"] for call in run.call_args_list]
+
+    def test_bundled_cache_is_selected_when_present_and_no_explicit_override(self):
+        self.seeded.mkdir(parents=True)
+        for selected in self.package_environment({}):
+            self.assertEqual(Path(selected["UV_CACHE_DIR"]), self.seeded)
+
+    def test_explicit_user_cache_takes_priority_over_bundled_cache(self):
+        self.seeded.mkdir(parents=True)
+        chosen = str(self.root / "user wheel cache")
+        for selected in self.package_environment({"UV_CACHE_DIR": chosen}):
+            self.assertEqual(selected["UV_CACHE_DIR"], chosen)
+
+    def test_missing_bundled_cache_preserves_uv_default_cache_selection(self):
+        for selected in self.package_environment({}):
+            self.assertNotIn("UV_CACHE_DIR", selected)
+
+    def test_bundled_cache_file_is_preserved_and_refused_before_install(self):
+        self.seeded.parent.mkdir()
+        original = b"not a wheel cache directory"
+        self.seeded.write_bytes(original)
+        with patch.object(environment, "ROOT", self.root), \
+                patch.dict(environment.os.environ, {}, clear=True), \
+                patch.object(environment.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)), \
+                patch.object(environment, "run_foreground") as run:
+            with self.assertRaises(environment.EnvironmentError):
+                environment.install_dependencies(Path(sys.executable))
+        run.assert_not_called()
+        self.assertEqual(self.seeded.read_bytes(), original)
+
+    def test_linked_bundled_cache_is_refused_before_install(self):
+        self.seeded.parent.mkdir()
+        real_cache = self.root / "real-cache"
+        real_cache.mkdir()
+        try:
+            self.seeded.symlink_to(real_cache, target_is_directory=True)
+        except OSError as exc:
+            self.skipTest(f"local symlink creation unavailable: {exc}")
+        with patch.object(environment, "ROOT", self.root), \
+                patch.dict(environment.os.environ, {}, clear=True), \
+                patch.object(environment.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)), \
+                patch.object(environment, "run_foreground") as run:
+            with self.assertRaises(environment.EnvironmentError):
+                environment.install_dependencies(Path(sys.executable))
+        run.assert_not_called()
+        self.assertTrue(self.seeded.is_symlink())
 
 
 class WholeInstallationTests(unittest.TestCase):

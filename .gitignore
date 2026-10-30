@@ -1,4 +1,5 @@
 # Local Python installation and caches
+/implementation/uv_cache/
 /.implementation-env.json
 /.implementation-env.json.*.tmp
 venv/

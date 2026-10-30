@@ -21,6 +21,16 @@ Alternatively, [download the IMPLEMENTATION ZIP](https://github.com/janusinss/fo
 
 The installer uses 64-bit Python 3.12 or 3.13. If neither is available, it downloads a private Python runtime under `%LOCALAPPDATA%\DGP` without changing PATH. Every model file must pass its size and SHA-256 checks; existing mismatched files are preserved.
 
+### Faster repeat and multi-PC setup
+
+The installer checks an existing private Python runtime before probing system installations. It validates the version and 64-bit architecture before use, and falls back to a supported system Python if that private copy is invalid.
+
+Package installation uses [uv's Windows hardlink default](https://docs.astral.sh/uv/reference/settings/#link-mode), avoiding full copies of cached dependency files when the cache and environment share a filesystem. Other filesystem layouts fall back to copying. This applies to dependency packages; model files remain separately verified ordinary files.
+
+For a trusted preseeded setup, copy a compatible, populated uv cache intact into `implementation\uv_cache\` before installation. The installer detects that directory automatically. An explicit `UV_CACHE_DIR` setting takes precedence; without either setting, uv uses its normal per-user cache. The bundled cache is git-ignored. Keep the cache and environment on the same filesystem for [best cache performance](https://docs.astral.sh/uv/concepts/cache/#cache-directory).
+
+Reuse existing exact model files under `models/` to avoid downloading them again; full size and SHA-256 checks still run. A copied package cache alone does not make setup fully offline: Python, the one-time uv bootstrap, missing packages, or model files can still require downloads. Installation time depends on available files, connection speed, disk speed, and security scanning.
+
 ## Requirements
 
 - 64-bit Windows; a graphics card is not required.

@@ -118,6 +118,12 @@ def install_dependencies(python: Path) -> int:
                    if not key.upper().startswith(('UV_', 'PIP_'))
                    or key.upper() in ('UV_CACHE_DIR', 'UV_SYSTEM_CERTS')}
     package_env['PIP_CONFIG_FILE'] = os.devnull
+    bundled_cache = ROOT / 'implementation' / 'uv_cache'
+    if 'UV_CACHE_DIR' not in package_env and (bundled_cache.exists() or bundled_cache.is_symlink()):
+        if not bundled_cache.is_dir() or bundled_cache.is_symlink() or bundled_cache.is_junction():
+            raise EnvironmentError('The bundled uv cache must be an ordinary directory.')
+        package_env['UV_CACHE_DIR'] = str(bundled_cache)
+        print(f'[packages] Reusing bundled uv cache: {bundled_cache}', flush=True)
     if checked.returncode == 1:
         print(f'[packages] Installing uv {UV_VERSION} once into this environment...', flush=True)
         result = run_foreground([
@@ -131,7 +137,7 @@ def install_dependencies(python: Path) -> int:
         str(python), '-I', '-m', 'uv', '--no-config', '--no-python-downloads',
         'pip', 'install', '--python', str(python), '--torch-backend', 'cpu',
         '--default-index', 'https://pypi.org/simple', '--only-binary', ':all:',
-        '--link-mode', 'copy', '--strict', '-r', str(ROOT / 'requirements.txt'),
+        '--strict', '-r', str(ROOT / 'requirements.txt'),
     ], env=package_env)
     if result:
         return result
