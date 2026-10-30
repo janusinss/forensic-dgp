@@ -1,13 +1,14 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-title Forensic DGP - Install
+title Forensic DGP - Optimized Install
 set "SETUP_EXIT=1"
 if /i "%~1"=="--no-pause" set "IMPLEMENTATION_NO_PAUSE=1"
 
 echo ===================================================
-echo Forensic DGP - Windows installation
+echo Forensic DGP - IMPLEMENTATION optimized installer
 echo ===================================================
+echo Current entry point: install.bat
 echo Uses Python 3.12 or 3.13, 64-bit, CPU PyTorch, and cached uv installs.
 echo Dependencies and both model families install in parallel.
 echo.

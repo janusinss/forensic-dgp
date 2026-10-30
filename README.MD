@@ -4,7 +4,11 @@ A local Windows app for restoring a cropped face picture, with optional manual c
 
 ## Install
 
-Open PowerShell and run:
+**`install.bat` is the updated installer on IMPLEMENTATION.** It uses pinned `uv 0.13.1`, cached dependencies, and concurrent restoration/completion asset setup. The filename stays the same so existing shortcuts and update commands keep working.
+
+`install-integrated.bat` is the `main` branch's wrapper for its `integrated_app/` folder. This standalone branch keeps the app at the repository root and uses `install.bat` directly.
+
+Install [Git for Windows](https://git-scm.com/download/win) for the clone command below. Open PowerShell and run:
 
 ```powershell
 git clone --depth 1 --single-branch --branch IMPLEMENTATION https://github.com/janusinss/forensic-dgp.git
@@ -13,9 +17,9 @@ cd forensic-dgp
 .\start.bat
 ```
 
-Git users need [Git for Windows](https://git-scm.com/download/win). Alternatively, [download the IMPLEMENTATION ZIP](https://github.com/janusinss/forensic-dgp/archive/refs/heads/IMPLEMENTATION.zip), extract it, and double-click `install.bat`. Open `start.bat` when installation succeeds.
+Alternatively, [download the IMPLEMENTATION ZIP](https://github.com/janusinss/forensic-dgp/archive/refs/heads/IMPLEMENTATION.zip), extract it, and double-click `install.bat`. Open `start.bat` when installation succeeds.
 
-The installer uses 64-bit Python 3.12 or 3.13. If neither is available, it downloads a private Python runtime under `%LOCALAPPDATA%\DGP` without changing PATH. Dependencies and both model families install concurrently through cached package downloads. Every model file must pass its size and SHA-256 checks; existing mismatched files are preserved.
+The installer uses 64-bit Python 3.12 or 3.13. If neither is available, it downloads a private Python runtime under `%LOCALAPPDATA%\DGP` without changing PATH. Every model file must pass its size and SHA-256 checks; existing mismatched files are preserved.
 
 ## Requirements
 
