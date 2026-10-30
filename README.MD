@@ -1,143 +1,65 @@
-# Face restoration app
+# Forensic DGP
 
-This app helps you inspect and restore a picture of one face on your Windows computer. It can also make an estimate of a part of the face hidden by a covering, such as a mask. The finished images are 256 Ã— 256 pixels.
+A local Windows app for restoring a cropped face picture, with optional manual covering removal. Results are 256 x 256 pixels.
 
-**Please read:** This is experimental research software. A sharper image or a generated face is not proof of someone's identity or what was hidden. If the face is too blurry or covered to see its features, use a clearer or less-covered picture.
+## Install
 
-## What you need
-
-- A **64-bit Windows** computer. A graphics card is not required.
-- An app folder downloaded from GitHub. You can use **Git for Windows** or download the ZIP in your browser. The installer uses an existing 64-bit Python 3.12 or 3.13, or downloads a private Python copy if needed.
-- An internet connection for the first setup. After setup, the app processes images on your computer.
-- At least **2.5 GiB of free memory (RAM)** when starting a restoration. Close other programs if needed. This is a required check, not a guarantee that every computer with that amount will run the app.
-- Free storage space for the app, its programs, and model files. The model files alone use about **720 MiB**.
-
-## Set up the app for the first time
-
-### 1. Install Git
-
-For the commands below, download and install [Git for Windows](https://git-scm.com/download/win). Its default installation options are suitable. Python does not need to be installed separately: the app installer will set it up if necessary.
-
-**Without Git:** [Download the IMPLEMENTATION ZIP](https://github.com/janusinss/forensic-dgp/archive/refs/heads/IMPLEMENTATION.zip) and extract it. Open the extracted folder, double-click `install.bat`, and wait for setup to finish. Then double-click `start.bat`.
-
-### 2. Download the app
-
-1. Open the Windows **Start** menu, type **PowerShell**, and open it.
-2. Copy the following lines into PowerShell. Press **Enter** after each line:
-
-   ```powershell
-   git clone --depth 1 --single-branch --branch IMPLEMENTATION https://github.com/janusinss/forensic-dgp.git
-   cd forensic-dgp
-   ```
-
-This creates a folder named `forensic-dgp` and opens it in PowerShell.
-
-### 3. Install the app's files
-
-In the same PowerShell window, run:
+Open PowerShell and run:
 
 ```powershell
+git clone --depth 1 --single-branch --branch IMPLEMENTATION https://github.com/janusinss/forensic-dgp.git
+cd forensic-dgp
 .\install.bat
-```
-
-Keep the window open and wait for the installer to finish. It downloads the programs and model files needed for both restoration and the optional covering-removal feature. If Python is missing, it also downloads a private copy under `%LOCALAPPDATA%\DGP`; it does not replace your existing Python or change your PATH. Follow any prompt to press a key when it finishes. If you see an error, read the message and check [Common problems](#common-problems).
-
-Setup uses pinned uv 0.13.1 and installs dependencies and both model families concurrently. Model files are checked against their expected size and SHA-256. Existing mismatched files are preserved and reported. Setup succeeds only after all tasks and the dependency check pass. First setup downloads about 755 MB of model assets, plus dependencies.
-
-## Open the app
-
-In the same PowerShell window, run:
-
-```powershell
 .\start.bat
 ```
 
-The app should open in your browser. Its usual address is [http://127.0.0.1:8000](http://127.0.0.1:8000). If the browser does not open, copy the **Application URL** shown in PowerShell into your browser.
+Git users need [Git for Windows](https://git-scm.com/download/win). Alternatively, [download the IMPLEMENTATION ZIP](https://github.com/janusinss/forensic-dgp/archive/refs/heads/IMPLEMENTATION.zip), extract it, and double-click `install.bat`. Open `start.bat` when installation succeeds.
 
-**Keep the PowerShell window open while using the app.** To close the app, return to that window, press **Ctrl+C**, and wait for it to stop.
+The installer uses 64-bit Python 3.12 or 3.13. If neither is available, it downloads a private Python runtime under `%LOCALAPPDATA%\DGP` without changing PATH. Dependencies and both model families install concurrently through cached package downloads. Every model file must pass its size and SHA-256 checks; existing mismatched files are preserved.
 
-### Open it again later
+## Requirements
 
-Open PowerShell, change to the `forensic-dgp` folder you downloaded, and run `.\start.bat`. For example, if you downloaded the folder in your Windows user folder:
+- 64-bit Windows; a graphics card is not required.
+- Internet access during installation. Image processing runs locally afterward.
+- At least 2.5 GiB of available RAM before model processing.
+- Storage for dependencies, about 720 MiB of model assets, and saved request records.
 
-```powershell
-cd "$env:USERPROFILE\forensic-dgp"
-.\start.bat
-```
+## Use
 
-If you placed it somewhere else, use that folder's path after `cd` instead.
+1. Upload one cropped PNG or JPEG containing a frontal or mildly turned face. The file limit is 10 MiB and 1600 pixels per side; animated images are unsupported.
+2. Select **One face is clear enough to review** when its visible features are readable.
+3. Choose **Auto**, **On**, or **Off** under **Choose restoration**. Auto uses an input-quality suggestion; Off returns the resized original.
+4. Choose **Bypass** or **Choose areas to protect or blur** for input preparation.
+5. Click **Restore selected input**. Compare the images and download a PNG or the review ZIP.
 
-## Prepare a picture
+### Optional input preparation
 
-Choose a picture that contains **one face**, facing forward or turned slightly. Crop a larger picture so that it contains just that face before uploading. You should be able to see the person's facial features.
+| Selection | Effect during preparation |
+| --- | --- |
+| Green only | Protect green pixels; blur the remaining surroundings. |
+| Blue only | Blur only the blue pixels. |
+| Green and blue | Blur blue pixels; green protection takes priority. |
+| Neither | Keep the input unchanged. |
 
-The picture must be a PNG or JPEG, no larger than **10 MiB**, and no wider or taller than **1600 pixels**. It must contain no more than **2,560,000 pixels** in total and must not be animated.
+Use **Paint**, **Erase both**, **Undo**, and **Blur strength** to adjust the selection. Click **Preview areas**, inspect the preview, and confirm it before continuing. Editing the selection or blur strength requires a new preview and confirmation.
 
-## Restore a face
+Protection applies to preparation. Restoration can change the face. Preparation is skipped when restoration is Off or Auto keeps the original.
 
-1. In **Inspect the original**, upload the picture and look at it. If you can clearly make out the face, select **One face is clear enough to review**, then click **Choose restoration**. If you cannot, use a clearer picture.
-2. Under **Choose restoration**, select **Auto** for the app's suggestion, **On** to request restoration, or **Off** to keep a resized copy without running restoration. Auto can decide to keep the original instead of restoring it.
-3. For the easiest start, leave input preparation on **Bypass**. This uses the picture as uploaded. Click **Continue**. If you want to adjust the surroundings first, see [Optional: prepare the picture](#optional-prepare-the-picture).
-4. Click **Restore selected input**. Compare the original, the selected input, and the result. Use **Download PNG** under an image to save it. You can also select **Download review files (ZIP)**, which contains the original and available records and results.
+### Optional covering removal
 
-Restoration can change visible facial features. Compare the result carefully with the original.
+Choose **Review covering removal** after restoration when a covering hides part of the face. Click **Start removal review**, then paint the covering orange. Keep visible features, clear glasses, and non-obstructing hair outside the selection.
 
-### Optional: prepare the picture
+Inspect the selection in the editor before clicking **Review**. Confirm both statements when they are true, then click **Generate result**. The guided app uses your manual selection; it does not choose a removal area automatically.
 
-Choose **Choose areas to protect or blur** if you want to prepare the picture before restoration:
+Completion changes only the selected area of the restoration result. An empty selection skips the completion model. PNG and evidence ZIP downloads retain the available images and records.
 
-- **Protect only:** Paint green over the face and any other areas you want to keep unchanged. The app selects the remaining surroundings for blur automatically.
-- **Blur only:** Paint blue over the areas you want to blur. You do not need to mark a green area.
-- **Both:** Paint green areas to protect and blue areas to blur. Green takes priority where they overlap.
-- **Neither:** The picture stays unchanged during preparation.
+## Start, stop, and update
 
-Choose **Paint** to mark the selected color. **Erase both** removes green and blue marks wherever you brush.
+Run `.\start.bat` whenever you want to open the app. Keep its terminal open during use. Press **Ctrl+C** in that terminal to stop it.
 
-Use **Blur strength** to adjust how much blur is applied during preparation. A higher value adds more blur; 0 means no blur. Click **Preview areas** and check the picture and marked areas. Confirm the preview before continuing; if you change a selection or blur strength, preview and confirm it again. Automatic surroundings blur can also blur areas that were already blurry, so mark them green if you want to keep them unchanged. There is no automatic matching of existing blur.
+The browser opens after the local health check succeeds. If it does not open, use the **Application URL** printed in the terminal. For an occupied port, run `.\start.bat --port 0` to select an available port.
 
-Protection applies to preparation only. Restoration can still change the face. If restoration is Off, or Auto keeps the original, preparation is skipped.
-
-## Optional: review a covering
-
-Use this after restoration only if something such as a mask, sunglasses, hand, or hair is hiding part of the face. If there is no covering to remove, keep the restoration result.
-
-1. Click **Review covering removal**, then **Start removal review**. The image starts with nothing selected.
-2. Paint over the covering you want to remove. The painted area appears orange. Erase any orange marks over visible facial features, clear glasses, or hair that is not blocking the face.
-3. Click **Review**. Read and check both confirmation boxes if they are true, then click **Generate result**. If too much of the face is hidden, use a clearer or less-covered picture instead.
-4. Compare the original, restoration, selected area, and estimate. Download the PNG images or the evidence ZIP if needed.
-
-The app changes only the selected area during this covering step. Everything outside it stays the same as the **restoration result**, which may already differ from the original picture. Hidden features are guesses and cannot be verified from the covered picture. An empty selected area skips the completion model.
-
-## Common problems
-
-- **Python setup failed:** Check the error, internet connection, and available storage. Run `.\install.bat` again. The installer preserves existing files rather than replacing a damaged private Python folder.
-- **Installation failed:** Check the error in PowerShell, your internet connection, and available storage. Run `.\install.bat` again. Existing model files that do not match are kept for inspection. For local completion model files, see [Use local completion files](#use-local-completion-files-advanced).
-- **The app says there is not enough memory:** Close other programs and try again.
-- **The browser did not open:** Open the **Application URL** printed in PowerShell. If port 8000 is already in use, run `.\start.bat --port 0` and use the printed address.
-
-## Use local completion files (advanced)
-
-Normally `install.bat` downloads the two completion files automatically. If you already have the exact files and need to stage them without downloading them again, first run `install.bat` until the restoration setup finishes. Then open PowerShell in the app folder and run the following, replacing the example paths with your files:
-
-```powershell
-$python = (Get-Content -Raw .implementation-env.json | ConvertFrom-Json).python
-& $python -B -m implementation.completion_install --local-r1 "C:\verified-assets\codeformer_completion_r1.pth" --local-detector "C:\verified-assets\covering_detector_segmenter_v1.pth"
-```
-
-The local completion step does not download files. You may omit a file's option only if its installed copy has already passed verification. Both files are checked against their expected size and SHA-256; mismatched existing files and failed partial copies are kept. To check installed completion files without changing them, run:
-
-```powershell
-$python = (Get-Content -Raw .implementation-env.json | ConvertFrom-Json).python
-& $python -B -m implementation.completion_install --verify-only
-```
-
-A successful new installation writes a receipt in `models/completion/`. Verifying the files does not establish completion quality.
-
-## Your pictures and updates
-
-The app runs on your computer. It saves restoration records in `scratch/implementation_requests` and covering-removal records in `scratch/completion_requests` inside the app folder. Downloaded images and evidence ZIPs can contain private pictures. Delete your own records and downloads when you no longer need them.
-
-To update a Git checkout, stop the app first. In PowerShell, open the app folder and run:
+To update a Git checkout, stop the app and save any source changes first:
 
 ```powershell
 git pull --ff-only origin IMPLEMENTATION
@@ -145,21 +67,40 @@ git pull --ff-only origin IMPLEMENTATION
 .\start.bat
 ```
 
-For a ZIP download, get and extract a fresh ZIP instead, then run `install.bat` in the new folder. Save any changes you made to the app's files before updating. If the update reports a conflict, resolve it before running the installer.
+For a ZIP installation, extract a fresh IMPLEMENTATION ZIP into a new folder and run its installer.
 
-## What makes up the restoration model
+## Troubleshooting
 
-The app uses one restoration model, V2. Its four files work together:
-
-| Component | File |
+| Problem | Action |
 | --- | --- |
-| **Base Model** | `codeformer_r2.pth` |
-| **U96 Adaptation** | `codeformer_u96_adapter.pth` |
-| **Spatial Head** | `terminal_u0064_heads.npz` |
-| **V2 Components** | `v2_p2_u0224_heads.npz` |
+| Python or dependency setup fails | Read the reported error; check internet access and storage before rerunning `install.bat`. |
+| A model fails verification | Keep the reported file for inspection. Move the mismatched file aside before rerunning installation. |
+| Available memory is too low | Close unused applications before processing. |
+| A worker fails or stops unexpectedly | Inspect the saved request under `scratch/` before restarting the app. |
+| Completion assets cannot be downloaded | Use the local-file instructions below if you already have both exact files. |
 
-These are labels for parts of the same model, not four choices in the app. The optional covering-removal step uses a separate completion model and the area you paint manually. A covering detector is installed for the underlying API; the guided app does not use it to select an area.
+### Install completion assets from local files
 
-## More information and license
+Local staging works even when a first installation stopped before creating `.implementation-env.json`. Use the environment folder printed after **[1/3] Python environment:** and append `\Scripts\python.exe`. Replace the three example paths below:
 
-The restoration and covering models are experimental and not qualified for identifying people. See the [restoration model card](MODEL_CARD.md) and [completion model card](COMPLETION_MODEL_CARD.md) for their limits. The app uses adaptations of S-Lab's CodeFormer; its **non-commercial terms** apply. Keep the [CodeFormer license](third_party/codeformer/LICENSE), [notices](third_party/codeformer/NOTICE.md), [completion license](third_party/codeformer_completion/LICENSE), and [completion notices](third_party/codeformer_completion/NOTICE.md). Training datasets are not included.
+```powershell
+$python = 'C:\path-shown-by-setup\Scripts\python.exe'
+& $python -B -m implementation.completion_install --local-r1 'C:\verified-assets\codeformer_completion_r1.pth' --local-detector 'C:\verified-assets\covering_detector_segmenter_v1.pth'
+.\install.bat
+```
+
+The local staging command performs no downloads. Both files must match their expected size and SHA-256. A peer file can be omitted only if its installed copy already passes verification. Rerunning `install.bat` completes the remaining checks and writes the environment configuration after successful setup.
+
+To verify installed completion files with the same interpreter:
+
+```powershell
+& $python -B -m implementation.completion_install --verify-only
+```
+
+## Local records and model information
+
+Request images and records are saved under `scratch/implementation_requests` and `scratch/completion_requests`. Downloaded evidence ZIPs also contain image data. Remove your own saved records when they are no longer needed.
+
+V2 is the app's restoration model; its four component files are loaded together. Optional covering removal uses the separate R1 completion model. See the [restoration model card](MODEL_CARD.md) and [completion model card](COMPLETION_MODEL_CARD.md) for asset fingerprints, provenance, and limits. Generated facial detail is an estimate, not proof of identity or hidden appearance.
+
+The app uses adaptations of S-Lab CodeFormer under non-commercial terms. Retain the [restoration license](third_party/codeformer/LICENSE), [restoration notices](third_party/codeformer/NOTICE.md), [completion license](third_party/codeformer_completion/LICENSE), and [completion notices](third_party/codeformer_completion/NOTICE.md). Training data is not distributed with this app.

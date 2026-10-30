@@ -8,4 +8,4 @@ Files copied: `basicsr/archs/codeformer_arch.py`, `basicsr/archs/vqgan_arch.py`,
 
 CodeFormer is Copyright 2022 S-Lab, under the non-commercial S-Lab License 1.0, retained in LICENSE. The registry and VQGAN source comments retain their original upstream attributions. This component is used as a research benchmark; its inclusion does not establish permission for every deployment use.
 
-Weights are downloaded separately from the official `v0.1.0/codeformer_inpainting.pth` release. Do not substitute the restoration checkpoint `codeformer.pth`.
+The app downloads its trained completion asset, `codeformer_completion_r1.pth`, separately from the application's `completion-r1-models-v1` release. The upstream inpainting checkpoint and R1 provenance are documented in [the completion model card](../../COMPLETION_MODEL_CARD.md). Do not substitute the restoration checkpoint `codeformer.pth`. Retain [the training attribution](TRAINING_ATTRIBUTION.json).
