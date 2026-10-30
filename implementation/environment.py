@@ -19,7 +19,11 @@ import time
 import venv
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = ROOT / '.implementation-env.json'
+from .managed_paths import managed_root
+
+_MANAGED_ROOT = managed_root()
+CONFIG_PATH = ((_MANAGED_ROOT / 'data' / 'installations' / (ROOT.name + '.json'))
+               if _MANAGED_ROOT else ROOT / '.implementation-env.json')
 SUPPORTED = {(3, 12), (3, 13)}
 UV_VERSION = '0.13.1'
 VERSION_CHECK = "import struct,sys; sys.exit(0 if sys.version_info[:2] in ((3,12),(3,13)) and struct.calcsize('P') == 8 else 1)"
@@ -29,10 +33,23 @@ class EnvironmentError(RuntimeError):
     """The installation's expected local Python environment is unavailable."""
 
 
+def dependency_identity(root: Path | None = None) -> str:
+    """UI changes reuse the runtime; pinned dependency or Python changes isolate it."""
+    root = ROOT if root is None else root
+    digest = hashlib.sha256()
+    for name in ('requirements.txt', 'implementation/capture_install.py'):
+        digest.update(name.encode() + b'\0' + (root / name).read_bytes().replace(b'\r\n', b'\n'))
+    digest.update(f'{sys.version_info[:2]}:{UV_VERSION}:64'.encode())
+    return digest.hexdigest()[:16]
+
+
 def expected_environment(root: Path = ROOT, local_app_data: str | None = None) -> Path:
     local = local_app_data if local_app_data is not None else os.environ.get('LOCALAPPDATA', '')
     if not local or not Path(local).is_absolute():
         raise EnvironmentError('LOCALAPPDATA must name an absolute user-local directory.')
+    managed = managed_root()
+    if managed:
+        return managed / 'environments' / dependency_identity(root)
     identity = os.path.normcase(str(root.resolve())).encode('utf-8')
     checkout_id = hashlib.sha256(identity).hexdigest()[:12]
     return Path(local) / 'DGP' / checkout_id
@@ -94,6 +111,7 @@ def run_foreground(command: list[str], *, env: dict | None = None) -> int:
 def write_record(record: dict, config_path: Path = CONFIG_PATH) -> None:
     temporary = config_path.with_name(config_path.name + f'.{os.getpid()}.tmp')
     try:
+        config_path.parent.mkdir(parents=True, exist_ok=True)
         temporary.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
         temporary.replace(config_path)
     finally:
@@ -187,6 +205,26 @@ def install_models() -> int:
     })
 
 
+def install_capture() -> int:
+    return run_foreground([sys.executable, '-B', '-m', 'implementation.capture_install'])
+
+
+def verify_installation() -> int:
+    python = configured_python()
+    check_python(python)
+    checks = [
+        [str(python), '-B', '-m', 'implementation.setup_models', '--verify-only'],
+        [str(python), '-B', '-m', 'implementation.completion_install', '--verify-only'],
+        [str(python), '-B', '-m', 'implementation.capture_install', '--verify-only'],
+        [str(python), '-B', '-c', 'import app,torch,cv2,numpy; print("Application imports verified.")'],
+    ]
+    for command in checks:
+        result = run_foreground(command)
+        if result:
+            return result
+    return 0
+
+
 def install() -> int:
     if sys.version_info[:2] not in SUPPORTED or struct.calcsize('P') != 8:
         raise EnvironmentError('Setup requires Python 3.12 or 3.13 64-bit.')
@@ -202,6 +240,7 @@ def install() -> int:
     result = run_install_tasks({
         'Application dependencies': lambda: install_dependencies(python),
         'Model assets': install_models,
+        'Capture runtime': install_capture,
     })
     if result:
         return result
@@ -213,7 +252,7 @@ def install() -> int:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'launch', 'python', 'path', 'completion-assets'))
+    parser.add_argument('command', choices=('install', 'launch', 'python', 'path', 'completion-assets', 'verify'))
     args, launch_args = parser.parse_known_args(argv)
     if args.command != 'launch' and launch_args:
         parser.error('extra arguments are accepted only for launch')
@@ -223,6 +262,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == 'install':
             return install()
+        if args.command == 'verify':
+            return verify_installation()
         if args.command == 'completion-assets':
             # Trusted installer orchestration only; no model execution or
             # environment configuration is needed to acquire these exact bytes.

@@ -13,6 +13,7 @@ import threading
 import time
 import uuid
 import zipfile
+from typing import Annotated
 
 import numpy as np
 from PIL import Image
@@ -26,6 +27,7 @@ from .preparation import MAX_MASK_BYTES, MAX_UPLOAD_BYTES, build_preview, decode
 from .quality import quality_signals
 from .runtime import model_contract, prepare_crop
 from .setup_models import ROOT, verify_models
+from .managed_paths import data_path
 
 app = FastAPI(title="Forensic face restoration — IMPLEMENTATION")
 app.mount('/static', StaticFiles(directory=str(ROOT / 'static')), name='static')
@@ -99,7 +101,7 @@ def one_forward(contents, model):
     if psutil.virtual_memory().available < 2684354560:
         raise RuntimeError('Restoration needs at least 2.5 GiB available RAM. Close unused applications and retry.')
     verify_models()
-    request_dir = ROOT / 'scratch/implementation_requests' / uuid.uuid4().hex
+    request_dir = data_path(ROOT, 'scratch', 'implementation_requests') / uuid.uuid4().hex
     request_dir.mkdir(parents=True)
     image_path = request_dir / 'input.bin'
     image_path.write_bytes(contents)
@@ -241,7 +243,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                   restoration: str = Form('auto'), preparation_mode: str = Form('bypass'),
                   protect_mask: UploadFile | None = File(None), apply_mask: UploadFile | None = File(None),
                   radius: float = Form(1), preview_id: str = Form(''), confirmed: bool = Form(False),
-                  include_bundle: bool = Form(True), model: str = Form(DEFAULT_MODEL)):
+                  include_bundle: bool = Form(True), model: str = Form(DEFAULT_MODEL),
+                  capture_id: Annotated[str, Form()] = ''):
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     protect = await protect_mask.read(MAX_MASK_BYTES + 1) if protect_mask else None
     apply = await apply_mask.read(MAX_MASK_BYTES + 1) if apply_mask else None
@@ -260,6 +263,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         applied = restoration == 'on' or (restoration == 'auto' and signals['suggest_restoration'])
         payloads = {'uploaded-original.bin': contents, 'original-native.png': png(native),
                     'original-256.png': png(original)}
+        if capture_id:
+            from .capture_api import evidence_for_crop
+            payloads.update(evidence_for_crop(contents, capture_id))
         selected, prepared, preparation = contents, original, None
         if preparation_mode == 'bypass':
             need(protect is None and apply is None and not preview_id and not confirmed,
@@ -287,7 +293,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     'selected_input_sha256': digest(selected), 'result_file_sha256': digest(output),
                     'geometry': geometry, 'worker_delivery': worker, 'model_qualified': False,
                     'protection_scope': 'Preprocessing input only; generated appearance may change.',
-                    'training_optimizer_VM_calls': 0}
+                    'training_optimizer_VM_calls': 0, 'capture_id': capture_id or None}
         payloads.update({'prepared-256.png': png(prepared), 'result.png': output,
                          'restoration.json': canonical(metadata)})
         if raw_bytes is not None:

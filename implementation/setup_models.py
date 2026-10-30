@@ -18,8 +18,10 @@ import urllib.parse
 import urllib.request
 import uuid
 
+from .managed_paths import data_path
+
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = ROOT / "models" / "implementation"
+MODEL_DIR = data_path(ROOT, 'models', 'implementation')
 BUNDLED_DIR = ROOT / "implementation" / "assets"
 MANIFEST_PATH = Path(__file__).with_name("models.json")
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/"

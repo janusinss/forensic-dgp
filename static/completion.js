@@ -52,7 +52,13 @@
         return detail;
     };
     const post = async (route, data) => {
-        const response = await fetch(api + route, { method: 'POST', body: data });
+        let response;
+        try { response = await fetch(api + route, { method: 'POST', body: data }); }
+        catch {
+            throw new Error(route === '/generate'
+                ? 'Connection to the local app was lost. The task may still be running. Check the app before generating again.'
+                : 'Cannot reach the local app. Keep this page open, start the app, then try again. If you restarted it, restore the picture again first.');
+        }
         let answer;
         try { answer = await response.json(); }
         catch { throw new Error('The request returned an invalid response. Your saved files are still available. Please try again.'); }
@@ -69,6 +75,7 @@
         const ready = Boolean(session && imagePixels);
         document.querySelectorAll('#completion-stage input, #completion-stage select, #completion-stage button:not([data-wizard-nav])').forEach(item => { item.disabled = busy || !ready; });
         byId('completion-start').disabled = busy || !source;
+        byId('completion-start').setAttribute('aria-busy', String(busy));
         byId('completion-undo').disabled = busy || !ready || !undo.length;
         byId('completion-generate').disabled = busy || !ready || !reviewId || !byId('completion-mask-confirm').checked || !byId('completion-visible-confirm').checked;
         canvas.setAttribute('aria-disabled', String(busy || !ready));
@@ -279,6 +286,7 @@
             context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); rebuildOverlay();
             byId('completion-editor-section').classList.remove('hidden'); update();
             progress('Paint the covering you want to remove, then review your selection.');
+            window.dispatchEvent(new Event('completion:prepared'));
         } catch (problem) { if (current(token, version)) { error(problem.message); progress('Could not prepare covering removal. You can keep your result or check the error and try again.'); } }
         finally { finish(token); }
     });
@@ -350,7 +358,7 @@
             pngURL(detail.result.result); pngURL(detail.result.original_input);
             source = { originalFile: detail.originalFile, result: detail.result };
             byId('completion-stage').classList.remove('hidden');
-            progress('Your restored image is ready. You can review a covering for removal or keep the image as it is.'); update();
+            progress('Your result is ready. Removal is optional; keep the image as it is if there is nothing to remove.'); update();
         } catch (problem) { error(problem.message); }
     });
     // Existing restoration invalidations remove/hide its output. Observe only;

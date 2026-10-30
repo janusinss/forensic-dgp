@@ -29,10 +29,11 @@ class WindowsBootstrapTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory(prefix="installer fixture ")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
-        self.installer = self.root / "install.bat"
-        shutil.copyfile(ROOT / "install.bat", self.installer)
+        (self.root / "implementation").mkdir()
+        self.installer = self.root / "implementation" / "install_source.bat"
+        shutil.copyfile(ROOT / "implementation" / "install_source.bat", self.installer)
         implementation = self.root / "implementation"
-        implementation.mkdir()
+        implementation.mkdir(exist_ok=True)
         (implementation / "__init__.py").write_text("", encoding="utf-8")
         (implementation / "environment.py").write_text(
             "import json,os,sys\n"

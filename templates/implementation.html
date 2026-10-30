@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:">
   <meta name="referrer" content="no-referrer">
   <meta name="application-name" content="Forensic DGP">
   <meta name="apple-mobile-web-app-title" content="Forensic DGP">
@@ -19,33 +19,62 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=23">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=24">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
+  <link rel="stylesheet" href="/static/capture.css?v=8">
+  <link rel="stylesheet" href="/static/capture-modern.css?v=2">
+  <link rel="stylesheet" href="/static/selects.css?v=1">
 </head>
 <body>
 <main class="viewport-workspace" id="workspace" aria-label="Face restoration workspace">
   <form id="brush-form" class="work-form">
-    <section class="work-screen is-active" data-screen="inspect" aria-labelledby="brush-upload-heading">
-      <div class="work-controls">
-        <span class="work-kicker">INPUT / 01</span><div class="status-block quiet-status"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div>
-        <div class="work-heading"><h1 id="brush-upload-heading">Inspect the original</h1><p>Use a close-up of one face looking forward or slightly to the side.</p></div>
-        <div class="field"><label for="brush-file">Choose a PNG or JPEG image (up to 10 MB)</label><input id="brush-file" type="file" accept="image/png,image/jpeg"></div>
+    <section class="work-screen is-active input-split" data-screen="inspect" data-input-mode="picture" data-input-phase="review" data-capture-state="idle" aria-labelledby="brush-upload-heading">
+      <div class="work-controls input-controls">
+        <div class="intake-progress"></div>
+        <div class="input-titlebar">
+          <div class="work-heading"><h1 id="brush-upload-heading">Inspect the original</h1><p>Use a close-up of one face looking forward or slightly to the side.</p></div>
+          <div class="input-method" role="group" aria-label="Input type"><button id="input-mode-picture" type="button" aria-pressed="true"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Picture</span></button><button id="input-mode-video" type="button" aria-pressed="false"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg><span>Video</span></button></div>
+        </div>
+        <section id="capture-controls" class="capture-controls hidden" data-capture-controls aria-label="Video and capture controls">
+          <div id="capture-source-settings">
+            <label class="capture-source-field" for="capture-source">Source<select id="capture-source"><option value="video">Video file</option><option value="webcam">Webcam</option><option value="rtsp">RTSP camera</option></select></label>
+            <div id="capture-video-field" class="capture-source-field"><label for="capture-video-file">Video file (up to 500 MB)</label><input id="capture-video-file" type="file" accept="video/*"></div>
+            <div id="capture-rtsp-field" class="capture-source-field hidden"><span>Local camera connection</span><button type="button" data-dialog="capture-camera-dialog">Camera settings</button></div>
+            <button id="capture-start" type="button" class="hidden">Start webcam</button>
+          </div>
+          <div id="capture-source-summary" class="capture-source-summary hidden"><svg class="capture-icon capture-file-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span id="capture-source-name">Video file</span><button id="capture-change-frame" type="button"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 11a9 9 0 0 1 15-6l3 3M21 3v5h-5M21 13a9 9 0 0 1-15 6l-3-3M3 21v-5h5"/></svg><span>Change frame</span></button></div>
+          <div class="capture-transport"><button id="capture-freeze" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="4"/></svg><span>Freeze frame</span></button><button id="capture-resume" class="hidden" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m8 5 11 7-11 7Z"/></svg><span>Resume video</span></button><button id="capture-stop" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="5" width="14" height="14" rx="1"/></svg><span>Stop</span></button></div>
+          <section class="capture-inspector" aria-labelledby="capture-selection-heading">
+            <h2 id="capture-selection-heading">Choose a face</h2>
+            <div id="capture-selection" class="capture-selection hidden"><div id="capture-faces" class="capture-faces" aria-label="Detected faces"></div><div class="capture-edit-actions"><button id="capture-full-frame" type="button" title="Show the full frame for crop adjustment. The selected crop stays unchanged." aria-pressed="true"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg><span>Full frame crop</span></button></div></div>
+            <div id="capture-crop-controls" class="hidden"><p id="capture-crop-size">Select an area.</p><button id="capture-precise" type="button" data-dialog="capture-precise-dialog">Adjust crop precisely</button><button id="capture-use" type="button" disabled><span>Use this face</span><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
+          </section>
+          <div class="capture-feedback"><p id="capture-status" role="status" aria-live="polite">Choose a video file. It opens automatically.</p><p id="capture-error" class="capture-error hidden" role="alert"></p></div>
+        </section>
+        <div id="picture-upload-field" class="field"><label for="brush-file">Choose a PNG or JPEG image (up to 10 MB)</label><input id="brush-file" type="file" accept="image/png,image/jpeg"></div>
+        <div id="brush-standby" class="hidden"></div>
+        <figure id="input-picture" class="input-picture hidden"><img id="upload-preview" class="hidden" width="160" height="160" alt="Current Picture input"><figcaption id="input-picture-label">Uploaded picture</figcaption></figure>
+        <div class="review-input-actions"><button id="capture-restore-upload" class="text-btn hidden" type="button">Use uploaded picture</button></div>
+        <div class="input-review">
         <fieldset class="choice-group"><legend>Can you see the face clearly?</legend><select id="brush-review" hidden><option value="">Inspect the original first</option><option value="usable">One face is clear enough to review</option><option value="needs_clearer">The face is too blurry or covered</option><option value="out_of_scope">The face is sideways, too small, or there are multiple faces</option></select><div class="choice-list review"><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="usable" data-select="brush-review"><span class="choice-content">One face is clear enough to review</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="needs_clearer" data-select="brush-review"><span class="choice-content">The face is too blurry or covered</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="out_of_scope" data-select="brush-review"><span class="choice-content">The face is sideways, too small, or there are multiple faces</span></label></div></fieldset>
         <p class="work-note">If the face is hard to see, use a clearer picture. A sharper image does not prove who someone is.</p>
-        <div class="feedback-slot"></div>
-        <div class="work-actions"><button class="execute-btn" type="button" data-nav="options">Choose restoration <span aria-hidden="true">→</span></button><button class="text-btn" type="button" data-dialog="about-dialog">About</button></div>
-      </div>
-      <aside class="work-visual inspect-visual" aria-label="Original input preview">
-        <div id="brush-standby" class="empty-state opening-dialogue">
-          <div class="opening-dialogue-brand">FORENSIC DGP<span>A CLOSER LOOK STARTS HERE</span></div>
-          <div class="opening-dialogue-stage">
-            <svg class="opening-dialogue-art" viewBox="0 0 835 900" aria-hidden="true" focusable="false"><path class="dialogue-question" d="M65 180H625V405H235L160 476V405H65Z"/><path class="dialogue-answer" d="M280 510H770V730H680V795L605 730H280Z"/></svg>
-            <h2>Your<br>picture.</h2>
-            <div class="opening-dialogue-reply">Let's look<br>closer.</div>
-          </div>
-          <p class="opening-dialogue-foot">Upload a face picture to begin.</p>
+        <div class="work-actions"><button class="execute-btn" type="button" data-nav="options">Choose restoration <span aria-hidden="true">→</span></button><button id="capture-back" class="text-btn hidden" type="button">Back to capture</button></div>
         </div>
-        <img id="upload-preview" class="hidden" width="160" height="160" alt="Original uploaded picture">
+        <div class="picture-feedback"><div class="status-block quiet-status"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div><div class="feedback-slot"></div></div>
+      </div>
+      <aside class="work-visual capture-visual" aria-label="Picture or video preview">
+        <div id="picture-preview" class="picture-preview"><img id="picture-main-preview" class="hidden" width="1280" height="720" alt="Current Picture input"><div id="picture-empty"><h2>Your picture appears here</h2><p>Choose a picture on the left, or switch to Video to capture a face.</p></div></div>
+        <div id="capture-preview" class="capture-preview hidden">
+          <div class="capture-preview-heading"><span>Preview</span><p id="capture-view-label" class="capture-view-label" role="status">Full frame</p></div>
+          <div id="capture-stage" class="capture-stage"><p id="capture-empty">Choose a video file or start a camera on the left.</p><video id="capture-video" class="hidden" width="1280" height="720" muted playsinline controls tabindex="0" aria-keyshortcuts="Space" aria-label="Video source preview" aria-describedby="capture-player-help"></video><img id="capture-stream" class="hidden" width="1280" height="720" alt="Local RTSP camera preview"><canvas id="capture-canvas" class="hidden" width="0" height="0" tabindex="0" aria-label="Frozen source frame. Select a detected face, drag to crop, or press Enter to create a crop. Arrow keys move the crop; Shift and arrow keys resize it."></canvas></div>
+          <div class="capture-playback" data-capture-controls>
+            <div id="capture-timeline" class="capture-timeline hidden">
+              <div class="capture-player-info"><span id="capture-quality">Original quality</span><span id="capture-player-help">Space: play / pause</span></div>
+              <div class="capture-speed" role="group" aria-label="Playback speed controls"><span class="capture-speed-label">Speed</span><button id="capture-speed-minus" type="button" aria-label="Decrease speed by 0.25">−</button><select id="capture-speed-select" aria-label="Playback speed"></select><button id="capture-speed-plus" type="button" aria-label="Increase speed by 0.25">+</button></div>
+            </div>
+            <p id="capture-speed-error" class="capture-error" role="alert"></p>
+          </div>
+        </div>
       </aside>
     </section>
     <section class="work-screen" data-screen="options" aria-labelledby="restoration-mode-heading">
@@ -107,7 +136,8 @@
       <p id="brush-result-summary" class="work-note hidden"></p>
       <div id="brush-result-downloads" class="hidden"><a id="brush-result-bundle" class="tool-btn" download="restoration-review-files.zip">Download review files (ZIP)</a></div>
       <p class="field-hint">Results are experimental. A clearer face does not prove identity.</p>
-      <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Change input settings</button><button class="execute-btn" type="button" data-nav="completion-intro">Review covering removal</button></div>
+      <div class="feedback-slot"></div>
+      <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Change input settings</button><button id="completion-start" class="execute-btn" type="button" disabled>Start removal review</button></div>
     </div>
     <div class="work-visual gallery-visual"><div id="brush-results" class="visual-gallery three-up hidden" aria-label="Original, selected input and one restoration result">
       <figure><img id="brush-result-input" width="256" height="256" alt="Original picture, resized"><figcaption>Original (resized)</figcaption><a id="brush-download-input" class="tool-btn" download="original-256.png">Download PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-result-input" aria-label="Enlarge Original picture, resized">Enlarge</button></figure>
@@ -116,10 +146,6 @@
     </div></div>
   </section>
   <div id="completion-stage" class="hidden">
-    <section class="work-screen" data-screen="completion-intro" aria-labelledby="completion-heading">
-      <div class="work-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-heading">Review covering removal</h1><p>Keep your result if there is nothing to remove.</p></div><p class="work-note">Check the selected area carefully. Hidden features are guesses and may not look like the real person.</p><div class="feedback-slot"></div><div class="work-actions"><button class="tool-btn" type="button" data-nav="result" data-wizard-nav>Back to result</button><button id="completion-start" class="execute-btn" type="button">Start removal review</button></div></div>
-      <aside class="work-visual completion-intro-visual" aria-label="Restoration result preview"><img id="completion-intro-preview" alt="Restoration result selected for optional completion"></aside>
-    </section>
     <div id="completion-editor-section" class="hidden">
       <section class="work-screen" data-screen="completion-paint" aria-labelledby="completion-editor-heading">
         <div class="work-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-editor-heading">Select the removal area</h1><p>Paint over the covering you want to remove. Keep the orange marks away from visible facial features.</p></div>
@@ -160,12 +186,23 @@
     <div id="completion-feedback" class="feedback"><p id="completion-progress" role="status" aria-live="polite">Your result is ready. Removing a covering is optional.</p><p id="completion-error" class="workflow-error hidden" role="alert"></p></div>
   </div>
 </main>
+<dialog id="capture-camera-dialog" class="work-dialog" data-capture-controls aria-labelledby="capture-camera-title">
+  <h2 id="capture-camera-title">Connect an RTSP camera</h2>
+  <p>Use a camera on your local network.</p>
+  <label for="capture-url">RTSP address<input id="capture-url" type="url" placeholder="rtsp://192.168.1.10:554/stream" autocomplete="off" spellcheck="false"></label>
+  <div class="capture-credentials"><label for="capture-user">Username (optional)<input id="capture-user" autocomplete="off"></label><label for="capture-password">Password (optional)<input id="capture-password" type="password" autocomplete="off"></label></div>
+  <div class="compact-actions"><button id="capture-connect" type="button" class="execute-btn">Connect camera</button><button type="button" class="tool-btn" data-close-dialog>Cancel</button></div>
+</dialog>
+<dialog id="capture-precise-dialog" class="work-dialog" data-capture-controls aria-labelledby="capture-precise-title"><h2 id="capture-precise-title">Adjust crop</h2><p>Coordinates refer to the original frozen frame.</p><div class="capture-rect-fields"><label for="capture-x">Left<input id="capture-x" type="number" min="0" step="1"></label><label for="capture-y">Top<input id="capture-y" type="number" min="0" step="1"></label><label for="capture-width">Width<input id="capture-width" type="number" min="16" max="1600" step="1"></label><label for="capture-height">Height<input id="capture-height" type="number" min="16" max="1600" step="1"></label></div><button class="tool-btn" type="button" data-close-dialog>Done</button></dialog>
 <dialog id="about-dialog" class="work-dialog" aria-labelledby="about-heading"><h2 id="about-heading">About this workflow</h2><p>This app tries to improve a face picture. Its results are experimental and are still being reviewed. Removing a covering is an optional extra step.</p><p>Use a clearer or less-covered picture if the face is hard to see. A sharper face is not proof of identity.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips it, and Auto may skip it if it keeps the original. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
-<dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><h2 id="image-dialog-title">Image detail</h2><img id="image-dialog-view" alt=""><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
-<script src="/static/implementation.js?v=12"></script>
-<script src="/static/completion.js?v=11"></script>
-<script src="/static/viewport-workbench.js?v=12"></script>
+<dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
+<script src="/static/implementation.js?v=14"></script>
+<script src="/static/completion.js?v=12"></script>
+<script src="/static/viewport-workbench.js?v=15"></script>
+<script src="/static/capture_geometry.js?v=1"></script>
+<script src="/static/capture_playback.js?v=3"></script>
+<script src="/static/capture.js?v=10"></script>
 <script src="/static/shader-background.js?v=16"></script>
 </body>
 </html>

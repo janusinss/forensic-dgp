@@ -27,8 +27,9 @@ from starlette.concurrency import run_in_threadpool
 from . import app as restoration
 from .completion_process_guard import OwnedWorker
 from .setup_models import ROOT
+from .managed_paths import data_path
 
-STORE = ROOT / 'scratch' / 'completion_requests'
+STORE = data_path(ROOT, 'scratch', 'completion_requests')
 MAX_PNG = 1024**2
 MAX_RECEIPT = 96 * 1024**2
 REGISTRY_LOCK = threading.RLock()
@@ -243,7 +244,10 @@ def prepare(original, image, metadata_raw):
     need(bounds == geometry['observed_bounds_256'] and
          np.array_equal(read_png((admitted['path']/'original-256.png').read_bytes(), 'RGB'), original256),
          'The original geometry differs from the restoration record.')
-    need(np.array_equal(rgb[~observed], original256[~observed]), 'Restoration padding changed.')
+    # Bilinear resizing can blend prepared edge pixels into the padding fringe.
+    # Restoration preserves the selected input there, which may differ from the original.
+    selected256 = read_png((admitted['path']/'selected-input-256.png').read_bytes(), 'RGB')
+    need(np.array_equal(rgb[~observed], selected256[~observed]), 'Restoration padding changed.')
     need(len(SESSIONS) < 100, 'Completion review is full; restart the app to review more outputs.')
     ident = uuid.uuid4().hex
     path = STORE / 'sessions' / ident

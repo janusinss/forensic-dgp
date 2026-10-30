@@ -13,6 +13,7 @@ import numpy as np
 from PIL import Image
 
 from .covering_detector import ROOT, load_frozen_detector, need, proposal_from_probability
+from .managed_paths import data_root
 
 
 def canonical(value):
@@ -21,11 +22,11 @@ def canonical(value):
 
 def read_png(path, mode):
     path = Path(path).absolute()
-    need(path.is_relative_to(ROOT / 'scratch') and path.is_file() and not path.is_symlink()
+    need(path.is_relative_to(data_root(ROOT) / 'scratch') and path.is_file() and not path.is_symlink()
          and 0 < path.stat().st_size <= 1024**2, 'Bounded server-owned detector input required.')
     for ancestor in path.parents:
         need(not ancestor.is_symlink(), 'Linked detector input directories are refused.')
-        if ancestor == ROOT:
+        if ancestor == data_root(ROOT):
             break
     raw = path.read_bytes()
     with Image.open(io.BytesIO(raw)) as image:
@@ -51,10 +52,10 @@ def run_request(request):
          and all(type(v) is str and v for v in request.values()),
          'Expected input_path, observed_path and output_dir strings only.')
     output = Path(request['output_dir']).absolute()
-    need(output.is_relative_to(ROOT / 'scratch'), 'Detector output must remain in server-owned scratch.')
+    need(output.is_relative_to(data_root(ROOT) / 'scratch'), 'Detector output must remain in server-owned scratch.')
     for ancestor in output.parents:
         need(not ancestor.is_symlink(), 'Linked detector output directories are refused.')
-        if ancestor == ROOT:
+        if ancestor == data_root(ROOT):
             break
     output.mkdir(parents=True, exist_ok=True)
     need(output.is_dir() and not output.is_symlink() and not any(output.iterdir()),

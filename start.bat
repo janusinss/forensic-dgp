@@ -1,32 +1,42 @@
 @echo off
 setlocal
-cd /d "%~dp0"
-title Forensic DGP - Implementation
-if /i "%~1"=="--no-pause" set "IMPLEMENTATION_NO_PAUSE=1"
-
-set "START_PYTHON="
-py -3.13 -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,13) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
-if not errorlevel 1 set "START_PYTHON=py -3.13"
-if defined START_PYTHON goto launch_environment
-py -3.12 -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,12) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
-if not errorlevel 1 set "START_PYTHON=py -3.12"
-if defined START_PYTHON goto launch_environment
-python -c "import struct,sys; sys.exit(0 if sys.version_info[:2] in ((3,12),(3,13)) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
-if not errorlevel 1 set "START_PYTHON=python"
-if defined START_PYTHON goto launch_environment
-if defined LOCALAPPDATA if exist "%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe" (
-  "%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe" -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,13) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
-  if not errorlevel 1 goto private_python
+if /i "%~1"=="--source" goto source
+if not defined LOCALAPPDATA goto missing
+set "DGP_APP_ROOT=%LOCALAPPDATA%\DGP\app"
+if not exist "%DGP_APP_ROOT%\current.json" goto missing
+set "DGP_NO_PAUSE="
+set "DGP_NO_BROWSER="
+set "DGP_PORT="
+:parse
+if "%~1"=="" goto launch
+if /i "%~1"=="--no-pause" (
+  set "DGP_NO_PAUSE=1"
+  shift
+  goto parse
 )
-echo [ERROR] A supported Python runtime was not found. Run install.bat first.
-if not defined IMPLEMENTATION_NO_PAUSE pause
+if /i "%~1"=="--no-browser" (
+  set "DGP_NO_BROWSER=1"
+  shift
+  goto parse
+)
+if /i "%~1"=="--port" goto port
+echo [ERROR] Unknown option: %~1
 exit /b 1
-
-:private_python
-set START_PYTHON="%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe"
-
-:launch_environment
-%START_PYTHON% -B -m implementation.environment launch %*
-set "START_EXIT=%ERRORLEVEL%"
-if not "%START_EXIT%"=="0" if not defined IMPLEMENTATION_NO_PAUSE pause
-exit /b %START_EXIT%
+:port
+if "%~2"=="" exit /b 1
+set "DGP_PORT=%~2"
+shift
+shift
+goto parse
+:launch
+powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "$p=Get-Content -LiteralPath (Join-Path $env:DGP_APP_ROOT 'current.json') -Raw | ConvertFrom-Json;if($p.commit -cnotmatch '^[0-9a-f]{40}$'){throw 'Invalid managed revision'};$helper=Join-Path $env:DGP_APP_ROOT ('versions\'+$p.commit+'\implementation\distribution.ps1');$r=Get-Content -LiteralPath (Join-Path $env:DGP_APP_ROOT ('receipts\'+$p.commit+'.json')) -Raw | ConvertFrom-Json;$s=[IO.File]::OpenRead($helper);$h=[Security.Cryptography.SHA256]::Create();try{$hash=([BitConverter]::ToString($h.ComputeHash($s))).Replace('-','').ToLowerInvariant()}finally{$h.Dispose();$s.Dispose()};if($r.commit -cne $p.commit -or $hash -cne $r.files.'implementation/distribution.ps1'){throw 'Installer helper differs from its receipt'};$a=@();if($env:DGP_PORT){if($env:DGP_PORT -notmatch '^\d{1,5}$' -or [int]$env:DGP_PORT -gt 65535){throw 'Invalid port'};$a+=@('--port',$env:DGP_PORT)};if($env:DGP_NO_BROWSER){$a+='--no-browser'};if($env:DGP_NO_PAUSE){$a+='--no-pause'}; & $helper -Action Launch -ManagedRoot $env:DGP_APP_ROOT -LaunchArgs $a"
+set "DGP_EXIT=%ERRORLEVEL%"
+if not defined DGP_NO_PAUSE if not "%DGP_EXIT%"=="0" pause
+exit /b %DGP_EXIT%
+:source
+call "%~dp0implementation\start_source.bat" %2 %3 %4 %5 %6 %7 %8 %9
+exit /b %ERRORLEVEL%
+:missing
+echo [ERROR] No managed installation found. Run install.bat first.
+if /i not "%~1"=="--no-pause" pause
+exit /b 1

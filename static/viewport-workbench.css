@@ -117,7 +117,15 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-dialog::backdrop { background:rgba(4,13,10,.72); }
 .work-dialog h2 { font:400 28px/1.1 Georgia,serif; margin:0 0 14px; }
 .work-dialog p { line-height:1.5; margin:0 0 14px; }
-#image-dialog img { display:block; max-width:min(80vw,700px); max-height:65dvh; width:auto; height:auto; object-fit:contain; margin:0 auto 12px; }
+/* Enlarge uses the whole browser viewport, including for 256-pixel results. */
+#image-dialog { box-sizing:border-box; inset:0; width:100vw; max-width:none; height:100dvh; max-height:none; margin:0; padding:clamp(12px,2vw,24px); border:0; border-radius:0; overflow:hidden; color:#eaf2ea; background:#101d1d; }
+#image-dialog[open] { display:grid; grid-template-rows:auto minmax(0,1fr); gap:12px; }
+.image-dialog-header { display:flex; align-items:center; justify-content:space-between; gap:16px; min-width:0; }
+#image-dialog h2 { min-width:0; margin:0; font:600 clamp(16px,2vw,20px)/1.25 var(--font-sans); overflow-wrap:anywhere; }
+#image-dialog .tool-btn { flex-shrink:0; min-width:44px; min-height:44px; color:inherit; border-color:#6b8274; background:transparent; font-family:var(--font-sans); }
+#image-dialog .tool-btn:hover { background:#294238; }
+#image-dialog img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-width:none; max-height:none; object-fit:contain; margin:0; }
+html:has(#image-dialog[open]) { overflow:hidden; }
 @media (max-width:800px) {
   .work-screen { grid-template-columns:minmax(0,1fr); grid-template-rows:auto minmax(0,1fr); }
   .work-controls { justify-content:flex-start; gap:10px; padding:18px 20px; }

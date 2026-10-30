@@ -16,8 +16,10 @@ import stat
 import sys
 import uuid
 
+from .managed_paths import data_path
+
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = ROOT / "models" / "completion"
+MODEL_DIR = data_path(ROOT, 'models', 'completion')
 MANIFEST_PATH = Path(__file__).with_name("completion_assets.json")
 R1_SHA256 = "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0"
 R1_SIZE = 370764381

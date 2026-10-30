@@ -1,120 +1,69 @@
-# Forensic DGP
+# Forensic DGP — IMPLEMENTATION
 
-A local Windows app for restoring a cropped face picture, with optional manual covering removal. Results are 256 x 256 pixels.
+Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Install
+## Install on Windows
 
-**`install.bat` is the updated installer on IMPLEMENTATION.** It uses pinned `uv 0.13.1`, cached dependencies, and concurrent restoration/completion asset setup. The filename stays the same so existing shortcuts and update commands keep working.
+1. Download [install.bat](https://raw.githubusercontent.com/janusinss/forensic-dgp/IMPLEMENTATION/install.bat) into an empty folder. Save the actual file, not the GitHub HTML page.
+2. Run `install.bat`. No Git, existing Python, administrator access, or complete repository download is required.
+3. Run the `start.bat` created beside it. Keep the application terminal open; press Ctrl+C to stop.
 
-`install-integrated.bat` is the `main` branch's wrapper for its `integrated_app/` folder. This standalone branch keeps the app at the repository root and uses `install.bat` directly.
+The installer resolves the latest **IMPLEMENTATION** commit once and downloads that exact version. It prints the installed revision. The managed app lives under `%LOCALAPPDATA%\DGP\app`; an existing unrelated source checkout is not overwritten. If a different `start.bat` already exists beside the download, it is preserved; use the launcher path printed by setup.
 
-Install [Git for Windows](https://git-scm.com/download/win) for the clone command below. Open PowerShell and run:
+Requirements: 64-bit Windows, internet access for setup, at least 2.5 GiB available RAM for processing, and sufficient disk space for Python dependencies, approximately 720 MiB of model files, retained app versions and your saved records. A GPU is not required.
 
-```powershell
-git clone --depth 1 --single-branch --branch IMPLEMENTATION https://github.com/janusinss/forensic-dgp.git
-cd forensic-dgp
-.\install.bat
-.\start.bat
-```
+## Update and installation behavior
 
-Alternatively, [download the IMPLEMENTATION ZIP](https://github.com/janusinss/forensic-dgp/archive/refs/heads/IMPLEMENTATION.zip), extract it, and double-click `install.bat`. Open `start.bat` when installation succeeds.
+Close the managed app and rerun `install.bat` to install the current published UI, flow and fixes. `start.bat` starts the last successfully installed version without an online update check. The installer cannot retrieve unpublished local edits.
 
-The installer uses 64-bit Python 3.12 or 3.13. If neither is available, it downloads a private Python runtime under `%LOCALAPPDATA%\DGP` without changing PATH. Every model file must pass its size and SHA-256 checks; existing mismatched files are preserved.
+- Source files are checked against the exact GitHub commit tree; model files retain their complete size/SHA-256 checks. This trusts GitHub HTTPS and the repository; it is not a separately signed release.
+- New code is staged in a separate version directory. The active-version pointer changes only after dependency, asset and application import checks pass. The prior version and saved records remain available if setup fails.
+- Dependencies use the pinned uv installer, its package cache and CPU-only PyTorch. An unchanged dependency fingerprint reuses its environment across UI-only updates. A changed dependency manifest creates a separate environment. The isolated capture runtime skips package installation when its exact versions and detector pass verification.
+- Verified model files are shared across app versions rather than downloaded for every update. Mismatched models or edited managed source files are refused and preserved for inspection.
+- A shared managed-app lock prevents concurrent setup or updating a running managed app. Setup does not kill processes or occupied ports. Previous versions and failed staging files are retained; no automatic evidence deletion occurs.
 
-### Faster repeat and multi-PC setup
+Package installation is pinned at the direct-dependency level; transitive dependencies are not a complete hash-locked supply chain. First setup needs the network. Repeated setup may still need it to check the branch or obtain missing packages; launching an already installed app is local.
 
-The installer checks an existing private Python runtime before probing system installations. It validates the version and 64-bit architecture before use, and falls back to a supported system Python if that private copy is invalid.
+## Input and review
 
-Package installation uses [uv's Windows hardlink default](https://docs.astral.sh/uv/reference/settings/#link-mode), avoiding full copies of cached dependency files when the cache and environment share a filesystem. Other filesystem layouts fall back to copying. This applies to dependency packages; model files remain separately verified ordinary files.
+Choose **Picture** to upload one PNG/JPEG face image, or **Video** for an uploaded clip, webcam or LAN RTSP camera. A chosen video file opens automatically. Native playback controls support Space play/pause and a separate 0.25×–4× speed selector.
 
-For a trusted preseeded setup, copy a compatible, populated uv cache intact into `implementation\uv_cache\` before installation. The installer detects that directory automatically. An explicit `UV_CACHE_DIR` setting takes precedence; without either setting, uv uses its normal per-user cache. The bundled cache is git-ignored. Keep the cache and environment on the same filesystem for [best cache performance](https://docs.astral.sh/uv/concepts/cache/#cache-directory).
+Freeze a frame, select a detected face or drag on the preview to crop it. Press Enter on the frozen preview to create a keyboard-adjustable crop. Arrow keys move the crop; Shift+arrow keys resize it. **Full frame crop** returns the preview to the entire frame while keeping the selected crop. **Use this face** passes the direct rectangular PNG crop into Picture review; no FAN alignment, person tracking, ranking or restoration runs during capture.
 
-Reuse existing exact model files under `models/` to avoid downloading them again; full size and SHA-256 checks still run. A copied package cache alone does not make setup fully offline: Python, the one-time uv bootstrap, missing packages, or model files can still require downloads. Installation time depends on available files, connection speed, disk speed, and security scanning.
+Switching Picture/Video, reviewing a crop or temporarily leaving Input pauses an opened local video while preserving its source, position, speed, crop and zoom. Returning does not autoplay. **Resume video** continues a frozen capture. Explicit Stop, file/source replacement and page unload release it. Live webcam/RTSP sources are released when leaving capture; they are never silently restarted.
 
-## Requirements
+Review whether one face is clear enough, then choose **Auto**, **On** or **Off** restoration and **Bypass** or optional reviewed preparation. Green protects pixels during preparation; blue selects blur, with green taking priority. Review and confirm preparation before restoration. Protection applies to preparation; generated appearance can change.
 
-- 64-bit Windows; a graphics card is not required.
-- Internet access during installation. Image processing runs locally afterward.
-- At least 2.5 GiB of available RAM before model processing.
-- Storage for dependencies, about 720 MiB of model assets, and saved request records.
+Optional removal review is available after the result, including when restoration was Off or Auto retained the original. Paint only the covering orange, inspect it, confirm the two statements and generate. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
 
-## Use
+## Launch and troubleshooting
 
-1. Upload one cropped PNG or JPEG containing a frontal or mildly turned face. The file limit is 10 MiB and 1600 pixels per side; animated images are unsupported.
-2. Select **One face is clear enough to review** when its visible features are readable.
-3. Choose **Auto**, **On**, or **Off** under **Choose restoration**. Auto uses an input-quality suggestion; Off returns the resized original.
-4. Choose **Bypass** or **Choose areas to protect or blur** for input preparation.
-5. Click **Restore selected input**. Compare the images and download a PNG or the review ZIP.
+`start.bat --port 0` selects an available loopback port. `--no-browser` prints the URL without opening a tab. If a port is occupied, setup/start reports it instead of opening another app's UI.
 
-### Optional input preparation
-
-| Selection | Effect during preparation |
+| Problem | Recovery |
 | --- | --- |
-| Green only | Protect green pixels; blur the remaining surroundings. |
-| Blue only | Blur only the blue pixels. |
-| Green and blue | Blur blue pixels; green protection takes priority. |
-| Neither | Keep the input unchanged. |
+| Old interface after update | Stop the older app, rerun the new installer, then run the managed launcher printed by setup. Compare its printed commit. |
+| Setup or network failure | Read the error and rerun setup. The active pointer is not promoted on failure. |
+| Model or managed code differs | Keep the reported file. Move only the identified mismatched version/file aside for inspection before retrying. |
+| Capture session is full | Stop and restart the app; saved capture records remain on disk. |
+| Browser permission or RTSP failure | Use a local video file or explicitly reconnect the camera. Do not put camera credentials in the URL. |
 
-Use **Paint**, **Erase both**, **Undo**, and **Blur strength** to adjust the selection. Click **Preview areas**, inspect the preview, and confirm it before continuing. Editing the selection or blur strength requires a new preview and confirmation.
+Managed models are in `%LOCALAPPDATA%\DGP\app\data\models`. Saved request records are in `data\scratch\implementation_requests`, `data\scratch\completion_requests` and `data\scratch\capture_requests`. Downloaded ZIPs contain image data. Existing source-checkout records are left where they were; updates do not import or delete them automatically.
 
-Protection applies to preparation. Restoration can change the face. Preparation is skipped when restoration is Off or Auto keeps the original.
+## Developers and existing source checkouts
 
-### Optional covering removal
-
-Choose **Review covering removal** after restoration when a covering hides part of the face. Click **Start removal review**, then paint the covering orange. Keep visible features, clear glasses, and non-obstructing hair outside the selection.
-
-Inspect the selection in the editor before clicking **Review**. Confirm both statements when they are true, then click **Generate result**. The guided app uses your manual selection; it does not choose a removal area automatically.
-
-Completion changes only the selected area of the restoration result. An empty selection skips the completion model. PNG and evidence ZIP downloads retain the available images and records.
-
-## Start, stop, and update
-
-Run `.\start.bat` whenever you want to open the app. Keep its terminal open during use. Press **Ctrl+C** in that terminal to stop it.
-
-The browser opens after the local health check succeeds. If it does not open, use the **Application URL** printed in the terminal. For an occupied port, run `.\start.bat --port 0` to select an available port.
-
-To update a Git checkout, stop the app and save any source changes first:
+The default installer always installs/updates the managed app. To work on an extracted or Git checkout deliberately:
 
 ```powershell
 git pull --ff-only origin IMPLEMENTATION
-.\install.bat
-.\start.bat
+.\install.bat --source --no-pause
+.\start.bat --source
 ```
 
-For a ZIP installation, extract a fresh IMPLEMENTATION ZIP into a new folder and run its installer.
+Save local source changes before pulling. The source path keeps its own environment record and checkout-local models/records. `start.bat --source --verify-only` checks that installation without starting a server. Standalone users need a newly downloaded installer once to get this updater; an older batch file cannot update itself automatically.
 
-## Troubleshooting
+Python asset verification remains available through `implementation.setup_models --verify-only` and `implementation.completion_install --verify-only` with the installation's Python. Completion assets can be staged from exact verified local files using `--local-r1` and `--local-detector`; consult the module's `--help`.
 
-| Problem | Action |
-| --- | --- |
-| Python or dependency setup fails | Read the reported error; check internet access and storage before rerunning `install.bat`. |
-| A model fails verification | Keep the reported file for inspection. Move the mismatched file aside before rerunning installation. |
-| Available memory is too low | Close unused applications before processing. |
-| A worker fails or stops unexpectedly | Inspect the saved request under `scratch/` before restarting the app. |
-| Completion assets cannot be downloaded | Use the local-file instructions below if you already have both exact files. |
+## Model information and licenses
 
-### Install completion assets from local files
-
-Local staging works even when a first installation stopped before creating `.implementation-env.json`. Use the environment folder printed after **[1/3] Python environment:** and append `\Scripts\python.exe`. Replace the three example paths below:
-
-```powershell
-$python = 'C:\path-shown-by-setup\Scripts\python.exe'
-& $python -B -m implementation.completion_install --local-r1 'C:\verified-assets\codeformer_completion_r1.pth' --local-detector 'C:\verified-assets\covering_detector_segmenter_v1.pth'
-.\install.bat
-```
-
-The local staging command performs no downloads. Both files must match their expected size and SHA-256. A peer file can be omitted only if its installed copy already passes verification. Rerunning `install.bat` completes the remaining checks and writes the environment configuration after successful setup.
-
-To verify installed completion files with the same interpreter:
-
-```powershell
-& $python -B -m implementation.completion_install --verify-only
-```
-
-## Local records and model information
-
-Request images and records are saved under `scratch/implementation_requests` and `scratch/completion_requests`. Downloaded evidence ZIPs also contain image data. Remove your own saved records when they are no longer needed.
-
-V2 is the app's restoration model; its four component files are loaded together. Optional covering removal uses the separate R1 completion model. See the [restoration model card](MODEL_CARD.md) and [completion model card](COMPLETION_MODEL_CARD.md) for asset fingerprints, provenance, and limits. Generated facial detail is an estimate, not proof of identity or hidden appearance.
-
-The app uses adaptations of S-Lab CodeFormer under non-commercial terms. Retain the [restoration license](third_party/codeformer/LICENSE), [restoration notices](third_party/codeformer/NOTICE.md), [completion license](third_party/codeformer_completion/LICENSE), and [completion notices](third_party/codeformer_completion/NOTICE.md). Training data is not distributed with this app.
+See [MODEL_CARD.md](MODEL_CARD.md) and [COMPLETION_MODEL_CARD.md](COMPLETION_MODEL_CARD.md) for fingerprints, provenance and limits. The app uses adaptations of S-Lab CodeFormer under **non-commercial terms**. Retain the [restoration license](third_party/codeformer/LICENSE), [restoration notices](third_party/codeformer/NOTICE.md), [completion license](third_party/codeformer_completion/LICENSE) and [completion notices](third_party/codeformer_completion/NOTICE.md). Training datasets are not distributed.

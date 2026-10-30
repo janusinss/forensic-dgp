@@ -5,12 +5,12 @@
   const form = byId('brush-form');
   const brushFeedback = byId('brush-feedback');
   const completionFeedback = byId('completion-feedback');
-  let current = 'inspect', pendingPreview = false, pendingCompletion = false, pendingEstimate = false;
+  let current = 'inspect', pendingPreview = false, pendingEstimate = false;
   const stageTitles = {
     inspect: '', options: 'Restoration settings',
     'brush-paint': 'Protect and blur', 'brush-preview': 'Review preparation',
     run: 'Restore the picture', result: 'Review restoration',
-    'completion-intro': 'Covering removal', 'completion-paint': 'Select the removal area',
+    'completion-paint': 'Select the removal area',
     'completion-tools': 'Removal tools', 'completion-confirm': 'Confirm removal',
     'completion-result': 'Review removal'
   };
@@ -31,10 +31,10 @@
     { label: 'Settings', names: ['options', 'brush-paint', 'brush-preview'] },
     { label: 'Restore', names: ['run'] },
     { label: 'Review', names: ['result'] },
-    { label: 'Removal', names: ['completion-intro', 'completion-paint', 'completion-tools', 'completion-confirm', 'completion-result'], optional: true }
+    { label: 'Removal', names: ['completion-paint', 'completion-tools', 'completion-confirm', 'completion-result'], optional: true }
   ];
   screens.forEach(screen => {
-    const controls = screen.querySelector('.work-controls');
+    const controls = screen.querySelector('.intake-progress') || screen.querySelector('.work-controls');
     const currentStep = journey.findIndex(step => step.names.includes(screen.dataset.screen));
     if (!controls || currentStep < 0) return;
     const progress = document.createElement('nav');
@@ -78,7 +78,7 @@
 
   // Batch fitting into one frame: measure every affected panel before writing
   // sizes, so load, navigation and resize events do not repeatedly force layout.
-  const previews = ['upload-preview', 'options-preview', 'restoration-idle', 'completion-intro-preview', 'completion-confirm-preview'].map(byId);
+  const previews = ['options-preview', 'restoration-idle', 'completion-confirm-preview'].map(byId);
   const previewByVisual = new Map(previews.map(image => [image.closest('.work-visual'), image]));
   const pendingFits = new Set();
   let fitFrame = 0;
@@ -165,16 +165,13 @@
       setPreviewSource(byId('restoration-idle'), source);
       byId('restoration-idle').alt = manual ? 'Reviewed prepared input before restoration' : 'Original input before restoration';
     }
-    if (name === 'completion-intro') {
-      const source = byId('brush-result-output').getAttribute('src');
-      setPreviewSource(byId('completion-intro-preview'), source);
-    }
     if (name === 'completion-confirm') {
       const source = byId('brush-result-output').getAttribute('src');
       setPreviewSource(byId('completion-confirm-preview'), source);
     }
     if (name === 'options' && current === 'result') byId('brush-progress').textContent = 'Choose restoration and preparation.';
     if (name === 'inspect' && current !== 'inspect') byId('brush-progress').textContent = 'Check your picture before continuing.';
+    window.dispatchEvent(new CustomEvent('workbench:screen', {detail:{screen:name}}));
     current = name;
     updateTabTitle();
     syncProgress();
@@ -182,7 +179,7 @@
     if (revealResult) screen.classList.add('result-enter');
     const slot = screen.querySelector('.feedback-slot');
     if (slot && form.contains(screen)) slot.append(brushFeedback);
-    if (slot && byId('completion-stage').contains(screen)) slot.append(completionFeedback);
+    if (slot && (name === 'result' || byId('completion-stage').contains(screen))) slot.append(completionFeedback);
     showNotice('');
     screen.querySelectorAll('.work-visual').forEach(queueFit);
     if (focus) {
@@ -229,13 +226,12 @@
     if (current !== 'run') { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
   byId('brush-preview').addEventListener('click', () => { pendingPreview = true; });
-  byId('completion-start').addEventListener('click', () => { pendingCompletion = true; });
+  window.addEventListener('completion:prepared', () => show('completion-paint'));
   byId('completion-generate').addEventListener('click', () => { pendingEstimate = true; });
   const observe = (id, ready) => new MutationObserver(() => {
     if (!byId(id).classList.contains('hidden')) ready();
   }).observe(byId(id), { attributes: true, attributeFilter: ['class'] });
   observe('brush-preview-section', () => { if (pendingPreview) { pendingPreview = false; show('brush-preview'); } });
-  observe('completion-editor-section', () => { if (pendingCompletion) { pendingCompletion = false; show('completion-paint'); } });
   observe('completion-result-section', () => { if (pendingEstimate) { pendingEstimate = false; show('completion-result', true, true); } });
   window.addEventListener('restoration:completed', () => show('result', true, true));
   show('inspect', false);

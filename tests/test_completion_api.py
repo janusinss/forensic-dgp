@@ -36,6 +36,61 @@ class CompletionAPITests(unittest.TestCase):
         api.admit_restoration(api.canonical(self.response))
         return api.prepare(self.raw, self.raw, api.canonical(self.metadata))['session_id']
 
+    def prepared_padding_fixture(self, height=620, width=503):
+        from implementation.preparation import build_preview
+        yy, xx = np.mgrid[:height, :width]
+        native = np.stack(((xx % 2) * 255, (yy % 2) * 255,
+                           ((xx + yy) % 3) * 127), axis=2).astype(np.uint8)
+        uploaded = api.png(native)
+        _, payloads = build_preview(uploaded, api.png(np.zeros((height, width), np.uint8)),
+                                    api.png(np.full((height, width), 255, np.uint8)), 3)
+        original, observed, _, geometry = api.restoration.prepare_crop(native)
+        selected = api.read_png(payloads['prepared-derived-256.png'], 'RGB')
+        self.assertTrue(np.any(selected[~observed] != original[~observed]),
+                        'Fixture must exercise the bilinear fringe outside nearest support.')
+        result = selected.copy()
+        result[128, 128] = (7, 11, 13)
+        metadata = {**self.metadata, 'uploaded_bytes_sha256': api.sha(uploaded),
+                    'restoration_applied': True, 'preparation_applied': True, 'geometry': geometry}
+        return uploaded, api.png(original), api.png(selected), result, observed, metadata
+
+    def admit_prepared_padding_fixture(self, original, selected, result, metadata):
+        result_png = api.png(result)
+        metadata['result_file_sha256'] = api.sha(result_png)
+        response = {'metadata': metadata, 'original_input': api.restoration.url(original),
+                    'prepared_input': api.restoration.url(selected), 'result': api.restoration.url(result_png)}
+        api.admit_restoration(api.canonical(response))
+        return result_png
+
+    def test_manual_preparation_fringe_is_valid_for_completion_review(self):
+        for height, width in ((620, 503), (503, 620)):
+            with self.subTest(height=height, width=width):
+                uploaded, original, selected, result, _, metadata = self.prepared_padding_fixture(height, width)
+                result_png = self.admit_prepared_padding_fixture(original, selected, result, metadata)
+                with patch.object(api, 'run_worker') as worker:
+                    response = api.prepare(uploaded, result_png, api.canonical(metadata))
+                worker.assert_not_called()
+                record = api.session(response['session_id'])
+                self.assertEqual((record['path'] / 'input.png').read_bytes(), result_png)
+                self.assertEqual((record['path'] / 'selected-input-256.png').read_bytes(), selected)
+
+    def test_restoration_padding_drift_still_rejected_after_admission(self):
+        uploaded, original, selected, result, observed, metadata = self.prepared_padding_fixture()
+        y, x = np.argwhere(~observed)[0]
+        result[y, x, 0] ^= 1
+        result_png = self.admit_prepared_padding_fixture(original, selected, result, metadata)
+        with self.assertRaisesRegex(ValueError, 'Restoration padding changed'):
+            api.prepare(uploaded, result_png, api.canonical(metadata))
+
+    def test_changed_retained_selected_input_is_rejected(self):
+        uploaded, original, selected, result, _, metadata = self.prepared_padding_fixture()
+        result_png = self.admit_prepared_padding_fixture(original, selected, result, metadata)
+        record = api.ADMISSIONS[api.metadata_key(metadata)]
+        (record['path'] / 'selected-input-256.png').write_bytes(original)
+        with self.assertRaisesRegex(ValueError, 'Retained restoration evidence changed'):
+            api.prepare(uploaded, result_png, api.canonical(metadata))
+
+
     def test_client_asserted_restoration_is_not_admitted(self):
         with self.assertRaisesRegex(ValueError, 'not produced'):
             api.prepare(self.raw,self.raw,api.canonical(self.metadata))

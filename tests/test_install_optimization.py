@@ -260,6 +260,7 @@ class WholeInstallationTests(unittest.TestCase):
         stack.enter_context(patch.object(environment.struct, "calcsize", return_value=8))
         stack.enter_context(patch.object(environment, "expected_record", return_value=self.record))
         stack.enter_context(patch.object(environment, "check_python"))
+        stack.enter_context(patch.object(environment, "install_capture", return_value=0))
         stack.enter_context(contextlib.redirect_stdout(io.StringIO()))
         return stack
 

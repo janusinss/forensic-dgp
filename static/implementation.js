@@ -5,7 +5,7 @@
     const api = '/face/restoration', byId = id => document.getElementById(id);
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
     const protectColor = [45, 185, 90], applyColor = [55, 125, 220];
-    let sourceFile, originalPixels, width = 0, height = 0, planes, undo = [];
+    let sourceFile, captureId, originalPixels, width = 0, height = 0, planes, undo = [];
     let available = false, busy = false, revision = 0, operation = 0;
     let previewId, masks, drawing = false, previous, cursorX = 0, cursorY = 0;
     let overlayPixels, dirty, renderFrame = 0, protectCount = 0, applyCount = 0;
@@ -25,7 +25,7 @@
         for (const id of ['brush-result-input', 'brush-result-prepared', 'brush-result-output']) byId(id).removeAttribute('src');
     };
     const update = () => {
-        document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => { item.disabled = busy; });
+        document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => { if (!item.closest('[data-capture-controls], .capture-visual')) item.disabled = busy; });
         const readable = byId('brush-review').value === 'usable';
         const confirmed = Boolean(previewId && masks && byId('brush-confirm').checked);
         byId('brush-preview').disabled = busy || !available || !planes || !readable || !manual();
@@ -34,6 +34,7 @@
         byId('brush-confirm').disabled = busy || !previewId || !manual();
         byId('brush-edit-section').classList.toggle('hidden', !planes || !manual());
         canvas.setAttribute('aria-disabled', String(busy));
+        window.dispatchEvent(new CustomEvent('restoration:busy', {detail:{busy}}));
     };
     const invalidate = () => {
         revision++; previewId = undefined; masks = undefined;
@@ -225,37 +226,44 @@
     const resetInput = () => {
         if (renderFrame) cancelAnimationFrame(renderFrame);
         renderFrame = 0; overlayPixels = undefined; dirty = undefined; protectCount = 0; applyCount = 0;
-        sourceFile = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
+        sourceFile = undefined; captureId = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
         canvas.width = 0; canvas.height = 0;
+        byId('input-picture').classList.add('hidden');
         byId('upload-preview').removeAttribute('src'); byId('upload-preview').classList.add('hidden');
         byId('brush-review').value = ''; byId('brush-review').dispatchEvent(new Event('change', { bubbles: true }));
     };
-    byId('brush-file').addEventListener('change', async () => {
-        const file = byId('brush-file').files[0];
+    const usePicture = async (file, options = {}) => {
+        if (busy) { error('Wait for the current task to finish, then choose the picture again.'); return false; }
         resetInput(); error('');
-        if (busy) { error('Wait for the current task to finish, then choose the picture again.'); return; }
         if (!file) return;
         if (file.size === 0 || file.size > 10 * 1024 ** 2 || !['image/png', 'image/jpeg'].includes(file.type)) { error('Choose a PNG or JPEG face picture smaller than 10 MB.'); return; }
         const token = begin(), version = revision;
         progress('Checking your picture.');
         try {
             const result = await post('/inspect', form(file));
-            if (!current(token, version)) return;
+            if (!current(token, version) || (options.isCurrent && !options.isCurrent())) return false;
             if (!Number.isInteger(result.width) || !Number.isInteger(result.height) || result.width < 1 || result.height < 1 || result.width > 1600 || result.height > 1600 || result.width * result.height > 2560000 || result.neural_calls !== 0) throw new Error('The app could not read the picture size. Please choose another image.');
             const image = new Image(); image.src = validPNG(result.source); await image.decode();
-            if (!current(token, version)) return;
+            if (!current(token, version) || (options.isCurrent && !options.isCurrent())) return false;
             if (image.naturalWidth !== result.width || image.naturalHeight !== result.height) throw new Error('The picture could not be prepared correctly. Please choose it again.');
-            sourceFile = file; width = result.width; height = result.height; canvas.width = width; canvas.height = height;
+            sourceFile = file; captureId = options.captureId; width = result.width; height = result.height; canvas.width = width; canvas.height = height;
             context.drawImage(image, 0, 0); originalPixels = context.getImageData(0, 0, width, height);
             overlayPixels = new ImageData(new Uint8ClampedArray(originalPixels.data), width, height);
             planes = { protect: new Uint8Array(width * height), apply: new Uint8Array(width * height) };
+            byId('input-picture').classList.remove('hidden');
+            byId('input-picture-label').textContent = options.label || 'Uploaded picture';
+            byId('upload-preview').alt = options.label || 'Original uploaded picture';
             byId('upload-preview').src = image.src; byId('upload-preview').classList.remove('hidden');
             byId('brush-dimensions').textContent = `Picture size: ${width} × ${height} pixels. No areas are marked yet.`;
             cursorX = 0; cursorY = 0;
             render(); progress('Check the face before continuing. Marking areas is optional.');
+            window.dispatchEvent(new CustomEvent('picture:changed', {detail:{captured:!!captureId,file}}));
+            return true;
         } catch (problem) { if (current(token, version)) { resetInput(); error(problem.message); progress('The picture could not be checked. Choose a clear face picture.'); } }
         finally { finish(token); }
-    });
+    };
+    window.restorationInput = {use:usePicture, get busy() {return busy;}};
+    byId('brush-file').addEventListener('change', () => usePicture(byId('brush-file').files[0]));
     byId('brush-preview').addEventListener('click', async () => {
         if (busy || !planes || !sourceFile || !manual() || byId('brush-review').value !== 'usable') return;
         const radius = byId('brush-radius').value;
@@ -299,6 +307,7 @@
         const data = mode === 'manual' ? maskedForm(sourceFile, masks, byId('brush-radius').value) : form(sourceFile);
         data.append('input_review', 'usable'); data.append('restoration', restoration); data.append('preparation_mode', mode);
         data.append('model', byId('brush-model').value);
+        if (captureId) data.append('capture_id', captureId);
         const includeBundle = byId('brush-include-bundle').checked;
         data.append('include_bundle', includeBundle ? 'true' : 'false');
         if (mode === 'manual') { data.append('preview_id', previewId); data.append('confirmed', 'true'); }
