@@ -29,7 +29,7 @@ class ManagedFlow(unittest.TestCase):
         files = {
             'start.bat': (BASE / 'start.bat').read_bytes(),
             'implementation/distribution.ps1': HELPER.read_bytes(),
-            'implementation/start_source.bat': b'@echo off\r\nif /i "%~1"=="--verify-only" exit /b 0\r\necho %* > "%DGP_TEST_ARGS%"\r\nexit /b 0\r\n',
+            'implementation/start_source.bat': b'@echo off\r\nif /i "%~1"=="--verify-only" exit /b 0\r\necho %* > "%DGP_TEST_ARGS%"\r\necho %IMPLEMENTATION_NO_PAUSE% > "%DGP_TEST_NO_PAUSE%"\r\nexit /b 0\r\n',
             'implementation/install_source.bat': b'@echo off\r\nif defined DGP_TEST_FAIL exit /b 1\r\nexit /b 0\r\n',
             'implementation/file.txt': b'fixture\n',
         }
@@ -51,7 +51,7 @@ class ManagedFlow(unittest.TestCase):
         self.fixture = self.local / 'fixture.ps1'
         self.fixture.write_text(source, encoding='utf8')
         self.env = dict(os.environ, LOCALAPPDATA=str(self.local), DGP_TEST_TREE=str(self.tree), DGP_TEST_ZIP=str(self.archive),
-                        DGP_TEST_ARGS=str(self.local / 'launch-args.txt'))
+                        DGP_TEST_ARGS=str(self.local / 'launch-args.txt'), DGP_TEST_NO_PAUSE=str(self.local / 'launch-no-pause.txt'))
 
     def install(self, fail=False):
         env = dict(self.env)
@@ -70,6 +70,7 @@ class ManagedFlow(unittest.TestCase):
                                   capture_output=True, text=True, env=self.env, timeout=30)
         self.assertEqual(launched.returncode, 0, launched.stdout + launched.stderr)
         self.assertEqual((self.local / 'launch-args.txt').read_text().strip(), '--port 4123 --no-browser --no-pause')
+        self.assertEqual((self.local / 'launch-no-pause.txt').read_text().strip(), '1')
         self.archive.unlink()
         result = self.install()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

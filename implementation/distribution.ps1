@@ -158,6 +158,7 @@ try {
     if ($active.schema -isnot [int] -or $active.schema -ne 1) { throw 'Invalid application pointer.' }
     $dir = Verify-Version $active.commit
     Write-Host "Managed application revision: $($active.commit)"
+    if ($LaunchArgs -contains '--no-pause') { $env:IMPLEMENTATION_NO_PAUSE = '1' }
     & (Join-Path $dir 'start.bat') --source @LaunchArgs
     exit $LASTEXITCODE
   }
