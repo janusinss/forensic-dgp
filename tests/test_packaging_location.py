@@ -68,6 +68,74 @@ class InstallLocationTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(json.loads((self.shell / 'install-location.json').read_text()), bad)
 
+    def recovery_binding(self):
+        self.shell.mkdir(parents=True)
+        runtime = self.shell / 'runtime'; runtime.mkdir()
+        config = {'schema': 1, 'install_root': str(self.shell), 'managed_root': str(runtime)}
+        owner = {'schema_version': 2, 'repository': 'janusinss/forensic-dgp',
+                 'layout': 'desktop-runtime-v1', 'install_root': str(self.shell)}
+        (self.shell / 'install-location.json').write_text(json.dumps(config, ensure_ascii=False), encoding='utf8')
+        (runtime / 'owner.json').write_text(json.dumps(owner, ensure_ascii=False), encoding='utf8')
+        return config, owner
+
+    def test_missing_marker_recovery_validates_read_only_then_prepares_canonical_marker(self):
+        config, owner = self.recovery_binding()
+        sentinel = self.shell / 'runtime/data/scratch/capture_requests/original.png'
+        sentinel.parent.mkdir(parents=True); sentinel.write_bytes(b'preserve captured original')
+        result = self.invoke('Validate')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.shell / 'shell-owner.json').exists())
+        prepared = self.invoke('Prepare')
+        self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+        self.assertEqual(json.loads((self.shell / 'shell-owner.json').read_text(encoding='utf8')), SHELL_MARKER)
+        self.assertEqual(json.loads((self.shell / 'install-location.json').read_text(encoding='utf8')), config)
+        self.assertEqual(json.loads((self.shell / 'runtime/owner.json').read_text(encoding='utf8')), owner)
+        self.assertEqual(sentinel.read_bytes(), b'preserve captured original')
+
+    def test_missing_marker_recovery_requires_both_exact_bindings(self):
+        config, owner = self.recovery_binding()
+        config_path = self.shell / 'install-location.json'; owner_path = self.shell / 'runtime/owner.json'
+        cases = [
+            ('config', None), ('owner', None),
+            ('config', dict(config, extra=True)), ('owner', dict(owner, extra=True)),
+            ('config', dict(config, schema=True)), ('owner', dict(owner, schema_version=True)),
+            ('config', dict(config, install_root=str(self.local / 'other'))),
+            ('config', dict(config, managed_root=str(self.local / 'other'))),
+            ('owner', dict(owner, install_root=str(self.local / 'other'))),
+            ('owner', dict(owner, repository='another/repository')),
+            ('owner', dict(owner, layout='unrecognized-layout')),
+        ]
+        for name, bad in cases:
+            with self.subTest(name=name, bad=bad):
+                config_path.write_text(json.dumps(config, ensure_ascii=False), encoding='utf8')
+                owner_path.write_text(json.dumps(owner, ensure_ascii=False), encoding='utf8')
+                chosen = config_path if name == 'config' else owner_path
+                if bad is None: chosen.unlink()
+                else: chosen.write_text(json.dumps(bad, ensure_ascii=False), encoding='utf8')
+                for action in ('Validate', 'Prepare'):
+                    result = self.invoke(action)
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertFalse((self.shell / 'shell-owner.json').exists())
+
+    def test_missing_marker_recovery_refuses_linked_runtime(self):
+        self.recovery_binding()
+        runtime = self.shell / 'runtime'; owner = runtime / 'owner.json'
+        target = self.local / 'retained-target'; target.mkdir()
+        owner.rename(target / 'owner.json'); runtime.rmdir()
+        created = subprocess.run([str(PS), '-NoProfile', '-NonInteractive', '-Command',
+                                 "New-Item -ItemType Junction -Path $env:DGP_TEST_LINK -Target $env:DGP_TEST_TARGET | Out-Null"],
+                                capture_output=True, text=True,
+                                env=dict(self.env, DGP_TEST_LINK=str(runtime), DGP_TEST_TARGET=str(target)))
+        if created.returncode:
+            self.skipTest('Junction fixture unavailable')
+        try:
+            result = self.invoke('Prepare')
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((self.shell / 'shell-owner.json').exists())
+            self.assertTrue((target / 'owner.json').exists())
+        finally:
+            runtime.rmdir()
+
     def test_existing_unrecognized_nonempty_folder_is_preserved(self):
         self.shell.mkdir(parents=True)
         sentinel = self.shell / 'unrelated.txt'

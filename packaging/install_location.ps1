@@ -25,6 +25,39 @@ function Bounded-Json([string]$Path) {
     if ($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $item.Length -gt 8192) { throw 'Installation ownership metadata is not an ordinary bounded file.' }
     return Get-Content -LiteralPath $Path -Raw -Encoding UTF8 | ConvertFrom-Json
 }
+function Retained-DesktopBinding([string]$Shell) {
+    # Old Inno uninstall logs can delete a marker even after an upgrade adds
+    # uninsneveruninstall. Recover only from two independently bound retained
+    # metadata records; directory contents alone never establish ownership.
+    $runtime = Join-Path $Shell 'runtime'
+    Ordinary-Parents $runtime
+    if (!(Test-Path -LiteralPath $runtime -PathType Container)) { throw 'Retained runtime ownership is missing.' }
+    $configurationPath = Join-Path $Shell 'install-location.json'
+    $ownerPath = Join-Path $runtime 'owner.json'
+    if (!(Test-Path -LiteralPath $configurationPath -PathType Leaf) -or !(Test-Path -LiteralPath $ownerPath -PathType Leaf)) { throw 'Retained install location and runtime ownership records are both required.' }
+    $configuration = Bounded-Json $configurationPath
+    $owner = Bounded-Json $ownerPath
+    if ($configuration -isnot [pscustomobject] -or @($configuration.PSObject.Properties).Count -ne 3 -or
+        @($configuration.PSObject.Properties.Name) -notcontains 'schema' -or
+        @($configuration.PSObject.Properties.Name) -notcontains 'install_root' -or
+        @($configuration.PSObject.Properties.Name) -notcontains 'managed_root' -or
+        $configuration.schema -isnot [int] -or $configuration.schema -ne 1 -or
+        $configuration.install_root -isnot [string] -or $configuration.install_root -cne $Shell -or
+        $configuration.managed_root -isnot [string] -or $configuration.managed_root -cne $runtime) {
+        throw 'Retained install location binding differs; files were preserved.'
+    }
+    if ($owner -isnot [pscustomobject] -or @($owner.PSObject.Properties).Count -ne 4 -or
+        @($owner.PSObject.Properties.Name) -notcontains 'schema_version' -or
+        @($owner.PSObject.Properties.Name) -notcontains 'repository' -or
+        @($owner.PSObject.Properties.Name) -notcontains 'layout' -or
+        @($owner.PSObject.Properties.Name) -notcontains 'install_root' -or
+        $owner.schema_version -isnot [int] -or $owner.schema_version -ne 2 -or
+        $owner.repository -isnot [string] -or $owner.repository -cne 'janusinss/forensic-dgp' -or
+        $owner.layout -isnot [string] -or $owner.layout -cne 'desktop-runtime-v1' -or
+        $owner.install_root -isnot [string] -or $owner.install_root -cne $Shell) {
+        throw 'Retained runtime ownership binding differs; files were preserved.'
+    }
+}
 function Same-Path([string]$Left,[string]$Right) {
     return [string]::Equals([IO.Path]::GetFullPath($Left).TrimEnd('\'),[IO.Path]::GetFullPath($Right).TrimEnd('\'),[StringComparison]::OrdinalIgnoreCase)
 }
@@ -56,9 +89,14 @@ try {
         $children = @(Get-ChildItem -LiteralPath $shell -Force)
         if ($children.Count -gt 0) {
             $markerPath = Join-Path $shell 'shell-owner.json'
-            if (!(Test-Path -LiteralPath $markerPath -PathType Leaf)) { throw 'Existing unrecognized nonempty installation folder was preserved.' }
-            $owner = Bounded-Json $markerPath
-            if ($null -eq $owner -or @($owner.PSObject.Properties).Count -ne 2 -or $owner.schema -isnot [int] -or $owner.schema -ne 1 -or $owner.application -cne 'Forensic DGP') { throw 'Installation ownership marker differs; existing files were preserved.' }
+            if (!(Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+                $markerEntry = Get-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue
+                if ($markerEntry) { throw 'Installation ownership marker is not an ordinary file.' }
+                Retained-DesktopBinding $shell
+            } else {
+                $owner = Bounded-Json $markerPath
+                if ($null -eq $owner -or @($owner.PSObject.Properties).Count -ne 2 -or $owner.schema -isnot [int] -or $owner.schema -ne 1 -or $owner.application -cne 'Forensic DGP') { throw 'Installation ownership marker differs; existing files were preserved.' }
+            }
         }
         $configPath = Join-Path $shell 'install-location.json'
         if (Test-Path -LiteralPath $configPath) {
