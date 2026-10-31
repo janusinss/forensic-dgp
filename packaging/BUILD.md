@@ -1,11 +1,11 @@
 # Build the online Windows installer
 
-Status: preview under verification. No release has been published.
+Status: local preview built and tested. Clean-machine release validation remains open. No release has been published.
 
 ## Prerequisites
 
 Use Windows x64 with Git, Python 3.12/3.13 x64, the Windows .NET Framework C#
-compiler, and verified Inno Setup 7.1.1 x64. End users need none of the build tools.
+compiler, Node.js for JavaScript checks, and verified Inno Setup 7.1.1 x64. End users need none of the build tools.
 The desktop preview needs Microsoft Edge. No shell package is installed silently.
 
 The compiler installer is pinned to:

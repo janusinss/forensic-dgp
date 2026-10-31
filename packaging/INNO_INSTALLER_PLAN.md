@@ -1,6 +1,6 @@
 # Forensic DGP: online Windows installer plan
 
-Status: approved by the user on 2026-10-31; implementation in progress in the isolated feature worktree.
+Status: local preview implemented on the isolated feature branch. Phase 5 release gates remain open; see VERIFICATION.md. No merge or publication occurred.
 
 Prepared: 2026-10-31, Asia/Manila.
 
