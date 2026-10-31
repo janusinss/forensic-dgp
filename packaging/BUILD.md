@@ -1,6 +1,6 @@
 # Build the online Windows installer
 
-Status: version 0.1.1 is published at https://forensic-dgp.janusdominic0.workers.dev. The public download matches the verified local artifact. Clean-machine release validation remains open; see VERIFICATION.md.
+Status: version 0.1.1 is published at https://forensic-dgp.pages.dev. The public download matches the verified local artifact. Clean-machine release validation remains open; see VERIFICATION.md.
 
 ## Build prerequisites
 

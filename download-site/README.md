@@ -1,8 +1,8 @@
 # Forensic DGP download site
 
-Live: https://forensic-dgp.janusdominic0.workers.dev
+Live: https://forensic-dgp.pages.dev
 
-A React/TypeScript landing page deployed with Cloudflare Workers Static Assets.
+A React/TypeScript landing page deployed with Cloudflare Pages.
 The executable stays in build output; it is never committed to Git.
 
 ## Build and preview
@@ -28,10 +28,16 @@ These commands use a separate ignored config directory at
     npm run whoami
     npm run deploy
 
+The wrapper targets project forensic-dgp and production branch main. The personal
+account is pinned through the child environment; Pages does not support account_id
+in its Wrangler configuration. The Pages-only flag prevents Wrangler from
+automatically delegating a new project back to Workers. The standalone Worker
+was retired after the Pages download passed verification.
+
 Confirm the personal account before deployment. Do not use a temporary Cloudflare
 account or change the configured account to bypass an authorization failure.
 No custom domain or paid storage is configured. Both page and installer are
-static assets in one Worker.
+static assets in one Pages project.
 
 ## Updating the installer
 
@@ -47,5 +53,5 @@ or browser exceptions. The primary link downloads the exact 6,304,374-byte EXE
 whose SHA-256 is:
 280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2
 
-Seven release-preparation fixtures cover tampering, size/version validation,
+Sixteen site checks cover Pages/account isolation and release tampering, size/version validation,
 ordinary-path boundaries and retention of unrelated files. Public deployment and header verification passed; see DEPLOYMENT.md.

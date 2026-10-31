@@ -1,5 +1,10 @@
 # Version 0.1.1 installer verification
 
+Current download page: https://forensic-dgp.pages.dev/.
+The hosting moved to Cloudflare Pages on 2026-10-31; the former Workers endpoint
+was removed. The installer below is unchanged. Historical publication details
+remain in this report; see ../download-site/DEPLOYMENT.md for the hosting cutover.
+
 Date: 2026-10-31, Asia/Manila.
 Status: published unsigned research preview. Clean-machine qualification remains open.
 
