@@ -43,7 +43,7 @@ class WizardSafetyContracts(unittest.TestCase):
 
     def test_zero_exit_is_authoritative_over_late_cancel_request(self):
         prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
-        tail = prepare.split('UpdateProgress;', 1)[1]
+        tail = prepare.split("UpdateProgress('');", 1)[1]
         self.assertRegex(tail, r'if ResultCode = 0 then BackendReady := True\s+else Result :=')
         self.assertNotIn('if CancelRequested', tail)
         self.assertNotIn('prior version and saved records remain', tail)

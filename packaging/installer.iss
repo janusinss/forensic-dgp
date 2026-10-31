@@ -118,26 +118,23 @@ begin
   end;
 end;
 
-procedure UpdateProgress;
+procedure UpdateProgress(const Event: String);
 var
-  Lines: TArrayOfString;
-  N, Current, Total: Integer;
-  Stage, Status: String;
+  Current, Total: Integer;
+  Stage: String;
 begin
-  if LoadStringsFromFile(EventsFile, Lines) and (GetArrayLength(Lines) > 0) then begin
-    N := GetArrayLength(Lines) - 1;
-    Stage := JsonField(Lines[N], 'stage');
-    Status := JsonField(Lines[N], 'status');
+  if Event <> '' then begin
+    Stage := JsonField(Event, 'stage');
     if Stage <> '' then LastStage := Stage;
     if (LastStage = 'activation') or (LastStage = 'complete') then WizardForm.CancelButton.Enabled := False;
-    Current := StrToIntDef(JsonField(Lines[N], 'current'), 0);
-    Total := StrToIntDef(JsonField(Lines[N], 'total'), 0);
+    Current := StrToIntDef(JsonField(Event, 'current'), 0);
+    Total := StrToIntDef(JsonField(Event, 'total'), 0);
     if (Total > 0) and (Current >= 0) and (Current <= Total) then
       ProgressPage.SetProgress(Current, Total)
     else ProgressPage.SetProgress(0, 0);
-  end else ProgressPage.SetProgress(0, 0);
-  if CancelRequested then
-    ProgressPage.SetText('Cancelling at a safe boundary', 'Finishing the current operation. Your active version and saved records are retained.')
+  end;
+  if CancelRequested and (LastStage <> 'complete') then
+    ProgressPage.SetText('Cancelling at a safe boundary', 'Finishing the current operation. Saved records are retained.')
   else
     ProgressPage.SetText('Preparing application: ' + LastStage, 'Downloads and verification can take several minutes. Log: ' + SetupLog);
 end;
@@ -146,7 +143,7 @@ procedure SetupOutput(const S: String; const Error, FirstLine: Boolean);
 begin
   Log(S);
   SaveStringToFile(SetupLog, S + #13#10, True);
-  UpdateProgress;
+  if Pos('DGP_EVENT ', S) = 1 then UpdateProgress(Copy(S, 11, Length(S)));
 end;
 
 procedure InitializeWizard;
@@ -223,7 +220,7 @@ begin
       Result := 'Could not run application setup. Log: ' + SetupLog;
       Exit;
     end;
-    UpdateProgress;
+    UpdateProgress('');
     if ResultCode = 0 then BackendReady := True
     else Result := 'Setup stopped before completion. Saved records were preserved. Review the active version and log: ' + SetupLog;
   finally

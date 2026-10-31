@@ -178,3 +178,66 @@ class SetupControlTests(unittest.TestCase):
             record=json.loads(events.read_text(encoding='utf8').strip())
             self.assertEqual((record['current'],record['total']),(25,100))
             self.assertEqual(record['schema'],1)
+
+
+@unittest.skipUnless(os.name == 'nt', 'Windows sharing modes required')
+class WindowsProgressSharingTests(unittest.TestCase):
+    def deny_writer(self, path):
+        import ctypes
+        from ctypes import wintypes
+        kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+        kernel.CreateFileW.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.c_void_p,wintypes.DWORD,wintypes.DWORD,wintypes.HANDLE]
+        kernel.CreateFileW.restype=wintypes.HANDLE
+        kernel.CloseHandle.argtypes=[wintypes.HANDLE]; kernel.CloseHandle.restype=wintypes.BOOL
+        handle=kernel.CreateFileW(str(path),0x80000000,1,None,3,128,None)
+        self.assertNotEqual(handle,ctypes.c_void_p(-1).value)
+        return kernel,handle
+
+    def test_transient_reader_deny_write_retries_until_reader_closes(self):
+        from implementation import setup_events
+        import threading
+        import time
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'events.jsonl'; path.write_bytes(b'')
+            kernel,handle=self.deny_writer(path)
+            timer=threading.Timer(0.2,lambda: kernel.CloseHandle(handle)); timer.start()
+            try:
+                start=time.monotonic()
+                with patch.dict(os.environ,{'DGP_SETUP_EVENTS':str(path)}), contextlib.redirect_stdout(io.StringIO()):
+                    setup_events.event('fixture','running','after reader')
+                self.assertGreaterEqual(time.monotonic()-start,0.15)
+                self.assertLess(time.monotonic()-start,2)
+            finally:
+                timer.join()
+            self.assertEqual(json.loads(path.read_text())['message'],'after reader')
+
+    def test_permanent_reader_deny_write_fails_after_bounded_retry(self):
+        from implementation import setup_events
+        import time
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'events.jsonl'; path.write_bytes(b'')
+            kernel,handle=self.deny_writer(path)
+            try:
+                start=time.monotonic()
+                with patch.dict(os.environ,{'DGP_SETUP_EVENTS':str(path)}), contextlib.redirect_stdout(io.StringIO()):
+                    with self.assertRaises(OSError): setup_events.event('fixture','running','must fail')
+                self.assertLess(time.monotonic()-start,2.8)
+                self.assertGreaterEqual(time.monotonic()-start,1.8)
+            finally:
+                kernel.CloseHandle(handle)
+            self.assertEqual(path.read_bytes(),b'')
+
+    def test_readonly_file_access_denial_is_not_hidden_or_retried(self):
+        from implementation import setup_events
+        import stat
+        import time
+        with tempfile.TemporaryDirectory() as temp:
+            path=Path(temp)/'events.jsonl'; path.write_bytes(b'')
+            os.chmod(path,stat.S_IREAD)
+            try:
+                start=time.monotonic()
+                with patch.dict(os.environ,{'DGP_SETUP_EVENTS':str(path)}), contextlib.redirect_stdout(io.StringIO()):
+                    with self.assertRaises(PermissionError): setup_events.event('fixture','running','must fail')
+                self.assertLess(time.monotonic()-start,0.5)
+            finally:
+                os.chmod(path,stat.S_IREAD|stat.S_IWRITE)
