@@ -1,6 +1,6 @@
 # Desktop lifecycle contract
 
-Implementation status: prototype compiled and non-UI regressions passed. The root agent must verify the actual Edge application window before accepting this phase.
+Implementation status: local preview compiled; process regressions, owned-window readiness and user-closed shutdown were observed. Clean-machine and native-host permission checks remain open. See VERIFICATION.md for the exact evidence boundaries.
 
 ## Launch boundary
 
