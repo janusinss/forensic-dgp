@@ -1,5 +1,7 @@
 # Forensic DGP download site
 
+Live: https://forensic-dgp.janusdominic0.workers.dev
+
 A React/TypeScript landing page deployed with Cloudflare Workers Static Assets.
 The executable stays in build output; it is never committed to Git.
 
@@ -41,10 +43,9 @@ than use immutable caching.
 ## Verification
 
 The page was checked at 375, 768 and 1280 CSS pixels with no horizontal overflow
-or browser exceptions. The primary link downloads the exact6,232,315-byte EXE
+or browser exceptions. The primary link downloads the exact 6,232,315-byte EXE
 whose SHA-256 is:
 3c055fe550149b9c3aee7f51bda59f5af7ebed683cbf3970d3d7c9b1cb50e4a5
 
 Seven release-preparation fixtures cover tampering, size/version validation,
-ordinary-path boundaries and retention of unrelated files. Public deployment
-and header verification must be recorded separately after successful upload.
+ordinary-path boundaries and retention of unrelated files. Public deployment and header verification passed; see DEPLOYMENT.md.
