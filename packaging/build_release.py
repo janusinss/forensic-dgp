@@ -33,6 +33,13 @@ def check_inno_version(iscc: Path) -> None:
         raise RuntimeError("Use verified Inno Setup " + INNO_VERSION + ".")
 
 
+def source_archive(commit: str) -> bytes:
+    # Unspecified text files must keep their Git blob bytes on Windows. Explicit
+    # *.bat eol=crlf remains declared by attributes and is verified by the backend.
+    return git("-c", "core.autocrlf=false", "archive", "--format=zip",
+               "--prefix=forensic-dgp-" + commit + "/", commit)
+
+
 def source_manifest(commit: str, archive: bytes, tree: bytes, ancestors: bytes) -> dict:
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("Expected exact source commit.")
@@ -72,7 +79,7 @@ def main() -> int:
     commit = git("rev-parse", "HEAD").decode("ascii").strip()
     # Untracked files are never included: every payload and packaging input is read
     # from the committed tree or generated from those bytes.
-    archive = git("archive", "--format=zip", "--prefix=forensic-dgp-" + commit + "/", commit)
+    archive = source_archive(commit)
     manifest = source_manifest(commit, archive, git("ls-tree", "-rz", commit), git("rev-list", commit))
     stage = ROOT / "scratch" / "build" / commit
     stage.mkdir(parents=True, exist_ok=True)

@@ -1,5 +1,10 @@
 """Release metadata must identify exact source and never include untracked files."""
 import importlib.util
+import io
+import os
+import subprocess
+import tempfile
+import zipfile
 import unittest
 from unittest import mock
 from pathlib import Path
@@ -21,6 +26,37 @@ class ReleaseManifestTests(unittest.TestCase):
             with self.subTest(output=output), mock.patch.object(builder.subprocess, 'run', return_value=mock.Mock(stdout=output)):
                 with self.assertRaises(RuntimeError):
                     builder.check_inno_version(Path('ISCC.exe'))
+
+    def test_archive_uses_canonical_unspecified_text_despite_autocrlf(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config = root / 'global-config'
+            config.write_text('[core]\n    autocrlf = true\n', encoding='utf8')
+            env = dict(os.environ, GIT_CONFIG_GLOBAL=str(config))
+            repo = root / 'repo'
+            repo.mkdir()
+            def git(*args, input=None):
+                return subprocess.run(['git', *args], cwd=repo, env=env, input=input,
+                                      check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).stdout
+            git('init', '-q')
+            (repo / '.gitattributes').write_bytes(b'*.bat text eol=crlf\n')
+            (repo / 'NOTICE').write_bytes(b'first\nsecond\n')
+            (repo / 'start.bat').write_bytes(b'@echo off\nexit /b 0\n')
+            git('-c', 'core.autocrlf=false', 'add', '.')
+            git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                '-c', 'commit.gpgsign=false', 'commit', '--no-verify', '-qm', 'fixture')
+            sha = git('rev-parse', 'HEAD').decode().strip()
+            # Establish the exact failure: ambient Windows autocrlf changes a
+            # non-batch archive member even though its canonical Git blob is LF.
+            with zipfile.ZipFile(io.BytesIO(git('archive', '--format=zip', sha))) as broken:
+                self.assertEqual(broken.read('NOTICE'), b'first\r\nsecond\r\n')
+            with mock.patch.object(builder, 'ROOT', repo), mock.patch.dict(os.environ, env, clear=True):
+                archive = builder.source_archive(sha)
+            with zipfile.ZipFile(io.BytesIO(archive)) as fixed:
+                prefix = 'forensic-dgp-' + sha + '/'
+                self.assertEqual(fixed.read(prefix + 'NOTICE'), git('show', sha + ':NOTICE'))
+                self.assertEqual(fixed.read(prefix + '.gitattributes'), git('show', sha + ':.gitattributes'))
+                self.assertEqual(fixed.read(prefix + 'start.bat'), b'@echo off\r\nexit /b 0\r\n')
 
     def test_manifest_binds_payload_and_tree(self):
         sha = "a" * 40
