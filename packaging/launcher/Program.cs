@@ -42,7 +42,7 @@ internal static class Program
                 string logs = Path.Combine(root, @"data\desktop\logs");
                 EnsureOrdinaryDirectory(logs);
                 logPath = Path.Combine(logs, "desktop-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N") + ".log");
-                log = new FileStream(logPath, FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite);
+                log = Native.CreateAppendLog(logPath);
                 Native.Check(Native.SetHandleInformation(log.SafeFileHandle.DangerousGetHandle(), 1, 1), "Cannot prepare the diagnostic log");
                 string token = Guid.NewGuid().ToString("N");
                 sessionDir = Path.Combine(Path.GetTempPath(), "ForensicDGP-" + token);
@@ -73,17 +73,30 @@ internal static class Program
                         using (Native.Child browser = job.Start(edge, edgeArgs, log.SafeFileHandle.DangerousGetHandle(), true))
                         {
                             bool hadWindow = false;
+                            bool starterExitLogged = false;
+                            DateTime nextDiagnostic = DateTime.UtcNow;
                             DateTime windowDeadline = DateTime.UtcNow.AddSeconds(35);
                             try
                             {
                                 for (;;)
                                 {
                                     if (server.Exited) throw new InvalidOperationException("The application server stopped unexpectedly (exit " + server.ExitCode + ").");
-                                    bool visible = Native.HasAppWindow(job.ProcessIds());
+                                    HashSet<uint> owned = job.ProcessIds();
+                                    bool visible = Native.HasAppWindow(owned);
+                                    if (browser.Exited && !starterExitLogged)
+                                    {
+                                        WriteLog("Edge starter exited: pid=" + browser.Id + ", code=" + browser.ExitCode + "; waiting for an owned app window until the bounded deadline.");
+                                        starterExitLogged = true;
+                                    }
+                                    if (DateTime.UtcNow >= nextDiagnostic)
+                                    {
+                                        WriteLog("Owned app-window probe: visible=" + visible + "; pids=" + String.Join(",", owned));
+                                        nextDiagnostic = DateTime.UtcNow.AddSeconds(2);
+                                    }
                                     if (visible) hadWindow = true;
                                     else if (hadWindow) break;
-                                    else if (browser.Exited || DateTime.UtcNow > windowDeadline)
-                                        throw new InvalidOperationException("The dedicated Edge window could not be owned. Close a stale Forensic DGP window and retry. No ordinary browser was opened.");
+                                    else if (DateTime.UtcNow > windowDeadline)
+                                        throw new InvalidOperationException("The dedicated Edge window could not be owned within 35 seconds. Starter pid=" + browser.Id + ", exited=" + browser.Exited + ", exit code=" + (browser.Exited ? browser.ExitCode.ToString() : "running") + "; owned pids=" + String.Join(",", owned) + ". Close a stale Forensic DGP window and retry. No ordinary browser was opened.");
                                     Thread.Sleep(200);
                                 }
                             }
@@ -287,6 +300,16 @@ internal static class Native
     [DllImport("user32.dll")] private static extern bool IsWindowVisible(IntPtr window);
     [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr window, out uint process);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] private static extern int GetClassName(IntPtr window, StringBuilder name, int count);
+
+    public static FileStream CreateAppendLog(string path)
+    {
+        SecurityAttributes security = new SecurityAttributes(); security.length = Marshal.SizeOf(security); security.inherit = true;
+        // FILE_APPEND_DATA ensures inherited native writers and managed writes
+        // cannot overwrite one another through a shared file-position cache.
+        IntPtr handle = CreateFile(path, 4, 3, ref security, 1, 0x80, IntPtr.Zero);
+        Check(handle != new IntPtr(-1), "Cannot create append-only diagnostic log");
+        return new FileStream(new Microsoft.Win32.SafeHandles.SafeFileHandle(handle, true), FileAccess.Write);
+    }
 
     public static void Check(bool ok, string message)
     {

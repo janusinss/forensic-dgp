@@ -41,3 +41,9 @@ The launcher uses hidden child processes and retains stdout/stderr in `data\desk
 3. Compile `Program.cs` plus `ProcessTests.cs` with `/target:exe /main:DesktopProcessTests`. The fixture proves assignment, ownership enumeration, job-disposal cleanup, and survival of an unrelated control process.
 
 These checks establish protocol and process primitives. They do not establish successful browser rendering, camera permissions, or the complete installed desktop flow.
+
+## Root desktop observations
+
+The initial installed preview opened a healthy server but rejected Edge starter exit too early. The revised supervisor allows the bounded owned-window deadline to elapse even if the initial Edge process exits. Ownership remains a PID-in-job/window requirement. Append-only native logging prevents child output overwriting supervisor diagnostics. The non-UI process fixture now covers an exited starter with a retained owned descendant.
+
+The root observed a dedicated Forensic DGP Edge app window through the native window inventory. Native app inspection timed out awaiting tool approval. The user closed that window; the root then verified graceful server shutdown, release of the actual loopback port, and zero dedicated desktop processes. Application flows were checked independently through the installed server using Playwright; those checks do not establish camera permission behavior in the Edge host.

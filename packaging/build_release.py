@@ -92,13 +92,14 @@ def main() -> int:
         "installer.iss": "packaging/installer.iss",
         "Program.cs": "packaging/launcher/Program.cs",
         "LICENSE.txt": "packaging/LICENSE.txt",
+        "app.ico": "static/branding/favicon.ico",
     }
     for dest, source in inputs.items():
         (stage / dest).write_bytes(git("show", commit + ":" + source))
     compiler = Path(os.environ["SystemRoot"]) / "Microsoft.NET/Framework64/v4.0.30319/csc.exe"
     subprocess.run([str(compiler), "/nologo", "/target:winexe", "/platform:x64", "/optimize+",
                     "/reference:System.Windows.Forms.dll", "/reference:System.Drawing.dll",
-                    "/reference:System.Web.Extensions.dll", "/out:" + str(stage / "ForensicDGP.exe"),
+                    "/reference:System.Web.Extensions.dll", "/win32icon:" + str(stage / "app.ico"), "/out:" + str(stage / "ForensicDGP.exe"),
                     str(stage / "Program.cs")], check=True)
     check_inno_version(args.iscc)
     build = dict(schema=1, version=args.version, commit=commit, inno_version=INNO_VERSION,
