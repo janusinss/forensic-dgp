@@ -1,3 +1,111 @@
+# Version 0.1.1 installer verification
+
+Date: 2026-10-31, Asia/Manila.
+Status: published unsigned research preview. Clean-machine qualification remains open.
+
+## Published artifact
+
+| Item | Value |
+| --- | --- |
+| Source branch | feature/inno-desktop-installer |
+| Build source commit | 90d43aa9687edf46f0cb4ca4fa9b4db5ea8a5b5d |
+| Version | 0.1.1 |
+| Artifact | scratch/dist/ForensicDGP_Setup.exe |
+| Bytes | 6,304,374 |
+| SHA-256 | 280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2 |
+| Public page | https://forensic-dgp.janusdominic0.workers.dev/ |
+| Worker version | ec2ece28-d490-437b-bc86-fe13add2e922 |
+
+The public browser download matched this exact local artifact. The build embeds
+committed source and seven hashed setup inputs. Later documentation and public
+metadata commits do not change this artifact's source identity.
+
+## Delivered installation behavior
+
+The wizard explains prerequisites, selects a dedicated local fixed-drive folder,
+offers an optional Desktop shortcut, reviews the destination, displays setup
+progress and finishes with a launch option. Installation requires no elevation.
+Paths longer than 120 characters, protected roots, network locations, linked
+ancestors and unrecognized nonempty destinations are refused.
+
+The selected folder contains the launcher and bound runtime child: private
+Python, isolated application/capture environments, pip/uv caches, verified model
+families and saved records. Existing developer batch roots remain separate.
+Upgrades reuse the registered folder. Choosing another folder requires removing
+the Windows launcher first; setup does not move or delete the old data.
+
+Python and model transfers report measured per-file byte counts and percentages.
+Operations without a reliable total display an activity bar. One active transfer
+stays visible during parallel downloads; all parallel output remains in details.
+Python progress is throttled to roughly 1 MiB intervals without reducing
+cancellation or integrity checks.
+
+Uninstall removes Windows integration and retains runtime data and bindings.
+New uninstall entries retain the shell marker. Older uninstall logs can remove
+it, so recovery requires both an exact bound location configuration and an exact
+schema-2 runtime owner before restoring the marker. Validate remains read-only.
+
+## Observed checks
+
+| Check | Evidence and boundary |
+| --- | --- |
+| Python suite | 237 tests ran, 4 Windows privilege skips; 233 executed successfully. Final packaging/ownership/wizard changes also passed 47 focused checks. |
+| Real wizard fixture | Compiled Inno EXEs recorded measured 0/50/100 progress; interleaved A/B downloads remained stable; an early-finished peer did not stall the display. This was executable logging evidence, not visual inspection of the interactive wizard. |
+| Fresh chosen folder | Actual installation into a previously absent local folder downloaded private Python, application/capture dependencies and all six admitted model files. The initial successful cold candidate was ab12dee; final source changes affected wizard display and retained-marker recovery. The final artifact then passed an actual upgrade and reinstall. |
+| Full-folder inventory | Private Python, both package caches, environments, models and installation records were beneath the selected runtime. The preservation baseline recorded 43,249 files totaling 2,832,472,630 bytes. |
+| Cancellation | A real Python-download cancellation requested through the installer's cancellation file exited before activation; no current pointer or Windows registration was published. Download/staging evidence remained. This did not test clicking the native Cancel button. |
+| Upgrade | Final 90d43aa artifact exited 0 in the existing selected folder, verified cached components and activated its exact source revision. |
+| Uninstall/reinstall | Actual final uninstaller exited 0; all 43,249 baseline runtime files, the verification record, location configuration and marker remained. Final reinstall exited 0. |
+| Legacy uninstall recovery | A real isolated old/new Inno upgrade demonstrated deletion by the old uninstall entry. Exact-binding recovery then passed actual PowerShell validation/preparation checks. |
+| Existing saved evidence | All 149 pre-existing data files in the legacy installation retained their SHA-256 values. No old data was moved or deleted. |
+| Desktop launch | Installed launcher hash matched its embedded manifest. Exact final source 90d43aa launched; its own URL record resolved the server, health returned 200 and an owned visible Forensic DGP window was observed. That window was left available for review. |
+| Installed app browser | The actual installed server returned its Picture UI and Video option with no page or console errors. Screenshot: main scratch/download-v011/installed-app.png. |
+| Download page | Local and live checks passed at 375, 768 and 1280 CSS pixels without overflow or browser errors. A real click downloaded the expected filename and exact 6,304,374-byte EXE with the SHA-256 above. Attachment/octet-stream headers passed; sensitive configuration paths returned 404. |
+| Site checks | Seven release-preparation fixtures passed; TypeScript/Vite production build passed; npm audit reported zero vulnerabilities. |
+
+## Remaining boundaries
+
+Testing used a fresh chosen folder and private runtime on this development PC.
+It was not a clean Windows VM/account without development tools. The native
+interactive wizard's visual layout was not inspected. Clean-machine network,
+low-disk, interruption and full account-path matrices remain open.
+
+Earlier owned-window closure and process-lifetime evidence is retained below.
+The final custom-root window was left running; closing it during active inference
+or live capture was not newly tested. Actual webcam/RTSP hardware behavior and
+model qualification are outside these installation checks.
+
+The setup and launcher remain unsigned. Direct package pins are not a complete
+transitive hash lock. Publishing this preview does not establish model quality,
+identity verification or a complete security verdict.
+
+## Evidence
+
+Feature scratch contains build-v011-release.log, python-v011-verified-tests.log,
+v011-final-focused.log, setup-custom-v011-verified.log, setup-v011-upgrade.log,
+uninstall-v011.log, setup-v011-reinstall.log, custom-v011-install-report.json,
+custom-v011-uninstall-report.json, custom-v011-preservation-report.json and
+desktop-v011-report.json. The main workspace retains browser artifacts in
+scratch/download-v011. Credentials, records and internal logs were not uploaded.
+
+Source remains on the installer feature branch. This task did not merge or push
+IMPLEMENTATION, create a GitHub release or configure automatic updates.
+
+## Internal evaluation
+
+Accuracy: verified artifact and public download identity. Completeness: requested
+features and local maintenance checks passed; clean-account and native visual
+validation remain open. Clarity: measured transfer progress and activity stages
+are distinguished. Actionability: live download is available. Conciseness: user
+handoff can link the download and this report.
+
+---
+
+# Historical 0.1.0 local preview evidence
+
+The following report describes the earlier artifact at its original verification
+time. Its publication and fixed-directory statements do not describe 0.1.1.
+
 # Local installer preview verification
 
 Date: 2026-10-31, Asia/Manila.

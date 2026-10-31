@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "version": "0.1.0",
-  "filename": "ForensicDGP_Setup-0.1.0.exe",
-  "bytes": 6232315,
-  "sha256": "3c055fe550149b9c3aee7f51bda59f5af7ebed683cbf3970d3d7c9b1cb50e4a5",
+  "version": "0.1.1",
+  "filename": "ForensicDGP_Setup-0.1.1.exe",
+  "bytes": 6304374,
+  "sha256": "280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2",
   "signed": false,
   "preview": true,
-  "downloadUrl": "/downloads/ForensicDGP_Setup-0.1.0.exe",
-  "checksumUrl": "/downloads/ForensicDGP_Setup-0.1.0.exe.sha256"
+  "downloadUrl": "/downloads/ForensicDGP_Setup-0.1.1.exe",
+  "checksumUrl": "/downloads/ForensicDGP_Setup-0.1.1.exe.sha256"
 }

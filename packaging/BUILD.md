@@ -1,6 +1,6 @@
 # Build the online Windows installer
 
-Status: version 0.1.1 is in local development and has not been published. The download landing page at https://forensic-dgp.janusdominic0.workers.dev is already public; its published preview is separate from the candidate described here. Clean-machine release validation remains open.
+Status: version 0.1.1 is published at https://forensic-dgp.janusdominic0.workers.dev. The public download matches the verified local artifact. Clean-machine release validation remains open; see VERIFICATION.md.
 
 ## Build prerequisites
 
@@ -68,7 +68,7 @@ The original batch-managed `%LOCALAPPDATA%\DGP\app` installation is also left un
 
 ## Uninstall and reinstall
 
-Windows Installed Apps uninstall removes the desktop launcher, registration and shortcuts. It retains `runtime`, `install-location.json` and `shell-owner.json` so saved evidence and ownership metadata remain available. Reinstalling into that same marked folder can verify and reuse retained resources. An unrelated nonempty directory or mismatched binding is refused.
+Windows Installed Apps uninstall removes the desktop launcher, registration and shortcuts. It retains `runtime`, `install-location.json` and `shell-owner.json` so saved evidence and ownership metadata remain available. Reinstalling into that same marked folder can verify and reuse retained resources. Older uninstall logs can remove the marker; setup recreates it only after the retained location configuration and schema-2 runtime ownership independently verify the same folder. An unrelated nonempty directory or mismatched binding is refused.
 
 No cache-removal checkbox or automatic record deletion is provided. Removing the launcher does not reclaim the retained runtime's disk space.
 
@@ -80,4 +80,4 @@ The existing batch defaults are preserved: standalone `install.bat` resolves pub
 
 The setup and desktop launcher are unsigned. Inno packaging does not eliminate SmartScreen warnings. Direct dependency pins are not a complete transitive hash lock. A cached local smoke test is not a clean-machine test; consult `VERIFICATION.md` for actual evidence and open gates.
 
-Offline packaging, automatic background updates, GitHub publication and merging to IMPLEMENTATION require separate authorization. The custom-folder 0.1.1 candidate is not the published landing-page artifact until its deployment and download checksum have been verified.
+Offline packaging, automatic background updates, GitHub publication and merging to IMPLEMENTATION require separate authorization. The 0.1.1 website deployment and download checksum have been verified.

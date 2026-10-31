@@ -43,9 +43,9 @@ than use immutable caching.
 ## Verification
 
 The page was checked at 375, 768 and 1280 CSS pixels with no horizontal overflow
-or browser exceptions. The primary link downloads the exact 6,232,315-byte EXE
+or browser exceptions. The primary link downloads the exact 6,304,374-byte EXE
 whose SHA-256 is:
-3c055fe550149b9c3aee7f51bda59f5af7ebed683cbf3970d3d7c9b1cb50e4a5
+280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2
 
 Seven release-preparation fixtures cover tampering, size/version validation,
 ordinary-path boundaries and retention of unrelated files. Public deployment and header verification passed; see DEPLOYMENT.md.
