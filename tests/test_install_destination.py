@@ -155,3 +155,47 @@ class CustomPackageCacheTests(unittest.TestCase):
                 self.assertEqual(options['env']['PIP_CACHE_DIR'],str(cache('pip')))
             bootstrap=calls[0][0]
             self.assertEqual(bootstrap[bootstrap.index('--cache-dir')+1],str(cache('pip')))
+
+
+class InstalledModuleBindingTests(unittest.TestCase):
+    @unittest.skipUnless(os.name=='nt','Windows installed-layout import')
+    def test_actual_environment_import_under_chosen_localappdata_layout(self):
+        import shutil
+        import subprocess
+        import sys
+        # A real LocalAppData layout exposes Windows packaged-process filesystem
+        # virtualization that does not occur in a mocked code_root argument.
+        with tempfile.TemporaryDirectory(prefix='DGP import ',dir=os.environ['LOCALAPPDATA']) as temporary:
+            shell=Path(temporary); runtime=shell/'runtime'; code=runtime/'versions'/('d'*40)
+            implementation=code/'implementation'; implementation.mkdir(parents=True)
+            source=Path(__file__).resolve().parents[1]
+            for name in ('__init__.py','managed_paths.py','environment.py','setup_events.py','capture_install.py'):
+                shutil.copyfile(source/'implementation'/name,implementation/name)
+            shutil.copyfile(source/'requirements.txt',code/'requirements.txt')
+            (shell/'shell-owner.json').write_text('{"schema":1,"application":"Forensic DGP"}')
+            (runtime/'owner.json').write_text(json.dumps({'schema_version':2,'repository':'janusinss/forensic-dgp',
+                'layout':'desktop-runtime-v1','install_root':str(shell)}))
+            env=dict(os.environ,DGP_INSTALL_ROOT=str(shell),DGP_MANAGED_ROOT=str(runtime))
+            result=subprocess.run([sys.executable,'-B','-c',
+                'import implementation.environment as e; import implementation.managed_paths as p; '
+                'assert p.managed_root() is not None; print(e.CONFIG_PATH)'],
+                cwd=code,env=env,capture_output=True,text=True,timeout=15)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            self.assertIn('installations',result.stdout)
+
+    def test_version_directory_identity_alias_remains_bound_to_exact_commit(self):
+        from implementation import managed_paths
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary); shell=root/'shell'; runtime=shell/'runtime'
+            code=runtime/'versions'/('a'*40); code.mkdir(parents=True)
+            physical=root/'virtualized'/'runtime'/'versions'/('a'*40)
+            physical.mkdir(parents=True)
+            with patch.dict(os.environ,{'DGP_INSTALL_ROOT':str(shell),'DGP_MANAGED_ROOT':str(runtime)}), \
+                 patch.object(managed_paths,'_validate_custom_shell'), \
+                 patch.object(managed_paths.os.path,'samefile',return_value=True) as identity:
+                self.assertEqual(managed_paths.custom_install_root(physical),shell)
+                identity.assert_called_once_with(physical.parent,runtime/'versions')
+            with patch.dict(os.environ,{'DGP_INSTALL_ROOT':str(shell),'DGP_MANAGED_ROOT':str(runtime)}), \
+                 patch.object(managed_paths,'_validate_custom_shell'), \
+                 patch.object(managed_paths.os.path,'samefile',return_value=False):
+                with self.assertRaises(managed_paths.ManagedPathError): managed_paths.custom_install_root(physical)

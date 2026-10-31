@@ -90,8 +90,15 @@ def custom_install_root(code_root: Path | None = None) -> Path | None:
         if not _same(supplied, expected):
             raise ManagedPathError('Custom managed root must be the chosen folder runtime child.')
         code = Path(os.path.abspath(code_root or Path(__file__).resolve().parents[1]))
-        if not re.fullmatch('[0-9a-f]{40}', code.name) or not _same(code.parent, expected / 'versions'):
+        if not re.fullmatch('[0-9a-f]{40}', code.name):
             raise ManagedPathError('Custom runtime code must belong to its selected version directory.')
+        version_parent = expected / 'versions'
+        if not _same(code.parent, version_parent):
+            # Windows packaged processes can resolve a LocalAppData path to its
+            # package-backed physical spelling. Require the very same directory
+            # identity rather than accepting an unrelated lexical source path.
+            if not os.path.samefile(code.parent, version_parent):
+                raise ManagedPathError('Custom runtime code must belong to its selected version directory.')
         return shell
     except (OSError, ValueError, TypeError) as exc:
         raise ManagedPathError('Custom installation ownership or directories could not be verified.') from exc
