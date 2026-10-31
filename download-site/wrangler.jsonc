@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "forensic-dgp",
+  "account_id": "b9e82b6514591358168877d8118aec18",
+  "compatibility_date": "2026-10-31",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none",
+    "binding": "ASSETS"
+  },
+  "main": "worker.mjs"
+}
