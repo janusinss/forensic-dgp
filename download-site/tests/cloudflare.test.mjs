@@ -9,7 +9,6 @@ const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const account = 'b9e82b6514591358168877d8118aec18';
 const configuration = {
   name: 'forensic-dgp',
-  account_id: account,
   compatibility_date: '2026-10-31',
   pages_build_output_dir: './dist',
 };
@@ -56,6 +55,7 @@ test('configuration drift is refused before any child process starts', () => {
   const invalid = [
     { ...configuration, name: 'another-project' },
     { ...configuration, account_id: 'another-account' },
+    { ...configuration, account_id: account },
     { ...configuration, pages_build_output_dir: '../other-output' },
     { ...configuration, pages_build_output_dir: undefined },
     ...['main', 'assets', 'workers_dev'].map(key => ({ ...configuration, [key]: false })),

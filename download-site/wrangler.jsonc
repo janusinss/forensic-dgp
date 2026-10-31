@@ -1,7 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "forensic-dgp",
-  "account_id": "b9e82b6514591358168877d8118aec18",
   "compatibility_date": "2026-10-31",
   "pages_build_output_dir": "./dist"
 }

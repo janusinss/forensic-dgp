@@ -9,9 +9,9 @@ const account = 'b9e82b6514591358168877d8118aec18';
 const project = 'forensic-dgp';
 
 export function makeInvocation(action, configuration, parentEnv = {}, siteRoot = site) {
-  if (!configuration || configuration.name !== project || configuration.account_id !== account ||
+  if (!configuration || configuration.name !== project ||
       configuration.pages_build_output_dir !== './dist' ||
-      ['main', 'assets', 'workers_dev'].some(key => Object.hasOwn(configuration, key))) {
+      ['account_id', 'main', 'assets', 'workers_dev'].some(key => Object.hasOwn(configuration, key))) {
     throw new Error('Expected the forensic-dgp Pages configuration in the personal Cloudflare account.');
   }
   const commands = {
