@@ -1,0 +1,14 @@
+Forensic DGP is an experimental local application.
+
+Generated facial detail is an estimate. The included restoration and completion
+models are not qualified for identifying people.
+
+This application uses adaptations of S-Lab CodeFormer under non-commercial
+terms. The full upstream licenses, model cards, provenance and notices are
+included with the installed application source.
+
+Installation requires network access for Python packages and model downloads.
+Application launch and local processing use the installed files.
+
+Uninstall removes the Windows launcher and shortcuts. The shared managed backend,
+models and saved records are retained under %LOCALAPPDATA%\DGP\app.

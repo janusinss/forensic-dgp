@@ -19,6 +19,7 @@ import urllib.request
 import uuid
 
 from .managed_paths import data_path
+from .setup_events import SetupCancelled, check_cancel, event
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = data_path(ROOT, 'models', 'implementation')
@@ -132,12 +133,14 @@ def _publish_without_overwrite(partial: Path, destination: Path) -> None:
 
 
 def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
+    check_cancel()
     _stage_bundled_asset_if_needed(asset, model_dir)
     destination = model_dir / asset["filename"]
     label = COMPONENT_LABELS.get(destination.name)
     display = f"{label} ({destination.name})" if label else destination.name
     if destination.exists() or destination.is_symlink():
         if verify_asset(destination, asset):
+            event("models", "verified", f"Verified {display}")
             print(f"Verified {display}", flush=True)
             return destination
         raise ModelSetupError(
@@ -151,6 +154,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     next_progress = 0
     request = urllib.request.Request(asset["url"], headers={"User-Agent": "Forensic-DGP-Implementation/1"})
     opener = urllib.request.build_opener(_HTTPSRedirectHandler())
+    event("models", "running", f"Downloading {display}", current=0, total=asset["size"])
     print(f"Downloading {display} ({asset['size'] / 1048576:.1f} MiB)...", flush=True)
     try:
         with opener.open(request, timeout=30) as response, partial.open("xb") as stream:
@@ -158,11 +162,13 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
             if content_length is not None and int(content_length) != asset["size"]:
                 raise ModelSetupError(f"Unexpected download size for {destination.name}.")
             while chunk := response.read(CHUNK_SIZE):
+                check_cancel()
                 downloaded += len(chunk)
                 if downloaded > asset["size"]:
                     raise ModelSetupError(f"Download exceeded the expected size for {destination.name}.")
                 digest.update(chunk)
                 stream.write(chunk)
+                event("models", "progress", f"Downloading {display}", current=downloaded, total=asset["size"])
                 if downloaded >= next_progress:
                     print(f"  {100 * downloaded / asset['size']:.0f}%", flush=True)
                     next_progress = downloaded + 32 * CHUNK_SIZE
@@ -170,7 +176,9 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
             os.fsync(stream.fileno())
         if downloaded != asset["size"] or digest.hexdigest() != asset["sha256"]:
             raise ModelSetupError(f"Download failed its complete size/SHA-256 check for {destination.name}.")
+        check_cancel()
         _publish_without_overwrite(partial, destination)
+        event("models", "verified", f"Verified {display}", current=downloaded, total=asset["size"])
         print(f"Verified and saved {display}", flush=True)
         return destination
     except urllib.error.HTTPError as exc:
@@ -198,6 +206,9 @@ def main(argv: list[str] | None = None) -> int:
                 download_asset(asset)
             verify_models(manifest)
         return 0
+    except SetupCancelled as exc:
+        print(f'[CANCELLED] {exc}', file=sys.stderr)
+        return 130
     except ModelSetupError as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1

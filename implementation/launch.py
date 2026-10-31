@@ -17,6 +17,7 @@ from .setup_models import ModelSetupError, ROOT, verify_models
 
 HOST = "127.0.0.1"
 from .managed_paths import data_path
+from .desktop import DesktopError, DesktopSession
 
 URL_RECORD = data_path(ROOT, 'scratch') / 'implementation_launch.json'
 
@@ -62,7 +63,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=None, help="loopback port; 0 asks Windows for an available port")
     parser.add_argument("--no-browser", action="store_true", help="print the URL without opening a browser")
     parser.add_argument("--no-pause", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--desktop", action="store_true", help="private desktop host mode; requires its readiness/event contract")
     args = parser.parse_args(argv)
+    try:
+        desktop = DesktopSession.from_environment()
+        if args.desktop and desktop is None:
+            raise DesktopError("Desktop mode must be launched using ForensicDGP.exe.")
+    except DesktopError as exc:
+        print(f"[ERROR] {exc}", file=sys.stderr)
+        return 1
+    try:
+        return _run(args, desktop)
+    finally:
+        if desktop:
+            desktop.close()
+
+
+def _run(args, desktop):
     try:
         port = args.port if args.port is not None else int(os.environ.get("IMPLEMENTATION_PORT", "8000"))
         if not 0 <= port <= 65535:
@@ -103,12 +120,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Application URL: {url}", flush=True)
         print(f"URL record: {URL_RECORD}", flush=True)
         print("Press Ctrl+C in this window to stop the server.", flush=True)
-        if not args.no_browser and os.environ.get("IMPLEMENTATION_NO_BROWSER", "").lower() not in {"1", "true", "yes"}:
+        if desktop is None and not args.no_browser and os.environ.get("IMPLEMENTATION_NO_BROWSER", "").lower() not in {"1", "true", "yes"}:
             threading.Thread(target=_open_when_ready, args=(url,), daemon=True, name="browser-after-health").start()
         config = uvicorn.Config("app:app", host=HOST, port=actual_port, reload=False, workers=1)
         server = uvicorn.Server(config)
+        if desktop:
+            try:
+                desktop.watch(server)
+                desktop.publish(url, os.getpid())
+            except DesktopError as exc:
+                print(f"[ERROR] {exc}", file=sys.stderr)
+                return 1
         server.run(sockets=[listener])
-        return 0 if server.started else 1
+        return 0 if server.started and not (desktop and desktop.failed) else 1
 
 
 if __name__ == "__main__":

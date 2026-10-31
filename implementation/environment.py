@@ -20,6 +20,7 @@ import venv
 
 ROOT = Path(__file__).resolve().parents[1]
 from .managed_paths import managed_root
+from .setup_events import SetupCancelled, check_cancel, event
 
 _MANAGED_ROOT = managed_root()
 CONFIG_PATH = ((_MANAGED_ROOT / 'data' / 'installations' / (ROOT.name + '.json'))
@@ -94,11 +95,13 @@ def check_python(python: Path) -> None:
 
 def run_foreground(command: list[str], *, env: dict | None = None) -> int:
     """Keep ownership of the exact child until it exits, including on Ctrl+C."""
+    check_cancel()
     process = subprocess.Popen(command, cwd=ROOT, env=env)
     interrupted = False
     while True:
         try:
             returncode = process.wait()
+            check_cancel()
             return 130 if interrupted and returncode == 0 else returncode
         except KeyboardInterrupt:
             # Windows delivers console Ctrl+C to both processes. The application
@@ -170,8 +173,15 @@ def install_dependencies(python: Path) -> int:
 def run_install_tasks(tasks: dict) -> int:
     """Join every owned task, including failed peers, before returning to cmd."""
     result = 0
+    def execute(label, task):
+        check_cancel()
+        event(label, 'running', label)
+        code = task()
+        check_cancel()
+        event(label, 'complete' if code == 0 else 'error', label)
+        return code
     with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
-        futures = [(label, executor.submit(task)) for label, task in tasks.items()]
+        futures = [(label, executor.submit(execute, label, task)) for label, task in tasks.items()]
         for label, future in futures:
             while True:
                 try:
@@ -209,15 +219,31 @@ def install_capture() -> int:
     return run_foreground([sys.executable, '-B', '-m', 'implementation.capture_install'])
 
 
-def verify_installation() -> int:
-    python = configured_python()
+def verify_runtime(python: Path, *, include_models: bool = True) -> int:
+    """Verify an existing runtime without changing its installed packages."""
     check_python(python)
+    requirements = []
+    for line in (ROOT / 'requirements.txt').read_text(encoding='utf8').splitlines():
+        line = line.strip()
+        if line and not line.startswith('#'):
+            if line.count('==') != 1:
+                raise EnvironmentError('Runtime verification needs exact direct dependency pins.')
+            requirements.append(line.split('=='))
+    probe = ("import importlib.metadata as m; "
+             "expected=" + repr(requirements + [['uv', UV_VERSION]]) + "; "
+             "bad=[name for name,version in expected if m.version(name)!=version]; "
+             "assert not bad, 'Installed package versions differ: '+repr(bad)")
     checks = [
-        [str(python), '-B', '-m', 'implementation.setup_models', '--verify-only'],
-        [str(python), '-B', '-m', 'implementation.completion_install', '--verify-only'],
+        [str(python), '-I', '-B', '-c', probe],
+        [str(python), '-I', '-B', '-m', 'pip', '--isolated', 'check'],
         [str(python), '-B', '-m', 'implementation.capture_install', '--verify-only'],
         [str(python), '-B', '-c', 'import app,torch,cv2,numpy; print("Application imports verified.")'],
     ]
+    if include_models:
+        checks[0:0] = [
+            [str(python), '-B', '-m', 'implementation.setup_models', '--verify-only'],
+            [str(python), '-B', '-m', 'implementation.completion_install', '--verify-only'],
+        ]
     for command in checks:
         result = run_foreground(command)
         if result:
@@ -225,25 +251,44 @@ def verify_installation() -> int:
     return 0
 
 
+def verify_installation() -> int:
+    return verify_runtime(configured_python())
+
+
 def install() -> int:
     if sys.version_info[:2] not in SUPPORTED or struct.calcsize('P') != 8:
         raise EnvironmentError('Setup requires Python 3.12 or 3.13 64-bit.')
+    check_cancel()
     started = time.monotonic()
     record = expected_record()
     environment = Path(record['environment_root'])
     python = Path(record['python'])
     print(f'[1/3] Python environment: {environment}', flush=True)
-    if not python.is_file():
-        venv.EnvBuilder(with_pip=True, clear=False, symlinks=False).create(environment)
-    check_python(python)
-    print('[2/3] Installing dependencies and verifying both model families in parallel...', flush=True)
-    result = run_install_tasks({
-        'Application dependencies': lambda: install_dependencies(python),
-        'Model assets': install_models,
-        'Capture runtime': install_capture,
-    })
+    reuse_managed = managed_root() is not None and environment.exists()
+    if reuse_managed:
+        for component in (environment, *environment.parents, python):
+            if component.is_symlink() or (hasattr(component, 'is_junction') and component.is_junction()):
+                raise EnvironmentError('Shared runtime paths cannot contain links; existing files were preserved.')
+        if not python.is_file():
+            raise EnvironmentError('An incomplete shared environment was preserved; repair requires a separate environment generation.')
+        event('environment', 'running', 'Verifying shared runtime without package changes')
+        if verify_runtime(python, include_models=False):
+            raise EnvironmentError('Shared environment verification failed. Existing packages were preserved; repair requires a separate environment generation.')
+        tasks = {'Model assets': install_models}
+    else:
+        if not python.is_file():
+            venv.EnvBuilder(with_pip=True, clear=False, symlinks=False).create(environment)
+        check_python(python)
+        tasks = {
+            'Application dependencies': lambda: install_dependencies(python),
+            'Model assets': install_models,
+            'Capture runtime': install_capture,
+        }
+    print('[2/3] Preparing dependencies and verifying model families...', flush=True)
+    result = run_install_tasks(tasks)
     if result:
         return result
+    check_cancel()
     write_record(record)
     print(f'[3/3] Installation complete in {time.monotonic() - started:.1f}s. '
           'Run start.bat to open the application.', flush=True)
@@ -281,6 +326,9 @@ def main(argv: list[str] | None = None) -> int:
             print(python)
             return 0
         return run_foreground([str(python), '-B', '-m', 'implementation.launch', *launch_args])
+    except SetupCancelled as exc:
+        print(f'[CANCELLED] {exc}', file=sys.stderr)
+        return 130
     except (EnvironmentError, OSError, subprocess.SubprocessError) as exc:
         print(f'[ERROR] {exc}', file=sys.stderr)
         return 1

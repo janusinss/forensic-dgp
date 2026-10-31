@@ -2,6 +2,8 @@ param(
   [ValidateSet('Install','Launch')][string]$Action,
   [Parameter(Mandatory=$true)][string]$ManagedRoot,
   [string]$Commit,
+  [string]$BundlePath,
+  [string]$BundleManifest,
   [Parameter(ValueFromRemainingArguments=$true)][string[]]$LaunchArgs
 )
 $ErrorActionPreference = 'Stop'
@@ -19,6 +21,47 @@ function Check-Path([string]$path) {
     if (!$next -or $next -eq $probe) { break }
     $probe = $next
   }
+}
+function Setup-Event([string]$stage,[string]$status,[string]$message,[long]$current=-1,[long]$total=-1) {
+  if (!$env:DGP_SETUP_EVENTS) { return }
+  if (![IO.Path]::IsPathRooted($env:DGP_SETUP_EVENTS)) { throw 'Setup event path must be absolute.' }
+  Check-Path $env:DGP_SETUP_EVENTS
+  $event = [ordered]@{schema=1;stage=$stage;status=$status;message=$message}
+  if ($current -ge 0) { $event.current=$current }
+  if ($total -gt 0) { $event.total=$total }
+  $json = $event | ConvertTo-Json -Compress
+  Write-Host ('DGP_EVENT ' + $json)
+  $line = $json + "`n"
+  $bytes = [Text.UTF8Encoding]::new($false).GetBytes($line)
+  $stream = [IO.File]::Open($env:DGP_SETUP_EVENTS,[IO.FileMode]::Append,[IO.FileAccess]::Write,[IO.FileShare]::ReadWrite)
+  try { $stream.Write($bytes,0,$bytes.Length) } finally { $stream.Dispose() }
+}
+function Check-Cancel {
+  if (!$env:DGP_SETUP_CANCEL_FILE) { return }
+  if (![IO.Path]::IsPathRooted($env:DGP_SETUP_CANCEL_FILE)) { throw 'Setup cancel path must be absolute.' }
+  Check-Path $env:DGP_SETUP_CANCEL_FILE
+  if (Test-Path -LiteralPath $env:DGP_SETUP_CANCEL_FILE) { throw 'Installation cancelled at a safe boundary; previous active version retained.' }
+}
+function Load-Bundle([string]$path,[string]$manifestPath,[string]$commit) {
+  if (!$path -or !$manifestPath -or ![IO.Path]::IsPathRooted($path) -or ![IO.Path]::IsPathRooted($manifestPath)) { throw 'Both bundle paths must be absolute.' }
+  Check-Path $path; Check-Path $manifestPath
+  if (!(Test-Path -LiteralPath $path -PathType Leaf) -or !(Test-Path -LiteralPath $manifestPath -PathType Leaf)) { throw 'Bundled payload is missing.' }
+  if ((Get-Item -LiteralPath $manifestPath).Length -gt 4MB) { throw 'Bundle manifest is oversized.' }
+  $bundle = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+  if ($bundle.schema -isnot [int] -or $bundle.schema -ne 1 -or $bundle.commit -cne $commit) { throw 'Bundle identity differs.' }
+  if ($bundle.source_zip_sha256 -cnotmatch '^[0-9a-f]{64}$' -or $bundle.source_zip_size -le 0 -or $bundle.source_zip_size -gt 100MB) { throw 'Bundle archive declaration differs.' }
+  if ((Get-Item -LiteralPath $path).Length -ne $bundle.source_zip_size -or (File-Sha $path) -cne $bundle.source_zip_sha256) { throw 'Bundled source failed its size/SHA-256 check.' }
+  $entries = @($bundle.files.PSObject.Properties)
+  if ($entries.Count -lt 1 -or $entries.Count -gt 5000) { throw 'Invalid bundle file inventory.' }
+  $mapped = @{}
+  foreach ($entry in $entries) {
+    if (!(Valid-Relative $entry.Name) -or $entry.Value -cnotmatch '^[0-9a-f]{40}$' -or $mapped.ContainsKey($entry.Name)) { throw 'Invalid bundle file declaration.' }
+    $mapped[$entry.Name] = $entry.Value
+  }
+  if (@($bundle.ancestors).Count -lt 1 -or @($bundle.ancestors).Count -gt 50000) { throw 'Invalid release ancestry inventory.' }
+  foreach ($ancestor in $bundle.ancestors) { if ($ancestor -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid release ancestor.' } }
+  if ($commit -cnotin @($bundle.ancestors)) { throw 'Bundle ancestry omits its own revision.' }
+  return @{files=$mapped;ancestors=@($bundle.ancestors)}
 }
 function Valid-Relative([string]$path) {
   if (!$path -or $path.Contains('\') -or $path.StartsWith('/') -or $path.Contains(':')) { return $false }
@@ -128,7 +171,9 @@ function Download-Limited([string]$url,[string]$path,[long]$limit) {
       while (($count = $input.Read($buffer,0,$buffer.Length)) -gt 0) {
         $total += $count
         if ($total -gt $limit -or $timer.Elapsed.TotalSeconds -gt 180) { throw 'Archive download exceeded its size or time limit.' }
+        Check-Cancel
         $output.Write($buffer,0,$count)
+        Setup-Event 'source' 'progress' 'Downloading pinned application source' $total $response.ContentLength
       }
       $output.Flush()
     } finally { $output.Dispose(); $input.Dispose() }
@@ -163,6 +208,19 @@ try {
     exit $LASTEXITCODE
   }
   if ($Commit -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid resolved revision.' }
+  Check-Cancel
+  Setup-Event 'source' 'running' 'Verifying pinned application source'
+  if ($BundlePath -or $BundleManifest) {
+    $bundle = Load-Bundle $BundlePath $BundleManifest $Commit
+    $manifest = $bundle.files
+    $existingPointer = Join-Path $root 'current.json'
+    if (Test-Path -LiteralPath $existingPointer) {
+      Check-Path $existingPointer
+      $prior = Get-Content -LiteralPath $existingPointer -Raw | ConvertFrom-Json
+      if ($prior.schema -isnot [int] -or $prior.schema -ne 1 -or $prior.commit -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid previous active version pointer.' }
+      if ($prior.commit -cne $Commit -and $prior.commit -cnotin $bundle.ancestors) { throw 'This setup is older than or unrelated to the installed version. Existing installation was preserved.' }
+    }
+  } else {
   $tree = Api "https://api.github.com/repos/$repo/git/trees/$($Commit)?recursive=1"
   if ($tree.truncated -or !$tree.tree) { throw 'GitHub tree is missing or truncated.' }
   $manifest = @{}
@@ -172,6 +230,7 @@ try {
     if ($manifest.ContainsKey($entry.path)) { throw 'Duplicate Git tree entry.' }
     $manifest[$entry.path] = $entry.sha
   }
+  }
   $versionDir = Join-Path $root ('versions\' + $Commit)
   if (Test-Path -LiteralPath $versionDir) { $versionDir = Verify-Version $Commit }
   else {
@@ -180,7 +239,12 @@ try {
     New-Item -ItemType Directory -Path $stage -Force | Out-Null
     Check-Path $stage
     $zip = Join-Path $stage 'source.zip'
+    if ($BundlePath) {
+      Copy-Item -LiteralPath $BundlePath -Destination $zip
+      if ((File-Sha $zip) -cne (File-Sha $BundlePath)) { throw 'Bundled source changed while copying.' }
+    } else {
     Download-Limited "https://github.com/$repo/archive/$Commit.zip" $zip 100MB
+    }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [IO.Compression.ZipFile]::OpenRead($zip)
     try {
@@ -206,12 +270,18 @@ try {
     $receipt = @{schema=1;commit=$Commit;files=$files} | ConvertTo-Json -Depth 5 -Compress
     [IO.File]::WriteAllText((Join-Path $root ('receipts\' + $Commit + '.json')),$receipt,[Text.Encoding]::UTF8)
   }
+  Check-Cancel
+  Setup-Event 'environment' 'running' 'Preparing dependencies and verified model assets'
   Write-Host "Preparing application revision $Commit at $versionDir"
   & (Join-Path $versionDir 'implementation\install_source.bat') --no-pause
   if ($LASTEXITCODE -ne 0) { throw 'Setup failed; the previous active version was retained.' }
+  Check-Cancel
+  Setup-Event 'verification' 'running' 'Verifying installed application'
   $python = & (Join-Path $versionDir 'start.bat') --source --verify-only
   if ($LASTEXITCODE -ne 0) { throw 'Verification failed; the previous active version was retained.' }
   $null = Verify-Version $Commit
+  Check-Cancel
+  Setup-Event 'activation' 'running' 'Activating verified application'
   $pointer = Join-Path $root 'current.json'
   Check-Path $pointer
   $tmp = Join-Path $root ('current.' + [guid]::NewGuid().ToString('N') + '.tmp')
@@ -232,4 +302,8 @@ try {
     }
   }
   Write-Host "Installed revision $Commit. Verified launcher: $starter"
+  Setup-Event 'complete' 'complete' "Installed revision $Commit"
+} catch {
+  Setup-Event 'error' 'error' $_.Exception.Message
+  throw
 } finally { if ($held) { $mutex.ReleaseMutex() }; $mutex.Dispose() }

@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime, timezone
 import hashlib
+from .setup_events import check_cancel, event
 import json
 import os
 from pathlib import Path
@@ -131,6 +132,8 @@ def _copy_local(source, partial, asset):
 
 
 def _download(url, partial, asset, *, opener=None, clock=time.monotonic):
+    check_cancel()
+    event("completion-models", "running", "Downloading completion asset", current=0, total=asset["size"])
     _https(url)
     opener = opener or urllib.request.build_opener(HTTPSRedirectHandler())
     request = urllib.request.Request(url, headers={"User-Agent": "ForensicDGP-CompletionInstaller/1", "Accept-Encoding": "identity"})
@@ -155,6 +158,7 @@ def _download(url, partial, asset, *, opener=None, clock=time.monotonic):
                     raise CompletionInstallError("Invalid completion download Content-Length.") from exc
             remaining, digest = asset["size"], hashlib.sha256()
             while True:
+                check_cancel()
                 if clock() - started > DOWNLOAD_TOTAL_SECONDS:
                     raise CompletionInstallError("Completion download exceeded 30 minutes; partial retained. No automatic retry.")
                 block = response.read(min(CHUNK_SIZE, remaining + 1))
@@ -167,6 +171,7 @@ def _download(url, partial, asset, *, opener=None, clock=time.monotonic):
                 writer.write(block)
                 digest.update(block)
                 remaining -= len(block)
+                event("completion-models", "progress", "Downloading completion asset", current=asset["size"]-remaining, total=asset["size"])
             writer.flush()
             os.fsync(writer.fileno())
             if remaining or digest.hexdigest() != asset["sha256"]:
@@ -177,6 +182,7 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
                    model_dir=assets.MODEL_DIR, opener=None, clock=time.monotonic):
     if verify_only and (local_r1 is not None or local_detector is not None):
         raise CompletionInstallError("Use --verify-only separately from local staging.")
+    check_cancel()
     manifest = assets.load_manifest()
     folder = _directory(model_dir)
     supplied = {"completion_r1": local_r1, "covering_detector": local_detector}
