@@ -25,6 +25,14 @@ def checked_version(value: str) -> str:
     return value
 
 
+def check_inno_version(iscc: Path) -> None:
+    # Inno 7's help banner omits the engine's patch version; query it directly.
+    output = subprocess.run([str(iscc), "--version"], stdout=subprocess.PIPE,
+                            stderr=subprocess.STDOUT, check=True).stdout
+    if output.decode("utf-8-sig").strip() != INNO_VERSION:
+        raise RuntimeError("Use verified Inno Setup " + INNO_VERSION + ".")
+
+
 def source_manifest(commit: str, archive: bytes, tree: bytes, ancestors: bytes) -> dict:
     if not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ValueError("Expected exact source commit.")
@@ -85,10 +93,7 @@ def main() -> int:
                     "/reference:System.Windows.Forms.dll", "/reference:System.Drawing.dll",
                     "/reference:System.Web.Extensions.dll", "/out:" + str(stage / "ForensicDGP.exe"),
                     str(stage / "Program.cs")], check=True)
-    tool_version = subprocess.run([str(args.iscc), "/?"], stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT, check=False).stdout.decode(errors="replace")
-    if "7.1.1" not in tool_version:
-        raise RuntimeError("Use verified Inno Setup 7.1.1.")
+    check_inno_version(args.iscc)
     build = dict(schema=1, version=args.version, commit=commit, inno_version=INNO_VERSION,
                  inno_installer_sha256=INNO_INSTALLER_SHA256, signed=False,
                  payload="online-source-bundled", files={})

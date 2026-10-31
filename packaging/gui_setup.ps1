@@ -26,7 +26,7 @@ try {
   $env:DGP_SETUP_CANCEL_FILE=$CancelFile
   $env:IMPLEMENTATION_NO_PAUSE='1'
   Remove-Item Env:\DGP_BOOTSTRAP_FILE -ErrorAction SilentlyContinue
-  & (Join-Path $Stage 'distribution.ps1') -Action Install -ManagedRoot (Join-Path $env:LOCALAPPDATA 'DGP\app') -Commit $release.commit -BundlePath (Join-Path $Stage 'app-source.zip') -BundleManifest (Join-Path $Stage 'app-source.json') *>&1 | Tee-Object -FilePath $LogPath
+  & (Join-Path $Stage 'distribution.ps1') -Action Install -ManagedRoot (Join-Path $env:LOCALAPPDATA 'DGP\app') -Commit $release.commit -BundlePath (Join-Path $Stage 'app-source.zip') -BundleManifest (Join-Path $Stage 'app-source.json')
   if ($LASTEXITCODE -ne 0) { throw "Application preparation failed. See $LogPath" }
   exit 0
 } catch {

@@ -145,6 +145,7 @@ end;
 procedure SetupOutput(const S: String; const Error, FirstLine: Boolean);
 begin
   Log(S);
+  SaveStringToFile(SetupLog, S + #13#10, True);
   UpdateProgress;
 end;
 
