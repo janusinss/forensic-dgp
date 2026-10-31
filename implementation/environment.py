@@ -19,7 +19,7 @@ import time
 import venv
 
 ROOT = Path(__file__).resolve().parents[1]
-from .managed_paths import managed_root
+from .managed_paths import managed_root, custom_install_root, managed_cache
 from .setup_events import SetupCancelled, check_cancel, event
 
 _MANAGED_ROOT = managed_root()
@@ -139,6 +139,10 @@ def install_dependencies(python: Path) -> int:
                    if not key.upper().startswith(('UV_', 'PIP_'))
                    or key.upper() in ('UV_CACHE_DIR', 'UV_SYSTEM_CERTS')}
     package_env['PIP_CONFIG_FILE'] = os.devnull
+    custom = custom_install_root()
+    if custom:
+        package_env['UV_CACHE_DIR'] = str(managed_cache('uv'))
+        package_env['PIP_CACHE_DIR'] = str(managed_cache('pip'))
     bundled_cache = ROOT / 'implementation' / 'uv_cache'
     if 'UV_CACHE_DIR' not in package_env and (bundled_cache.exists() or bundled_cache.is_symlink()):
         if not bundled_cache.is_dir() or bundled_cache.is_symlink() or bundled_cache.is_junction():
@@ -150,7 +154,8 @@ def install_dependencies(python: Path) -> int:
         result = run_foreground([
             str(python), '-I', '-m', 'pip', '--isolated', 'install',
             '--disable-pip-version-check', '--only-binary', ':all:',
-            '--index-url', 'https://pypi.org/simple', f'uv=={UV_VERSION}',
+            '--index-url', 'https://pypi.org/simple',
+            *(['--cache-dir', str(managed_cache('pip'))] if custom else []), f'uv=={UV_VERSION}',
         ], env=package_env)
         if result:
             return result

@@ -10,8 +10,16 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $repo = 'janusinss/forensic-dgp'
 $root = [IO.Path]::GetFullPath($ManagedRoot).TrimEnd('\')
-$expected = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'DGP\app')).TrimEnd('\')
-if (-not [string]::Equals($root,$expected,[StringComparison]::OrdinalIgnoreCase)) { throw 'Managed root must be the expected user-local DGP app directory.' }
+$customShell = $null
+if ($env:DGP_INSTALL_ROOT) {
+  if ($env:DGP_INSTALL_ROOT -cnotmatch '^[A-Za-z]:\\') { throw 'Custom installation root must be an absolute local directory.' }
+  $customShell = [IO.Path]::GetFullPath($env:DGP_INSTALL_ROOT).TrimEnd('\')
+  $expected = Join-Path $customShell 'runtime'
+} else {
+  if (!$env:LOCALAPPDATA -or ![IO.Path]::IsPathRooted($env:LOCALAPPDATA)) { throw 'LOCALAPPDATA must be absolute.' }
+  $expected = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'DGP\app')).TrimEnd('\')
+}
+if (-not [string]::Equals($root,$expected,[StringComparison]::OrdinalIgnoreCase)) { throw 'Managed root does not match the selected installation.' }
 function Check-Path([string]$path) {
   $probe = [IO.Path]::GetFullPath($path)
   while ($probe) {
@@ -21,6 +29,33 @@ function Check-Path([string]$path) {
     if (!$next -or $next -eq $probe) { break }
     $probe = $next
   }
+}
+function Check-CustomShell {
+  if (!$customShell) { return }
+  $driveRoot = [IO.Path]::GetPathRoot($customShell)
+  $drive = New-Object IO.DriveInfo($driveRoot)
+  if ($drive.DriveType -ne [IO.DriveType]::Fixed -or $customShell.TrimEnd('\') -eq $driveRoot.TrimEnd('\') -or $customShell.Length -gt 120) { throw 'Choose a dedicated folder on a fixed local drive with a path of at most 120 characters.' }
+  foreach ($part in $customShell.Substring($driveRoot.Length).Split('\')) {
+    if (!$part -or $part -eq '.' -or $part -eq '..' -or $part.EndsWith('.') -or $part.EndsWith(' ') -or $part -match '[\x00-\x1f<>"|?*:]' -or $part -match '^(?i:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)') { throw 'Installation folder has an unsafe Windows path component.' }
+  }
+  foreach ($name in @('SystemRoot','ProgramFiles','ProgramFiles(x86)','ProgramData')) {
+    $value = [Environment]::GetEnvironmentVariable($name)
+    if ($value) {
+      $blocked = [IO.Path]::GetFullPath($value).TrimEnd('\')
+      if ([string]::Equals($customShell,$blocked,[StringComparison]::OrdinalIgnoreCase) -or $customShell.StartsWith($blocked+'\',[StringComparison]::OrdinalIgnoreCase)) { throw 'System and shared program directories cannot host this per-user installation.' }
+    }
+  }
+  $bases = @('USERPROFILE','LOCALAPPDATA','APPDATA','TEMP','TMP') | ForEach-Object { [Environment]::GetEnvironmentVariable($_) } | Where-Object { $_ }
+  if ($env:USERPROFILE) { $bases += @('Desktop','Documents','Downloads','Pictures','Videos','Music') | ForEach-Object { Join-Path $env:USERPROFILE $_ } }
+  foreach ($base in $bases) { if ([string]::Equals($customShell,[IO.Path]::GetFullPath($base).TrimEnd('\'),[StringComparison]::OrdinalIgnoreCase)) { throw 'Choose a dedicated child folder instead of a profile or data root.' } }
+  Check-Path $customShell
+  $shellDirectory = Get-Item -LiteralPath $customShell -Force
+  if (!$shellDirectory.PSIsContainer) { throw 'Chosen installation location is not a directory.' }
+  $shellMarker = Join-Path $customShell 'shell-owner.json'
+  Check-Path $shellMarker
+  if (!(Test-Path -LiteralPath $shellMarker -PathType Leaf) -or (Get-Item -LiteralPath $shellMarker).Length -gt 8192) { throw 'Desktop shell marker is missing or oversized.' }
+  $m = Get-Content -LiteralPath $shellMarker -Raw -Encoding UTF8 | ConvertFrom-Json
+  if ($m.schema -isnot [int] -or $m.schema -ne 1 -or $m.application -cne 'Forensic DGP' -or @($m.PSObject.Properties).Count -ne 2) { throw 'Desktop shell marker differs.' }
 }
 function Setup-Event([string]$stage,[string]$status,[string]$message,[long]$current=-1,[long]$total=-1) {
   if (!$env:DGP_SETUP_EVENTS) { return }
@@ -108,8 +143,11 @@ function Load-Owner {
   $marker = Join-Path $root 'owner.json'
   if (!(Test-Path -LiteralPath $marker -PathType Leaf)) { throw 'Managed installation marker is missing.' }
   Check-Path $marker
-  $m = Get-Content -LiteralPath $marker -Raw | ConvertFrom-Json
-  if ($m.schema_version -isnot [int] -or $m.schema_version -ne 1 -or $m.repository -cne $repo -or @($m.PSObject.Properties).Count -ne 2) { throw 'Managed installation marker differs.' }
+  $m = Get-Content -LiteralPath $marker -Raw -Encoding UTF8 | ConvertFrom-Json
+  if ($customShell) {
+    Check-CustomShell
+    if ($m.schema_version -isnot [int] -or $m.schema_version -ne 2 -or $m.repository -cne $repo -or $m.layout -cne 'desktop-runtime-v1' -or ![string]::Equals($m.install_root,$customShell,[StringComparison]::OrdinalIgnoreCase) -or @($m.PSObject.Properties).Count -ne 4) { throw 'Custom managed installation marker differs.' }
+  } elseif ($m.schema_version -isnot [int] -or $m.schema_version -ne 1 -or $m.repository -cne $repo -or @($m.PSObject.Properties).Count -ne 2) { throw 'Managed installation marker differs.' }
 }
 function Verify-Version([string]$sha) {
   if ($sha -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid application revision.' }
@@ -179,6 +217,7 @@ function Download-Limited([string]$url,[string]$path,[long]$limit) {
     } finally { $output.Dispose(); $input.Dispose() }
   } finally { $response.Dispose() }
 }
+Check-CustomShell
 Check-Path $root
 if (!(Test-Path -LiteralPath $root)) { New-Item -ItemType Directory -Path $root -Force | Out-Null }
 Check-Path $root
@@ -193,7 +232,10 @@ try {
   if ($Action -eq 'Install' -and !(Test-Path -LiteralPath $marker)) {
     if (@(Get-ChildItem -LiteralPath $root -Force).Count -ne 0) { throw 'Existing unrecognized app directory was preserved.' }
     $markerFile = [IO.File]::Open($marker,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
-    try { $content = [Text.Encoding]::UTF8.GetBytes('{"schema_version":1,"repository":"janusinss/forensic-dgp"}'); $markerFile.Write($content,0,$content.Length) } finally { $markerFile.Dispose() }
+    try {
+      $owner = if ($customShell) { @{schema_version=2;repository=$repo;layout='desktop-runtime-v1';install_root=$customShell} | ConvertTo-Json -Compress } else { '{"schema_version":1,"repository":"janusinss/forensic-dgp"}' }
+      $content = [Text.Encoding]::UTF8.GetBytes($owner); $markerFile.Write($content,0,$content.Length)
+    } finally { $markerFile.Dispose() }
   }
   Load-Owner
   $env:DGP_MANAGED_ROOT = $root

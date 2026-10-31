@@ -5,6 +5,7 @@ title Forensic DGP - Implementation
 if /i "%~1"=="--no-pause" set "IMPLEMENTATION_NO_PAUSE=1"
 
 set "START_PYTHON="
+if defined DGP_INSTALL_ROOT goto custom_python
 py -3.13 -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,13) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
 if not errorlevel 1 set "START_PYTHON=py -3.13"
 if defined START_PYTHON goto launch_environment
@@ -21,6 +22,13 @@ if defined LOCALAPPDATA if exist "%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.
 echo [ERROR] A supported Python runtime was not found. Run install.bat first.
 if not defined IMPLEMENTATION_NO_PAUSE pause
 exit /b 1
+
+:custom_python
+if not defined DGP_MANAGED_ROOT exit /b 1
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0bootstrap_python.ps1" -ManagedRoot "%DGP_MANAGED_ROOT%" -VerifyOnly
+if errorlevel 1 exit /b 1
+set START_PYTHON="%DGP_MANAGED_ROOT%\python\python-3.13.9-amd64\python.exe"
+goto launch_environment
 
 :private_python
 set START_PYTHON="%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe"

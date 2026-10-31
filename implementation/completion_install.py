@@ -133,7 +133,7 @@ def _copy_local(source, partial, asset):
 
 def _download(url, partial, asset, *, opener=None, clock=time.monotonic):
     check_cancel()
-    event("completion-models", "running", "Downloading completion asset", current=0, total=asset["size"])
+    event("download:" + asset["filename"], "downloading", asset["filename"], current=0, total=asset["size"])
     _https(url)
     opener = opener or urllib.request.build_opener(HTTPSRedirectHandler())
     request = urllib.request.Request(url, headers={"User-Agent": "ForensicDGP-CompletionInstaller/1", "Accept-Encoding": "identity"})
@@ -171,7 +171,7 @@ def _download(url, partial, asset, *, opener=None, clock=time.monotonic):
                 writer.write(block)
                 digest.update(block)
                 remaining -= len(block)
-                event("completion-models", "progress", "Downloading completion asset", current=asset["size"]-remaining, total=asset["size"])
+                event("download:" + asset["filename"], "downloading", asset["filename"], current=asset["size"]-remaining, total=asset["size"])
             writer.flush()
             os.fsync(writer.fileno())
             if remaining or digest.hexdigest() != asset["sha256"]:
@@ -237,6 +237,8 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
     for _, asset, destination, _ in planned:
         if not _admitted(destination, asset):
             raise CompletionInstallError(f"Completion asset changed before final verification: {destination.name}")
+    for _, asset, _, _ in planned:
+        event("download:" + asset["filename"], "complete", asset["filename"], current=asset["size"], total=asset["size"])
     result = {"schema_version": 1, "component": "completion-r1-distribution-installation",
               "complete": True, "verified_only": bool(verify_only), "assets": acquired,
               "restoration_files_modified": False, "inference_calls": 0, "training_calls": 0,

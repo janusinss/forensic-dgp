@@ -26,9 +26,11 @@ class DistributionSafety(unittest.TestCase):
 
     def run_ps(self, body):
         script = "$ErrorActionPreference='Stop'\n" + self.helpers + '\n' + body
-        encoded = base64.b64encode(script.encode('utf-16le')).decode('ascii')
+        # Keep the growing helper inventory below Windows' command-line limit.
+        fixture = self.root / 'helper-test.ps1'
+        fixture.write_text(script, encoding='utf-8-sig')
         env = dict(os.environ, DISTRIBUTION_TEST_ROOT=str(self.root))
-        return subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-EncodedCommand', encoded],
+        return subprocess.run([SHELL, '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', str(fixture)],
                               capture_output=True, text=True, encoding='utf8', errors='replace', env=env, timeout=15)
 
     def test_windows_path_validation(self):

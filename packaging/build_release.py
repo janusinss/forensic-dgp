@@ -89,6 +89,7 @@ def main() -> int:
         "distribution.ps1": "implementation/distribution.ps1",
         "uninstall.ps1": "packaging/uninstall.ps1",
         "gui_setup.ps1": "packaging/gui_setup.ps1",
+        "install_location.ps1": "packaging/install_location.ps1",
         "installer.iss": "packaging/installer.iss",
         "Program.cs": "packaging/launcher/Program.cs",
         "LICENSE.txt": "packaging/LICENSE.txt",
@@ -106,7 +107,7 @@ def main() -> int:
                  inno_installer_sha256=INNO_INSTALLER_SHA256, signed=False,
                  payload="online-source-bundled", files={})
     for name in ["app-source.zip", "app-source.json", "distribution.ps1", "uninstall.ps1",
-                 "gui_setup.ps1", "ForensicDGP.exe"]:
+                 "gui_setup.ps1", "ForensicDGP.exe", "install_location.ps1"]:
         build["files"][name] = hashlib.sha256((stage / name).read_bytes()).hexdigest()
     write_json(stage / "release.json", build)
     (stage / "shell-owner.json").write_text('{"schema":1,"application":"Forensic DGP"}\n', encoding="ascii")

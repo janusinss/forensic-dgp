@@ -1,3 +1,4 @@
+param([string]$ManagedRoot,[switch]$ReuseExisting,[switch]$VerifyOnly)
 # Install a private, pinned CPython distribution without changing PATH or existing Python installations.
 # This script is intentionally only called when the private target does not already exist.
 $ErrorActionPreference = 'Stop'
@@ -17,20 +18,75 @@ function Assert-OrdinaryDirectory([string]$Path) {
     }
 }
 
+function Python-Progress([string]$status,[string]$message,[long]$current=-1,[long]$total=-1) {
+    if (!$env:DGP_SETUP_EVENTS) { return }
+    $record = [ordered]@{schema=1;stage='python-runtime';status=$status;message=$message}
+    if ($current -ge 0) { $record.current = $current }
+    if ($total -gt 0) { $record.total = $total }
+    Write-Host ('DGP_EVENT ' + ($record | ConvertTo-Json -Compress))
+}
+function Python-Cancel {
+    if ($env:DGP_SETUP_CANCEL_FILE -and (Test-Path -LiteralPath $env:DGP_SETUP_CANCEL_FILE)) { throw 'Python setup cancelled at a safe boundary; previous active version retained.' }
+}
+function Download-Python([string]$url,[string]$path) {
+    Python-Cancel
+    $request = [Net.HttpWebRequest]::Create($url)
+    $request.Timeout = 30000; $request.ReadWriteTimeout = 30000; $request.AllowAutoRedirect = $false
+    $response = $request.GetResponse()
+    try {
+        if ([int]$response.StatusCode -ne 200 -or $response.ResponseUri.Scheme -cne 'https' -or ($response.ContentLength -ge 0 -and $response.ContentLength -ne $expectedBytes)) { throw 'Unexpected Python download response.' }
+        $input = $response.GetResponseStream()
+        $output = [IO.File]::Open($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+        try {
+            $buffer = New-Object byte[] 1048576
+            $downloaded = [long]0; $timer = [Diagnostics.Stopwatch]::StartNew()
+            Python-Progress 'downloading' 'Downloading private Python runtime' 0 $expectedBytes
+            while (($count = $input.Read($buffer,0,$buffer.Length)) -gt 0) {
+                Python-Cancel
+                $downloaded += $count
+                if ($downloaded -gt $expectedBytes -or $timer.Elapsed.TotalSeconds -gt 900) { throw 'Python download exceeded its size or time limit.' }
+                $output.Write($buffer,0,$count)
+                Python-Progress 'downloading' 'Downloading private Python runtime' $downloaded $expectedBytes
+            }
+            $output.Flush()
+        } finally { $output.Dispose(); $input.Dispose() }
+    } finally { $response.Dispose() }
+}
+
 try {
     if (-not [Environment]::Is64BitOperatingSystem) { throw 'A 64-bit Windows computer is required.' }
     if ([string]::IsNullOrWhiteSpace($env:LOCALAPPDATA) -or -not [IO.Path]::IsPathRooted($env:LOCALAPPDATA)) {
         throw 'LOCALAPPDATA must name an absolute user directory.'
     }
-    $local = [IO.Path]::GetFullPath($env:LOCALAPPDATA)
-    Assert-OrdinaryDirectory $local
-    $base = [IO.Path]::Combine($local, 'DGP')
-    if (-not [IO.Directory]::Exists($base)) { [void][IO.Directory]::CreateDirectory($base) }
+    if ($ManagedRoot) {
+        . (Join-Path $PSScriptRoot 'install_paths.ps1')
+        $runtime = Assert-DGPCustomRuntime $ManagedRoot
+        $base = Join-Path $runtime 'python'
+    } else {
+        if ($env:DGP_INSTALL_ROOT) { throw 'Custom Python requires its explicit managed root.' }
+        $local = [IO.Path]::GetFullPath($env:LOCALAPPDATA)
+        Assert-OrdinaryDirectory $local
+        $base = [IO.Path]::Combine($local, 'DGP')
+    }
+    if (-not [IO.Directory]::Exists($base)) {
+        if ($VerifyOnly) { throw 'Private Python is missing; run setup first.' }
+        [void][IO.Directory]::CreateDirectory($base)
+    }
     Assert-OrdinaryDirectory $base
     $target = [IO.Path]::Combine($base, 'python-3.13.9-amd64')
     if ([IO.File]::Exists($target) -or [IO.Directory]::Exists($target)) {
-        throw "The private Python destination already exists and was not changed: $target"
+        if (!$ManagedRoot -or (!$ReuseExisting -and !$VerifyOnly)) { throw "The private Python destination already exists and was not changed: $target" }
+        Assert-OrdinaryDirectory $target
+        $existing = Join-Path $target 'python.exe'
+        $info = Get-Item -LiteralPath $existing -Force
+        if ($info.PSIsContainer -or ($info.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Private Python executable is not an ordinary file.' }
+        & $existing -I -B -c "import sys,struct,venv,ensurepip;sys.exit(0 if sys.version_info[:3]==(3,13,9) and struct.calcsize('P')==8 else 1)"
+        if ($LASTEXITCODE -ne 0) { throw 'Existing custom Python failed verification; its files were preserved.' }
+        Python-Progress 'complete' 'Private Python runtime verified without downloads'
+        Write-Host '[Python] Existing private runtime verified without downloads.'
+        exit 0
     }
+    if ($VerifyOnly) { throw 'Private Python is missing; run setup first.' }
 
     $work = [IO.Path]::Combine($base, ('python-bootstrap-' + [guid]::NewGuid().ToString('N')))
     [void][IO.Directory]::CreateDirectory($work)
@@ -41,7 +97,7 @@ try {
 
     Write-Host '[Python] Downloading the official 64-bit Python runtime...'
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $zipPath -TimeoutSec 900
+    Download-Python $downloadUrl $zipPath
     $download = Get-Item -LiteralPath $zipPath -Force
     if ($download.Length -ne $expectedBytes) { throw 'The Python download has an unexpected size.' }
     $hasher = [Security.Cryptography.SHA256]::Create()
@@ -49,6 +105,8 @@ try {
     try { $hash = [BitConverter]::ToString($hasher.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
     finally { $stream.Dispose(); $hasher.Dispose() }
     if ($hash -ne $expectedSha256) { throw 'The Python download failed its SHA-256 check.' }
+    Python-Cancel
+    Python-Progress 'running' 'Verifying and extracting private Python runtime'
     Write-Host '[Python] Download verified. Preparing the private runtime...'
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -95,7 +153,9 @@ try {
     & $python -I -c "import sys, struct, venv, ensurepip; sys.exit(0 if sys.version_info[:3] == (3,13,9) and struct.calcsize('P') == 8 else 1)"
     if ($LASTEXITCODE -ne 0) { throw 'The downloaded Python runtime failed validation.' }
     Assert-OrdinaryDirectory $base
+    Python-Cancel
     [IO.Directory]::Move($staged, $target)
+    Python-Progress 'complete' 'Private Python runtime installed and verified'
     Write-Host "[Python] Private runtime installed: $target"
     Write-Host '[Python] Continuing application setup...'
     exit 0

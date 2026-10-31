@@ -2,6 +2,15 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
+## Desktop installer preview
+
+The Windows setup EXE has a public [download page](https://forensic-dgp.janusdominic0.workers.dev). Version **0.1.1 with selectable full application folders is in local development and has not been published**; the landing page's current download is a separate preview.
+
+The 0.1.1 setup flow selects a dedicated local fixed-drive folder of at most 120 characters. That folder contains the desktop launcher plus `runtime` for private Python, application/capture dependencies, package caches, verified models and saved records. First setup requires Windows 10/11 x64, Microsoft Edge, internet access and at least 4 GB of free disk space. It does not require administrator access or preinstalled Python. Known-size downloads show measured progress; package setup and verification show activity when a total is unknown.
+
+Updates verify and reuse valid components in the same location. To select another folder, uninstall the Windows launcher first; the previous runtime, saved evidence and ownership records remain. Setup creates the new installation without automatically migrating or deleting the old data. Uninstall retains `runtime`, `install-location.json` and `shell-owner.json` for safe verification on reinstall.
+
+See [installer build and folder behavior](packaging/BUILD.md) and [verification evidence](packaging/VERIFICATION.md). These desktop changes preserve the existing developer batch workflows below, including their legacy default storage location.
 ## Install on Windows
 
 1. Download [install.bat](https://raw.githubusercontent.com/janusinss/forensic-dgp/IMPLEMENTATION/install.bat) into an empty folder. Save the actual file, not the GitHub HTML page.

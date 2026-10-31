@@ -12,7 +12,11 @@ AppPublisher=Forensic DGP Research
 AppComments=Experimental local face restoration
 DefaultDirName={localappdata}\Programs\Forensic DGP
 DefaultGroupName=Forensic DGP
-DisableDirPage=yes
+DisableDirPage=no
+UsePreviousAppDir=yes
+DisableWelcomePage=no
+AlwaysShowDirOnReadyPage=yes
+ExtraDiskSpaceRequired=3_221_225_472
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -39,11 +43,12 @@ Name: desktopicon; Description: "Create a Desktop shortcut"; GroupDescription: "
 Source: "{#StageDir}\ForensicDGP.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#StageDir}\uninstall.ps1"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#StageDir}\release.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#StageDir}\shell-owner.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#StageDir}\shell-owner.json"; DestDir: "{app}"; Flags: ignoreversion uninsneveruninstall
 Source: "{#StageDir}\gui_setup.ps1"; Flags: dontcopy
 Source: "{#StageDir}\distribution.ps1"; Flags: dontcopy
 Source: "{#StageDir}\app-source.zip"; Flags: dontcopy
 Source: "{#StageDir}\app-source.json"; Flags: dontcopy
+Source: "{#StageDir}\install_location.ps1"; Flags: dontcopy
 
 [Icons]
 Name: "{userprograms}\Forensic DGP"; Filename: "{app}\ForensicDGP.exe"; WorkingDir: "{app}"
@@ -58,6 +63,12 @@ var
   ProgressPage: TOutputProgressWizardPage;
   EventsFile, CancelFile, SetupLog, LastStage: String;
   UninstallMutex: THandle;
+  RequirementsPage: TOutputMsgWizardPage;
+  StepLabel, TransferLabel: TNewStaticText;
+  DetailsButton: TNewButton;
+  DetailsMemo: TNewMemo;
+  PreviousInstallRoot: String;
+  StepNumber: Integer;
 
 function GetFileAttributes(Name: String): LongWord;
   external 'GetFileAttributesW@kernel32.dll stdcall';
@@ -119,37 +130,146 @@ begin
   end;
 end;
 
+function RegisteredInstallRoot: String;
+begin
+  Result := '';
+  RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{FEE649E9-195D-4576-8F30-DAE06A5099C8}_is1', 'InstallLocation', Result);
+  Result := RemoveBackslashUnlessRoot(Result);
+end;
+
+function PhaseNumber(Stage: String): Integer;
+begin
+  Result := 1;
+  if (Pos('python', Lowercase(Stage)) > 0) then Result := 2;
+  if (Stage = 'environment') or (Pos('download:', Stage) = 1) or
+     (Pos('models', Lowercase(Stage)) > 0) or (Stage = 'Application dependencies') or
+     (Stage = 'Capture runtime') or (Stage = 'capture-runtime') then Result := 3;
+  if Stage = 'verification' then Result := 4;
+  if (Stage = 'activation') or (Stage = 'complete') then Result := 5;
+end;
+
+function PhaseText(Number: Integer): String;
+begin
+  case Number of
+    1: Result := 'Preparing application files';
+    2: Result := 'Preparing Python';
+    3: Result := 'Downloading and setting up components';
+    4: Result := 'Checking the installation';
+    5: Result := 'Finishing setup';
+  end;
+end;
+
 procedure UpdateProgress(const Event: String);
 var
-  Current, Total: Integer;
-  Stage: String;
+  Current, Total, Percent, Phase: Integer;
+  Stage, Status, Message: String;
 begin
   if Event <> '' then begin
     Stage := JsonField(Event, 'stage');
+    Status := JsonField(Event, 'status');
+    Message := JsonField(Event, 'message');
     if Stage <> '' then LastStage := Stage;
+    Phase := PhaseNumber(Stage);
+    if Phase > StepNumber then StepNumber := Phase;
+    StepLabel.Caption := 'Step ' + IntToStr(StepNumber) + ' of 5';
     if (LastStage = 'activation') or (LastStage = 'complete') then WizardForm.CancelButton.Enabled := False;
-    Current := StrToIntDef(JsonField(Event, 'current'), 0);
-    Total := StrToIntDef(JsonField(Event, 'total'), 0);
-    if (Total > 0) and (Current >= 0) and (Current <= Total) then
-      ProgressPage.SetProgress(Current, Total)
-    else ProgressPage.SetProgress(0, 0);
+    Current := StrToIntDef(JsonField(Event, 'current'), -1);
+    Total := StrToIntDef(JsonField(Event, 'total'), -1);
+    if (Total > 0) and (Current >= 0) and (Current <= Total) and (Status = 'downloading') then begin
+      Percent := Round((Current * 100.0) / Total);
+      ProgressPage.ProgressBar.Style := npbstNormal;
+      ProgressPage.SetProgress(Percent, 100);
+      TransferLabel.Caption := IntToStr(Percent) + '%  |  ' +
+        Format('%.1f of %.1f MiB', [Current / 1048576.0, Total / 1048576.0]) + '  |  ' + Message;
+      Log('DGP_PROGRESS download ' + IntToStr(Percent) + ' ' + Stage);
+    end else begin
+      ProgressPage.SetProgress(0, 100);
+      ProgressPage.ProgressBar.Style := npbstMarquee;
+      TransferLabel.Caption := Message;
+      if Status = 'complete' then TransferLabel.Caption := Message + ' ready';
+      Log('DGP_PROGRESS activity ' + Stage);
+    end;
+    if Stage = 'complete' then begin
+      ProgressPage.ProgressBar.Style := npbstNormal;
+      ProgressPage.SetProgress(100, 100);
+      TransferLabel.Caption := 'Application verified. Creating your shortcuts next.';
+    end;
   end;
+  ProgressPage.ProgressBar.Visible := True;
   if CancelRequested and (LastStage <> 'complete') then
-    ProgressPage.SetText('Cancelling at a safe boundary', 'Finishing the current operation. Saved records are retained.')
+    ProgressPage.SetText('Stopping safely', 'Finishing the current operation. Saved records are retained.')
   else
-    ProgressPage.SetText('Preparing application: ' + LastStage, 'Downloads and verification can take several minutes. Log: ' + SetupLog);
+    ProgressPage.SetText(PhaseText(StepNumber), 'Keep this window open. You can view details below.');
+end;
+
+procedure ToggleDetails(Sender: TObject);
+begin
+  DetailsMemo.Visible := not DetailsMemo.Visible;
+  if DetailsMemo.Visible then DetailsButton.Caption := 'Hide details'
+  else DetailsButton.Caption := 'Show details';
 end;
 
 procedure SetupOutput(const S: String; const Error, FirstLine: Boolean);
 begin
   Log(S);
   SaveStringToFile(SetupLog, S + #13#10, True);
+  DetailsMemo.Lines.Add(S);
+  if DetailsMemo.Lines.Count > 120 then DetailsMemo.Lines.Delete(0);
   if Pos('DGP_EVENT ', S) = 1 then UpdateProgress(Copy(S, 11, Length(S)));
 end;
 
 procedure InitializeWizard;
 begin
-  ProgressPage := CreateOutputProgressPage('Prepare Forensic DGP', 'Verified source, Python packages and models');
+  PreviousInstallRoot := RegisteredInstallRoot;
+  RequirementsPage := CreateOutputMsgPage(wpWelcome, 'Before you install',
+    'A local workspace for pictures and video',
+    'You need Windows 10 or 11 (64-bit), Microsoft Edge and internet access for first setup.' + #13#10#13#10 +
+    'Setup downloads a private Python runtime, application libraries and about 720 MiB of models. Allow at least 4 GB of free disk space.' + #13#10#13#10 +
+    'The folder you choose contains the full application, downloaded components and saved records. No administrator access is required.' + #13#10#13#10 +
+    'This is an unsigned research preview. Generated facial details are estimates and cannot verify identity.');
+  ProgressPage := CreateOutputProgressPage('Installing Forensic DGP', 'Preparing your local workspace');
+  ProgressPage.ProgressBar.Top := ScaleY(92);
+  ProgressPage.ProgressBar.Visible := True;
+  StepLabel := TNewStaticText.Create(WizardForm);
+  StepLabel.Parent := ProgressPage.Surface;
+  StepLabel.SetBounds(0, ScaleY(112), ProgressPage.SurfaceWidth, ScaleY(20));
+  StepLabel.Caption := 'Step 1 of 5';
+  TransferLabel := TNewStaticText.Create(WizardForm);
+  TransferLabel.Parent := ProgressPage.Surface;
+  TransferLabel.SetBounds(0, ScaleY(136), ProgressPage.SurfaceWidth, ScaleY(44));
+  TransferLabel.WordWrap := True;
+  DetailsButton := TNewButton.Create(WizardForm);
+  DetailsButton.Parent := ProgressPage.Surface;
+  DetailsButton.SetBounds(0, ScaleY(182), ScaleX(110), ScaleY(26));
+  DetailsButton.Caption := 'Show details';
+  DetailsButton.OnClick := @ToggleDetails;
+  DetailsMemo := TNewMemo.Create(WizardForm);
+  DetailsMemo.Parent := ProgressPage.Surface;
+  DetailsMemo.SetBounds(0, ScaleY(216), ProgressPage.SurfaceWidth, ScaleY(60));
+  DetailsMemo.ReadOnly := True;
+  DetailsMemo.ScrollBars := ssVertical;
+  DetailsMemo.Visible := False;
+  WizardForm.SelectDirLabel.Caption := 'Choose a folder for the full app, Python, models and saved records.';
+  WizardForm.FinishedLabel.Caption := 'Forensic DGP is ready. Open it from the Start Menu or your Desktop shortcut.' + #13#10#13#10 +
+    'Your application data stays in the folder you selected. Uninstalling the Windows launcher keeps that data.';
+end;
+
+function NextButtonClick(CurPageID: Integer): Boolean;
+begin
+  Result := True;
+  if (CurPageID = wpSelectDir) and (PreviousInstallRoot <> '') and
+     (CompareText(RemoveBackslashUnlessRoot(WizardDirValue), PreviousInstallRoot) <> 0) then begin
+    MsgBox('To choose a different folder, uninstall the Windows launcher first. Your existing models and saved records are retained. Setup does not move or delete the previous installation.', mbInformation, MB_OK);
+    Result := False;
+  end;
+end;
+
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo, MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+begin
+  Result := 'Full application folder:' + NewLine + Space + WizardDirValue + NewLine + NewLine +
+    'Includes:' + NewLine + Space + 'Application, private Python, libraries and verified models' + NewLine +
+    Space + 'Saved records: ' + AddBackslash(WizardDirValue) + 'runtime\data' + NewLine + NewLine +
+    'First setup requires internet access. Existing saved records are preserved.' + NewLine + NewLine + MemoTasksInfo;
 end;
 
 procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
@@ -170,7 +290,7 @@ function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   ResultCode: Integer;
   Marker: AnsiString;
-  Params, FixedDir: String;
+  Params: String;
 begin
   Result := '';
   if BackendReady then Exit;
@@ -178,20 +298,10 @@ begin
     Result := 'The launcher location contains a link or an unexpected file. Existing files were preserved.';
     Exit;
   end;
-  FixedDir := ExpandConstant('{localappdata}\Programs\Forensic DGP');
-  if CompareText(RemoveBackslashUnlessRoot(ExpandConstant('{app}')), FixedDir) <> 0 then begin
-    Result := 'Use the fixed per-user application location.';
+  if (PreviousInstallRoot <> '') and
+     (CompareText(RemoveBackslashUnlessRoot(ExpandConstant('{app}')), PreviousInstallRoot) <> 0) then begin
+    Result := 'To choose a different folder, uninstall the Windows launcher first. Saved records remain in the previous location.';
     Exit;
-  end;
-  if DirExists(FixedDir) then begin
-    if not LoadStringFromFile(FixedDir + '\shell-owner.json', Marker) then begin
-      Result := 'An existing unrecognized launcher directory was preserved.';
-      Exit;
-    end;
-    if Trim(String(Marker)) <> '{"schema":1,"application":"Forensic DGP"}' then begin
-      Result := 'The launcher ownership marker differs. Existing files were preserved.';
-      Exit;
-    end;
   end;
   ExtractTemporaryFile('gui_setup.ps1');
   ExtractTemporaryFile('distribution.ps1');
@@ -201,21 +311,26 @@ begin
   ExtractTemporaryFile('ForensicDGP.exe');
   ExtractTemporaryFile('uninstall.ps1');
   ExtractTemporaryFile('release.json');
+  ExtractTemporaryFile('install_location.ps1');
   EventsFile := ExpandConstant('{tmp}\setup-events.jsonl');
   CancelFile := ExpandConstant('{tmp}\setup-cancel');
   SetupLog := ExpandConstant('{localappdata}\DGP-setup-{#ReleaseCommit}.log');
   LastStage := 'source verification';
+  StepNumber := 1;
   CancelRequested := False;
   DeleteFile(CancelFile);
   SaveStringToFile(EventsFile, '', False);
   Params := '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ' + Q(ExpandConstant('{tmp}\gui_setup.ps1')) +
-    ' -Stage ' + Q(ExpandConstant('{tmp}')) + ' -EventsFile ' + Q(EventsFile) +
+    ' -Stage ' + Q(ExpandConstant('{tmp}')) + ' -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -EventsFile ' + Q(EventsFile) +
     ' -CancelFile ' + Q(CancelFile) + ' -LogPath ' + Q(SetupLog) +
     ' -ExpectedManifestHash {#ReleaseManifestSHA256}';
   Preparing := True;
   ProgressPage.Show;
   try
     WizardForm.CancelButton.Enabled := True;
+    ProgressPage.SetProgress(0, 100);
+    ProgressPage.ProgressBar.Style := npbstMarquee;
+    ProgressPage.ProgressBar.Visible := True;
     if not ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_SHOWNORMAL,
         ewWaitUntilTerminated, ResultCode, @SetupOutput) then begin
       Result := 'Could not run application setup. Log: ' + SetupLog;
@@ -247,15 +362,18 @@ var
 begin
   Result := False;
   if not OrdinaryShellPath then Exit;
-  if CompareText(ExpandConstant('{app}'), ExpandConstant('{localappdata}\Programs\Forensic DGP')) <> 0 then Exit;
+  if (RegisteredInstallRoot <> '') and (CompareText(RegisteredInstallRoot, RemoveBackslashUnlessRoot(ExpandConstant('{app}'))) <> 0) then begin
+    MsgBox('A different Forensic DGP location is currently registered. This older uninstaller left all files unchanged.', mbInformation, MB_OK);
+    Exit;
+  end;
   if GetSHA256OfFile(ExpandConstant('{app}\uninstall.ps1')) <> '{#UninstallSHA256}' then begin
     MsgBox('The uninstall helper differs. Files were preserved.', mbError, MB_OK);
     Exit;
   end;
   CheckOutput := '';
   if not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ' +
-      Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Check -ManagedRoot ' +
-      Q(ExpandConstant('{localappdata}\DGP\app')), ExpandConstant('{app}'), SW_SHOWNORMAL,
+      Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Check -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -ManagedRoot ' +
+      Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_SHOWNORMAL,
       ewWaitUntilTerminated, Code, @UninstallLog) or (Code <> 0) then begin
     MsgBox('Close Forensic DGP or its installer before uninstalling. Shared files were preserved.', mbError, MB_OK);
     Exit;
@@ -293,5 +411,5 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if (CurUninstallStep = usDone) and not UninstallSilent then
     MsgBox('Windows launcher removed. Shared application files, models and saved records remain in ' +
-      ExpandConstant('{localappdata}\DGP\app') + '.', mbInformation, MB_OK);
+      ExpandConstant('{app}\runtime') + '.', mbInformation, MB_OK);
 end;

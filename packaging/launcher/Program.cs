@@ -35,8 +35,10 @@ internal static class Program
             {
                 if (args.Length != 0) throw new InvalidOperationException("This launcher accepts no command-line options.");
                 string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string root = Path.Combine(local, @"DGP\app");
-                VerifyManagedRoot(root);
+                InstallLocation location = InstallLocation.Resolve(Path.GetDirectoryName(Application.ExecutablePath), local);
+                string root = location.ManagedRoot;
+                Environment.SetEnvironmentVariable("DGP_INSTALL_ROOT", location.InstallRoot);
+                VerifyManagedRoot(root, location.InstallRoot);
                 string helper = VerifyHelper(root);
                 string edge = FindEdge();
                 string logs = Path.Combine(root, @"data\desktop\logs");
@@ -136,14 +138,20 @@ internal static class Program
         }
     }
 
-    private static void VerifyManagedRoot(string root)
+    private static void VerifyManagedRoot(string root, string installRoot)
     {
         CheckOrdinary(root, true);
         string markerPath = Path.Combine(root, "owner.json");
         CheckOrdinary(markerPath, false);
         Dictionary<string, object> marker = ReadJson(markerPath);
-        if (marker.Count != 2 || Convert.ToString(marker["repository"]) != "janusinss/forensic-dgp" || Convert.ToInt32(marker["schema_version"]) != 1)
+        int schema = installRoot == null ? 1 : 2;
+        if (marker.Count != (schema == 1 ? 2 : 4) || !marker.ContainsKey("repository") || !marker.ContainsKey("schema_version")
+            || !(marker["schema_version"] is int) || (int)marker["schema_version"] != schema
+            || Convert.ToString(marker["repository"]) != "janusinss/forensic-dgp")
             throw new InvalidOperationException("The managed installation ownership marker differs. Run the setup executable.");
+        if (schema == 2 && (!marker.ContainsKey("layout") || !marker.ContainsKey("install_root")
+            || Convert.ToString(marker["layout"]) != "desktop-runtime-v1" || Convert.ToString(marker["install_root"]) != installRoot))
+            throw new InvalidOperationException("The managed installation marker is not bound to this application folder.");
     }
 
     private static string VerifyHelper(string root)
@@ -275,6 +283,101 @@ internal static class Program
     }
 }
 
+internal sealed class InstallLocation
+{
+    public readonly string InstallRoot;
+    public readonly string ManagedRoot;
+    private InstallLocation(string installRoot, string managedRoot) { InstallRoot = installRoot; ManagedRoot = managedRoot; }
+    private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
+
+    public static InstallLocation Resolve(string executableDirectory, string localAppData)
+    {
+        string shell = Canonical(executableDirectory);
+        string config = Path.Combine(shell, "install-location.json");
+        if (!File.Exists(config))
+        {
+            string legacyShell = Canonical(Path.Combine(localAppData, @"Programs\Forensic DGP"));
+            if (!String.Equals(shell, legacyShell, StringComparison.OrdinalIgnoreCase))
+                throw new IOException("The installation location record is missing. Run setup for this application folder.");
+            Ordinary(shell, true);
+            return new InstallLocation(null, Canonical(Path.Combine(localAppData, @"DGP\app")));
+        }
+        ValidateShell(shell);
+        Dictionary<string, object> marker = ReadObject(Path.Combine(shell, "shell-owner.json"));
+        if (marker.Count != 2 || !Integer(marker, "schema", 1) || !Text(marker, "application", "Forensic DGP"))
+            throw new IOException("The desktop shell ownership marker differs.");
+        Dictionary<string, object> value = ReadObject(config);
+        string root = Path.Combine(shell, "runtime");
+        if (value.Count != 3 || !Integer(value, "schema", 1) || !Text(value, "install_root", shell) || !Text(value, "managed_root", root))
+            throw new IOException("The installation record is not bound to this executable's folder.");
+        return new InstallLocation(shell, root);
+    }
+
+    private static string Canonical(string value)
+    {
+        if (String.IsNullOrEmpty(value) || !System.Text.RegularExpressions.Regex.IsMatch(value, @"^[A-Za-z]:\\")
+            || value.IndexOf('/') >= 0 || value.Substring(2).IndexOf(':') >= 0)
+            throw new IOException("Choose an absolute local installation folder.");
+        return Path.GetFullPath(value).TrimEnd('\\');
+    }
+    private static bool Integer(Dictionary<string, object> value, string key, int expected)
+    { return value.ContainsKey(key) && value[key] is int && (int)value[key] == expected; }
+    private static bool Text(Dictionary<string, object> value, string key, string expected)
+    { return value.ContainsKey(key) && value[key] is string && (string)value[key] == expected; }
+    private static Dictionary<string, object> ReadObject(string path)
+    {
+        Ordinary(path, false);
+        if (new FileInfo(path).Length > 8192) throw new IOException("Installation metadata is too large.");
+        Dictionary<string, object> value = Json.DeserializeObject(File.ReadAllText(path)) as Dictionary<string, object>;
+        if (value == null) throw new IOException("Installation metadata must be an object.");
+        return value;
+    }
+    private static void Ordinary(string path, bool directory)
+    {
+        bool first = true;
+        for (string cursor = Path.GetFullPath(path); ; )
+        {
+            FileAttributes attributes = File.GetAttributes(cursor);
+            if ((attributes & FileAttributes.ReparsePoint) != 0 || (first && (((attributes & FileAttributes.Directory) != 0) != directory)))
+                throw new IOException("Installation paths must be ordinary files and folders without links.");
+            first = false;
+            string parent = Path.GetDirectoryName(cursor);
+            if (String.IsNullOrEmpty(parent) || parent == cursor) break;
+            cursor = parent;
+        }
+    }
+    private static void ValidateShell(string shell)
+    {
+        if (shell.Length > 120) throw new IOException("The application folder exceeds the supported 120-character limit.");
+        string driveRoot = Path.GetPathRoot(shell);
+        DriveInfo drive = new DriveInfo(driveRoot);
+        if (shell == driveRoot.TrimEnd('\\') || drive.DriveType != DriveType.Fixed || !drive.IsReady)
+            throw new IOException("The application needs a dedicated local fixed-drive folder.");
+        foreach (string part in shell.Substring(3).Split('\\'))
+            if (part.Length == 0 || part == "." || part == ".." || part.EndsWith(".") || part.EndsWith(" ")
+                || part.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0
+                || System.Text.RegularExpressions.Regex.IsMatch(part, @"^(?i:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)"))
+                throw new IOException("Installation path contains an ambiguous directory name.");
+        string[] protectedRoots = { Environment.GetEnvironmentVariable("SystemRoot"), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) };
+        foreach (string entry in protectedRoots)
+        {
+            if (String.IsNullOrEmpty(entry)) continue;
+            string root = Canonical(entry);
+            if (String.Equals(shell, root, StringComparison.OrdinalIgnoreCase) || shell.StartsWith(root + "\\", StringComparison.OrdinalIgnoreCase))
+                throw new IOException("Windows and shared program folders cannot be the installation destination.");
+        }
+        string user = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string[] bases = { user, Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), Environment.GetFolderPath(Environment.SpecialFolder.MyMusic),
+            Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), String.IsNullOrEmpty(user) ? null : Path.Combine(user, "Downloads") };
+        foreach (string entry in bases)
+            if (!String.IsNullOrEmpty(entry) && String.Equals(shell, Canonical(entry), StringComparison.OrdinalIgnoreCase))
+                throw new IOException("Choose a dedicated child folder rather than a personal directory root.");
+        Ordinary(shell, true);
+    }
+}
 internal static class Native
 {
     [StructLayout(LayoutKind.Sequential)] private struct BasicLimit { public long PerProcessUserTimeLimit, PerJobUserTimeLimit; public uint LimitFlags; public UIntPtr MinimumWorkingSetSize, MaximumWorkingSetSize; public uint ActiveProcessLimit; public UIntPtr Affinity; public uint PriorityClass, SchedulingClass; }

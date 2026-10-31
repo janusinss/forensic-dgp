@@ -71,12 +71,15 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertIn('(CurStep = ssInstall) and not OrdinaryShellPath', final_write)
         self.assertIn('RaiseException(', final_write)
 
-    def test_fixed_user_path_and_trusted_uninstall_helper(self):
+    def test_selected_user_path_and_trusted_uninstall_helper(self):
         self.assertIn('PrivilegesRequired=lowest', self.code)
-        self.assertIn('DisableDirPage=yes', self.code)
+        self.assertIn('DisableDirPage=no', self.code)
+        self.assertIn('UsePreviousAppDir=yes', self.code)
         prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
-        self.assertIn("FixedDir := ExpandConstant('{localappdata}\\Programs\\Forensic DGP')", prepare)
-        self.assertIn('CompareText(RemoveBackslashUnlessRoot(ExpandConstant(\'{app}\')), FixedDir)', prepare)
+        self.assertIn("' -InstallRoot ' + Q(ExpandConstant('{app}'))", prepare)
+        self.assertIn("ExtractTemporaryFile('install_location.ps1')", prepare)
+        self.assertIn("PreviousInstallRoot := RegisteredInstallRoot", self.code)
+        self.assertIn("PreviousInstallRoot) <> 0", prepare)
         uninstall = self.section('function InitializeUninstall', 'procedure CurStepChanged')
         self.assertIn("GetSHA256OfFile(ExpandConstant('{app}\\uninstall.ps1'))", uninstall)
         self.assertLess(uninstall.index('GetSHA256OfFile'), uninstall.index('ExecAndLogOutput'))
@@ -91,6 +94,7 @@ class GuiSetupWrapper(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix='wizard-', dir=BASE / 'scratch')
         self.addCleanup(self.temp.cleanup)
         self.stage = Path(self.temp.name)
+        self.install_root = self.stage / 'Selected App'
         self.called = self.stage / 'backend-called.json'
         self.events = self.stage / 'events.jsonl'
         self.cancel = self.stage / 'cancel-request'
@@ -108,7 +112,8 @@ class GuiSetupWrapper(unittest.TestCase):
 )
 $record = @{action=$Action;root=$ManagedRoot;commit=$Commit;bundle=$BundlePath;manifest=$BundleManifest;
             events=$env:DGP_SETUP_EVENTS;cancel=$env:DGP_SETUP_CANCEL_FILE;
-            no_pause=$env:IMPLEMENTATION_NO_PAUSE;bootstrap_present=(Test-Path Env:\DGP_BOOTSTRAP_FILE)}
+            no_pause=$env:IMPLEMENTATION_NO_PAUSE;bootstrap_present=(Test-Path Env:\DGP_BOOTSTRAP_FILE);
+            install_root=$env:DGP_INSTALL_ROOT;config_present_at_backend=(Test-Path -LiteralPath (Join-Path $env:DGP_INSTALL_ROOT 'install-location.json'))}
 [IO.File]::WriteAllText($env:DGP_TEST_CALLED,($record|ConvertTo-Json -Compress))
 Write-Output 'inert backend output'
 if ($env:DGP_TEST_NATIVE_STDERR -eq '1') { & $env:ComSpec /d /c 'echo harmless native diagnostic 1>&2' }
@@ -119,6 +124,15 @@ if ($env:DGP_TEST_LATE_CANCEL -eq '1') {
 if ($env:DGP_TEST_FAIL -eq '1') { exit 17 }
 exit 0
 '''
+        # Trusted inert helper maps the selected folder to its private runtime.
+        # It never invokes the production location validator or touches user paths.
+        location_script = r'''param([string]$Action,[Parameter(Mandatory=$true)][string]$InstallRoot)
+if ($Action -notin @('Prepare','Validate')) { throw 'Unexpected location action' }
+if ($Action -eq 'Validate' -and $env:DGP_TEST_LOCATION_CHANGE -eq '1') { throw 'Location changed at final validation' }
+[IO.Directory]::CreateDirectory($InstallRoot) | Out-Null
+@{schema=1;install_root=$InstallRoot;managed_root=(Join-Path $InstallRoot 'runtime')} | ConvertTo-Json -Compress | Write-Output
+exit 0
+'''
         self.inputs = {
             'app-source.zip': b'inert zip fixture; never extracted',
             'app-source.json': b'{"inert":true}',
@@ -126,6 +140,7 @@ exit 0
             'uninstall.ps1': b'# inert fixture',
             'gui_setup.ps1': WRAPPER.read_bytes(),
             'ForensicDGP.exe': b'inert executable; never started',
+            'install_location.ps1': location_script.encode('utf8'),
         }
         for name, value in self.inputs.items():
             (self.stage / name).write_bytes(value)
@@ -141,6 +156,7 @@ exit 0
     def invoke(self, env=None, expected=None):
         return subprocess.run([str(PS), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
                                '-File', str(self.stage / 'gui_setup.ps1'), '-Stage', str(self.stage),
+                               '-InstallRoot', str(self.install_root),
                                '-EventsFile', str(self.events), '-CancelFile', str(self.cancel),
                                '-LogPath', str(self.log), '-ExpectedManifestHash', expected or self.expected],
                               capture_output=True, text=True, timeout=15, env=env or self.env)
@@ -150,7 +166,8 @@ exit 0
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         called = json.loads(self.called.read_text(encoding='utf8'))
         self.assertEqual(called['action'], 'Install')
-        self.assertEqual(Path(called['root']), self.stage / 'user' / 'DGP' / 'app')
+        self.assertEqual(Path(called['root']), self.install_root / 'runtime')
+        self.assertEqual(Path(called['install_root']), self.install_root)
         self.assertEqual(called['commit'], COMMIT)
         self.assertEqual(Path(called['bundle']), self.stage / 'app-source.zip')
         self.assertEqual(Path(called['manifest']), self.stage / 'app-source.json')
@@ -162,6 +179,28 @@ exit 0
         # Inno's SetupOutput captures stdout/stderr and owns the persistent log.
         # The wrapper must forward output without PS stream-redirection coercion.
         self.assertNotIn('Tee-Object', (self.stage / 'gui_setup.ps1').read_text(encoding='utf8'))
+
+    def test_bound_configuration_is_written_only_after_backend_success(self):
+        result = self.invoke()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        configuration = json.loads((self.install_root / 'install-location.json').read_text(encoding='utf8'))
+        self.assertEqual(configuration, {'schema': 1, 'install_root': str(self.install_root),
+                                        'managed_root': str(self.install_root / 'runtime')})
+        called = json.loads(self.called.read_text(encoding='utf8'))
+        self.assertFalse(called['config_present_at_backend'])
+
+    def test_failed_backend_does_not_publish_location_configuration(self):
+        result = self.invoke(env=dict(self.env, DGP_TEST_FAIL='1'))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(self.called.is_file(), result.stdout + result.stderr)
+        self.assertFalse((self.install_root / 'install-location.json').exists())
+
+    def test_changed_location_after_backend_does_not_publish_configuration(self):
+        result = self.invoke(env=dict(self.env, DGP_TEST_LOCATION_CHANGE='1'))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(self.called.is_file())
+        self.assertFalse((self.install_root / 'install-location.json').exists())
+        self.assertIn('Location changed at final validation', ' '.join((result.stdout + result.stderr).split()))
 
     def test_backend_failure_does_not_become_wrapper_success(self):
         result = self.invoke(env=dict(self.env, DGP_TEST_FAIL='1'))

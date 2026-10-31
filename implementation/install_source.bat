@@ -15,6 +15,7 @@ echo.
 
 set "SETUP_PYTHON="
 set "SETUP_PYTHON_ARGS="
+if defined DGP_INSTALL_ROOT goto custom_python
 rem Reuse a validated private runtime before probing system installations.
 if defined LOCALAPPDATA if exist "%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe" (
   "%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe" -I -c "import struct,sys; sys.exit(0 if sys.version_info[:2] == (3,13) and struct.calcsize('P') == 8 else 1)" >nul 2>&1
@@ -56,6 +57,13 @@ if errorlevel 1 (
   goto failed
 )
 set "SETUP_PYTHON=%LOCALAPPDATA%\DGP\python-3.13.9-amd64\python.exe"
+goto install_environment
+
+:custom_python
+if not defined DGP_MANAGED_ROOT goto failed
+"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "%~dp0bootstrap_python.ps1" -ManagedRoot "%DGP_MANAGED_ROOT%" -ReuseExisting
+if errorlevel 1 goto failed
+set "SETUP_PYTHON=%DGP_MANAGED_ROOT%\python\python-3.13.9-amd64\python.exe"
 goto install_environment
 
 :install_environment

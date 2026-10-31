@@ -140,7 +140,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     display = f"{label} ({destination.name})" if label else destination.name
     if destination.exists() or destination.is_symlink():
         if verify_asset(destination, asset):
-            event("models", "verified", f"Verified {display}")
+            event("download:" + destination.name, "complete", destination.name, current=asset["size"], total=asset["size"])
             print(f"Verified {display}", flush=True)
             return destination
         raise ModelSetupError(
@@ -154,7 +154,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     next_progress = 0
     request = urllib.request.Request(asset["url"], headers={"User-Agent": "Forensic-DGP-Implementation/1"})
     opener = urllib.request.build_opener(_HTTPSRedirectHandler())
-    event("models", "running", f"Downloading {display}", current=0, total=asset["size"])
+    event("download:" + destination.name, "downloading", destination.name, current=0, total=asset["size"])
     print(f"Downloading {display} ({asset['size'] / 1048576:.1f} MiB)...", flush=True)
     try:
         with opener.open(request, timeout=30) as response, partial.open("xb") as stream:
@@ -168,7 +168,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
                     raise ModelSetupError(f"Download exceeded the expected size for {destination.name}.")
                 digest.update(chunk)
                 stream.write(chunk)
-                event("models", "progress", f"Downloading {display}", current=downloaded, total=asset["size"])
+                event("download:" + destination.name, "downloading", destination.name, current=downloaded, total=asset["size"])
                 if downloaded >= next_progress:
                     print(f"  {100 * downloaded / asset['size']:.0f}%", flush=True)
                     next_progress = downloaded + 32 * CHUNK_SIZE
@@ -178,7 +178,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
             raise ModelSetupError(f"Download failed its complete size/SHA-256 check for {destination.name}.")
         check_cancel()
         _publish_without_overwrite(partial, destination)
-        event("models", "verified", f"Verified {display}", current=downloaded, total=asset["size"])
+        event("download:" + destination.name, "complete", destination.name, current=downloaded, total=asset["size"])
         print(f"Verified and saved {display}", flush=True)
         return destination
     except urllib.error.HTTPError as exc:

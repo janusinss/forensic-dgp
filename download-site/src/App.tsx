@@ -82,7 +82,7 @@ export default function App() {
                 <span className="step-number" aria-hidden="true">02</span>
                 <div>
                   <h3>Install</h3>
-                  <p>Open the setup file and follow the instructions.</p>
+                  <p>Choose a folder for the app, models and saved records.</p>
                 </div>
               </li>
               <li>
@@ -93,7 +93,7 @@ export default function App() {
                 </div>
               </li>
             </ol>
-            <p className="setup-note">First setup needs internet access for Python packages and approximately 720 MiB of models. Microsoft Edge is required to open the desktop window.</p>
+            <p className="setup-note">First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.</p>
           </section>
 
           <aside className="research-note" aria-label="Experimental use">
