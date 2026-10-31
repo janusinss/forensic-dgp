@@ -39,14 +39,17 @@ function Download-Python([string]$url,[string]$path) {
         $output = [IO.File]::Open($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
         try {
             $buffer = New-Object byte[] 1048576
-            $downloaded = [long]0; $timer = [Diagnostics.Stopwatch]::StartNew()
+            $downloaded = [long]0; $reported = [long]0; $timer = [Diagnostics.Stopwatch]::StartNew()
             Python-Progress 'downloading' 'Downloading private Python runtime' 0 $expectedBytes
             while (($count = $input.Read($buffer,0,$buffer.Length)) -gt 0) {
                 Python-Cancel
                 $downloaded += $count
                 if ($downloaded -gt $expectedBytes -or $timer.Elapsed.TotalSeconds -gt 900) { throw 'Python download exceeded its size or time limit.' }
                 $output.Write($buffer,0,$count)
-                Python-Progress 'downloading' 'Downloading private Python runtime' $downloaded $expectedBytes
+                if (($downloaded - $reported) -ge 1MB -or $downloaded -eq $expectedBytes) {
+                    Python-Progress 'downloading' 'Downloading private Python runtime' $downloaded $expectedBytes
+                    $reported = $downloaded
+                }
             }
             $output.Flush()
         } finally { $output.Dispose(); $input.Dispose() }
