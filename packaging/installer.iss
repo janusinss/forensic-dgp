@@ -61,7 +61,7 @@ Filename: "{app}\ForensicDGP.exe"; Description: "Open Forensic DGP"; Flags: nowa
 var
   Preparing, CancelRequested, BackendReady: Boolean;
   ProgressPage: TOutputProgressWizardPage;
-  EventsFile, CancelFile, SetupLog, LastStage: String;
+  EventsFile, CancelFile, SetupLog, LastStage, ActiveDownloadStage: String;
   UninstallMutex: THandle;
   RequirementsPage: TOutputMsgWizardPage;
   StepLabel, TransferLabel: TNewStaticText;
@@ -175,7 +175,16 @@ begin
     if (LastStage = 'activation') or (LastStage = 'complete') then WizardForm.CancelButton.Enabled := False;
     Current := StrToIntDef(JsonField(Event, 'current'), -1);
     Total := StrToIntDef(JsonField(Event, 'total'), -1);
+    { Keep one measured transfer visible while parallel tasks continue in details. }
+    if (Status = 'error') or (Status = 'cancelled') or (Stage = 'error') or
+       (Stage = 'activation') or (Stage = 'complete') then ActiveDownloadStage := ''
+    else if ActiveDownloadStage <> '' then begin
+      if Stage <> ActiveDownloadStage then Exit;
+      { Completion or verification of the visible file releases the display. }
+      if Status <> 'downloading' then ActiveDownloadStage := '';
+    end;
     if (Total > 0) and (Current >= 0) and (Current <= Total) and (Status = 'downloading') then begin
+      ActiveDownloadStage := Stage;
       Percent := Round((Current * 100.0) / Total);
       ProgressPage.ProgressBar.Style := npbstNormal;
       ProgressPage.SetProgress(Percent, 100);
@@ -316,6 +325,7 @@ begin
   CancelFile := ExpandConstant('{tmp}\setup-cancel');
   SetupLog := ExpandConstant('{localappdata}\DGP-setup-{#ReleaseCommit}.log');
   LastStage := 'source verification';
+  ActiveDownloadStage := '';
   StepNumber := 1;
   CancelRequested := False;
   DeleteFile(CancelFile);
