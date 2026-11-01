@@ -1,3 +1,37 @@
+# Current 0.2.0 offline installer scope
+
+Updated 2026-11-01, Asia/Manila. Later user instructions approved a single offline
+EXE, fresh/update/repair/move flows, verification on the user's own PC, and a
+public downloads-only GitHub release linked from the existing Cloudflare Pages
+site. This supersedes the older online-only/local-preview scope below.
+
+The tested candidate is built from source
+03d6fdaa5caa7817eff8aa721e0d784593bf0da2. An earlier fresh offline candidate
+completed installation; the tested candidate passed an actual in-place update and
+source/package repair with records preserved. Application capture, actual
+restoration, export and scoped shutdown checks passed. Native relocation stopped
+safely before switching registration because of a source-file counting defect.
+The helper correction has regression coverage; a rebuilt artifact and repeat
+relocation remain pending. A matching 03d6fda asset exists only in a draft release
+and must not be published as the corrected accepted artifact.
+
+Use [BUILD.md](BUILD.md) for the current build/storage/maintenance contract and
+[VERIFICATION.md](VERIFICATION.md) for artifact identities, exact results and open
+checks. This is PC verification, not a clean Windows VM or general hardware
+qualification. Native UI/antivirus observations remain limited; the unsigned
+preview provides no universal warning-free execution guarantee.
+
+No VM setup, download mirrors, automatic background updater, or signing-service
+purchase is included. No IMPLEMENTATION merge or push has been performed.
+
+---
+
+# Historical 0.1.0 implementation plan
+
+The original proposal follows unchanged for provenance. Its online-only,
+local-preview and authorization/deferred-work statements applied at that time;
+they do not override the later approved 0.2.0 scope above.
+
 # Forensic DGP: online Windows installer plan
 
 Status: local preview implemented on the isolated feature branch. Phase 5 release gates remain open; see VERIFICATION.md. No merge or publication occurred.

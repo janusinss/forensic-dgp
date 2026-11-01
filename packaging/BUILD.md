@@ -1,5 +1,9 @@
 # Build Windows installer releases
 
+Current implementation target: **0.2.0 offline candidate**. Local-PC verification
+is in progress; the public download remains 0.1.1 until acceptance passes. See
+[VERIFICATION.md](VERIFICATION.md) for exact candidate identities and results.
+
 The offline release targets Windows x64 and contains private CPython, CPU-only
 application packages, an isolated capture environment, and all six admitted
 models. Legacy online builds remain supported for developer workflows.
@@ -8,7 +12,7 @@ models. Legacy online builds remain supported for developer workflows.
 
 Use Windows x64, Git, Python 3.13 x64, the Windows Framework C# compiler, and the
 verified Inno Setup 7.1.1 compiler. End users need none of these build tools.
-The desktop window requires Microsoft Edge and the supported .NET Framework.
+The desktop window requires Microsoft Edge and Microsoft .NET Framework 4.8 or newer.
 
 The compiler is pinned to the official innosetup-7.1.1-x64.exe release with
 SHA-256 8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0.
@@ -39,8 +43,9 @@ python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --ver
 
 Output: scratch/dist/ForensicDGP_Setup.exe and release.json. The release records
 source ancestry, setup-input hashes, the offline manifest fingerprint, exact
-artifact bytes and SHA-256. Offline packaging uses ZIP/1 with non-solid files to reduce extraction time and
-permit random access to setup helpers. The single EXE must remain below 2 GiB. Omit
+artifact bytes and SHA-256. Offline packaging uses ZIP/1 with non-solid files to
+reduce extraction time and permit random access to setup helpers. The single EXE
+must remain below 2 GiB. Omit
 --offline-payload only when deliberately building the legacy online variant.
 
 ## Offline installation contract
@@ -73,6 +78,8 @@ files. A failed candidate does not replace the active application pointer.
 Cancellation stops at a safe operation boundary; details and logs remain visible.
 Capture imports are verified after bulk package/model writes finish. Cold setup
 allows 120 seconds; normal installed health probes retain a 30-second bound.
+Reused capture environments are checked against the committed full package lock;
+installation checks must not depend on a temporary payload surviving afterward.
 Measured model-copy progress is throttled without delaying per-block cancellation.
 
 Relocation stages records and verified models in the new folder, recreates
@@ -103,3 +110,7 @@ offline EXEs are GitHub Release assets in janusinss/forensic-dgp-downloads; the
 Cloudflare Pages site publishes only sanitized metadata/checksums and a fixed
 versioned GitHub link. Website preparation streams the EXE hash rather than
 loading the large file into memory. Never upload research records or credentials.
+
+Download mirrors and automatic background updates are not included. The source
+repository and developer batch workflow remain separate from the public downloads
+repository. Old release gates in VERIFICATION.md are labeled historical.

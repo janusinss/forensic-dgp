@@ -74,13 +74,14 @@ class InstallStateTests(unittest.TestCase):
         record(runtime/'current.json',{'schema':1,'commit':commit})
         version_dir=runtime/'versions'/commit; version_dir.mkdir(parents=True,exist_ok=True)
         (version_dir/'app.txt').write_bytes(b'verified source fixture')
+        (version_dir/'helper.txt').write_bytes(b'second verified source file')
         private=runtime/'python/python-3.13.9-amd64'; private.mkdir(parents=True,exist_ok=True)
         shutil.copyfile(self.probe,private/'python.exe')
         config_dir=runtime/'data/installations'; config_dir.mkdir(parents=True,exist_ok=True)
         record(config_dir/(commit+'.json'),{'schema_version':1,'checkout_root':str(version_dir),
              'environment_root':str(runtime/'environments/fixture'),'python':str(runtime/'environments/fixture/Scripts/python.exe')})
         receipts=runtime/'receipts'; receipts.mkdir(exist_ok=True)
-        record(receipts/(commit+'.json'),{'schema':1,'commit':commit,'files':{'app.txt':sha(b'verified source fixture')}})
+        record(receipts/(commit+'.json'),{'schema':1,'commit':commit,'files':{'app.txt':sha(b'verified source fixture'),'helper.txt':sha(b'second verified source file')}})
 
     def saved(self):
         path=self.old/'runtime/data/scratch/capture_requests/evidence.json'
@@ -107,6 +108,21 @@ class InstallStateTests(unittest.TestCase):
         self.assertEqual(self.result(root=self.old)['mode'],'update')
         (self.old/'runtime/versions'/A/'app.txt').write_bytes(b'corrupt')
         self.assertEqual(self.result(root=self.old)['mode'],'repair')
+
+    def test_multi_file_source_receipt_is_healthy_without_count_wrapping(self):
+        self.install(self.old,'0.2.0',B)
+        data=self.result(root=self.old)
+        self.assertEqual(data['mode'],'current')
+        self.assertTrue(data['healthy'])
+
+    def test_unexpected_extra_source_file_still_blocks_health(self):
+        self.install(self.old,'0.2.0',B)
+        extra=self.old/'runtime/versions'/B/'unexpected.txt'
+        extra.write_bytes(b'unrecognized source bytes')
+        data=self.result(root=self.old)
+        self.assertEqual(data['mode'],'repair')
+        self.assertIn('Unexpected installed source file',data['reason'])
+        self.assertEqual(extra.read_bytes(),b'unrecognized source bytes')
 
     def test_tampered_launcher_never_claims_request_close_is_verified(self):
         self.install(self.old,'0.2.0',B)

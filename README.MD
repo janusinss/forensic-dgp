@@ -10,20 +10,31 @@ admitted models. It adds fresh/update/repair/move discovery, safe environment
 replacement and verified relocation records. See [build instructions](packaging/BUILD.md).
 The public download remains 0.1.1 until the new candidate passes local-PC checks.
 
-This release is tested on the user's own PC; no clean-Windows VM or general
-hardware qualification is claimed. Antivirus stays enabled. Signing remains
+Verification uses the user's own PC and dedicated test folders. An earlier
+0.2.0 candidate completed a fresh installation; the tested candidate passed an
+in-place update while reusing its verified environment and preserving a saved
+record. Source/package repair also passed with restored source bytes, a new
+verified environment generation and preserved records. Capture, real restoration,
+review export and scoped shutdown checks passed. Native relocation stopped safely
+before switching registration because of a source-file counting defect; the helper
+fix has regression coverage, and a corrected installer/retest remains pending.
+The tested candidate has not been accepted or published. No clean-Windows
+VM or general hardware qualification is claimed. Antivirus stays enabled. Signing remains
 outside the free preview and an unsigned release can still receive Windows warnings.
 
-## Desktop installer preview
+## Previous public desktop installer: 0.1.1
 
-The Windows setup EXE has a public [download page](https://forensic-dgp.pages.dev). Version **0.1.1 with selectable full application folders is published**. See [installer verification](packaging/VERIFICATION.md) for its exact artifact identity and test boundaries.
+The Windows setup EXE has a public [download page](https://forensic-dgp.pages.dev).
+The following behavior describes **the previous 0.1.1 online installer**, which
+remains the public download during 0.2.0 verification. See [installer verification](packaging/VERIFICATION.md) for its exact artifact identity and test boundaries.
 
 The 0.1.1 setup flow selects a dedicated local fixed-drive folder of at most 120 characters. That folder contains the desktop launcher plus `runtime` for private Python, application/capture dependencies, package caches, verified models and saved records. First setup requires Windows 10/11 x64, Microsoft Edge, internet access and at least 4 GB of free disk space. It does not require administrator access or preinstalled Python. Known-size downloads show measured progress; package setup and verification show activity when a total is unknown.
 
-Updates verify and reuse valid components in the same location. To select another folder, uninstall the Windows launcher first; the previous runtime, saved evidence and ownership records remain. Setup creates the new installation without automatically migrating or deleting the old data. Uninstall retains `runtime`, `install-location.json` and `shell-owner.json` for safe verification on reinstall.
+In 0.1.1, updates verify and reuse valid components in the same location. To
+select another folder in that old version, uninstall the Windows launcher first; the previous runtime, saved evidence and ownership records remain. Setup creates the new installation without automatically migrating or deleting the old data. Uninstall retains `runtime`, `install-location.json` and `shell-owner.json` for safe verification on reinstall.
 
 See [installer build and folder behavior](packaging/BUILD.md) and [verification evidence](packaging/VERIFICATION.md). These desktop changes preserve the existing developer batch workflows below, including their legacy default storage location.
-## Install on Windows
+## Developer batch installation on Windows
 
 1. Download [install.bat](https://raw.githubusercontent.com/janusinss/forensic-dgp/IMPLEMENTATION/install.bat) into an empty folder. Save the actual file, not the GitHub HTML page.
 2. Run `install.bat`. No Git, existing Python, administrator access, or complete repository download is required.
@@ -33,7 +44,7 @@ The installer resolves the latest **IMPLEMENTATION** commit once and downloads t
 
 Requirements: 64-bit Windows, internet access for setup, at least 2.5 GiB available RAM for processing, and sufficient disk space for Python dependencies, approximately 720 MiB of model files, retained app versions and your saved records. A GPU is not required.
 
-## Update and installation behavior
+## Developer batch update and installation behavior
 
 Close the managed app and rerun `install.bat` to install the current published UI, flow and fixes. `start.bat` starts the last successfully installed version without an online update check. The installer cannot retrieve unpublished local edits.
 
@@ -43,7 +54,8 @@ Close the managed app and rerun `install.bat` to install the current published U
 - Verified model files are shared across app versions rather than downloaded for every update. Mismatched models or edited managed source files are refused and preserved for inspection.
 - A shared managed-app lock prevents concurrent setup or updating a running managed app. Setup does not kill processes or occupied ports. Previous versions and failed staging files are retained; no automatic evidence deletion occurs.
 
-Package installation is pinned at the direct-dependency level; transitive dependencies are not a complete hash-locked supply chain. First setup needs the network. Repeated setup may still need it to check the branch or obtain missing packages; launching an already installed app is local.
+The legacy online batch path pins direct dependencies; it is not the complete
+hash-locked offline package path introduced for the 0.2.0 desktop installer. First setup needs the network. Repeated setup may still need it to check the branch or obtain missing packages; launching an already installed app is local.
 
 ## Input and review
 

@@ -83,7 +83,8 @@ function Code-Files([string]$root,[string]$commit) {
     if (!(Test-Path -LiteralPath $path -PathType Leaf) -or (Hash $path) -cne $file.Value) { throw 'Installed source file differs.' }
     $files.Add([pscustomobject]@{path=('runtime\versions\'+$commit+'\'+$name);sha256=$file.Value})
   }
-  if (@(Tree-Files $codeRoot).Count -ne $files.Count) { throw 'Unexpected installed source file.' }
+  $actualSourceFiles=Tree-Files $codeRoot
+  if ($actualSourceFiles.Count -ne $files.Count) { throw 'Unexpected installed source file.' }
   $files.Add([pscustomobject]@{path=('runtime\receipts\'+$commit+'.json');sha256=(Hash $receiptPath)})
   return ,$files.ToArray()
 }

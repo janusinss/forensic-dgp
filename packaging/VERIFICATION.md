@@ -1,7 +1,12 @@
 # Version 0.2.0 candidate verification
 
-Date: 2026-11-01, Asia/Manila. Status: candidate under local-PC verification;
-not yet published. The previous 0.1.1 record below is historical evidence.
+Date: 2026-11-01, Asia/Manila. Status: 0.2.0 candidate under verification on
+this user's PC; not yet published. The tested candidate was built from
+source 03d6fdaa5caa7817eff8aa721e0d784593bf0da2 after the runtime-reuse correction.
+Its actual relocation found a fail-safe counting defect; a corrected candidate
+build is pending. The 03d6fda artifact is not an accepted final release.
+Version 0.1.1 remains the public download until the replacement passes acceptance. All 0.1.x sections
+below are historical evidence and do not define the current offline contract.
 
 ## New acceptance contract
 
@@ -12,15 +17,22 @@ preserved on preparation failure; historical saved records remain byte-exact.
 
 The payload has 1,097,942,917 input bytes and 1,880,644,934 expanded bytes.
 Manifest SHA-256: bf92c65b3ad343f0605325b48dad5c94e80300e4675fd3918c48c86a363fbb3e.
-Final compressed EXE bytes and SHA-256 will be recorded after compilation.
+The successful fresh-install candidate 3dce509830e6ef9900673823ecd82e0242589ed4
+was 1,045,710,387 bytes, SHA-256
+437ee146d5e5af675d51fa9f21beb761c0de00be1b084a81684953aae9563505.
+This identifies the earlier fresh-install candidate, not the subsequently tested artifact.
+The tested 03d6fda offline EXE is 1,045,712,378 bytes, SHA-256
+dc7efb36a1c08a4ceff9bc7123071563482dd138623f300d8680bb780612671f.
+Evidence: scratch/dist-v020-final/release.json.
 
-## Checks completed before candidate compilation
+## Checks completed
 
 - Locked application packages installed and imported from local wheels with
   LongPathsEnabled=0. No Windows registry policy change was made.
 - Patched package pins: Pillow13.0.0, pip26.2.2, uv0.13.4. The isolated verification
-  environment dependency audit reported no known vulnerabilities. This is an
-  advisory-database check, not a complete security verdict.
+  environment dependency audit reported zero known vulnerabilities for covered
+  packages. Torch 2.13.0+cpu was skipped because that build was not found on PyPI.
+  This advisory-database result is not a complete security verdict.
 - 34 JavaScript capture/playback regressions and 19 website integrity/hosting
   tests passed. The website production build and dependency audit passed.
 - Actual private-Python staging proof installed pip26.2.2 from the verified
@@ -28,6 +40,29 @@ Final compressed EXE bytes and SHA-256 will be recorded after compilation.
   only the owned test base. Shared Python remained unchanged.
 - An isolated Inno event fixture established that ssPostInstall follows files,
   registration and shortcuts, and precedes the optional application launch.
+
+## Current executable and regression evidence
+
+| Check | Observed result and boundary |
+| --- | --- |
+| Python regression suite | 327 tests ran, 4 Windows privilege skips; 323 executed successfully. Evidence: scratch/python-v020-cold-final.log. |
+| Later focused regressions | 39 checks passed against the final 03d6fda source after the full suite. |
+| JavaScript and website | 34 capture/playback tests and 19 website integrity/hosting tests passed. |
+| Actual fresh offline candidate | Source 3dce509 installed into the dedicated scratch/pc-fresh folder, exited 0 in 261.17 seconds, and published the launcher and active pointer. Evidence: scratch/pc-fresh-zip-outcome.json. |
+| Tested candidate in-place update | The 03d6fda EXE exited 0 in 189.22 seconds. Generation de2a0a3f8f3b4b1fa2a3d088ca199ec0 was reused, and the saved record retained SHA-256 7acb5f22954ecb442e6fb8f82c63c9287100460d5afec7057d108aec50509b92. Evidence: scratch/pc-update-final-outcome.json and installation log. |
+| Tested candidate source/package repair | Final EXE exited 0 in 173.54 seconds after deliberate corruption of only the owned test README and Pillow metadata. README bytes were restored, a new generation 02a9fdbf751248a5a6b7c5ce313a928d was verified, the previous generation remained, and the saved record SHA-256 was unchanged. Evidence: scratch/pc-repair-final-outcome.json and installation log. |
+| Relocation finding | The 03d6fda native Move exited 7 after 346.55 seconds while preparing the replacement backend. Windows registration stayed at scratch/pc-fresh; both saved-record copies matched, and an unrelated old-folder file remained. Evidence: scratch/pc-move-final-outcome.json. This was a safe refusal, not a successful relocation. |
+| Installed app capture flow | Six checks completed: automatic video opening, retained 0.5x speed, Space play/pause, selected-face zoom, and playable capture/Picture-mode return. The later automation stopped on an ambiguous text selector, not an app error; no complete all-stage flow is claimed from this report. Evidence: main scratch/pc-final-flow-report.json. |
+| Actual restoration and review | Restoration On returned HTTP 200 with a real CPU forward; Enlarge filled the 1366 by 768 browser area, the review ZIP exported, and the removal editor opened. No page/console errors were recorded. Removal inference was not run. Evidence: main scratch/pc-app-restoration-report.json. |
+| Scoped desktop closure | The close request exited 0; launcher/server exited, the resolved port stopped listening, and no owned PIDs remained. Evidence: scratch/pc-app-close-report.json. |
+| Final local download page | Widths 375, 768 and 1280 had no overflow or browser errors; metadata matches the final version, byte count, checksum and intended GitHub asset URL. Evidence: main workspace scratch/offline-site-report.json. This is local page verification, not a public download check. |
+| Network boundary | The successful installer process used unreachable child-only proxies. Host networking and antivirus settings were unchanged. This verifies no successful proxy-mediated setup fetch was required; it is not a network-disconnected clean-machine test. |
+
+The tested 03d6fda candidate passed in-place update, source/package repair and
+the application checks above, but did not pass relocation. The GitHub draft asset
+upload for that candidate completed with its reported digest matching its EXE
+SHA-256; it has not been published and must be replaced by the corrected,
+accepted artifact. A draft is not a public browser-download verification.
 
 ## First candidate finding
 
@@ -48,12 +83,32 @@ extraction 6.281 seconds versus no-compression 3.218 seconds. ZIP/1 produced
 non-solid ZIP/1. Total fixture process time included substantial overhead
 outside the extraction timer; no cause is asserted for that overhead.
 
+## Relocation defect and correction
+
+The candidate had already prepared its destination backend when health discovery
+counted the array returned by `Tree-Files` as one object instead of counting the
+160 source files described by the receipt. This incorrectly refused the candidate
+before Windows registration switched. Existing registration and original records
+were retained, and the copied record remained byte-identical.
+
+A two-line collection-count correction and a regression using multiple source
+files passed red/green checks. Read-only health discovery with the corrected
+helper reported scratch/pc-moved healthy. This verifies the helper correction;
+it does not establish a successful native relocation with a rebuilt installer.
+A corrected artifact and repeat relocation remain required before publication.
+
 ## Required final checks
 
-Full integrated regression suite, final committed-source compilation, actual
-fresh install/reinstall/repair/move in dedicated PC test folders, offline setup,
-first-use flows, browser download and active-antivirus observations remain
-pending until explicit results are appended. No VM is part of this run.
+The corrected candidate must be built and repeat native relocation in dedicated
+PC test folders. Public browser download and observations from the installed
+antivirus remain pending until explicit results are appended. Preserve the failed
+03d6fda Move evidence above; do not report that attempt as successful. The existing
+capture, restoration and close checks apply to 03d6fda, not automatically to a
+subsequent artifact whose source differs.
+The earlier fresh-install candidate, final in-place update and regression counts
+are bound separately above; they must not be conflated as one identical test. No VM is part of this run.
+Native wizard interaction and antivirus prompt coverage remain limited; executable
+logs and automated fixtures do not replace visual inspection of every UI state.
 
 The PC reports Avast Antivirus registered. No antivirus settings were changed.
 Registration alone does not prove every protection module is active. The user
@@ -64,11 +119,11 @@ than this PC remain unverified. Model qualification is unchanged.
 
 ---
 
-# Version 0.1.1 installer verification
+# Historical version 0.1.1 installer verification
 
-Current download page: https://forensic-dgp.pages.dev/.
+Public landing page: https://forensic-dgp.pages.dev/.
 The hosting moved to Cloudflare Pages on 2026-10-31; the former Workers endpoint
-was removed. The installer below is unchanged. Historical publication details
+was removed. The 0.1.1 artifact described below is unchanged. Historical publication details
 remain in this report; see ../download-site/DEPLOYMENT.md for the hosting cutover.
 
 Date: 2026-10-31, Asia/Manila.
@@ -175,7 +230,9 @@ handoff can link the download and this report.
 # Historical 0.1.0 local preview evidence
 
 The following report describes the earlier artifact at its original verification
-time. Its publication and fixed-directory statements do not describe 0.1.1.
+time. Its publication, authorization, fixed-directory, package-locking and
+release-gate statements describe 0.1.0 only. They do not revoke the later user
+approval for the 0.2.0 offline installer, PC testing, relocation, or release work.
 
 # Local installer preview verification
 
@@ -236,7 +293,7 @@ failure after successful backend activation can leave a prepared backend; it doe
 not claim to roll the backend pointer back. Rerunning the same setup completes
 registration after resolving the shell error.
 
-## Gates still open
+## Historical 0.1.0 gates at the time of that report
 
 | Gate | Missing evidence |
 | --- | --- |
@@ -246,9 +303,11 @@ registration after resolving the shell error.
 | Full maintenance matrix | Complete interactive cancellation timing, interrupted fresh runtime creation/repair, all downgrade/divergence combinations and ordinary non-ASCII Windows account paths on a clean machine. Selected boundaries have automated fixtures. |
 | Release trust | Authenticode signing, complete transitive package hash locking, independent release attestations and public distribution are not delivered by this preview. |
 
-These gates keep the release in draft status. The approved continuing goal allows
-a local review artifact with unmet gates explicit; it does not authorize merging,
-publishing, purchasing services or beginning an offline installer.
+At the time of the 0.1.0 report, these gates kept that preview in draft status.
+Its then-approved goal covered only a local review artifact. Later authorization
+and the current 0.2.0 delivery scope are recorded at the top of this document;
+this historical paragraph is not a current prohibition on offline packaging or
+publication. Purchasing signing services remains outside the free-preview scope.
 
 ## Evidence locations
 
