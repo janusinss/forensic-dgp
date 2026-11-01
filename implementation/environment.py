@@ -365,25 +365,107 @@ def _write_generation_state(folder: Path, generation: str, state: str) -> None:
     temporary.replace(target)
 
 
+def _reuse_candidates(primary: dict | None) -> list[dict]:
+    """Select only computed ready generations; configuration never supplies code paths.
+
+    This discovery belongs to install selection only. Ordinary launches still
+    require the exact per-source-commit configuration written after verification.
+    """
+    candidates=[]; seen=set()
+    def add(record):
+        key=os.path.normcase(record['environment_root'])
+        if key not in seen:
+            seen.add(key); candidates.append(record)
+    if primary is not None:
+        add(primary)
+    managed=managed_root()
+    if managed is None:
+        return candidates
+    folder=managed/'environments'
+    if not folder.exists() and not folder.is_symlink():
+        return candidates
+    for parent in (folder,*folder.parents):
+        _ordinary_runtime(parent,directory=True)
+    entries=[]
+    for entry in folder.iterdir():
+        entries.append(entry)
+        if len(entries)>1024:
+            raise EnvironmentError('Environment inventory exceeds its bounded reuse scan; existing files were preserved.')
+    identity=dependency_identity(ROOT)
+    ready={}
+    for entry in entries:
+        match=re.fullmatch(re.escape(identity)+'-g([0-9a-f]{32})',entry.name)
+        if not match:
+            continue
+        generation=match.group(1)
+        try:
+            _verify_generation_marker(entry,ROOT,generation)
+            _ordinary_runtime(entry/'Scripts'/'python.exe')
+        except (EnvironmentError,OSError,ValueError,TypeError):
+            continue
+        ready[generation]=entry
+    preferred=None
+    try:
+        active=_configuration(managed/'current.json')
+        commit=active.get('commit')
+        if set(active)!={'schema','commit'} or type(active.get('schema')) is not int or active['schema']!=1 or not isinstance(commit,str) or not re.fullmatch('[0-9a-f]{40}',commit):
+            raise EnvironmentError('Previous active source identity differs.')
+        prior=_configuration(managed/'data'/'installations'/(commit+'.json'))
+        generation=prior.get('generation')
+        if generation in ready:
+            previous_root=managed/'versions'/commit
+            expected=_record_for_path(previous_root,ready[generation],generation)
+            if prior==expected and type(prior.get('schema_version')) is int:
+                preferred=generation
+    except (EnvironmentError,OSError,ValueError,TypeError):
+        pass
+    order=([preferred] if preferred else [])+[key for key in sorted(ready) if key!=preferred]
+    for generation in order:
+        add(_record_for_path(ROOT,ready[generation],generation))
+    return candidates
+
+
 def _install_offline(payload) -> int:
     """Preserve failed/active generations and publish only a fully verified candidate."""
     candidate = None
     try:
-        candidate = expected_record()
-        python = Path(candidate['python'])
-        if python.is_file() and verify_runtime(python,include_models=False) == 0:
+        candidate = expected_record(ROOT)
+    except (EnvironmentError,OSError,ValueError,subprocess.SubprocessError) as exc:
+        print('[environment] Existing runtime binding was preserved: '+str(exc),flush=True)
+    for candidate in _reuse_candidates(candidate):
+        generation=candidate.get('generation')
+        previous_generation=os.environ.get('DGP_SETUP_GENERATION')
+        if generation is None:
+            os.environ.pop('DGP_SETUP_GENERATION',None)
+        else:
+            os.environ['DGP_SETUP_GENERATION']=generation
+        try:
+            python=Path(candidate['python'])
+            if not python.is_file():
+                continue
+            for parent in python.parents:
+                _ordinary_runtime(parent,directory=True)
+            _ordinary_runtime(python)
+            if verify_runtime(python,include_models=False)!=0:
+                continue
             event('environment','running','Reusing verified offline environment')
-            result = install_models()
+            result=install_models()
             if result:
                 return result
-            result = verify_runtime(python)
-            if result == 0:
+            result=verify_runtime(python)
+            if result==0:
+                check_cancel()
                 write_record(candidate)
             return result
-    except (EnvironmentError,OSError,ValueError,subprocess.SubprocessError) as exc:
-        print('[environment] Existing runtime was preserved; preparing a separate repair generation: ' + str(exc),flush=True)
+        except (EnvironmentError,OSError,ValueError,subprocess.SubprocessError) as exc:
+            print('[environment] Existing runtime was preserved; trying a separate verified generation: '+str(exc),flush=True)
+        finally:
+            if previous_generation is None:
+                os.environ.pop('DGP_SETUP_GENERATION',None)
+            else:
+                os.environ['DGP_SETUP_GENERATION']=previous_generation
     generation = uuid.uuid4().hex
-    candidate = expected_record(generation=generation)
+    candidate = expected_record(ROOT,generation=generation)
     folder = Path(candidate['environment_root'])
     if folder.exists() or folder.is_symlink():
         raise EnvironmentError('New environment generation already exists; existing files were preserved.')

@@ -285,7 +285,7 @@ begin
 #ifdef OfflinePayload
     3: Result := 'Installing bundled components';
 #else
-    3: Result := 'Downloading and setting up components';
+    3: Result := 'Installing components';
 #endif
     4: Result := 'Checking the installation';
     5: Result := 'Finishing setup';
