@@ -13,8 +13,9 @@ import re
 import stat
 import subprocess
 import shutil
+import time
 
-from .setup_events import check_cancel
+from .setup_events import check_cancel, event
 
 
 class OfflinePayloadError(RuntimeError):
@@ -485,3 +486,18 @@ def protect_active_model(destination: Path, group: str, replacement: dict) -> No
         raise OfflinePayloadError('Previous model changed while checking; files were preserved.')
     if digest.hexdigest()==prior_asset['sha256'] and (prior_asset['sha256']!=replacement['sha256'] or prior_asset['size']!=replacement['size']):
         raise OfflinePayloadError('A valid active release model needs a different fingerprint. Use Move installation; the working model was preserved.')
+
+
+class CopyProgress:
+    """Throttle GUI callbacks without reducing per-block cancellation checks."""
+    def __init__(self, name, total, *, emit=None, clock=None):
+        self.name=name; self.total=total; self.emit=event if emit is None else emit
+        self.clock=time.monotonic if clock is None else clock
+        self.last_bytes=0; self.last_time=self.clock()
+        self.emit('download:'+name,'copying','Copying verified offline '+name,current=0,total=total)
+
+    def update(self, current):
+        now=self.clock()
+        if current==self.total or (current-self.last_bytes>=8*1024*1024 and now-self.last_time>=0.1):
+            self.emit('download:'+self.name,'copying',self.name,current=current,total=self.total)
+            self.last_bytes=current; self.last_time=now

@@ -5,6 +5,7 @@ import zipfile
 import os
 from pathlib import Path
 import shutil
+import re
 import subprocess
 import tempfile
 import unittest
@@ -108,5 +109,54 @@ exit 0
         result=self.run_setup()
         self.assertNotEqual(result.returncode,0)
         self.assertFalse(self.target.exists())
+
+@unittest.skipUnless((BASE/'scratch/tools/inno-7.1.1/ISCC.exe').is_file(),'Verified Inno compiler required')
+class NativeCopyProgressTests(unittest.TestCase):
+    def test_interleaved_copy_progress_displays_one_transfer_until_it_finishes(self):
+        with tempfile.TemporaryDirectory(prefix='copy-progress-',dir=BASE/'scratch') as temporary:
+            area=Path(temporary)
+            source=(BASE/'packaging/installer.iss').read_text(encoding='utf8')
+            json_function=source.split('function JsonField(',1)[1].split('function RegisteredInstallRoot',1)[0]
+            progress_functions=source.split('function PhaseNumber(',1)[1].split('procedure ToggleDetails',1)[0]
+            setup=('[Setup]\nAppId=ForensicDGP-CopyProgress-Fixture\nAppName=Copy progress fixture\nAppVersion=1.0.0\n'
+                   'DefaultDirName={tmp}\nCreateAppDir=no\nUninstallable=no\nPrivilegesRequired=lowest\n'
+                   'DisableWelcomePage=yes\nDisableDirPage=yes\nDisableProgramGroupPage=yes\n'
+                   'OutputDir='+str(area)+'\nOutputBaseFilename=progress-fixture\n')
+            declarations=('[Code]\nvar\nProgressPage: TOutputProgressWizardPage;\n'
+                'StepLabel, TransferLabel: TNewStaticText;\n'
+                'LastStage, ActiveDownloadStage: String;\nStepNumber: Integer;\nCancelRequested: Boolean;\n')
+            initialize="""procedure InitializeWizard;
+begin
+  ProgressPage := CreateOutputProgressPage('Fixture', 'Copying');
+  StepLabel := TNewStaticText.Create(WizardForm); StepLabel.Parent := ProgressPage.Surface;
+  TransferLabel := TNewStaticText.Create(WizardForm); TransferLabel.Parent := ProgressPage.Surface;
+  StepNumber := 1;
+"""
+            events=[
+                ('copy:A','copying',0),('copy:B','copying',5),('copy:A','copying',50),
+                ('copy:B','copying',10),('capture-runtime','running',None),('copy:A','copying',100),
+                ('copy:A','complete',100),('copy:B','copying',50),('copy:B','copying',100),
+                ('copy:B','complete',100),('copy:C','copying',40),('copy:D','copying',100),
+                ('copy:D','complete',100),('copy:C','copying',100),('copy:C','complete',100)]
+            for stage,status,current in events:
+                row={'schema':1,'stage':stage,'status':status,'message':stage}
+                if current is not None: row.update(current=current,total=100)
+                initialize+="  UpdateProgress('"+json.dumps(row,separators=(',',':'))+"');\n"
+            initialize+="end;\n"
+            (area/'progress.iss').write_text(setup+declarations+'function JsonField('+json_function+
+                'function PhaseNumber('+progress_functions+initialize,encoding='utf8')
+            built=subprocess.run([str(BASE/'scratch/tools/inno-7.1.1/ISCC.exe'),str(area/'progress.iss')],
+                capture_output=True,text=True,timeout=25)
+            self.assertEqual(built.returncode,0,built.stdout+built.stderr)
+            log=area/'progress.log'
+            executed=subprocess.run([str(area/'progress-fixture.exe'),'/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',
+                '/LOG='+str(log)],capture_output=True,text=True,timeout=25)
+            self.assertEqual(executed.returncode,0,executed.stdout+executed.stderr)
+            body=log.read_text(encoding='utf-8-sig')
+            selected=[(int(value),stage) for value,stage in re.findall(r'DGP_PROGRESS copying (\d+) (copy:[^\r\n ]+)',body)]
+            self.assertEqual(selected,[(0,'copy:A'),(50,'copy:A'),(100,'copy:A'),
+                (50,'copy:B'),(100,'copy:B'),(40,'copy:C'),(100,'copy:C')])
+            self.assertIn('DGP_PROGRESS activity copy:C',body)
+            self.assertNotIn('DGP_PROGRESS activity copy:D',body)
 
 if __name__=='__main__': unittest.main()

@@ -207,4 +207,74 @@ class CaptureOfflineLockTests(unittest.TestCase):
             with patch.object(capture_install,'load_payload',return_value=None),patch.object(capture_install,'committed_versions',return_value=payload.locked_versions('capture')),patch.object(capture_install.subprocess,'run',side_effect=run):
                 self.assertFalse(capture_install.verified(python))
 
+class CaptureProbeDeadlineTests(unittest.TestCase):
+    def test_setup_probe_allows_cold_load_but_reports_timeout_as_failure(self):
+        import contextlib,io,subprocess
+        from implementation import capture_install
+        with tempfile.TemporaryDirectory() as temporary:
+            python=Path(temporary)/'python.exe'; python.write_bytes(b'fixture')
+            with patch.object(capture_install,'capture_python',return_value=python), patch.object(capture_install,'load_payload',return_value=None),patch.object(capture_install,'committed_versions',return_value=None), patch.object(capture_install.subprocess,'run',side_effect=subprocess.TimeoutExpired('capture-probe',120)) as run, patch.object(capture_install,'event') as events,contextlib.redirect_stderr(io.StringIO()) as error:
+                self.assertEqual(capture_install.main([]),1)
+            self.assertEqual(run.call_args.kwargs['timeout'],120)
+            self.assertIn('120 seconds',error.getvalue())
+            self.assertIn('retry',error.getvalue().lower())
+            self.assertTrue(any(call.args[1]=='error' for call in events.call_args_list))
+
+    def test_regular_capture_health_keeps_short_deadline(self):
+        import subprocess
+        from implementation import capture_install
+        with tempfile.TemporaryDirectory() as temporary:
+            python=Path(temporary)/'python.exe'; python.write_bytes(b'fixture')
+            with patch.object(capture_install,'load_payload',return_value=None),patch.object(capture_install,'committed_versions',return_value=None),patch.object(capture_install.subprocess,'run',return_value=subprocess.CompletedProcess([],0)) as run:
+                self.assertTrue(capture_install.verified(python))
+            self.assertEqual(run.call_args.kwargs['timeout'],30)
+
+
+class DeferredCaptureSetupTests(unittest.TestCase):
+    def test_bulk_capture_task_defers_import_until_outer_verification(self):
+        import contextlib,io,subprocess
+        from implementation import capture_install
+        with tempfile.TemporaryDirectory() as temporary:
+            python=Path(temporary)/'capture/Scripts/python.exe'; python.parent.mkdir(parents=True); python.write_bytes(b'fixture')
+            payload=unittest.mock.Mock(); payload.package_command.return_value=['fixture.exe','install']
+            with patch.object(capture_install,'capture_python',return_value=python),patch.object(capture_install,'load_payload',return_value=payload),patch.object(capture_install,'_deferred_setup_allowed',return_value=True),patch.object(capture_install,'verified') as verify,patch.object(capture_install,'custom_install_root',return_value=None),patch.object(capture_install.subprocess,'run',return_value=subprocess.CompletedProcess([],0)),patch.object(capture_install,'event') as emitted,contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(capture_install.main(['--defer-verification']),0)
+            verify.assert_not_called()
+            self.assertFalse(any(call.args[1]=='complete' for call in emitted.call_args_list))
+            self.assertTrue(any('verification follows' in call.args[2] for call in emitted.call_args_list))
+
+    def test_deferred_mode_requires_exact_preparing_generation_marker(self):
+        from implementation import capture_install
+        with tempfile.TemporaryDirectory() as temporary:
+            folder=Path(temporary)/'env'; folder.mkdir(); python=folder/'capture/Scripts/python.exe'
+            marker=folder/'.dgp-environment.json'; body={'schema':1,'dependency_identity':'a'*16,'generation':'b'*32,'state':'preparing'}
+            marker.write_text(json.dumps(body))
+            with patch.dict(os.environ,{'DGP_SETUP_GENERATION':'b'*32}),patch.object(capture_install,'expected_environment',return_value=folder),patch.object(capture_install,'dependency_identity',return_value='a'*16):
+                self.assertTrue(capture_install._deferred_setup_allowed(python,object()))
+                body['state']='ready'; marker.write_text(json.dumps(body))
+                self.assertFalse(capture_install._deferred_setup_allowed(python,object()))
+
+    def test_timeout_still_honors_pending_cancellation(self):
+        import subprocess
+        from implementation import capture_install
+        from implementation.setup_events import SetupCancelled
+        with tempfile.TemporaryDirectory() as temporary:
+            python=Path(temporary)/'python.exe'; python.write_bytes(b'fixture')
+            with patch.object(capture_install,'load_payload',return_value=None),patch.object(capture_install,'committed_versions',return_value=None),patch.object(capture_install,'check_cancel',side_effect=[None,SetupCancelled('cancelled')]),patch.object(capture_install.subprocess,'run',side_effect=subprocess.TimeoutExpired('probe',120)):
+                with self.assertRaises(SetupCancelled): capture_install.verified(python,timeout=120)
+
+class CopyProgressThrottleTests(unittest.TestCase):
+    def test_progress_is_throttled_but_final_bytes_are_always_reported(self):
+        module=importlib.import_module('implementation.offline_payload')
+        emitted=[]; clock=[0.0]; total=20*1024*1024+1
+        progress=module.CopyProgress('face.pth',total,emit=lambda *a,**k:emitted.append((a,k)),clock=lambda:clock[0])
+        for current in range(1024*1024,total,1024*1024):
+            clock[0]+=0.02; progress.update(current)
+        progress.update(total)
+        self.assertEqual(emitted[0][1]['current'],0)
+        self.assertEqual(emitted[-1][1]['current'],total)
+        self.assertEqual(emitted[-1][1]['total'],total)
+        self.assertLessEqual(len(emitted),5)
+        self.assertTrue(all(item[0][1]=='copying' for item in emitted))
+
 if __name__=='__main__': unittest.main()

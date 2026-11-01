@@ -20,7 +20,7 @@ import uuid
 
 from .managed_paths import data_path
 from .setup_events import SetupCancelled, check_cancel, event
-from .offline_payload import load_payload, OfflinePayloadError, protect_active_model
+from .offline_payload import load_payload, OfflinePayloadError, protect_active_model, CopyProgress
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = data_path(ROOT, 'models', 'implementation')
@@ -161,13 +161,13 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
         partial=model_dir/('.'+destination.name+'.'+uuid.uuid4().hex+'.partial')
         try:
             copied=0
-            event('download:'+destination.name,'copying','Copying verified offline '+destination.name,current=0,total=asset['size'])
+            progress=CopyProgress(destination.name,asset['size'])
             with source.open('rb') as reader,partial.open('xb') as writer:
                 while block:=reader.read(CHUNK_SIZE):
                     check_cancel(); copied+=len(block)
                     if copied>asset['size']: raise ModelSetupError('Offline model grew during copy.')
                     writer.write(block)
-                    event('download:'+destination.name,'copying',destination.name,current=copied,total=asset['size'])
+                    progress.update(copied)
                 writer.flush(); os.fsync(writer.fileno())
             if not verify_asset(partial,asset):
                 raise ModelSetupError('Offline model copy failed verification.')

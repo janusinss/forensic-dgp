@@ -303,7 +303,10 @@ def install_models() -> int:
 
 
 def install_capture() -> int:
-    return run_foreground([sys.executable, '-B', '-m', 'implementation.capture_install'])
+    arguments=[sys.executable,'-B','-m','implementation.capture_install']
+    if os.environ.get('DGP_OFFLINE_PAYLOAD') and os.environ.get('DGP_SETUP_GENERATION'):
+        arguments.append('--defer-verification')
+    return run_foreground(arguments)
 
 
 def verify_runtime(python: Path, *, include_models: bool = True) -> int:

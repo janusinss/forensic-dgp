@@ -39,7 +39,8 @@ python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --ver
 
 Output: scratch/dist/ForensicDGP_Setup.exe and release.json. The release records
 source ancestry, setup-input hashes, the offline manifest fingerprint, exact
-artifact bytes and SHA-256. The single EXE must remain below 2 GiB. Omit
+artifact bytes and SHA-256. Offline packaging uses ZIP/1 with non-solid files to reduce extraction time and
+permit random access to setup helpers. The single EXE must remain below 2 GiB. Omit
 --offline-payload only when deliberately building the legacy online variant.
 
 ## Offline installation contract
@@ -70,6 +71,9 @@ must close before mutation; the new launcher supports a scoped close request.
 Repairs create and verify a separate environment generation. They retain prior
 files. A failed candidate does not replace the active application pointer.
 Cancellation stops at a safe operation boundary; details and logs remain visible.
+Capture imports are verified after bulk package/model writes finish. Cold setup
+allows 120 seconds; normal installed health probes retain a 30-second bound.
+Measured model-copy progress is throttled without delaying per-block cancellation.
 
 Relocation stages records and verified models in the new folder, recreates
 Python/environments and location bindings, and verifies the candidate before

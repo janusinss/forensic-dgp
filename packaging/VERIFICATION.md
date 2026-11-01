@@ -29,6 +29,25 @@ Final compressed EXE bytes and SHA-256 will be recorded after compilation.
 - An isolated Inno event fixture established that ssPostInstall follows files,
   registration and shortcuts, and precedes the optional application launch.
 
+## First candidate finding
+
+The dafb213 offline candidate compiled to 1,023,222,504 bytes with SHA-256
+681db98600268f812839019645bd93d4907079e47537470ba5d67f49d1d43f0d.
+The full suite passed 319 tests (4 skips) before compilation.
+
+Its real fresh installation stopped before activation/registration: the capture
+import probe exceeded 30 seconds during parallel setup. The retained environment
+then passed the exact capture/OpenCV/NumPy/pip probe in 0.928 seconds alone.
+This establishes a cold parallel-setup timeout, not an antivirus diagnosis.
+The fix defers capture verification until bulk writes finish and allows a
+bounded 120-second cold check, retaining 30 seconds for normal health checks.
+
+An isolated R2-model Inno benchmark verified equal extracted hashes: ZIP/1
+extraction 6.281 seconds versus no-compression 3.218 seconds. ZIP/1 produced
+352,164,946 bytes versus 378,706,964 bytes, so the next full candidate uses
+non-solid ZIP/1. Total fixture process time included substantial overhead
+outside the extraction timer; no cause is asserted for that overhead.
+
 ## Required final checks
 
 Full integrated regression suite, final committed-source compilation, actual

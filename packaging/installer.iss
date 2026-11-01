@@ -28,8 +28,13 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#OutputDir}
 OutputBaseFilename=ForensicDGP_Setup
+#ifdef OfflinePayload
+Compression=zip/1
+SolidCompression=no
+#else
 Compression=lzma2
 SolidCompression=yes
+#endif
 WizardStyle=modern
 InfoBeforeFile={#StageDir}\LICENSE.txt
 SetupIconFile={#StageDir}\app.ico
@@ -265,7 +270,7 @@ function PhaseNumber(Stage: String): Integer;
 begin
   Result := 1;
   if (Pos('python', Lowercase(Stage)) > 0) then Result := 2;
-  if (Stage = 'environment') or (Pos('download:', Stage) = 1) or
+  if (Stage = 'environment') or (Pos('download:', Stage) = 1) or (Pos('copy:', Stage) = 1) or
      (Pos('models', Lowercase(Stage)) > 0) or (Stage = 'Application dependencies') or
      (Stage = 'Capture runtime') or (Stage = 'capture-runtime') then Result := 3;
   if Stage = 'verification' then Result := 4;
@@ -309,16 +314,17 @@ begin
     else if ActiveDownloadStage <> '' then begin
       if Stage <> ActiveDownloadStage then Exit;
       { Completion or verification of the visible file releases the display. }
-      if Status <> 'downloading' then ActiveDownloadStage := '';
+      if (Status <> 'downloading') and (Status <> 'copying') then ActiveDownloadStage := '';
     end;
-    if (Total > 0) and (Current >= 0) and (Current <= Total) and (Status = 'downloading') then begin
+    if (Total > 0) and (Current >= 0) and (Current <= Total) and ((Status = 'downloading') or (Status = 'copying')) then begin
       ActiveDownloadStage := Stage;
       Percent := Round((Current * 100.0) / Total);
       ProgressPage.ProgressBar.Style := npbstNormal;
       ProgressPage.SetProgress(Percent, 100);
       TransferLabel.Caption := IntToStr(Percent) + '%  |  ' +
         Format('%.1f of %.1f MiB', [Current / 1048576.0, Total / 1048576.0]) + '  |  ' + Message;
-      Log('DGP_PROGRESS download ' + IntToStr(Percent) + ' ' + Stage);
+      if Status = 'copying' then Log('DGP_PROGRESS copying ' + IntToStr(Percent) + ' ' + Stage)
+      else Log('DGP_PROGRESS download ' + IntToStr(Percent) + ' ' + Stage);
     end else begin
       ProgressPage.SetProgress(0, 100);
       ProgressPage.ProgressBar.Style := npbstMarquee;

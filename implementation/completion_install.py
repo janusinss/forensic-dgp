@@ -23,7 +23,7 @@ import urllib.request
 import uuid
 
 from . import completion_assets as assets
-from .offline_payload import load_payload, protect_active_model
+from .offline_payload import load_payload, protect_active_model, CopyProgress
 
 RELEASE_URL = "https://github.com/janusinss/forensic-dgp/releases/tag/completion-r1-models-v1"
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/completion-r1-models-v1/"
@@ -116,6 +116,7 @@ def _publish(partial, destination, asset):
 def _copy_local(source, partial, asset):
     if not _admitted(source, asset):
         raise CompletionInstallError(f"Supplied local completion file failed exact size/SHA-256 or ordinary-file checks: {source}")
+    progress=CopyProgress(asset['filename'],asset['size'])
     with Path(source).open("rb") as reader, partial.open("xb") as writer:
         remaining = asset["size"]
         while True:
@@ -127,7 +128,7 @@ def _copy_local(source, partial, asset):
                 raise CompletionInstallError(f"Local source grew during copy; partial retained: {partial.name}")
             writer.write(block)
             remaining -= len(block)
-            event('download:'+asset['filename'],'copying',asset['filename'],current=asset['size']-remaining,total=asset['size'])
+            progress.update(asset['size']-remaining)
         writer.flush()
         os.fsync(writer.fileno())
     if not _admitted(source, asset):

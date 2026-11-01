@@ -22,6 +22,13 @@ class InstallerExperience(unittest.TestCase):
         self.assertNotIn('ProgressPage.SetProgress(0, 0)',self.code)
         self.assertIn('DGP_PROGRESS ',self.code)
 
+    def test_offline_copying_has_measured_progress_and_fast_non_solid_compression(self):
+        self.assertIn("(Status = 'downloading') or (Status = 'copying')",self.code)
+        self.assertIn('Compression=zip/1',self.code)
+        self.assertIn('SolidCompression=no',self.code)
+        self.assertIn("Log('DGP_PROGRESS copying '",self.code)
+        self.assertIn("Log('DGP_PROGRESS download '",self.code)
+
     def test_setup_explains_requirements_destination_and_finish(self):
         self.assertIn('Before you install',self.code)
         self.assertIn('Microsoft Edge',self.code)
