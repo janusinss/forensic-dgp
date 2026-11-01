@@ -5,15 +5,26 @@ EXE, fresh/update/repair/move flows, verification on the user's own PC, and a
 public downloads-only GitHub release linked from the existing Cloudflare Pages
 site. This supersedes the older online-only/local-preview scope below.
 
-The tested candidate is built from source
-03d6fdaa5caa7817eff8aa721e0d784593bf0da2. An earlier fresh offline candidate
-completed installation; the tested candidate passed an actual in-place update and
-source/package repair with records preserved. Application capture, actual
-restoration, export and scoped shutdown checks passed. Native relocation stopped
-safely before switching registration because of a source-file counting defect.
-The helper correction has regression coverage; a rebuilt artifact and repeat
-relocation remain pending. A matching 03d6fda asset exists only in a draft release
-and must not be published as the corrected accepted artifact.
+Published 0.2.0 source:
+c8ff04e83bd4a722bc73134f67c0c1b1719ecb36. Its single offline EXE is
+1,045,716,354 bytes with SHA-256
+4287feb22c96c9abaf5804592938b0c4de2dbfbeecc747cb00a93543a9a5635a.
+An earlier candidate completed fresh installation; 03d6fda passed in-place update,
+source/package repair, capture, actual restoration, export and scoped shutdown.
+Its native relocation stopped safely before registration switched because of a
+source-file counting defect. The c8ff04e correction has 52 passing lifecycle
+cases across a combined run and one unchanged timeout rerun. The repeat native
+Move and subsequent installed-app checks are complete; GitHub/Pages publication passed.
+The accepted c8ff04e native Move exited 0 in 651.33 seconds with a completed
+receipt, switched registration, recreated environment and byte-identical records.
+Original records and unknown old-folder files remained with default cleanup off.
+The accepted installation passed desktop layout/capture/rate checks and scoped
+shutdown with no remaining owned processes. Its matching asset is published as a
+GitHub prerelease at https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.0,
+linked by https://forensic-dgp.pages.dev/. Canonical live metadata is verified;
+the full anonymous Chromium download and a separate HTTP transfer matched the
+accepted size/checksum. The Internet-marked downloaded EXE was not executed;
+SmartScreen/antivirus acceptance for that execution remains unverified.
 
 Use [BUILD.md](BUILD.md) for the current build/storage/maintenance contract and
 [VERIFICATION.md](VERIFICATION.md) for artifact identities, exact results and open

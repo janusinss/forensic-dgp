@@ -1,7 +1,9 @@
 # Build Windows installer releases
 
-Current implementation target: **0.2.0 offline candidate**. Local-PC verification
-is in progress; the public download remains 0.1.1 until acceptance passes. See
+Current release: **0.2.0 unsigned offline preview**, published through GitHub
+Releases and the Cloudflare Pages landing page after local-PC acceptance.
+The full anonymous browser download and an independent HTTP transfer matched
+the accepted artifact size and checksum. See
 [VERIFICATION.md](VERIFICATION.md) for exact candidate identities and results.
 
 The offline release targets Windows x64 and contains private CPython, CPU-only
@@ -114,3 +116,20 @@ loading the large file into memory. Never upload research records or credentials
 Download mirrors and automatic background updates are not included. The source
 repository and developer batch workflow remain separate from the public downloads
 repository. Old release gates in VERIFICATION.md are labeled historical.
+
+## Future release rule
+
+Published version assets are immutable. Never replace the published v0.2.0 EXE
+or checksum with different bytes under the same filename/tag. Future installer
+or IMPLEMENTATION changes require a new version, committed-source build,
+acceptance checks, a new GitHub release, and updated Pages metadata pointing to
+that exact new asset. Launching an installed app does not fetch branch changes.
+
+The current app artifact identifies source c8ff04e83bd4a722bc73134f67c0c1b1719ecb36
+on the local installer feature branch. No IMPLEMENTATION merge or source push has
+been performed by this release work. Publishing the downloads-only repository
+and static landing page does not change that source-branch state.
+
+The published browser download had Mark of the Web but was not executed. Local
+installer/application checks and public download integrity do not establish a
+warning-free SmartScreen result or acceptance by every antivirus product.

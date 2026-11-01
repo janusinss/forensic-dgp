@@ -1,12 +1,14 @@
-# Version 0.2.0 candidate verification
+# Version 0.2.0 offline preview verification
 
-Date: 2026-11-01, Asia/Manila. Status: 0.2.0 candidate under verification on
-this user's PC; not yet published. The tested candidate was built from
-source 03d6fdaa5caa7817eff8aa721e0d784593bf0da2 after the runtime-reuse correction.
-Its actual relocation found a fail-safe counting defect; a corrected candidate
-build is pending. The 03d6fda artifact is not an accepted final release.
-Version 0.1.1 remains the public download until the replacement passes acceptance. All 0.1.x sections
-below are historical evidence and do not define the current offline contract.
+Date: 2026-11-01, Asia/Manila. Status: 0.2.0 unsigned offline preview published
+on GitHub Releases and the Cloudflare Pages landing page after local-PC acceptance.
+The full anonymous browser download and a separate anonymous HTTP transfer
+completed with the exact accepted byte count and SHA-256.
+Build source: c8ff04e83bd4a722bc73134f67c0c1b1719ecb36. Native relocation into
+scratch/pc-moved-final passed, followed by installed-app and scoped-close checks.
+The earlier 03d6fda candidate's failed-safe relocation remains below as evidence.
+The main landing-page metadata now points to the accepted 0.2.0 GitHub asset.
+All 0.1.x sections are historical and do not define the offline contract.
 
 ## New acceptance contract
 
@@ -24,6 +26,39 @@ This identifies the earlier fresh-install candidate, not the subsequently tested
 The tested 03d6fda offline EXE is 1,045,712,378 bytes, SHA-256
 dc7efb36a1c08a4ceff9bc7123071563482dd138623f300d8680bb780612671f.
 Evidence: scratch/dist-v020-final/release.json.
+
+## Published artifact
+
+| Item | Value |
+| --- | --- |
+| Source commit | c8ff04e83bd4a722bc73134f67c0c1b1719ecb36 |
+| Version | 0.2.0 unsigned offline preview |
+| Local release artifact | scratch/dist/ForensicDGP_Setup.exe; accepted copy retained in scratch/dist-v020-relocation-final |
+| Public release | https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.0 |
+| Landing page | https://forensic-dgp.pages.dev/ |
+| Pages deployment | https://f0d4b9ce.forensic-dgp.pages.dev/ |
+| Bytes | 1,045,716,354 |
+| SHA-256 | 4287feb22c96c9abaf5804592938b0c4de2dbfbeecc747cb00a93543a9a5635a |
+
+The rebuilt source differs from 03d6fda only in documentation, release metadata,
+the corrected installation-state helper and its regression test; application
+Python/UI source is unchanged. This establishes source equivalence for those app
+flows; separate native relocation and installed-app results for c8ff04e are
+recorded below. Evidence: scratch/candidate-source-equivalence.json.
+
+GitHub release v0.2.0 is public (`isDraft=false`) and marked as a prerelease
+(`isPrerelease=true`). Its asset size and GitHub-reported digest match the accepted
+EXE above. The accepted artifact was promoted to scratch/dist; the previous
+0.1.1 public bytes were preserved and hash-verified in previous-public-v011.
+Evidence: scratch/release-promotion-report.json.
+
+Cloudflare Pages deployment succeeded, and the canonical /release.json contains
+version 0.2.0 with the exact accepted size/checksum and fixed GitHub download URL.
+The anonymous Chromium download from the live landing-page button completed as
+ForensicDGP_Setup-0.2.0.exe with 1,045,716,354 bytes, the exact accepted SHA-256,
+and no download failure. Its Zone.Identifier contained ZoneId=3 with
+HostUrl=about:internet. The browser-owned test download was removed automatically
+when its context closed. The downloaded EXE was not executed.
 
 ## Checks completed
 
@@ -46,23 +81,29 @@ Evidence: scratch/dist-v020-final/release.json.
 | Check | Observed result and boundary |
 | --- | --- |
 | Python regression suite | 327 tests ran, 4 Windows privilege skips; 323 executed successfully. Evidence: scratch/python-v020-cold-final.log. |
-| Later focused regressions | 39 checks passed against the final 03d6fda source after the full suite. |
+| Earlier focused regressions | 39 checks passed against the 03d6fda source after the full suite. |
+| Corrected lifecycle regressions | All 52 cases have passing evidence: a combined run passed 51, and one 15-second startup timeout passed unchanged on rerun in 0.834 seconds. This was not a single clean 52-case run. |
 | JavaScript and website | 34 capture/playback tests and 19 website integrity/hosting tests passed. |
 | Actual fresh offline candidate | Source 3dce509 installed into the dedicated scratch/pc-fresh folder, exited 0 in 261.17 seconds, and published the launcher and active pointer. Evidence: scratch/pc-fresh-zip-outcome.json. |
 | Tested candidate in-place update | The 03d6fda EXE exited 0 in 189.22 seconds. Generation de2a0a3f8f3b4b1fa2a3d088ca199ec0 was reused, and the saved record retained SHA-256 7acb5f22954ecb442e6fb8f82c63c9287100460d5afec7057d108aec50509b92. Evidence: scratch/pc-update-final-outcome.json and installation log. |
-| Tested candidate source/package repair | Final EXE exited 0 in 173.54 seconds after deliberate corruption of only the owned test README and Pillow metadata. README bytes were restored, a new generation 02a9fdbf751248a5a6b7c5ce313a928d was verified, the previous generation remained, and the saved record SHA-256 was unchanged. Evidence: scratch/pc-repair-final-outcome.json and installation log. |
+| Tested candidate source/package repair | The 03d6fda EXE exited 0 in 173.54 seconds after deliberate corruption of only the owned test README and Pillow metadata. README bytes were restored, a new generation 02a9fdbf751248a5a6b7c5ce313a928d was verified, the previous generation remained, and the saved record SHA-256 was unchanged. Evidence: scratch/pc-repair-final-outcome.json and installation log. |
 | Relocation finding | The 03d6fda native Move exited 7 after 346.55 seconds while preparing the replacement backend. Windows registration stayed at scratch/pc-fresh; both saved-record copies matched, and an unrelated old-folder file remained. Evidence: scratch/pc-move-final-outcome.json. This was a safe refusal, not a successful relocation. |
+| Corrected native relocation | Accepted c8ff04e EXE exited 0 after 651.33 seconds (10 minutes 51 seconds). The environment was recreated, registration switched to scratch/pc-moved-final, the relocation receipt is completed, and the saved-record SHA-256 stayed 7acb5f22954ecb442e6fb8f82c63c9287100460d5afec7057d108aec50509b92. Original records and an unrelated old-folder file remained; optional cleanup was off by default. Evidence: scratch/pc-move-fixed-outcome.json. This is one measured PC result, not a speed promise. |
+| Accepted installed-app verification | c8ff04e server was healthy; widths 1280, 1366 and 1920 had no overflow or browser errors; actual video capture, return playback and retained 0.25x/4x rates passed. Evidence: main scratch/pc-final-installed-report.json. |
+| Accepted launcher and close | Launcher hash and Start Menu target matched the accepted installation. Its scoped close exited 0, server PID 3548 exited, port 54862 closed and no owned PIDs remained. Evidence: scratch/pc-final-close-report.json. |
 | Installed app capture flow | Six checks completed: automatic video opening, retained 0.5x speed, Space play/pause, selected-face zoom, and playable capture/Picture-mode return. The later automation stopped on an ambiguous text selector, not an app error; no complete all-stage flow is claimed from this report. Evidence: main scratch/pc-final-flow-report.json. |
 | Actual restoration and review | Restoration On returned HTTP 200 with a real CPU forward; Enlarge filled the 1366 by 768 browser area, the review ZIP exported, and the removal editor opened. No page/console errors were recorded. Removal inference was not run. Evidence: main scratch/pc-app-restoration-report.json. |
 | Scoped desktop closure | The close request exited 0; launcher/server exited, the resolved port stopped listening, and no owned PIDs remained. Evidence: scratch/pc-app-close-report.json. |
 | Final local download page | Widths 375, 768 and 1280 had no overflow or browser errors; metadata matches the final version, byte count, checksum and intended GitHub asset URL. Evidence: main workspace scratch/offline-site-report.json. This is local page verification, not a public download check. |
+| Public browser download | Anonymous Chromium clicked the actual live download button and obtained ForensicDGP_Setup-0.2.0.exe, 1,045,716,354 bytes, SHA-256 4287feb22c96c9abaf5804592938b0c4de2dbfbeecc747cb00a93543a9a5635a, failure null. Live widths 375/768/1280 had no overflow/errors; checksum and metadata matched. Evidence: main scratch/public-v020-download-report.json. |
+| Previous release preserved | The 0.1.1 download returned HTTP 200 with 6,304,374 bytes and its unchanged SHA-256 280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2. |
+| Independent anonymous HTTP transfer | HTTP 200, 1,045,716,354 bytes and the same final SHA-256 in 48.11 seconds. The file was not executed. Evidence: scratch/public-v020-http-download-report.json. |
 | Network boundary | The successful installer process used unreachable child-only proxies. Host networking and antivirus settings were unchanged. This verifies no successful proxy-mediated setup fetch was required; it is not a network-disconnected clean-machine test. |
 
 The tested 03d6fda candidate passed in-place update, source/package repair and
-the application checks above, but did not pass relocation. The GitHub draft asset
-upload for that candidate completed with its reported digest matching its EXE
-SHA-256; it has not been published and must be replaced by the corrected,
-accepted artifact. A draft is not a public browser-download verification.
+the application checks above, but did not pass relocation. Its unpublished draft asset was replaced by the accepted c8ff04e artifact after
+the corrected native relocation passed. Only that accepted artifact was published;
+the earlier candidate checks remain bound to their original source identities.
 
 ## First candidate finding
 
@@ -93,22 +134,33 @@ were retained, and the copied record remained byte-identical.
 
 A two-line collection-count correction and a regression using multiple source
 files passed red/green checks. Read-only health discovery with the corrected
-helper reported scratch/pc-moved healthy. This verifies the helper correction;
-it does not establish a successful native relocation with a rebuilt installer.
-A corrected artifact and repeat relocation remain required before publication.
+helper reported scratch/pc-moved healthy. The corrected c8ff04e installer then
+passed a separate native relocation into the new empty scratch/pc-moved-final
+folder, with completed receipt, switched registration and verified record hashes.
+The earlier failed destination and its evidence were preserved.
 
-## Required final checks
+## Publication and remaining boundaries
 
-The corrected candidate must be built and repeat native relocation in dedicated
-PC test folders. Public browser download and observations from the installed
-antivirus remain pending until explicit results are appended. Preserve the failed
-03d6fda Move evidence above; do not report that attempt as successful. The existing
-capture, restoration and close checks apply to 03d6fda, not automatically to a
-subsequent artifact whose source differs.
-The earlier fresh-install candidate, final in-place update and regression counts
-are bound separately above; they must not be conflated as one identical test. No VM is part of this run.
-Native wizard interaction and antivirus prompt coverage remain limited; executable
-logs and automated fixtures do not replace visual inspection of every UI state.
+GitHub publication, canonical live release metadata, the live checksum, previous
+release preservation, three-width page layout, and the complete anonymous browser
+download passed. A separate full anonymous HTTP transfer independently matched
+the final file. Public evidence is retained in main workspace
+scratch/public-v020-download-report.json and feature scratch/
+public-v020-http-download-report.json.
+
+The browser download initially paused at 44,460 bytes before later completing.
+No protection settings changed; the cause of that pause was not diagnosed.
+The downloaded file had Mark of the Web but was not executed. Installation tests
+used the local accepted artifact. Therefore these results do not establish the
+SmartScreen outcome or antivirus acceptance when executing a freshly downloaded
+Internet-marked EXE. No universal antivirus qualification is claimed.
+
+The earlier fresh-install candidate, update/repair candidate, accepted relocation
+artifact, app-source equivalence and final installed-app checks are bound
+separately above. They are not one identical test or a clean-Windows validation.
+No VM is part of this run. Native wizard interaction and antivirus-prompt coverage
+remain limited; executable logs and automated fixtures do not establish every
+interactive state. No general installation-time performance guarantee is made.
 
 The PC reports Avast Antivirus registered. No antivirus settings were changed.
 Registration alone does not prove every protection module is active. The user

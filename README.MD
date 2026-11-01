@@ -2,13 +2,17 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Offline installer candidate
+## Offline desktop installer: 0.2.0
 
-Version **0.2.0 is being prepared** on the isolated installer feature branch.
+Version **0.2.0 is published as an unsigned research prerelease**. Download it
+from the [landing page](https://forensic-dgp.pages.dev/) or
+[GitHub Releases](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.0).
 It bundles private Python, complete hashed Windows CPU package sets and all six
 admitted models. It adds fresh/update/repair/move discovery, safe environment
 replacement and verified relocation records. See [build instructions](packaging/BUILD.md).
-The public download remains 0.1.1 until the new candidate passes local-PC checks.
+The public download is one offline EXE containing 1,045,716,354 bytes. The live
+metadata, GitHub asset digest and complete anonymous browser-download hash
+match the accepted build. The previous 0.1.1 download remains available unchanged.
 
 Verification uses the user's own PC and dedicated test folders. An earlier
 0.2.0 candidate completed a fresh installation; the tested candidate passed an
@@ -17,16 +21,21 @@ record. Source/package repair also passed with restored source bytes, a new
 verified environment generation and preserved records. Capture, real restoration,
 review export and scoped shutdown checks passed. Native relocation stopped safely
 before switching registration because of a source-file counting defect; the helper
-fix has regression coverage, and a corrected installer/retest remains pending.
-The tested candidate has not been accepted or published. No clean-Windows
+fix has regression coverage and the corrected c8ff04e installer is built.
+Its repeat native relocation passed in 651.33 seconds with records preserved,
+recreated environments and updated Windows integration. The accepted installation
+also passed layout, capture, playback-rate and shutdown checks. GitHub/Pages
+publication and final browser-download verification are complete. The downloaded
+Internet-marked EXE was verified but not executed, so these checks do not establish
+its SmartScreen/antivirus execution outcome. No clean-Windows
 VM or general hardware qualification is claimed. Antivirus stays enabled. Signing remains
 outside the free preview and an unsigned release can still receive Windows warnings.
 
 ## Previous public desktop installer: 0.1.1
 
 The Windows setup EXE has a public [download page](https://forensic-dgp.pages.dev).
-The following behavior describes **the previous 0.1.1 online installer**, which
-remains the public download during 0.2.0 verification. See [installer verification](packaging/VERIFICATION.md) for its exact artifact identity and test boundaries.
+The following behavior describes **the historical 0.1.1 online installer**,
+preserved as the previous release rather than the current main download. See [installer verification](packaging/VERIFICATION.md) for its exact artifact identity and test boundaries.
 
 The 0.1.1 setup flow selects a dedicated local fixed-drive folder of at most 120 characters. That folder contains the desktop launcher plus `runtime` for private Python, application/capture dependencies, package caches, verified models and saved records. First setup requires Windows 10/11 x64, Microsoft Edge, internet access and at least 4 GB of free disk space. It does not require administrator access or preinstalled Python. Known-size downloads show measured progress; package setup and verification show activity when a total is unknown.
 
