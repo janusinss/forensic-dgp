@@ -1,3 +1,50 @@
+# Version 0.2.0 candidate verification
+
+Date: 2026-11-01, Asia/Manila. Status: candidate under local-PC verification;
+not yet published. The previous 0.1.1 record below is historical evidence.
+
+## New acceptance contract
+
+The candidate bundles private Python, hashed Windows application/capture wheel
+sets, admitted models and third-party notices. It supports existing-installation
+discovery, source/runtime repair, and receipt-bound relocation. Active files are
+preserved on preparation failure; historical saved records remain byte-exact.
+
+The payload has 1,097,942,917 input bytes and 1,880,644,934 expanded bytes.
+Manifest SHA-256: bf92c65b3ad343f0605325b48dad5c94e80300e4675fd3918c48c86a363fbb3e.
+Final compressed EXE bytes and SHA-256 will be recorded after compilation.
+
+## Checks completed before candidate compilation
+
+- Locked application packages installed and imported from local wheels with
+  LongPathsEnabled=0. No Windows registry policy change was made.
+- Patched package pins: Pillow13.0.0, pip26.2.2, uv0.13.4. The isolated verification
+  environment dependency audit reported no known vulnerabilities. This is an
+  advisory-database check, not a complete security verdict.
+- 34 JavaScript capture/playback regressions and 19 website integrity/hosting
+  tests passed. The website production build and dependency audit passed.
+- Actual private-Python staging proof installed pip26.2.2 from the verified
+  wheel, validated ensurepip26.2.2 and a derived-runtime receipt, then published
+  only the owned test base. Shared Python remained unchanged.
+- An isolated Inno event fixture established that ssPostInstall follows files,
+  registration and shortcuts, and precedes the optional application launch.
+
+## Required final checks
+
+Full integrated regression suite, final committed-source compilation, actual
+fresh install/reinstall/repair/move in dedicated PC test folders, offline setup,
+first-use flows, browser download and active-antivirus observations remain
+pending until explicit results are appended. No VM is part of this run.
+
+The PC reports Avast Antivirus registered. No antivirus settings were changed.
+Registration alone does not prove every protection module is active. The user
+provided an illustrative SmartScreen screenshot, not an exact diagnosis of a
+specific release detection. Signing is not implemented and no warning-free
+execution guarantee is made. Webcam/RTSP hardware and physical computers other
+than this PC remain unverified. Model qualification is unchanged.
+
+---
+
 # Version 0.1.1 installer verification
 
 Current download page: https://forensic-dgp.pages.dev/.

@@ -1,5 +1,6 @@
 /** Prepare the exact verified preview installer for a static download site. */
 import { createHash } from 'node:crypto';
+import { createReadStream } from 'node:fs';
 import { lstat, mkdir, mkdtemp, readFile, writeFile, rename, unlink, rmdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -7,6 +8,20 @@ import { fileURLToPath } from 'node:url';
 const siteRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const defaultSource = path.resolve(siteRoot, '../scratch/dist');
 const maximumArtifactBytes = 25 * 1024 * 1024;
+const maximumOfflineBytes = 2 * 1024 ** 3 - 1;
+
+function isOffline(source) {
+  if (source.payload !== undefined && !['online-source-bundled', 'offline-bundled'].includes(source.payload)) {
+    throw new Error('Unsupported release payload contract.');
+  }
+  return source.payload === 'offline-bundled';
+}
+
+async function hashArtifact(target) {
+  const hash = createHash('sha256');
+  for await (const chunk of createReadStream(target)) hash.update(chunk);
+  return hash.digest('hex');
+}
 
 async function existingInfo(target) {
   try { return await lstat(target); }
@@ -40,7 +55,7 @@ async function ensureDirectory(target) {
   await requireOrdinary(target, 'directory');
 }
 
-function releaseMetadata(source, bytes, sha256) {
+function releaseMetadata(source, byteCount, sha256) {
   if (source === null || Array.isArray(source) || typeof source !== 'object' || source.schema !== 1) {
     throw new Error('Unsupported release metadata schema.');
   }
@@ -48,10 +63,12 @@ function releaseMetadata(source, bytes, sha256) {
   if (typeof source.version !== 'string' || !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(source.version)) {
     throw new Error('Release version must be a safe numeric major.minor.patch value.');
   }
-  if (!Number.isSafeInteger(source.artifact_bytes) || source.artifact_bytes < 1 || source.artifact_bytes > maximumArtifactBytes) {
-    throw new Error('Release artifact bytes must fit the 25 MiB static asset limit.');
+  const offline = isOffline(source);
+  const maximum = offline ? maximumOfflineBytes : maximumArtifactBytes;
+  if (!Number.isSafeInteger(source.artifact_bytes) || source.artifact_bytes < 1 || source.artifact_bytes > maximum) {
+    throw new Error('Release artifact bytes exceed the reviewed download limit.');
   }
-  if (source.artifact_bytes !== bytes.length) throw new Error('Installer size differs from its release metadata.');
+  if (source.artifact_bytes !== byteCount) throw new Error('Installer size differs from its release metadata.');
   if (typeof source.artifact_sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(source.artifact_sha256) || source.artifact_sha256 !== sha256) {
     throw new Error('Installer SHA-256 differs from its release metadata.');
   }
@@ -61,12 +78,15 @@ function releaseMetadata(source, bytes, sha256) {
     schema: 1,
     version: source.version,
     filename,
-    bytes: bytes.length,
+    bytes: byteCount,
     sha256,
     signed: false,
     preview: true,
-    downloadUrl: `/downloads/${filename}`,
+    downloadUrl: offline
+      ? `https://github.com/janusinss/forensic-dgp-downloads/releases/download/v${source.version}/${filename}`
+      : `/downloads/${filename}`,
     checksumUrl: `/downloads/${filename}.sha256`,
+    ...(offline ? { offline: true } : {}),
   };
 }
 
@@ -80,11 +100,17 @@ export async function prepareRelease({ sourceDir = defaultSource, siteDir = site
   const metadataInfo = await lstat(metadataPath);
   if (metadataInfo.size > 64 * 1024) throw new Error('Source release metadata exceeds its size limit.');
   const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+  if (metadata === null || Array.isArray(metadata) || typeof metadata !== 'object') throw new Error('Unsupported release metadata schema.');
+  const offline = isOffline(metadata);
   const artifactInfo = await lstat(artifactPath);
-  if (artifactInfo.size < 1 || artifactInfo.size > maximumArtifactBytes) throw new Error('Installer size exceeds the 25 MiB static asset limit.');
-  const bytes = await readFile(artifactPath);
-  const sha256 = createHash('sha256').update(bytes).digest('hex');
-  const release = releaseMetadata(metadata, bytes, sha256);
+  const maximum = offline ? maximumOfflineBytes : maximumArtifactBytes;
+  if (artifactInfo.size < 1 || artifactInfo.size > maximum) throw new Error('Installer size exceeds the reviewed download limit.');
+  const sha256 = await hashArtifact(artifactPath);
+  const afterHash = await lstat(artifactPath);
+  if (afterHash.size !== artifactInfo.size || afterHash.ino !== artifactInfo.ino || afterHash.mtimeMs !== artifactInfo.mtimeMs) {
+    throw new Error('Installer changed while verifying its checksum.');
+  }
+  const release = releaseMetadata(metadata, artifactInfo.size, sha256);
 
   // Validation completes before public directories or previously prepared files change.
   const publicDir = path.join(destination, 'public');
@@ -92,7 +118,7 @@ export async function prepareRelease({ sourceDir = defaultSource, siteDir = site
   const sourceOutput = path.join(destination, 'src');
   const filename = path.basename(release.downloadUrl);
   const targets = [
-    path.join(downloadsDir, filename),
+    ...(!offline ? [path.join(downloadsDir, filename)] : []),
     path.join(downloadsDir, `${filename}.sha256`),
     path.join(sourceOutput, 'release.generated.json'),
     path.join(publicDir, 'release.json'),
@@ -105,9 +131,16 @@ export async function prepareRelease({ sourceDir = defaultSource, siteDir = site
   const stage = await mkdtemp(path.join(publicDir, '.release-'));
   const staged = targets.map(target => path.join(stage, path.basename(target)));
   try {
-    await writeFile(staged[0], bytes, { flag: 'wx' });
-    await writeFile(staged[1], `${sha256}  ${filename}\n`, { encoding: 'utf8', flag: 'wx' });
-    for (const target of staged.slice(2)) await writeFile(target, `${JSON.stringify(release, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
+    let offset = 0;
+    if (!offline) {
+      const bytes = await readFile(artifactPath);
+      if (bytes.length !== release.bytes || createHash('sha256').update(bytes).digest('hex') !== sha256) {
+        throw new Error('Installer changed before release staging.');
+      }
+      await writeFile(staged[offset++], bytes, { flag: 'wx' });
+    }
+    await writeFile(staged[offset++], `${sha256}  ${filename}\n`, { encoding: 'utf8', flag: 'wx' });
+    for (const target of staged.slice(offset)) await writeFile(target, `${JSON.stringify(release, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' });
     // Each rename replaces one owned output atomically. Publish the metadata last.
     for (let index = 0; index < staged.length; index++) {
       await requireOrdinary(targets[index], 'file', true);

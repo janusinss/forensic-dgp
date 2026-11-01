@@ -61,7 +61,7 @@ class DependencyInstallationTests(unittest.TestCase):
         bootstrap, installation, check = [call.args[0] for call in run.call_args_list]
         self.assertEqual(bootstrap[0], str(self.python))
         self.assertIn("pip", bootstrap)
-        self.assertIn("uv==0.13.1", bootstrap)
+        self.assertIn("uv==0.13.4", bootstrap)
         self.assertNotIn("--upgrade", bootstrap)
         self.assertIn("https://pypi.org/simple", bootstrap)
         self.assert_uv_install(installation)

@@ -4,11 +4,13 @@ param(
   [string]$Commit,
   [string]$BundlePath,
   [string]$BundleManifest,
+  [switch]$Repair,
   [Parameter(ValueFromRemainingArguments=$true)][string[]]$LaunchArgs
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $repo = 'janusinss/forensic-dgp'
+if ($Repair -and ($Action -ne 'Install' -or !$BundlePath -or !$BundleManifest)) { throw 'Source repair requires an Install action and both embedded bundle paths.' }
 $root = [IO.Path]::GetFullPath($ManagedRoot).TrimEnd('\')
 $customShell = $null
 if ($env:DGP_INSTALL_ROOT) {
@@ -168,6 +170,41 @@ function Verify-Version([string]$sha) {
   }
   return $dir
 }
+function Repair-Container([string]$directory,[string]$receipt) {
+  Check-Path $directory; Check-Path $receipt
+  if (Test-Path -LiteralPath $directory) {
+    $item = Get-Item -LiteralPath $directory -Force
+    if (!$item.PSIsContainer) { throw 'The computed source revision is not an ordinary directory.' }
+    $files = @(Ordinary-Files $directory)
+    if ($files.Count -gt 5000) { throw 'The owned repair source contains too many files; existing files were preserved.' }
+  }
+  if (Test-Path -LiteralPath $receipt) {
+    $item = Get-Item -LiteralPath $receipt -Force
+    if ($item.PSIsContainer -or $item.Length -gt 4MB) { throw 'The repair receipt is not an ordinary bounded file.' }
+  }
+}
+function Restore-SourceRepair([hashtable]$transaction) {
+  $directory = $transaction.directory; $receipt = $transaction.receipt; $backup = $transaction.backup
+  Check-Path $directory; Check-Path $receipt; Check-Path $backup
+  if ($transaction.replacement_published -and (Test-Path -LiteralPath $directory)) {
+    $null = @(Ordinary-Files $directory)
+    Move-Item -LiteralPath $directory -Destination (Join-Path $backup 'failed-replacement') -ErrorAction Stop
+  }
+  if ($transaction.replacement_receipt -and (Test-Path -LiteralPath $receipt)) {
+    Check-Path $receipt
+    Move-Item -LiteralPath $receipt -Destination (Join-Path $backup 'failed-replacement-receipt.json') -ErrorAction Stop
+  }
+  if ($transaction.source_moved) {
+    $original = Join-Path $backup 'source'; Check-Path $original
+    if (Test-Path -LiteralPath $directory) { throw 'Repair rollback destination is occupied; backup files were preserved.' }
+    Move-Item -LiteralPath $original -Destination $directory -ErrorAction Stop
+  }
+  if ($transaction.receipt_moved) {
+    $original = Join-Path $backup 'receipt.json'; Check-Path $original
+    if (Test-Path -LiteralPath $receipt) { throw 'Repair receipt rollback destination is occupied; backup files were preserved.' }
+    Move-Item -LiteralPath $original -Destination $receipt -ErrorAction Stop
+  }
+}
 function Api([string]$url) { return Invoke-RestMethod -Uri $url -Headers @{ 'User-Agent'='Forensic-DGP-Installer'; 'Accept'='application/vnd.github+json' } -TimeoutSec 30 }
 function Test-Archive($archive, [hashtable]$manifest, [string]$commit) {
   $seen = @{}
@@ -225,6 +262,8 @@ $digest = [Security.Cryptography.SHA256]::Create()
 try { $mutexId = ([BitConverter]::ToString($digest.ComputeHash([Text.Encoding]::UTF8.GetBytes($root.ToLowerInvariant())))).Replace('-','').Substring(0,24) } finally { $digest.Dispose() }
 $mutex = New-Object Threading.Mutex($false, ('Local\DGP-app-' + $mutexId))
 $held = $false
+$repairTransaction = $null
+$sourceActivated = $false
 try {
   try { $held = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $held = $true }
   if (!$held) { throw 'The app or installer is already running. Close it before continuing.' }
@@ -274,7 +313,7 @@ try {
   }
   }
   $versionDir = Join-Path $root ('versions\' + $Commit)
-  if (Test-Path -LiteralPath $versionDir) { $versionDir = Verify-Version $Commit }
+  if ((Test-Path -LiteralPath $versionDir) -and !$Repair) { $versionDir = Verify-Version $Commit }
   else {
     $stage = Join-Path $root ('staging\' + [guid]::NewGuid().ToString('N'))
     Check-Path $stage
@@ -306,11 +345,42 @@ try {
     Check-Path (Join-Path $root 'versions'); Check-Path (Join-Path $root 'receipts')
     New-Item -ItemType Directory -Path (Join-Path $root 'versions'),(Join-Path $root 'receipts') -Force | Out-Null
     Check-Path (Join-Path $root 'versions'); Check-Path (Join-Path $root 'receipts')
-    Move-Item -LiteralPath (Join-Path $stage 'tree') -Destination $versionDir
+    $treeDirectory = Join-Path $stage 'tree'
     $files = [ordered]@{}
-    foreach ($name in ($manifest.Keys | Sort-Object)) { $files[$name] = File-Sha (Join-Path $versionDir ($name.Replace('/','\'))) }
+    foreach ($name in ($manifest.Keys | Sort-Object)) { $files[$name] = File-Sha (Join-Path $treeDirectory ($name.Replace('/','\'))) }
     $receipt = @{schema=1;commit=$Commit;files=$files} | ConvertTo-Json -Depth 5 -Compress
-    [IO.File]::WriteAllText((Join-Path $root ('receipts\' + $Commit + '.json')),$receipt,[Text.Encoding]::UTF8)
+    $stagedReceipt = Join-Path $stage 'receipt.json'
+    [IO.File]::WriteAllText($stagedReceipt,$receipt,[Text.Encoding]::UTF8)
+    $receiptPath = Join-Path $root ('receipts\' + $Commit + '.json')
+    if ($Repair -and ((Test-Path -LiteralPath $versionDir) -or (Test-Path -LiteralPath $receiptPath))) {
+      # Runtime ownership, the exact bundled commit/ancestry and ordinary computed
+      # paths establish the container. Damaged/missing receipts are preserved;
+      # they are never trusted as executable code or used to choose another path.
+      Repair-Container $versionDir $receiptPath
+      $backup = Join-Path $root ('repair-backups\' + $Commit + '-' + [guid]::NewGuid().ToString('N'))
+      Check-Path $backup
+      New-Item -ItemType Directory -Path $backup -Force | Out-Null
+      Check-Path $backup
+      $record = @{schema=1;kind='source-repair-backup';commit=$Commit;source_root=$versionDir;receipt_path=$receiptPath} | ConvertTo-Json -Compress
+      [IO.File]::WriteAllText((Join-Path $backup 'owner.json'),$record,[Text.Encoding]::UTF8)
+      $repairTransaction = @{directory=$versionDir;receipt=$receiptPath;backup=$backup;source_moved=$false;receipt_moved=$false;replacement_published=$false;replacement_receipt=$false}
+      if (Test-Path -LiteralPath $versionDir) {
+        Move-Item -LiteralPath $versionDir -Destination (Join-Path $backup 'source') -ErrorAction Stop
+        $repairTransaction.source_moved = $true
+      }
+      if (Test-Path -LiteralPath $receiptPath) {
+        Move-Item -LiteralPath $receiptPath -Destination (Join-Path $backup 'receipt.json') -ErrorAction Stop
+        $repairTransaction.receipt_moved = $true
+      }
+      Setup-Event 'source' 'running' 'Repairing source from the verified embedded release; previous source preserved'
+    } elseif (Test-Path -LiteralPath $receiptPath) {
+      throw 'A source receipt exists without its version directory. Use Repair to preserve and replace this interrupted attempt.'
+    }
+    Move-Item -LiteralPath $treeDirectory -Destination $versionDir -ErrorAction Stop
+    if ($repairTransaction) { $repairTransaction.replacement_published = $true }
+    Move-Item -LiteralPath $stagedReceipt -Destination $receiptPath -ErrorAction Stop
+    if ($repairTransaction) { $repairTransaction.replacement_receipt = $true }
+    $null = Verify-Version $Commit
   }
   Check-Cancel
   Setup-Event 'environment' 'running' 'Preparing dependencies and verified model assets'
@@ -332,6 +402,7 @@ try {
     $backup = Join-Path $root ('previous.' + [guid]::NewGuid().ToString('N') + '.json')
     [IO.File]::Replace($tmp,$pointer,$backup)
   } else { [IO.File]::Move($tmp,$pointer) }
+  $sourceActivated = $true
   $starter = Join-Path $versionDir 'start.bat'
   foreach ($dest in @((Join-Path $root 'start.bat'),$(if ($env:DGP_BOOTSTRAP_FILE) { Join-Path (Split-Path -Parent $env:DGP_BOOTSTRAP_FILE) 'start.bat' }))) {
     if (!$dest) { continue }
@@ -346,6 +417,11 @@ try {
   Write-Host "Installed revision $Commit. Verified launcher: $starter"
   Setup-Event 'complete' 'complete' "Installed revision $Commit"
 } catch {
-  Setup-Event 'error' 'error' $_.Exception.Message
-  throw
+  $failure = $_
+  if ($repairTransaction -and !$sourceActivated) {
+    try { Restore-SourceRepair $repairTransaction }
+    catch { throw ('Source repair failed and rollback requires review. Previous files remain in ' + $repairTransaction.backup + '. Original error: ' + $failure.Exception.Message + '. Rollback error: ' + $_.Exception.Message) }
+  }
+  Setup-Event 'error' 'error' $failure.Exception.Message
+  throw $failure
 } finally { if ($held) { $mutex.ReleaseMutex() }; $mutex.Dispose() }

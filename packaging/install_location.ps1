@@ -1,7 +1,9 @@
 # Validate a dedicated per-user full application folder before any runtime setup.
 param(
-    [ValidateSet('Validate','Prepare')][string]$Action = 'Validate',
-    [Parameter(Mandatory=$true)][string]$InstallRoot
+    [ValidateSet('Validate','Prepare','Preflight')][string]$Action = 'Validate',
+    [Parameter(Mandatory=$true)][string]$InstallRoot,
+    [long]$RequiredBytes=0,
+    [switch]$CheckPrerequisites
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2
@@ -103,6 +105,48 @@ try {
             $config = Bounded-Json $configPath
             if ($null -eq $config -or @($config.PSObject.Properties).Count -ne 3 -or $config.schema -isnot [int] -or $config.schema -ne 1 -or !(Same-Path $config.install_root $shell) -or !(Same-Path $config.managed_root (Join-Path $shell 'runtime'))) { throw 'Existing install location binding differs; files were preserved.' }
         }
+    }
+    if ($Action -eq 'Preflight') {
+        if ($RequiredBytes -lt 0) { throw 'Invalid required disk space.' }
+        if ($info.AvailableFreeSpace -lt $RequiredBytes) { throw 'Not enough free space for application preparation. Choose another drive or free disk space.' }
+        $existing=$shell
+        while (!(Test-Path -LiteralPath $existing -PathType Container)) { $existing=[IO.Path]::GetDirectoryName($existing) }
+        Add-Type -TypeDefinition @'
+using System;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Text;
+public static class DgpLocationNative {
+ [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern IntPtr CreateFile(string name,uint access,uint share,IntPtr security,uint creation,uint flags,IntPtr template);
+ [DllImport("kernel32.dll",CharSet=CharSet.Unicode,SetLastError=true)] static extern uint GetFinalPathNameByHandle(IntPtr handle,StringBuilder path,uint length,uint flags);
+ [DllImport("kernel32.dll",SetLastError=true)] static extern bool CloseHandle(IntPtr handle);
+ public static string FinalDirectory(string name) {
+  IntPtr handle=CreateFile(name,0,7,IntPtr.Zero,3,0x02000000,IntPtr.Zero);
+  if(handle==new IntPtr(-1)) throw new Win32Exception(Marshal.GetLastWin32Error());
+  try { StringBuilder output=new StringBuilder(32768); uint size=GetFinalPathNameByHandle(handle,output,32768,0); if(size==0 || size>=32768) throw new Win32Exception(Marshal.GetLastWin32Error()); string value=output.ToString(); return value.StartsWith(@"\\?\")?value.Substring(4):value; }
+  finally {CloseHandle(handle);}
+ }
+}
+'@
+        $physicalParent=[DgpLocationNative]::FinalDirectory($existing).TrimEnd('\')
+        $suffix=$shell.Substring($existing.TrimEnd('\').Length).TrimStart('\')
+        $physical=$(if ($suffix) { Join-Path $physicalParent $suffix } else { $physicalParent })
+        if (!(Same-Path $physical $shell)) { throw ('Windows redirected the chosen folder to '+$physical+'. Open setup directly from File Explorer or choose an ordinary folder on another local path.') }
+        $probe=Join-Path $existing ('.dgp-write-probe-'+[guid]::NewGuid().ToString('N'))
+        $stream=$null
+        try { $stream=[IO.File]::Open($probe,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None); $stream.WriteByte(0) }
+        finally { if ($stream) { $stream.Dispose() }; if (Test-Path -LiteralPath $probe -PathType Leaf) { Remove-Item -LiteralPath $probe -Force } }
+        if ($CheckPrerequisites) {
+            $edge=$false
+            foreach ($base in @([Environment]::GetEnvironmentVariable('ProgramFiles(x86)'),$env:ProgramFiles,$env:LOCALAPPDATA)) {
+                if ($base -and (Test-Path -LiteralPath (Join-Path $base 'Microsoft\Edge\Application\msedge.exe') -PathType Leaf)) { $edge=$true; break }
+            }
+            if (!$edge) { throw 'Microsoft Edge is required for the desktop window. Install Edge before continuing; this offline setup does not download a browser.' }
+            $framework=Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -Name Release -ErrorAction SilentlyContinue
+            if (!$framework -or $framework.Release -lt 528040) { throw 'Microsoft .NET Framework 4.8 or newer is required for the desktop launcher. Windows prerequisites must be installed before continuing.' }
+        }
+        [ordered]@{schema=1;install_root=$shell;managed_root=(Join-Path $shell 'runtime');physical_install_root=$physical;available_bytes=$info.AvailableFreeSpace;required_bytes=$RequiredBytes} | ConvertTo-Json -Compress | Write-Output
+        exit 0
     }
     if ($Action -eq 'Prepare') {
         [IO.Directory]::CreateDirectory($shell) | Out-Null

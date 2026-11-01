@@ -4,11 +4,14 @@ Generated facial detail is an estimate. The included restoration and completion
 models are not qualified for identifying people.
 
 This application uses adaptations of S-Lab CodeFormer under non-commercial
-terms. The full upstream licenses, model cards, provenance and notices are
-included with the installed application source.
+terms. The upstream licenses, model cards, provenance and notices are included
+with the application source. Bundled Python and package licenses are retained.
 
-Installation requires network access for Python packages and model downloads.
-Application launch and local processing use the installed files.
+Offline installers include Python, application libraries and model files.
+After downloading the complete installer, setup and local processing do not
+require internet access. Legacy online installers obtain components online.
 
-Uninstall removes the Windows launcher and shortcuts. The shared managed backend,
-models and saved records are retained under %LOCALAPPDATA%\DGP\app.
+The selected application folder contains the private runtime, models and saved
+records. Normal uninstall removes Windows integration while retaining that data.
+Relocation preserves records and offers removal of verified previous app files
+only after the new installation is ready. Unrelated files are preserved.

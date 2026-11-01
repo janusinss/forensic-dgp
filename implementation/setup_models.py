@@ -20,6 +20,7 @@ import uuid
 
 from .managed_paths import data_path
 from .setup_events import SetupCancelled, check_cancel, event
+from .offline_payload import load_payload, OfflinePayloadError, protect_active_model
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = data_path(ROOT, 'models', 'implementation')
@@ -134,6 +135,54 @@ def _publish_without_overwrite(partial: Path, destination: Path) -> None:
 
 def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     check_cancel()
+    payload = load_payload()
+    if payload is not None:
+        key = next((key for key,value in load_manifest()['assets'].items() if value['filename']==asset['filename']),None)
+        if key is None:
+            raise ModelSetupError('Offline model is not part of the admitted restoration set.')
+        source = payload.model_source('restoration',key,asset)
+        destination = model_dir / asset['filename']
+        if verify_asset(destination,asset):
+            return destination
+        # A damaged ordinary file is retained under a unique backup name; links
+        # and unrelated directory entries are never repaired or overwritten.
+        for parent in (model_dir,*model_dir.parents):
+            if parent.exists():
+                info=parent.lstat()
+                if not parent.is_dir() or parent.is_symlink() or getattr(info,'st_file_attributes',0)&1024:
+                    raise ModelSetupError('Offline model directories cannot contain links.')
+        backup = None
+        if destination.exists() or destination.is_symlink():
+            info=destination.lstat()
+            if not destination.is_file() or destination.is_symlink() or getattr(info,'st_file_attributes',0)&1024 or info.st_nlink != 1:
+                raise ModelSetupError('Existing model is linked or has an unexpected type; it was preserved.')
+            protect_active_model(destination,'restoration',asset)
+        model_dir.mkdir(parents=True,exist_ok=True)
+        partial=model_dir/('.'+destination.name+'.'+uuid.uuid4().hex+'.partial')
+        try:
+            copied=0
+            event('download:'+destination.name,'copying','Copying verified offline '+destination.name,current=0,total=asset['size'])
+            with source.open('rb') as reader,partial.open('xb') as writer:
+                while block:=reader.read(CHUNK_SIZE):
+                    check_cancel(); copied+=len(block)
+                    if copied>asset['size']: raise ModelSetupError('Offline model grew during copy.')
+                    writer.write(block)
+                    event('download:'+destination.name,'copying',destination.name,current=copied,total=asset['size'])
+                writer.flush(); os.fsync(writer.fileno())
+            if not verify_asset(partial,asset):
+                raise ModelSetupError('Offline model copy failed verification.')
+            if destination.exists():
+                backup=model_dir/('.'+destination.name+'.previous-'+uuid.uuid4().hex)
+                destination.rename(backup)
+            try:
+                _publish_without_overwrite(partial,destination)
+            except BaseException:
+                if backup is not None and not destination.exists(): backup.rename(destination)
+                raise
+            event('download:'+destination.name,'complete',destination.name,current=asset['size'],total=asset['size'])
+            return destination
+        finally:
+            partial.unlink(missing_ok=True)
     _stage_bundled_asset_if_needed(asset, model_dir)
     destination = model_dir / asset["filename"]
     label = COMPONENT_LABELS.get(destination.name)
@@ -209,7 +258,7 @@ def main(argv: list[str] | None = None) -> int:
     except SetupCancelled as exc:
         print(f'[CANCELLED] {exc}', file=sys.stderr)
         return 130
-    except ModelSetupError as exc:
+    except (ModelSetupError,OfflinePayloadError) as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1
 

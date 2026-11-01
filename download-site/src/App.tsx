@@ -9,10 +9,11 @@ type Release = {
   downloadUrl: string
   checksumUrl?: string
   filename: string
+  offline?: boolean
 }
 
 const release = releaseData as Release
-const size = `${(release.bytes / 1_000_000).toFixed(1)} MB`
+const size = release.bytes >= 1_000_000_000 ? `${(release.bytes / 1_000_000_000).toFixed(2)} GB` : `${(release.bytes / 1_000_000).toFixed(1)} MB`
 
 function DownloadIcon() {
   return (
@@ -50,7 +51,7 @@ export default function App() {
                   <span className="download-arrow" aria-hidden="true">↗</span>
                 </a>
                 <p className="download-details">Windows 10 / 11 <span aria-hidden="true">·</span> 64-bit <span aria-hidden="true">·</span> {size}</p>
-                <p className="release-details">Version {release.version}{release.preview ? ' preview' : ''}{!release.signed ? ' · Unsigned installer' : ''}</p>
+                <p className="release-details">Version {release.version}{release.preview ? ' preview' : ''}{release.offline ? ' · Offline installer' : ''}{!release.signed ? ' · Unsigned installer' : ''}</p>
               </div>
             </div>
 
@@ -93,7 +94,9 @@ export default function App() {
                 </div>
               </li>
             </ol>
-            <p className="setup-note">First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.</p>
+            <p className="setup-note">{release.offline
+              ? 'Includes Python, application libraries and models. After downloading, setup works offline. Microsoft Edge is required; setup checks available disk space. Existing installations can be updated, repaired or moved.'
+              : 'First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.'}</p>
           </section>
 
           <aside className="research-note" aria-label="Experimental use">

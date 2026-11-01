@@ -1,83 +1,101 @@
-# Build the online Windows installer
+# Build Windows installer releases
 
-Status: version 0.1.1 is published at https://forensic-dgp.pages.dev. The public download matches the verified local artifact. Clean-machine release validation remains open; see VERIFICATION.md.
+The offline release targets Windows x64 and contains private CPython, CPU-only
+application packages, an isolated capture environment, and all six admitted
+models. Legacy online builds remain supported for developer workflows.
 
-## Build prerequisites
+## Build preparation
 
-Use Windows x64 with Git, Python 3.12/3.13 x64, the Windows .NET Framework C# compiler, Node.js for JavaScript checks, and verified Inno Setup 7.1.1 x64. End users need none of these build tools. The desktop window requires Microsoft Edge.
+Use Windows x64, Git, Python 3.13 x64, the Windows Framework C# compiler, and the
+verified Inno Setup 7.1.1 compiler. End users need none of these build tools.
+The desktop window requires Microsoft Edge and the supported .NET Framework.
 
-The compiler installer is pinned to:
-https://github.com/jrsoftware/issrc/releases/download/is-7_1_1/innosetup-7.1.1-x64.exe
+The compiler is pinned to the official innosetup-7.1.1-x64.exe release with
+SHA-256 8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0.
+Verify its Pyrsys B.V. Authenticode signature before using it.
 
-SHA-256:
-8a5a6711c3766a6e5fb74f280ba0e3551e719ce94538d901fdbd1f8f9920b3f0
+Prepare a fresh payload outside tracked source:
 
-Verify the checksum and a valid Authenticode signature from Pyrsys B.V. before installing the compiler. Install it for the current user without elevation. This checkout uses `scratch/tools/inno-7.1.1/ISCC.exe`; build tools are not committed.
+```powershell
+python packaging/prepare_offline.py --output scratch/offline-payload --model-source <restoration-model-directory> --model-source <completion-model-directory> --write-locks
+```
 
-## Build
+Only exact size/SHA-256 matches to the admitted model manifests are copied.
+The preparer obtains the fixed official Python ZIP and Windows cp313 wheels.
+No research directory is modified. Review the resulting application/capture
+locks and dependency audit before committing them with the source changes.
+An optional --wheel-source can reuse an earlier group wheelhouse; obsolete
+packages are excluded and missing pinned versions are fetched during building.
 
-Commit the source intended for the artifact on the isolated feature branch. A local preview build does not require merging to IMPLEMENTATION or publishing a release.
+Run the Python/JavaScript suites and commit the reviewed feature source before
+creating the release. The builder reads committed Git blobs and rejects tracked
+changes, changed preparer bytes, or payload locks differing from that commit.
 
 ```powershell
 python -B -m unittest discover -s tests
 node --test tests/*.test.cjs
-python packaging/build_release.py --iscc "scratch/tools/inno-7.1.1/ISCC.exe" --version 0.1.1
+python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.0 --offline-payload scratch/offline-payload
 ```
 
-The builder refuses tracked modifications. Payloads and packaging inputs come from the exact commit; untracked records and model weights are excluded. The setup EXE bundles application source. First setup obtains the pinned private Python runtime, application packages and verified models online. The generated manifest records source identity, ancestry, input checksums and the artifact hash.
+Output: scratch/dist/ForensicDGP_Setup.exe and release.json. The release records
+source ancestry, setup-input hashes, the offline manifest fingerprint, exact
+artifact bytes and SHA-256. The single EXE must remain below 2 GiB. Omit
+--offline-payload only when deliberately building the legacy online variant.
 
-Output is `scratch/dist/ForensicDGP_Setup.exe` with `scratch/dist/release.json`. Build output is ignored by Git. The instructions identify the build inputs; byte-for-byte reproducibility is not asserted for timestamped unsigned EXEs. See `VERIFICATION.md` for the candidate actually built and the checks performed.
+## Offline installation contract
 
-## End-user requirements
+The payload is immutable and inventory-bound: Python ZIP, separate hashed
+package locks/wheels, six models, and package notices with original-path indexes.
+End-user setup never resolves against package indexes or silently falls back to
+an online download. Pip and uv are patched release pins; the installed private
+Python is derived from the fixed ZIP plus the checksum-bound pip update.
 
-- Windows 10 or 11, 64-bit, with Microsoft Edge.
-- Internet access for first setup, including approximately 720 MiB of models and the Python/packages downloads.
-- At least 4 GB of free disk space initially; allow additional space for retained versions, caches and saved records.
-- A dedicated, user-writable folder on a ready local fixed drive, with a full folder path of at most 120 characters.
-- No administrator access, Git, preinstalled Python or GPU is required.
+The selected folder contains the launcher and runtime: private Python, owned
+environment generations, source versions, models, records and diagnostics.
+No global Python, PATH, antivirus exclusion or Windows long-path policy change
+is required. Offline wheel installation uses the extended-length spelling of
+the exact computed environment prefix instead of moving a prebuilt venv.
 
-Network/device paths, drive roots, protected Windows/shared-program directories and linked folders are refused. Select a dedicated child directory rather than a personal-folder root such as Documents or Downloads.
+Preflight checks prerequisites, actual resolved destination, write access and
+payload-based temporary/destination space. Protected roots, links, unsupported
+paths, conflicting ownership and unintended downgrades remain refused.
 
-## Full application folder
+## Existing installations
 
-The directory page selects the full application location. The default is `%LOCALAPPDATA%\Programs\Forensic DGP`; users can choose another permitted folder. The ready page shows that location before installation.
+Setup distinguishes fresh, same-version, update, repair and relocation using
+validated files and ownership as well as Windows registration. An absent target
+with stale registration does not require manual uninstall first. A running app
+must close before mutation; the new launcher supports a scoped close request.
 
-| Location under the selected folder | Contents |
-| --- | --- |
-| Application root | Desktop launcher, shell ownership marker and bound `install-location.json` record. |
-| `runtime\versions` | Verified application source versions. |
-| `runtime\python-3.13.9-amd64` | Private Python used by this desktop installation. |
-| `runtime\environments` and `runtime\cache` | Application/capture libraries and reusable package caches. |
-| `runtime\data` | Verified model files, saved capture/restoration/removal records, and desktop diagnostics. |
+Repairs create and verify a separate environment generation. They retain prior
+files. A failed candidate does not replace the active application pointer.
+Cancellation stops at a safe operation boundary; details and logs remain visible.
 
-Windows registration and shortcuts remain in normal per-user Windows locations. Temporary staging/handshake files can use Windows temporary storage. The full application folder does not require relocating existing global Python installations or changing PATH.
+Relocation stages records and verified models in the new folder, recreates
+Python/environments and location bindings, and verifies the candidate before
+switching Windows integration. Historical JSON bytes and hashes are preserved;
+old absolute paths remain historical provenance. A separate relocation record
+identifies the completed change. The app does not automatically replay old jobs.
 
-## Progress and cancellation
+Optional cleanup runs only after completion and removes matching owned files.
+Unknown or changed files remain. Older installations may retain unproven Python
+or cache files; setup reports this instead of presenting cleanup as total removal.
+The old uninstaller is never used against the newly registered location.
 
-Setup presents five named stages. Known-size downloads show measured byte percentages. Package resolution, environment creation and checks use an activity bar when their total work is unknown. Details and diagnostic logs remain available; the activity bar is not a time estimate.
+Normal uninstall retains runtime and saved records. Reinstalling into an exact
+owned retained folder can reuse verified resources. Unrecognized nonempty folders
+are preserved. Legacy batch-managed DGP/app roots are not implicitly migrated.
 
-Cancellation waits for the current owned operation to finish before stopping at a safe boundary. Activation is the commit boundary; a late cancellation request does not turn a successful backend result into a false failure. If shell installation fails after backend activation, rerun the same setup to finish registration. Shell rollback must not be described as restoring the backend pointer.
+## Release verification and distribution
 
-## Updates and changing location
+Test on the user's own PC in dedicated test folders. Report this as local-PC
+verification, never a clean-Windows or universal hardware qualification. Keep
+antivirus protection enabled and record actual alerts. A SmartScreen example is
+not a confirmed detection cause. The preview remains unsigned; code signing is
+not a delivered feature and no warning-free antivirus promise is made.
 
-Run a newer tested setup EXE explicitly to update the same folder. Valid Python, environments and model files are verified and reused. Package changes use a different environment identity; mismatched or invalid existing resources are preserved and refused rather than silently overwritten. Source ancestry rejects unintended downgrades or divergent embedded payloads.
-
-To choose a different folder while a desktop location is registered, uninstall the Windows launcher first. Uninstall retains the previous runtime and records. Setup can then create a fresh installation in the new folder. It does not copy, move, merge or delete the old models, Python, environments or saved evidence automatically. Preserve those records when comparing the installations.
-
-The original batch-managed `%LOCALAPPDATA%\DGP\app` installation is also left untouched. A custom desktop installation has its own `runtime`; it does not adopt or relocate that older backend implicitly.
-
-## Uninstall and reinstall
-
-Windows Installed Apps uninstall removes the desktop launcher, registration and shortcuts. It retains `runtime`, `install-location.json` and `shell-owner.json` so saved evidence and ownership metadata remain available. Reinstalling into that same marked folder can verify and reuse retained resources. Older uninstall logs can remove the marker; setup recreates it only after the retained location configuration and schema-2 runtime ownership independently verify the same folder. An unrelated nonempty directory or mismatched binding is refused.
-
-No cache-removal checkbox or automatic record deletion is provided. Removing the launcher does not reclaim the retained runtime's disk space.
-
-## Developer batch workflows
-
-The existing batch defaults are preserved: standalone `install.bat` resolves published IMPLEMENTATION and uses its legacy user-local managed root; `start.bat` launches that installed version. Deliberate checkout development continues through `install.bat --source` and `start.bat --source`. The desktop EXE uses the location bound to its own launcher directory instead of redirecting these workflows.
-
-## Release limits
-
-The setup and desktop launcher are unsigned. Inno packaging does not eliminate SmartScreen warnings. Direct dependency pins are not a complete transitive hash lock. A cached local smoke test is not a clean-machine test; consult `VERIFICATION.md` for actual evidence and open gates.
-
-Offline packaging, automatic background updates, GitHub publication and merging to IMPLEMENTATION require separate authorization. The 0.1.1 website deployment and download checksum have been verified.
+Keep the prior public download until the candidate passes acceptance. Large
+offline EXEs are GitHub Release assets in janusinss/forensic-dgp-downloads; the
+Cloudflare Pages site publishes only sanitized metadata/checksums and a fixed
+versioned GitHub link. Website preparation streams the EXE hash rather than
+loading the large file into memory. Never upload research records or credentials.

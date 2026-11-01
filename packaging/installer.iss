@@ -16,7 +16,11 @@ DisableDirPage=no
 UsePreviousAppDir=yes
 DisableWelcomePage=no
 AlwaysShowDirOnReadyPage=yes
+#ifdef OfflinePayload
+ExtraDiskSpaceRequired={#OfflineExpandedBytes + 536870912}
+#else
 ExtraDiskSpaceRequired=3_221_225_472
+#endif
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
@@ -30,7 +34,6 @@ WizardStyle=modern
 InfoBeforeFile={#StageDir}\LICENSE.txt
 SetupIconFile={#StageDir}\app.ico
 UninstallDisplayIcon={app}\ForensicDGP.exe
-AppMutex=Local\ForensicDGP-Desktop
 CloseApplications=no
 RestartApplications=no
 AllowCancelDuringInstall=no
@@ -49,6 +52,10 @@ Source: "{#StageDir}\distribution.ps1"; Flags: dontcopy
 Source: "{#StageDir}\app-source.zip"; Flags: dontcopy
 Source: "{#StageDir}\app-source.json"; Flags: dontcopy
 Source: "{#StageDir}\install_location.ps1"; Flags: dontcopy
+Source: "{#StageDir}\install_state.ps1"; Flags: dontcopy
+#ifdef OfflinePayload
+Source: "{#StageDir}\payload\*"; DestDir: "{tmp}\payload"; Flags: dontcopy recursesubdirs createallsubdirs
+#endif
 
 [Icons]
 Name: "{userprograms}\Forensic DGP"; Filename: "{app}\ForensicDGP.exe"; WorkingDir: "{app}"
@@ -67,7 +74,12 @@ var
   StepLabel, TransferLabel: TNewStaticText;
   DetailsButton: TNewButton;
   DetailsMemo: TNewMemo;
-  PreviousInstallRoot: String;
+  PreviousInstallRoot, SelectedMode, InstalledVersion, StateOutput: String;
+  ModePage: TOutputMsgWizardPage;
+  OpenExistingButton: TNewButton;
+  CleanupPrevious: TNewCheckBox;
+  CleanupHint: TNewStaticText;
+  OpenOnly, RelocationCompleted, PreviousLauncherVerified: Boolean;
   StepNumber: Integer;
 
 function GetFileAttributes(Name: String): LongWord;
@@ -137,6 +149,118 @@ begin
   Result := RemoveBackslashUnlessRoot(Result);
 end;
 
+procedure StateLog(const S: String; const Error, FirstLine: Boolean);
+begin
+  Log(S);
+  if (not Error) and (Pos('"mode"', S) > 0) then StateOutput := S;
+end;
+
+procedure PrepareStateFiles;
+var
+  ReleaseText: AnsiString;
+begin
+  ExtractTemporaryFile('release.json');
+  ExtractTemporaryFile('install_location.ps1');
+  ExtractTemporaryFile('install_state.ps1');
+  ExtractTemporaryFile('app-source.json');
+  if GetSHA256OfFile(ExpandConstant('{tmp}\release.json')) <> '{#ReleaseManifestSHA256}' then
+    RaiseException('The embedded release manifest differs.');
+  if not LoadStringFromFile(ExpandConstant('{tmp}\release.json'), ReleaseText) then
+    RaiseException('The embedded release manifest could not be read.');
+  if GetSHA256OfFile(ExpandConstant('{tmp}\install_location.ps1')) <> JsonField(String(ReleaseText), 'install_location.ps1') then
+    RaiseException('The installation location helper differs.');
+  if GetSHA256OfFile(ExpandConstant('{tmp}\install_state.ps1')) <> JsonField(String(ReleaseText), 'install_state.ps1') then
+    RaiseException('The installation lifecycle helper differs.');
+  if GetSHA256OfFile(ExpandConstant('{tmp}\app-source.json')) <> JsonField(String(ReleaseText), 'app-source.json') then
+    RaiseException('The source history manifest differs.');
+end;
+
+function RunState(Action: String): Boolean;
+var
+  Params: String;
+  Code: Integer;
+begin
+  StateOutput := '';
+  Params := '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
+    Q(ExpandConstant('{tmp}\install_state.ps1')) + ' -Action ' + Action +
+    ' -InstallRoot ' + Q(WizardDirValue) + ' -ReleaseVersion {#ReleaseVersion} -ReleaseCommit {#ReleaseCommit}' +
+    ' -SourceManifest ' + Q(ExpandConstant('{tmp}\app-source.json'));
+  if PreviousInstallRoot <> '' then Params := Params + ' -RegisteredRoot ' + Q(PreviousInstallRoot);
+  Result := ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_HIDE,
+    ewWaitUntilTerminated, Code, @StateLog) and (Code = 0);
+end;
+
+function InspectInstallation: Boolean;
+begin
+  PrepareStateFiles;
+  Result := RunState('Inspect');
+  if not Result then begin
+    MsgBox('The selected folder or existing installation could not be verified. Existing files were preserved. Choose a dedicated empty folder or review the setup log.', mbError, MB_OK);
+    Exit;
+  end;
+  SelectedMode := JsonField(StateOutput, 'mode');
+  InstalledVersion := JsonField(StateOutput, 'installed_version');
+  PreviousLauncherVerified := JsonField(StateOutput, 'launcher_verified') = '1';
+  PreviousInstallRoot := JsonField(StateOutput, 'previous_root');
+  if SelectedMode = 'newer' then begin
+    MsgBox('A newer Forensic DGP version is already installed. Open that version or download a newer setup. Existing files were preserved.', mbInformation, MB_OK);
+    Result := False;
+    Exit;
+  end;
+  if SelectedMode = 'move' then
+    ModePage.MsgLabel.Caption := 'Move Forensic DGP to:' + #13#10 + WizardDirValue + #13#10#13#10 +
+      'Setup copies saved records unchanged, reuses verified models and recreates Python environments. The previous installation remains until the replacement is verified.'
+  else if SelectedMode = 'update' then
+    ModePage.MsgLabel.Caption := 'Update Forensic DGP ' + InstalledVersion + ' to {#ReleaseVersion}.' + #13#10#13#10 +
+      'The existing folder and saved records are retained. Verified components are reused.'
+  else if SelectedMode = 'current' then
+    ModePage.MsgLabel.Caption := 'Forensic DGP {#ReleaseVersion} is installed and passed source, package and model checks.' + #13#10#13#10 +
+      'Open the installed app, or choose Next to repair it from this setup.'
+  else if SelectedMode = 'repair' then
+    ModePage.MsgLabel.Caption := 'Repair the existing Forensic DGP installation.' + #13#10#13#10 +
+      'Setup prepares verified replacement components while preserving saved records and previous files.'
+  else
+    ModePage.MsgLabel.Caption := 'Install Forensic DGP in:' + #13#10 + WizardDirValue + #13#10#13#10 +
+      'This dedicated folder contains the application, private Python, libraries, models and saved records.';
+  OpenExistingButton.Visible := SelectedMode = 'current';
+  CleanupPrevious.Visible := SelectedMode = 'move';
+  CleanupHint.Visible := CleanupPrevious.Visible;
+  CleanupPrevious.Checked := False;
+end;
+
+function CloseAppForSetup: Boolean;
+var
+  Code, I: Integer;
+begin
+  Result := True;
+  if not CheckForMutexes('Local\ForensicDGP-Desktop') then Exit;
+  Result := False;
+  if PreviousLauncherVerified and (PreviousInstallRoot <> '') and (InstalledVersion <> '') and (CompareText(InstalledVersion, '0.2.0') >= 0) then begin
+    if MsgBox('Forensic DGP is running. Close its dedicated window and continue setup? Active work must finish or be stopped before installation.', mbConfirmation, MB_YESNO) <> IDYES then Exit;
+    if Exec(AddBackslash(PreviousInstallRoot) + 'ForensicDGP.exe', '--request-close', PreviousInstallRoot,
+      SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0) then begin
+      for I := 1 to 150 do begin
+        if not CheckForMutexes('Local\ForensicDGP-Desktop') then begin Result := True; Exit; end;
+        Sleep(100);
+      end;
+    end;
+  end;
+  MsgBox('Close the Forensic DGP window, then retry setup. No unrelated browser or Python processes were stopped.', mbInformation, MB_OK);
+end;
+
+procedure OpenExisting(Sender: TObject);
+var
+  Code: Integer;
+begin
+  if not InspectInstallation then Exit;
+  if SelectedMode <> 'current' then Exit;
+  if Exec(AddBackslash(WizardDirValue) + 'ForensicDGP.exe', '', WizardDirValue,
+    SW_SHOWNORMAL, ewNoWait, Code) then begin
+    OpenOnly := True;
+    WizardForm.Close;
+  end else MsgBox('The installed app could not be opened. Choose Repair or review its desktop log.', mbError, MB_OK);
+end;
+
 function PhaseNumber(Stage: String): Integer;
 begin
   Result := 1;
@@ -153,7 +277,11 @@ begin
   case Number of
     1: Result := 'Preparing application files';
     2: Result := 'Preparing Python';
+#ifdef OfflinePayload
+    3: Result := 'Installing bundled components';
+#else
     3: Result := 'Downloading and setting up components';
+#endif
     4: Result := 'Checking the installation';
     5: Result := 'Finishing setup';
   end;
@@ -225,6 +353,10 @@ begin
   DetailsMemo.Lines.Add(S);
   if DetailsMemo.Lines.Count > 120 then DetailsMemo.Lines.Delete(0);
   if Pos('DGP_EVENT ', S) = 1 then UpdateProgress(Copy(S, 11, Length(S)));
+  if (Pos('"mode"', S) > 0) and (Pos('"install_root"', S) > 0) then begin
+    SelectedMode := JsonField(S, 'mode');
+    PreviousInstallRoot := JsonField(S, 'previous_root');
+  end;
 end;
 
 procedure InitializeWizard;
@@ -232,10 +364,34 @@ begin
   PreviousInstallRoot := RegisteredInstallRoot;
   RequirementsPage := CreateOutputMsgPage(wpWelcome, 'Before you install',
     'A local workspace for pictures and video',
+#ifdef OfflinePayload
+    'You need Windows 10 or 11 (64-bit), Microsoft Edge and .NET Framework 4.8 or newer.' + #13#10#13#10 +
+    'This offline setup includes private Python, application libraries and verified models. No internet is needed after downloading this EXE.' + #13#10#13#10 +
+#else
     'You need Windows 10 or 11 (64-bit), Microsoft Edge and internet access for first setup.' + #13#10#13#10 +
-    'Setup downloads a private Python runtime, application libraries and about 720 MiB of models. Allow at least 4 GB of free disk space.' + #13#10#13#10 +
+    'Setup downloads private Python, application libraries and verified models.' + #13#10#13#10 +
+#endif
     'The folder you choose contains the full application, downloaded components and saved records. No administrator access is required.' + #13#10#13#10 +
     'This is an unsigned research preview. Generated facial details are estimates and cannot verify identity.');
+  ModePage := CreateOutputMsgPage(wpSelectDir, 'Installation options', 'Keep your existing work', '');
+  ModePage.MsgLabel.Height := ScaleY(125);
+  OpenExistingButton := TNewButton.Create(WizardForm);
+  OpenExistingButton.Parent := ModePage.Surface;
+  OpenExistingButton.SetBounds(0, ScaleY(145), ScaleX(155), ScaleY(30));
+  OpenExistingButton.Caption := 'Open installed app';
+  OpenExistingButton.OnClick := @OpenExisting;
+  OpenExistingButton.Visible := False;
+  CleanupPrevious := TNewCheckBox.Create(WizardForm);
+  CleanupPrevious.Parent := ModePage.Surface;
+  CleanupPrevious.SetBounds(0, ScaleY(145), ModePage.SurfaceWidth, ScaleY(28));
+  CleanupPrevious.Caption := 'Remove verified files from the previous folder after moving.';
+  CleanupPrevious.Visible := False;
+  CleanupHint := TNewStaticText.Create(WizardForm);
+  CleanupHint.Parent := ModePage.Surface;
+  CleanupHint.SetBounds(0, ScaleY(183), ModePage.SurfaceWidth, ScaleY(45));
+  CleanupHint.WordWrap := True;
+  CleanupHint.Caption := 'Unrecognized files and unverified legacy Python, environments or caches remain in the previous folder.';
+  CleanupHint.Visible := False;
   ProgressPage := CreateOutputProgressPage('Installing Forensic DGP', 'Preparing your local workspace');
   ProgressPage.ProgressBar.Top := ScaleY(92);
   ProgressPage.ProgressBar.Visible := True;
@@ -264,12 +420,41 @@ begin
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
+var
+  FreeBytes, TotalBytes, RequiredBytes: Int64;
+  Drive: String;
 begin
   Result := True;
-  if (CurPageID = wpSelectDir) and (PreviousInstallRoot <> '') and
-     (CompareText(RemoveBackslashUnlessRoot(WizardDirValue), PreviousInstallRoot) <> 0) then begin
-    MsgBox('To choose a different folder, uninstall the Windows launcher first. Your existing models and saved records are retained. Setup does not move or delete the previous installation.', mbInformation, MB_OK);
-    Result := False;
+  if CurPageID = wpSelectDir then begin
+#ifdef OfflinePayload
+    RequiredBytes := {#OfflineExpandedBytes} + {#OfflinePayloadBytes} + 1073741824;
+#else
+    RequiredBytes := 3221225472;
+#endif
+    Drive := ExtractFileDrive(WizardDirValue);
+    if (Length(Drive) <> 2) or (Drive[2] <> ':') then begin
+      MsgBox('Choose a dedicated folder on a local fixed drive.', mbInformation, MB_OK);
+      Result := False; Exit;
+    end;
+    if not GetSpaceOnDisk64(Drive + '\', FreeBytes, TotalBytes) then begin
+      MsgBox('Setup could not check free disk space. Choose a ready local drive.', mbError, MB_OK);
+      Result := False; Exit;
+    end;
+    if FreeBytes < RequiredBytes then begin
+      MsgBox('Not enough free disk space for preparation and verified replacement files. Choose another drive or free disk space.', mbInformation, MB_OK);
+      Result := False; Exit;
+    end;
+    Result := InspectInstallation;
+  end;
+  if (CurPageID = wpReady) and Result then Result := CloseAppForSetup;
+end;
+
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if CurPageID = wpReady then begin
+    if SelectedMode = 'move' then WizardForm.NextButton.Caption := 'Move and install'
+    else if SelectedMode = 'update' then WizardForm.NextButton.Caption := 'Update'
+    else if (SelectedMode = 'current') or (SelectedMode = 'repair') then WizardForm.NextButton.Caption := 'Repair';
   end;
 end;
 
@@ -278,11 +463,16 @@ begin
   Result := 'Full application folder:' + NewLine + Space + WizardDirValue + NewLine + NewLine +
     'Includes:' + NewLine + Space + 'Application, private Python, libraries and verified models' + NewLine +
     Space + 'Saved records: ' + AddBackslash(WizardDirValue) + 'runtime\data' + NewLine + NewLine +
+#ifdef OfflinePayload
+    'Offline installation. Existing saved records are preserved.' + NewLine + NewLine + MemoTasksInfo;
+#else
     'First setup requires internet access. Existing saved records are preserved.' + NewLine + NewLine + MemoTasksInfo;
+#endif
 end;
 
 procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
 begin
+  if OpenOnly then begin Cancel := True; Confirm := False; Exit; end;
   if Preparing then begin
     Cancel := False;
     Confirm := False;
@@ -298,8 +488,8 @@ end;
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
   ResultCode: Integer;
-  Marker: AnsiString;
-  Params: String;
+  Params, TempDrive: String;
+  TempFree, TempTotal: Int64;
 begin
   Result := '';
   if BackendReady then Exit;
@@ -307,11 +497,15 @@ begin
     Result := 'The launcher location contains a link or an unexpected file. Existing files were preserved.';
     Exit;
   end;
-  if (PreviousInstallRoot <> '') and
-     (CompareText(RemoveBackslashUnlessRoot(ExpandConstant('{app}')), PreviousInstallRoot) <> 0) then begin
-    Result := 'To choose a different folder, uninstall the Windows launcher first. Saved records remain in the previous location.';
+  if not CloseAppForSetup then begin Result := 'Close Forensic DGP before retrying setup.'; Exit; end;
+#ifdef OfflinePayload
+  TempDrive := ExtractFileDrive(ExpandConstant('{tmp}')) + '\';
+  if (not GetSpaceOnDisk64(TempDrive, TempFree, TempTotal)) or
+     (TempFree < {#OfflinePayloadBytes} + 268435456) then begin
+    Result := 'Not enough space on the Windows temporary drive to unpack the offline installer. Free temporary-drive space before retrying.';
     Exit;
   end;
+#endif
   ExtractTemporaryFile('gui_setup.ps1');
   ExtractTemporaryFile('distribution.ps1');
   ExtractTemporaryFile('app-source.zip');
@@ -320,7 +514,7 @@ begin
   ExtractTemporaryFile('ForensicDGP.exe');
   ExtractTemporaryFile('uninstall.ps1');
   ExtractTemporaryFile('release.json');
-  ExtractTemporaryFile('install_location.ps1');
+  PrepareStateFiles;
   EventsFile := ExpandConstant('{tmp}\setup-events.jsonl');
   CancelFile := ExpandConstant('{tmp}\setup-cancel');
   SetupLog := ExpandConstant('{localappdata}\DGP-setup-{#ReleaseCommit}.log');
@@ -330,10 +524,11 @@ begin
   CancelRequested := False;
   DeleteFile(CancelFile);
   SaveStringToFile(EventsFile, '', False);
-  Params := '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ' + Q(ExpandConstant('{tmp}\gui_setup.ps1')) +
+  Params := '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' + Q(ExpandConstant('{tmp}\gui_setup.ps1')) +
     ' -Stage ' + Q(ExpandConstant('{tmp}')) + ' -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -EventsFile ' + Q(EventsFile) +
     ' -CancelFile ' + Q(CancelFile) + ' -LogPath ' + Q(SetupLog) +
     ' -ExpectedManifestHash {#ReleaseManifestSHA256}';
+  if PreviousInstallRoot <> '' then Params := Params + ' -PreviousRoot ' + Q(PreviousInstallRoot);
   Preparing := True;
   ProgressPage.Show;
   try
@@ -341,6 +536,10 @@ begin
     ProgressPage.SetProgress(0, 100);
     ProgressPage.ProgressBar.Style := npbstMarquee;
     ProgressPage.ProgressBar.Visible := True;
+#ifdef OfflinePayload
+    ProgressPage.SetText('Preparing bundled files', 'Extracting verified offline components. No download is required.');
+    ExtractTemporaryFiles('{tmp}\payload\*');
+#endif
     if not ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_SHOWNORMAL,
         ewWaitUntilTerminated, ResultCode, @SetupOutput) then begin
       Result := 'Could not run application setup. Log: ' + SetupLog;
@@ -381,7 +580,7 @@ begin
     Exit;
   end;
   CheckOutput := '';
-  if not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy Bypass -File ' +
+  if not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
       Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Check -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -ManagedRoot ' +
       Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_SHOWNORMAL,
       ewWaitUntilTerminated, Code, @UninstallLog) or (Code <> 0) then begin
@@ -406,6 +605,18 @@ procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if (CurStep = ssInstall) and not OrdinaryShellPath then
     RaiseException('The launcher path changed. Existing files were preserved.');
+  if (CurStep = ssPostInstall) and (SelectedMode = 'move') then begin
+    if RunState('CompleteMove') then begin
+      RelocationCompleted := True;
+      if CleanupPrevious.Checked then begin
+        if not RunState('Cleanup') then
+          MsgBox('The new installation is ready. Previous-file cleanup did not complete; the previous folder was preserved for review: ' + PreviousInstallRoot, mbInformation, MB_OK)
+        else
+          MsgBox('Verified previous app files were removed. Unrecognized files and unverified legacy Python, environments or caches remain in: ' + PreviousInstallRoot, mbInformation, MB_OK);
+      end;
+    end else
+      MsgBox('The new installation is ready, but relocation completion could not be recorded. The previous folder remains unchanged: ' + PreviousInstallRoot, mbInformation, MB_OK);
+  end;
 end;
 
 procedure DeinitializeUninstall;

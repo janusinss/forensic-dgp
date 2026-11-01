@@ -31,7 +31,12 @@ class InstallerExperience(unittest.TestCase):
 
     def test_relocation_does_not_leave_a_stale_registered_uninstaller(self):
         self.assertIn('PreviousInstallRoot',self.code)
-        self.assertIn('uninstall the Windows launcher first',self.code)
+        self.assertNotIn('uninstall the Windows launcher first',self.code)
+        self.assertIn("RunState('CompleteMove')",self.code)
+        self.assertIn("CurStep = ssPostInstall",self.code)
+        self.assertIn('Remove verified files',self.code)
+        self.assertIn('InspectInstallation',self.code)
+        self.assertIn("if PreviousLauncherVerified and (PreviousInstallRoot <> '')",self.code)
         self.assertIn('RegisteredInstallRoot',self.code)
 
     def test_trusted_location_preflight_precedes_execution(self):

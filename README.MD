@@ -2,6 +2,18 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
+## Offline installer candidate
+
+Version **0.2.0 is being prepared** on the isolated installer feature branch.
+It bundles private Python, complete hashed Windows CPU package sets and all six
+admitted models. It adds fresh/update/repair/move discovery, safe environment
+replacement and verified relocation records. See [build instructions](packaging/BUILD.md).
+The public download remains 0.1.1 until the new candidate passes local-PC checks.
+
+This release is tested on the user's own PC; no clean-Windows VM or general
+hardware qualification is claimed. Antivirus stays enabled. Signing remains
+outside the free preview and an unsigned release can still receive Windows warnings.
+
 ## Desktop installer preview
 
 The Windows setup EXE has a public [download page](https://forensic-dgp.pages.dev). Version **0.1.1 with selectable full application folders is published**. See [installer verification](packaging/VERIFICATION.md) for its exact artifact identity and test boundaries.

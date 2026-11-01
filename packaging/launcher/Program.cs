@@ -21,6 +21,17 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 1 && args[0] == "--request-close")
+        {
+            try
+            {
+                string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                InstallLocation location = InstallLocation.Resolve(Path.GetDirectoryName(Application.ExecutablePath), local);
+                VerifyManagedRoot(location.ManagedRoot, location.InstallRoot);
+                return SignalCloseRequest(location.InstallRoot ?? Path.GetDirectoryName(Application.ExecutablePath));
+            }
+            catch (Exception error) { Console.Error.WriteLine(error.Message); return 1; }
+        }
         Application.EnableVisualStyles();
         bool created;
         using (Mutex singleton = new Mutex(true, DesktopMutex, out created))
@@ -40,6 +51,7 @@ internal static class Program
                 Environment.SetEnvironmentVariable("DGP_INSTALL_ROOT", location.InstallRoot);
                 VerifyManagedRoot(root, location.InstallRoot);
                 string helper = VerifyHelper(root);
+                string startHelper = VerifyHelper(root, "implementation/desktop_start.ps1");
                 string edge = FindEdge();
                 string logs = Path.Combine(root, @"data\desktop\logs");
                 EnsureOrdinaryDirectory(logs);
@@ -60,13 +72,14 @@ internal static class Program
                 Environment.SetEnvironmentVariable("DGP_DESKTOP_HELPER", helper);
                 Environment.SetEnvironmentVariable("DGP_DESKTOP_MANAGED_ROOT", root);
                 Environment.SetEnvironmentVariable("IMPLEMENTATION_NO_PAUSE", "1");
+                using (EventWaitHandle closeRequest = new EventWaitHandle(false, EventResetMode.ManualReset, CloseRequestName(location.InstallRoot ?? Path.GetDirectoryName(Application.ExecutablePath))))
                 using (EventWaitHandle stop = new EventWaitHandle(false, EventResetMode.ManualReset, eventName))
                 using (Native.Job job = new Native.Job())
                 {
                     string ps = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"WindowsPowerShell\v1.0\powershell.exe");
-                    // Static code and environment values avoid interpolating user paths into shell syntax.
-                    string command = "$ErrorActionPreference='Stop'; & $env:DGP_DESKTOP_HELPER -Action Launch -ManagedRoot $env:DGP_DESKTOP_MANAGED_ROOT -LaunchArgs @('--port','0','--no-browser','--no-pause','--desktop'); exit $LASTEXITCODE";
-                    string psArgs = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -EncodedCommand " + Convert.ToBase64String(Encoding.Unicode.GetBytes(command));
+                    // The receipt-verified local helper keeps startup visible to source review.
+                    // RemoteSigned applies only to this process; machine policy is unchanged.
+                    string psArgs = StartupArguments(startHelper);
                     using (Native.Child server = job.Start(ps, psArgs, log.SafeFileHandle.DangerousGetHandle()))
                     {
                         string url = AwaitReady(server, ready, token, job);
@@ -82,6 +95,7 @@ internal static class Program
                             {
                                 for (;;)
                                 {
+                                    if (closeRequest.WaitOne(0)) { WriteLog("Setup requested graceful application closure."); break; }
                                     if (server.Exited) throw new InvalidOperationException("The application server stopped unexpectedly (exit " + server.ExitCode + ").");
                                     HashSet<uint> owned = job.ProcessIds();
                                     bool visible = Native.HasAppWindow(owned);
@@ -138,6 +152,26 @@ internal static class Program
         }
     }
 
+    internal static string CloseRequestName(string installRoot)
+    {
+        string canonical = Path.GetFullPath(installRoot).TrimEnd('\\').ToUpperInvariant();
+        using (SHA256 sha = SHA256.Create())
+            return @"Local\ForensicDGP-close-" + BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(canonical))).Replace("-", "").ToLowerInvariant();
+    }
+
+    internal static int SignalCloseRequest(string installRoot)
+    {
+        EventWaitHandle request;
+        if (!EventWaitHandle.TryOpenExisting(CloseRequestName(installRoot), out request)) return 0;
+        using (request) request.Set();
+        return 0;
+    }
+
+    internal static string StartupArguments(string helper)
+    {
+        return "-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File " + Quote(helper);
+    }
+
     private static void VerifyManagedRoot(string root, string installRoot)
     {
         CheckOrdinary(root, true);
@@ -154,7 +188,7 @@ internal static class Program
             throw new InvalidOperationException("The managed installation marker is not bound to this application folder.");
     }
 
-    private static string VerifyHelper(string root)
+    private static string VerifyHelper(string root, string relative = "implementation/distribution.ps1")
     {
         string pointer = Path.Combine(root, "current.json");
         CheckOrdinary(pointer, false);
@@ -162,14 +196,14 @@ internal static class Program
         string commit = Convert.ToString(active["commit"]);
         if (Convert.ToInt32(active["schema"]) != 1 || !System.Text.RegularExpressions.Regex.IsMatch(commit, "^[0-9a-f]{40}$"))
             throw new InvalidOperationException("The managed active version is invalid.");
-        string helper = Path.Combine(root, @"versions\" + commit + @"\implementation\distribution.ps1");
+        string helper = Path.Combine(root, "versions", commit, relative.Replace('/', '\\'));
         string receiptPath = Path.Combine(root, @"receipts\" + commit + ".json");
         CheckOrdinary(helper, false); CheckOrdinary(receiptPath, false);
         Dictionary<string, object> receipt = ReadJson(receiptPath);
         Dictionary<string, object> files = receipt["files"] as Dictionary<string, object>;
         if (files == null || Convert.ToString(receipt["commit"]) != commit || Convert.ToInt32(receipt["schema"]) != 1)
             throw new InvalidOperationException("The managed version receipt differs.");
-        string expected = Convert.ToString(files["implementation/distribution.ps1"]);
+        string expected = Convert.ToString(files[relative]);
         using (SHA256 sha = SHA256.Create())
         using (FileStream input = File.OpenRead(helper))
         {

@@ -23,6 +23,7 @@ import urllib.request
 import uuid
 
 from . import completion_assets as assets
+from .offline_payload import load_payload, protect_active_model
 
 RELEASE_URL = "https://github.com/janusinss/forensic-dgp/releases/tag/completion-r1-models-v1"
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/completion-r1-models-v1/"
@@ -118,6 +119,7 @@ def _copy_local(source, partial, asset):
     with Path(source).open("rb") as reader, partial.open("xb") as writer:
         remaining = asset["size"]
         while True:
+            check_cancel()
             block = reader.read(min(CHUNK_SIZE, remaining + 1))
             if not block:
                 break
@@ -125,6 +127,7 @@ def _copy_local(source, partial, asset):
                 raise CompletionInstallError(f"Local source grew during copy; partial retained: {partial.name}")
             writer.write(block)
             remaining -= len(block)
+            event('download:'+asset['filename'],'copying',asset['filename'],current=asset['size']-remaining,total=asset['size'])
         writer.flush()
         os.fsync(writer.fileno())
     if not _admitted(source, asset):
@@ -186,6 +189,13 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
     manifest = assets.load_manifest()
     folder = _directory(model_dir)
     supplied = {"completion_r1": local_r1, "covering_detector": local_detector}
+    payload = load_payload() if not verify_only else None
+    if payload is not None:
+        for key,asset in manifest['assets'].items():
+            expected_source=payload.model_source('completion',key,asset)
+            if supplied[key] is not None and Path(supplied[key]) != expected_source:
+                raise CompletionInstallError('Explicit local model differs from the pinned offline payload.')
+            supplied[key]=expected_source
     offline = any(value is not None for value in supplied.values())
     planned = []
     # Refuse every existing mismatch and every invalid supplied source before
@@ -196,8 +206,13 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
             raise CompletionInstallError(f"Supplied {key} file failed exact size/SHA-256 checks.")
         if _exists(destination):
             if not _admitted(destination, asset):
-                raise CompletionInstallError(f"Existing completion model was preserved because it is mismatched or linked: {destination}")
-            source = "existing_verified"
+                info=destination.lstat()
+                if payload is None or not destination.is_file() or destination.is_symlink() or getattr(info,'st_file_attributes',0)&1024 or info.st_nlink != 1:
+                    raise CompletionInstallError(f"Existing completion model was preserved because it is mismatched or linked: {destination}")
+                protect_active_model(destination,'completion',asset)
+                source='verified_local_repair'
+            else:
+                source = "existing_verified"
         elif verify_only:
             raise CompletionInstallError(f"Completion asset is missing: {destination.name}")
         elif supplied[key] is not None:
@@ -221,7 +236,7 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
             raise CompletionInstallError(f"Not enough free space to stage {destination.name} while preserving existing files.")
         partial = folder / f".{destination.name}.{uuid.uuid4().hex}.partial"
         try:
-            if source == "verified_local_copy":
+            if source in ("verified_local_copy","verified_local_repair"):
                 print(f"[completion] Copying and verifying {destination.name}...", flush=True)
                 _copy_local(Path(supplied[key]), partial, asset)
                 item["local_source_name"] = Path(supplied[key]).name
@@ -230,7 +245,15 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
                 print(f"[completion] Downloading and verifying {destination.name} ({asset['size']:,} bytes)...", flush=True)
                 _download(url, partial, asset, opener=opener, clock=clock)
                 item["download_url"] = url
-            _publish(partial, destination, asset)
+            backup=None
+            if source=='verified_local_repair':
+                backup=folder/('.'+destination.name+'.previous-'+uuid.uuid4().hex)
+                destination.rename(backup)
+            try:
+                _publish(partial, destination, asset)
+            except BaseException:
+                if backup is not None and not _exists(destination): backup.rename(destination)
+                raise
         except Exception as exc:
             raise CompletionInstallError(f"{exc} Existing models and any partial are preserved: {partial}") from exc
         acquired.append(item)

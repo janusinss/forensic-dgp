@@ -169,7 +169,7 @@ class InstalledModuleBindingTests(unittest.TestCase):
             shell=Path(temporary); runtime=shell/'runtime'; code=runtime/'versions'/('d'*40)
             implementation=code/'implementation'; implementation.mkdir(parents=True)
             source=Path(__file__).resolve().parents[1]
-            for name in ('__init__.py','managed_paths.py','environment.py','setup_events.py','capture_install.py'):
+            for name in ('__init__.py','managed_paths.py','environment.py','setup_events.py','capture_install.py','offline_payload.py'):
                 shutil.copyfile(source/'implementation'/name,implementation/name)
             shutil.copyfile(source/'requirements.txt',code/'requirements.txt')
             (shell/'shell-owner.json').write_text('{"schema":1,"application":"Forensic DGP"}')

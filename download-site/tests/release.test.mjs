@@ -113,3 +113,39 @@ test('linked output directory is refused without touching outside data', async t
   await assert.rejects(prepareRelease({ sourceDir: f.sourceDir, siteDir: f.siteDir }), /link|ordinary/i);
   assert.deepEqual(await readdir(outside), ['preserve.txt']);
 });
+
+
+test('offline release publishes a fixed GitHub URL without copying the large EXE to Pages', async t => {
+  const f = await fixture(t);
+  f.metadata.payload = 'offline-bundled';
+  f.metadata.downloadUrl = 'https://untrusted.example/installer.exe';
+  await saveMetadata(f);
+  await prepareRelease({sourceDir:f.sourceDir,siteDir:f.siteDir});
+  const published=JSON.parse(await readFile(path.join(f.siteDir,'public','release.json'),'utf8'));
+  assert.equal(published.offline,true);
+  assert.equal(published.downloadUrl,'https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.1.0/ForensicDGP_Setup-0.1.0.exe');
+  assert.equal(published.sha256,f.sha256);
+  assert.deepEqual(await readdir(path.join(f.siteDir,'public','downloads')),['ForensicDGP_Setup-0.1.0.exe.sha256']);
+});
+
+test('offline artifact larger than the Pages limit is verified without publishing it as a Pages asset', async t => {
+  const f=await fixture(t);
+  const large=Buffer.alloc(26*1024*1024,37);
+  f.metadata.payload='offline-bundled';
+  f.metadata.artifact_bytes=large.length;
+  f.metadata.artifact_sha256=createHash('sha256').update(large).digest('hex');
+  await writeFile(path.join(f.sourceDir,'ForensicDGP_Setup.exe'),large);
+  await saveMetadata(f);
+  await prepareRelease({sourceDir:f.sourceDir,siteDir:f.siteDir});
+  const published=JSON.parse(await readFile(path.join(f.siteDir,'public','release.json'),'utf8'));
+  assert.equal(published.bytes,large.length);
+  assert.equal(published.offline,true);
+  assert.deepEqual(await readdir(path.join(f.siteDir,'public','downloads')),['ForensicDGP_Setup-0.1.0.exe.sha256']);
+});
+
+test('unknown payload contract cannot replace a prior release', async t => {
+  const f=await fixture(t); await previousRelease(f);
+  f.metadata.payload='unreviewed-download-mode'; await saveMetadata(f);
+  await assert.rejects(prepareRelease({sourceDir:f.sourceDir,siteDir:f.siteDir}),/payload/i);
+  await assertPriorIntact(f);
+});

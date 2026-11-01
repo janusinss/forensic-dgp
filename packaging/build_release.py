@@ -1,8 +1,9 @@
-"""Build a pinned online installer from a committed source tree."""
+"""Build a pinned online or offline installer from a committed source tree."""
 from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -66,11 +67,50 @@ def write_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def artifact_record(path: Path) -> dict:
+    size = path.stat().st_size
+    if size < 1 or size >= 2 * 1024**3:
+        raise RuntimeError("The single release EXE must be nonempty and below GitHub's 2 GiB asset limit.")
+    digest = hashlib.sha256()
+    with path.open('rb') as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b''):
+            digest.update(block)
+    return dict(artifact_bytes=size, artifact_sha256=digest.hexdigest())
+
+
+def release_defines(build: dict, manifest_sha256: str) -> str:
+    result = ('#define ReleaseManifestSHA256 "' + manifest_sha256 + '"\n' +
+              '#define UninstallSHA256 "' + build['files']['uninstall.ps1'] + '"\n')
+    if build['payload'] == 'offline-bundled':
+        result += ('#define OfflinePayload 1\n' +
+                   '#define OfflinePayloadBytes ' + str(build['payload_bytes']) + '\n' +
+                   '#define OfflineExpandedBytes ' + str(build['payload_expanded_bytes']) + '\n')
+    return result
+
+
+def stage_offline_payload(payload: Path, stage: Path, commit: str) -> dict:
+    helper = ROOT / 'packaging' / 'prepare_offline.py'
+    if helper.read_bytes() != git('show', commit + ':packaging/prepare_offline.py'):
+        raise RuntimeError('Offline preparer differs from committed source.')
+    spec = importlib.util.spec_from_file_location('dgp_offline_preparer', helper)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    locks = {group:git('show', commit + ':implementation/locks/windows-cp313-' + group + '.txt')
+             for group in ('application','capture')}
+    model_specs = []
+    for group, name in (('restoration','models.json'),('completion','completion_assets.json')):
+        manifest = json.loads(git('show', commit + ':implementation/' + name))
+        for identity, asset in sorted(manifest['assets'].items()):
+            model_specs.append(dict(group=group,id=identity,filename=asset['filename'],size=asset['size'],sha256=asset['sha256']))
+    return module.stage_payload(payload,stage / 'payload',locks,model_specs=model_specs)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--iscc", type=Path, required=True)
     parser.add_argument("--version", type=checked_version, required=True)
     parser.add_argument("--output", type=Path, default=ROOT / "scratch" / "dist")
+    parser.add_argument("--offline-payload", type=Path, help="Verified payload prepared with packaging/prepare_offline.py.")
     args = parser.parse_args()
     if os.name != "nt":
         raise RuntimeError("Windows build required.")
@@ -90,6 +130,7 @@ def main() -> int:
         "uninstall.ps1": "packaging/uninstall.ps1",
         "gui_setup.ps1": "packaging/gui_setup.ps1",
         "install_location.ps1": "packaging/install_location.ps1",
+        "install_state.ps1": "packaging/install_state.ps1",
         "installer.iss": "packaging/installer.iss",
         "Program.cs": "packaging/launcher/Program.cs",
         "LICENSE.txt": "packaging/LICENSE.txt",
@@ -97,30 +138,42 @@ def main() -> int:
     }
     for dest, source in inputs.items():
         (stage / dest).write_bytes(git("show", commit + ":" + source))
+    assembly = ('using System.Reflection;\n' +
+                '[assembly: AssemblyTitle("Forensic DGP")]\n' +
+                '[assembly: AssemblyProduct("Forensic DGP")]\n' +
+                '[assembly: AssemblyCompany("Forensic DGP Research")]\n' +
+                '[assembly: AssemblyDescription("Forensic DGP desktop launcher")]\n' +
+                '[assembly: AssemblyVersion("' + args.version + '.0")]\n' +
+                '[assembly: AssemblyFileVersion("' + args.version + '.0")]\n' +
+                '[assembly: AssemblyInformationalVersion("' + args.version + '+' + commit + '")]\n')
+    (stage / 'AssemblyInfo.cs').write_text(assembly, encoding='utf-8')
     compiler = Path(os.environ["SystemRoot"]) / "Microsoft.NET/Framework64/v4.0.30319/csc.exe"
     subprocess.run([str(compiler), "/nologo", "/target:winexe", "/platform:x64", "/optimize+",
                     "/reference:System.Windows.Forms.dll", "/reference:System.Drawing.dll",
                     "/reference:System.Web.Extensions.dll", "/win32icon:" + str(stage / "app.ico"), "/out:" + str(stage / "ForensicDGP.exe"),
-                    str(stage / "Program.cs")], check=True)
+                    str(stage / "Program.cs"), str(stage / "AssemblyInfo.cs")], check=True)
     check_inno_version(args.iscc)
     build = dict(schema=1, version=args.version, commit=commit, inno_version=INNO_VERSION,
                  inno_installer_sha256=INNO_INSTALLER_SHA256, signed=False,
-                 payload="online-source-bundled", files={})
+                 payload="offline-bundled" if args.offline_payload else "online-source-bundled", files={})
     for name in ["app-source.zip", "app-source.json", "distribution.ps1", "uninstall.ps1",
-                 "gui_setup.ps1", "ForensicDGP.exe", "install_location.ps1"]:
+                 "gui_setup.ps1", "ForensicDGP.exe", "install_location.ps1", "install_state.ps1"]:
         build["files"][name] = hashlib.sha256((stage / name).read_bytes()).hexdigest()
+    if args.offline_payload:
+        verified = stage_offline_payload(args.offline_payload, stage, commit)
+        build['files']['offline-payload-manifest.json'] = verified['manifest_sha256']
+        build['payload_bytes'] = verified['payload_bytes']
+        build['payload_expanded_bytes'] = verified['payload_expanded_bytes']
     write_json(stage / "release.json", build)
     (stage / "shell-owner.json").write_text('{"schema":1,"application":"Forensic DGP"}\n', encoding="ascii")
     (stage / "release.inc").write_text(
-        '#define ReleaseManifestSHA256 "' + hashlib.sha256((stage / "release.json").read_bytes()).hexdigest() + '"\n'
-        '#define UninstallSHA256 "' + build["files"]["uninstall.ps1"] + '"\n', encoding="ascii")
+        release_defines(build, hashlib.sha256((stage / "release.json").read_bytes()).hexdigest()), encoding="ascii")
     args.output.mkdir(parents=True, exist_ok=True)
     subprocess.run([str(args.iscc), "/DStageDir=" + str(stage), "/DOutputDir=" + str(args.output.resolve()),
                     "/DReleaseVersion=" + args.version, "/DReleaseCommit=" + commit,
                     str(stage / "installer.iss")], check=True)
     exe = args.output / "ForensicDGP_Setup.exe"
-    build["artifact_sha256"] = hashlib.sha256(exe.read_bytes()).hexdigest()
-    build["artifact_bytes"] = exe.stat().st_size
+    build.update(artifact_record(exe))
     write_json(args.output / "release.json", build)
     print(json.dumps(dict(artifact=str(exe.resolve()), **build), indent=2))
     return 0

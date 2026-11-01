@@ -77,9 +77,14 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertIn('UsePreviousAppDir=yes', self.code)
         prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
         self.assertIn("' -InstallRoot ' + Q(ExpandConstant('{app}'))", prepare)
-        self.assertIn("ExtractTemporaryFile('install_location.ps1')", prepare)
+        self.assertIn('PrepareStateFiles;', prepare)
+        helpers = self.section('procedure PrepareStateFiles', 'function RunState')
+        self.assertIn("ExtractTemporaryFile('install_location.ps1')", helpers)
+        self.assertIn("GetSHA256OfFile(ExpandConstant('{tmp}\\install_state.ps1'))", helpers)
         self.assertIn("PreviousInstallRoot := RegisteredInstallRoot", self.code)
-        self.assertIn("PreviousInstallRoot) <> 0", prepare)
+        self.assertNotIn('uninstall the Windows launcher first', prepare)
+        self.assertIn("RunState('CompleteMove')", self.code)
+        self.assertIn('(CurStep = ssPostInstall)', self.code)
         uninstall = self.section('function InitializeUninstall', 'procedure CurStepChanged')
         self.assertIn("GetSHA256OfFile(ExpandConstant('{app}\\uninstall.ps1'))", uninstall)
         self.assertLess(uninstall.index('GetSHA256OfFile'), uninstall.index('ExecAndLogOutput'))
@@ -126,25 +131,30 @@ exit 0
 '''
         # Trusted inert helper maps the selected folder to its private runtime.
         # It never invokes the production location validator or touches user paths.
-        location_script = r'''param([string]$Action,[Parameter(Mandatory=$true)][string]$InstallRoot)
-if ($Action -notin @('Prepare','Validate')) { throw 'Unexpected location action' }
+        location_script = r'''param([string]$Action,[Parameter(Mandatory=$true)][string]$InstallRoot,[long]$RequiredBytes,[switch]$CheckPrerequisites)
+if ($Action -notin @('Prepare','Validate','Preflight')) { throw 'Unexpected location action' }
 if ($Action -eq 'Validate' -and $env:DGP_TEST_LOCATION_CHANGE -eq '1') { throw 'Location changed at final validation' }
-[IO.Directory]::CreateDirectory($InstallRoot) | Out-Null
+if ($Action -eq 'Prepare') { [IO.Directory]::CreateDirectory($InstallRoot) | Out-Null }
 @{schema=1;install_root=$InstallRoot;managed_root=(Join-Path $InstallRoot 'runtime')} | ConvertTo-Json -Compress | Write-Output
 exit 0
 '''
         self.inputs = {
             'app-source.zip': b'inert zip fixture; never extracted',
-            'app-source.json': b'{"inert":true}',
+            'app-source.json': json.dumps({'schema':1,'commit':COMMIT,'ancestors':[COMMIT],'files':{'app.py':'0'*40}}).encode('utf8'),
             'distribution.ps1': script.encode('utf8'),
             'uninstall.ps1': b'# inert fixture',
             'gui_setup.ps1': WRAPPER.read_bytes(),
             'ForensicDGP.exe': b'inert executable; never started',
             'install_location.ps1': location_script.encode('utf8'),
+            'install_state.ps1': b'''param([string]$Action,[string]$InstallRoot,[string]$ReleaseVersion,[string]$ReleaseCommit,[string]$SourceManifest,[string]$RegisteredRoot)
+if ($Action -ne 'Inspect') { throw 'Unexpected fixture lifecycle action' }
+@{schema=1;mode='fresh';healthy=$false;launcher_verified=0;installed_version='';previous_root='';registration_stale=$false}|ConvertTo-Json -Compress|Write-Output
+exit 0
+''',
         }
         for name, value in self.inputs.items():
             (self.stage / name).write_bytes(value)
-        self.manifest = {'schema': 1, 'commit': COMMIT,
+        self.manifest = {'schema': 1, 'version':'0.2.0', 'payload':'online-source-bundled', 'commit': COMMIT,
                          'files': {name: sha(value) for name, value in self.inputs.items()}}
         self.save_manifest()
 

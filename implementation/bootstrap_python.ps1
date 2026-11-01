@@ -10,6 +10,7 @@ $expectedBytes = 33724497
 $base = $null
 $work = $null
 $archive = $null
+$replaceExisting = $false
 
 function Assert-OrdinaryDirectory([string]$Path) {
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
@@ -28,6 +29,79 @@ function Python-Progress([string]$status,[string]$message,[long]$current=-1,[lon
 function Python-Cancel {
     if ($env:DGP_SETUP_CANCEL_FILE -and (Test-Path -LiteralPath $env:DGP_SETUP_CANCEL_FILE)) { throw 'Python setup cancelled at a safe boundary; previous active version retained.' }
 }
+function Publish-PythonRuntime([string]$Staged,[string]$Target,[string]$Base,[bool]$ReplaceExisting) {
+    $basePath=[IO.Path]::GetFullPath($Base).TrimEnd('\')
+    $stagedPath=[IO.Path]::GetFullPath($Staged)
+    $targetPath=[IO.Path]::GetFullPath($Target)
+    if (![string]::Equals($targetPath,(Join-Path $basePath 'python-3.13.9-amd64'),[StringComparison]::OrdinalIgnoreCase) -or
+        !$stagedPath.StartsWith($basePath+'\',[StringComparison]::OrdinalIgnoreCase) -or
+        [string]::Equals($stagedPath,$targetPath,[StringComparison]::OrdinalIgnoreCase)) { throw 'Private Python publication escaped its dedicated runtime folder.' }
+    $probe=$stagedPath
+    while ($probe) {
+        Assert-OrdinaryDirectory $probe
+        $parent=[IO.Path]::GetDirectoryName($probe)
+        if (!$parent -or $parent -eq $probe) { break }
+        $probe=$parent
+    }
+    $backup=$null
+    if ([IO.Directory]::Exists($targetPath)) {
+        if (!$ReplaceExisting) { throw 'Private Python target already exists and was preserved.' }
+        Assert-OrdinaryDirectory $targetPath
+        $backup=$targetPath+'.previous-'+[guid]::NewGuid().ToString('N')
+        if (!$backup.StartsWith($basePath+'\',[StringComparison]::OrdinalIgnoreCase) -or [IO.Directory]::Exists($backup) -or [IO.File]::Exists($backup)) { throw 'Private Python backup path is not a new owned child.' }
+        [IO.Directory]::Move($targetPath,$backup)
+    } elseif ([IO.File]::Exists($targetPath)) { throw 'Private Python target is an unexpected file; it was preserved.' }
+    try { [IO.Directory]::Move($stagedPath,$targetPath) }
+    catch {
+        if ($backup -and ![IO.Directory]::Exists($targetPath) -and ![IO.File]::Exists($targetPath)) { [IO.Directory]::Move($backup,$targetPath) }
+        throw
+    }
+    if ($backup) { Write-Host ('[Python] Previous private runtime preserved at: '+$backup) }
+}
+
+function Offline-PythonHash([string]$Path) {
+    $algorithm=[Security.Cryptography.SHA256]::Create()
+    $reader=[IO.File]::OpenRead($Path)
+    try { return [BitConverter]::ToString($algorithm.ComputeHash($reader)).Replace('-','').ToLowerInvariant() }
+    finally { $reader.Dispose(); $algorithm.Dispose() }
+}
+function Offline-PythonArchive {
+    if (!$env:DGP_OFFLINE_PAYLOAD -and !$env:DGP_OFFLINE_PAYLOAD_SHA256) { return $null }
+    if (!$env:DGP_OFFLINE_PAYLOAD -or !$env:DGP_OFFLINE_PAYLOAD_SHA256 -or
+        $env:DGP_OFFLINE_PAYLOAD_SHA256 -cnotmatch '^[0-9a-f]{64}$' -or
+        ![IO.Path]::IsPathRooted($env:DGP_OFFLINE_PAYLOAD)) {
+        throw 'Offline Python requires its payload root and pinned manifest SHA-256. No online fallback is permitted.'
+    }
+    $payloadRoot=[IO.Path]::GetFullPath($env:DGP_OFFLINE_PAYLOAD)
+    $probe=$payloadRoot
+    while ($probe) {
+        Assert-OrdinaryDirectory $probe
+        $parent=[IO.Path]::GetDirectoryName($probe)
+        if (!$parent -or $parent -eq $probe) { break }
+        $probe=$parent
+    }
+    $manifestPath=Join-Path $payloadRoot 'manifest.json'
+    $manifestItem=Get-Item -LiteralPath $manifestPath -Force
+    if ($manifestItem.PSIsContainer -or ($manifestItem.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $manifestItem.Length -gt 2MB) { throw 'Offline manifest is not an ordinary bounded file.' }
+    $hash=(Offline-PythonHash $manifestPath)
+    if ($hash -cne $env:DGP_OFFLINE_PAYLOAD_SHA256) { throw 'Offline Python manifest failed its pinned SHA-256 check.' }
+    $manifest=Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($manifest.schema -ne 1 -or $manifest.platform -cne 'win_amd64' -or
+        $manifest.python.version -cne '3.13.9' -or $manifest.python.path -cne 'python/python-3.13.9-amd64.zip' -or
+        $manifest.python.bytes -ne $expectedBytes -or $manifest.python.sha256 -cne $expectedSha256) {
+        throw 'Offline Python metadata differs from the fixed private runtime.'
+    }
+    $folder=Join-Path $payloadRoot 'python'
+    Assert-OrdinaryDirectory $folder
+    $result=Join-Path $folder 'python-3.13.9-amd64.zip'
+    $item=Get-Item -LiteralPath $result -Force
+    if ($item.PSIsContainer -or ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) -or $item.Length -ne $expectedBytes -or
+        (Offline-PythonHash $result) -cne $expectedSha256) {
+        throw 'Offline Python archive failed its fixed size/SHA-256 check.'
+    }
+    return $result
+}
+
 function Download-Python([string]$url,[string]$path) {
     Python-Cancel
     $request = [Net.HttpWebRequest]::Create($url)
@@ -77,17 +151,35 @@ try {
     }
     Assert-OrdinaryDirectory $base
     $target = [IO.Path]::Combine($base, 'python-3.13.9-amd64')
+    $codeRoot=[IO.Path]::GetDirectoryName($PSScriptRoot)
+    $offlineArchive=$null
+    if ($env:DGP_OFFLINE_PAYLOAD -or $env:DGP_OFFLINE_PAYLOAD_SHA256) { $offlineArchive=Offline-PythonArchive }
     if ([IO.File]::Exists($target) -or [IO.Directory]::Exists($target)) {
         if (!$ManagedRoot -or (!$ReuseExisting -and !$VerifyOnly)) { throw "The private Python destination already exists and was not changed: $target" }
         Assert-OrdinaryDirectory $target
         $existing = Join-Path $target 'python.exe'
-        $info = Get-Item -LiteralPath $existing -Force
-        if ($info.PSIsContainer -or ($info.Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw 'Private Python executable is not an ordinary file.' }
-        & $existing -I -B -c "import sys,struct,venv,ensurepip;sys.exit(0 if sys.version_info[:3]==(3,13,9) and struct.calcsize('P')==8 else 1)"
-        if ($LASTEXITCODE -ne 0) { throw 'Existing custom Python failed verification; its files were preserved.' }
-        Python-Progress 'complete' 'Private Python runtime verified without downloads'
-        Write-Host '[Python] Existing private runtime verified without downloads.'
-        exit 0
+        $info=$null
+        try { $info = Get-Item -LiteralPath $existing -Force -ErrorAction Stop }
+        catch [System.Management.Automation.ItemNotFoundException] { }
+        if ($info -and ($info.PSIsContainer -or ($info.Attributes -band [IO.FileAttributes]::ReparsePoint))) { throw 'Private Python executable is not an ordinary file.' }
+        $existingValid=$false
+        try {
+            if (!$info) { throw 'Private Python executable is missing.' }
+            & $existing -I -B -c "import sys,struct,venv,ensurepip;sys.exit(0 if sys.version_info[:3]==(3,13,9) and struct.calcsize('P')==8 else 1)"
+            $existingValid=($LASTEXITCODE -eq 0)
+            if ($existingValid -and $offlineArchive) {
+                & $existing -I -B -c "import sys;sys.path.insert(0,sys.argv[1]);from implementation.offline_payload import verify_private_python;verify_private_python(sys.argv[2])" $codeRoot $target
+                $existingValid=($LASTEXITCODE -eq 0)
+            }
+        } catch { $existingValid=$false }
+        if ($existingValid) {
+            Python-Progress 'complete' 'Private Python runtime verified without downloads'
+            Write-Host '[Python] Existing private runtime verified without downloads.'
+            exit 0
+        }
+        if ($VerifyOnly -or !$env:DGP_OFFLINE_PAYLOAD) { throw 'Existing custom Python failed verification; its files were preserved.' }
+        $replaceExisting=$true
+        Write-Host '[Python] Existing private runtime differs. Preparing a separate verified replacement; old files will be retained.'
     }
     if ($VerifyOnly) { throw 'Private Python is missing; run setup first.' }
 
@@ -98,9 +190,15 @@ try {
     $staged = [IO.Path]::Combine($work, 'python')
     [void][IO.Directory]::CreateDirectory($staged)
 
-    Write-Host '[Python] Downloading the official 64-bit Python runtime...'
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    Download-Python $downloadUrl $zipPath
+    if ($offlineArchive) {
+        $zipPath=$offlineArchive
+        Python-Progress 'running' 'Preparing bundled private Python runtime'
+        Write-Host '[Python] Using verified bundled runtime; no download required.'
+    } else {
+        Write-Host '[Python] Downloading the official 64-bit Python runtime...'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        Download-Python $downloadUrl $zipPath
+    }
     $download = Get-Item -LiteralPath $zipPath -Force
     if ($download.Length -ne $expectedBytes) { throw 'The Python download has an unexpected size.' }
     $hasher = [Security.Cryptography.SHA256]::Create()
@@ -133,17 +231,20 @@ try {
         if (-not $seen.Add($trimmed)) { throw "Duplicate archive entry: $($entry.FullName)" }
         $attributes = [BitConverter]::ToUInt32([BitConverter]::GetBytes([int]$entry.ExternalAttributes), 0)
         if ((($attributes -shr 16) -band 0xF000) -eq 0xA000) { throw "Archive links are not supported: $($entry.FullName)" }
-        $destination = [IO.Path]::GetFullPath([IO.Path]::Combine($staged, $trimmed))
+        # Components above are already validated: avoid legacy .NET path-length
+        # normalization before applying the extended local-drive IO spelling.
+        $destination = [IO.Path]::Combine($staged, $trimmed)
         if (-not $destination.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) { throw "Archive entry escapes its staging directory: $($entry.FullName)" }
+        $destinationIO='\\?\'+$destination
         $total += $entry.Length
         if ($total -gt 2GB) { throw 'The Python archive expands beyond its size limit.' }
         if ($directory) {
-            [void][IO.Directory]::CreateDirectory($destination)
+            [void][IO.Directory]::CreateDirectory($destinationIO)
         } else {
-            [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destination))
+            [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($destinationIO))
             $inputStream = $entry.Open()
             try {
-                $outputStream = [IO.File]::Open($destination, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
+                $outputStream = [IO.File]::Open($destinationIO, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write, [IO.FileShare]::None)
                 try { $inputStream.CopyTo($outputStream) } finally { $outputStream.Dispose() }
             } finally { $inputStream.Dispose() }
         }
@@ -155,9 +256,14 @@ try {
     if (-not [IO.File]::Exists($python)) { throw 'The Python archive did not contain python.exe.' }
     & $python -I -c "import sys, struct, venv, ensurepip; sys.exit(0 if sys.version_info[:3] == (3,13,9) and struct.calcsize('P') == 8 else 1)"
     if ($LASTEXITCODE -ne 0) { throw 'The downloaded Python runtime failed validation.' }
+    if ($offlineArchive) {
+        Python-Progress 'running' 'Preparing verified private pip and ensurepip'
+        & $python -I -B -c "import sys;sys.path.insert(0,sys.argv[1]);from implementation.offline_payload import prepare_private_python;prepare_private_python(sys.argv[2])" $codeRoot $staged
+        if ($LASTEXITCODE -ne 0) { throw 'The derived offline pip runtime failed verification. Previous Python was retained.' }
+    }
     Assert-OrdinaryDirectory $base
     Python-Cancel
-    [IO.Directory]::Move($staged, $target)
+    Publish-PythonRuntime $staged $target $base $replaceExisting
     Python-Progress 'complete' 'Private Python runtime installed and verified'
     Write-Host "[Python] Private runtime installed: $target"
     Write-Host '[Python] Continuing application setup...'

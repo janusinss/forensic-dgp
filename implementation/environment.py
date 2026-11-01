@@ -12,6 +12,9 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
+import stat
+import uuid
 import struct
 import subprocess
 import sys
@@ -21,12 +24,13 @@ import venv
 ROOT = Path(__file__).resolve().parents[1]
 from .managed_paths import managed_root, custom_install_root, managed_cache
 from .setup_events import SetupCancelled, check_cancel, event
+from .offline_payload import OfflinePayloadError, load_payload, package_environment, committed_versions
 
 _MANAGED_ROOT = managed_root()
 CONFIG_PATH = ((_MANAGED_ROOT / 'data' / 'installations' / (ROOT.name + '.json'))
                if _MANAGED_ROOT else ROOT / '.implementation-env.json')
 SUPPORTED = {(3, 12), (3, 13)}
-UV_VERSION = '0.13.1'
+UV_VERSION = '0.13.4'
 VERSION_CHECK = "import struct,sys; sys.exit(0 if sys.version_info[:2] in ((3,12),(3,13)) and struct.calcsize('P') == 8 else 1)"
 
 
@@ -40,11 +44,15 @@ def dependency_identity(root: Path | None = None) -> str:
     digest = hashlib.sha256()
     for name in ('requirements.txt', 'implementation/capture_install.py'):
         digest.update(name.encode() + b'\0' + (root / name).read_bytes().replace(b'\r\n', b'\n'))
+    for name in ('implementation/locks/windows-cp313-application.txt','implementation/locks/windows-cp313-capture.txt'):
+        path=root/name
+        if path.exists():
+            digest.update(name.encode()+b'\0'+path.read_bytes().replace(b'\r\n',b'\n'))
     digest.update(f'{sys.version_info[:2]}:{UV_VERSION}:64'.encode())
     return digest.hexdigest()[:16]
 
 
-def expected_environment(root: Path = ROOT, local_app_data: str | None = None) -> Path:
+def _base_environment(root: Path = ROOT, local_app_data: str | None = None) -> Path:
     local = local_app_data if local_app_data is not None else os.environ.get('LOCALAPPDATA', '')
     if not local or not Path(local).is_absolute():
         raise EnvironmentError('LOCALAPPDATA must name an absolute user-local directory.')
@@ -56,28 +64,95 @@ def expected_environment(root: Path = ROOT, local_app_data: str | None = None) -
     return Path(local) / 'DGP' / checkout_id
 
 
-def expected_record(root: Path = ROOT, local_app_data: str | None = None) -> dict:
-    environment = expected_environment(root, local_app_data)
-    return {'schema_version': 1, 'checkout_root': str(root.resolve()),
-            'environment_root': str(environment),
-            'python': str(environment / 'Scripts' / 'python.exe')}
+def _generation_path(root: Path, local_app_data: str | None, generation: str) -> Path:
+    if not isinstance(generation,str) or not re.fullmatch('[0-9a-f]{32}',generation):
+        raise EnvironmentError('Invalid managed environment generation.')
+    if managed_root() is None:
+        raise EnvironmentError('Environment generations require a managed installation.')
+    base = _base_environment(root,local_app_data)
+    return base.with_name(base.name + '-g' + generation)
+
+
+def _ordinary_runtime(path: Path, directory: bool = False) -> None:
+    info = path.lstat()
+    if (stat.S_ISLNK(info.st_mode) or getattr(info,'st_file_attributes',0) & 1024
+            or not (stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode))
+            or (not directory and info.st_nlink != 1)):
+        raise EnvironmentError('Managed runtime paths cannot contain links or unexpected file types.')
+
+
+def _configuration(path: Path) -> dict:
+    _ordinary_runtime(path)
+    if path.stat().st_size > 8192:
+        raise EnvironmentError('Managed environment configuration is oversized.')
+    result = json.loads(path.read_text(encoding='utf-8'))
+    if type(result) is not dict:
+        raise EnvironmentError('Invalid managed environment configuration.')
+    return result
+
+
+def _record_for_path(root: Path, environment: Path, generation: str | None = None) -> dict:
+    result = {'schema_version': 2 if generation else 1,'checkout_root':str(root.resolve()),
+              'environment_root':str(environment),'python':str(environment/'Scripts'/'python.exe')}
+    if generation:
+        result['generation'] = generation
+    return result
+
+
+def expected_environment(root: Path = ROOT, local_app_data: str | None = None) -> Path:
+    generation = os.environ.get('DGP_SETUP_GENERATION')
+    if generation is not None:
+        return _generation_path(root,local_app_data,generation)
+    managed = managed_root()
+    if managed:
+        configuration_path = managed/'data'/'installations'/(root.name + '.json')
+        if configuration_path.exists() or configuration_path.is_symlink():
+            configuration = _configuration(configuration_path)
+            if configuration.get('schema_version') == 2:
+                generation = configuration.get('generation')
+                path = _generation_path(root,local_app_data,generation)
+                if configuration != _record_for_path(root,path,generation):
+                    raise EnvironmentError('Managed environment generation binding differs.')
+                _verify_generation_marker(path,root,generation)
+                return path
+    return _base_environment(root,local_app_data)
+
+
+def expected_record(root: Path = ROOT, local_app_data: str | None = None, *, generation: str | None = None) -> dict:
+    environment = (_generation_path(root,local_app_data,generation) if generation is not None
+                   else expected_environment(root,local_app_data))
+    if generation is None:
+        match = re.fullmatch('[0-9a-f]{16}-g([0-9a-f]{32})',environment.name)
+        generation = match.group(1) if match else None
+    return _record_for_path(root,environment,generation)
+
+
+def _verify_generation_marker(environment: Path, root: Path, generation: str) -> None:
+    for directory in (environment,*environment.parents):
+        _ordinary_runtime(directory,directory=True)
+    marker = _configuration(environment/'.dgp-environment.json')
+    expected = {'schema':1,'dependency_identity':dependency_identity(root),'generation':generation,'state':'ready'}
+    if marker != expected or type(marker.get('schema')) is not int:
+        raise EnvironmentError('Managed environment generation is not verified and ready.')
 
 
 def configured_python(config_path: Path = CONFIG_PATH, root: Path = ROOT,
                       local_app_data: str | None = None) -> Path:
-    """Never execute a path supplied by configuration; match its computed value."""
-    expected = expected_record(root, local_app_data)
+    """Never execute an arbitrary configuration path; recompute all bindings."""
     try:
-        if not config_path.is_file() or config_path.is_symlink() or config_path.stat().st_size > 8192:
-            raise ValueError('missing or invalid local environment configuration')
-        configured = json.loads(config_path.read_text(encoding='utf-8'))
-        if configured != expected:
+        configured = _configuration(config_path)
+        generation = configured.get('generation') if configured.get('schema_version') == 2 else None
+        expected = (expected_record(root,local_app_data,generation=generation) if generation is not None
+                    else _record_for_path(root,_base_environment(root,local_app_data)))
+        if configured != expected or type(configured.get('schema_version')) is not int:
             raise ValueError('local environment configuration does not match this checkout and user')
-    except (OSError, ValueError, TypeError) as exc:
-        raise EnvironmentError(f'{exc}. Run install.bat for this checkout.') from exc
+        if generation is not None:
+            _verify_generation_marker(Path(expected['environment_root']),root,generation)
+    except (OSError,ValueError,TypeError) as exc:
+        raise EnvironmentError(f'{exc}. Repair using the installer for this checkout.') from exc
     python = Path(expected['python'])
     if not python.is_file():
-        raise EnvironmentError(f'The expected environment Python is missing: {python}. Run install.bat.')
+        raise EnvironmentError(f'The expected environment Python is missing: {python}. Repair using the installer.')
     return python
 
 
@@ -122,7 +197,14 @@ def write_record(record: dict, config_path: Path = CONFIG_PATH) -> None:
 
 
 def install_dependencies(python: Path) -> int:
-    """Resolve once with CPU-only Torch; satisfied reruns use uv's fast audit."""
+    """Install a validated local wheel set, or preserve the developer online path."""
+    payload = load_payload()
+    if payload is not None:
+        event('packages','running','Installing verified offline application packages')
+        result = run_foreground(payload.package_command(python,'application'),env=package_environment())
+        if result:
+            return result
+        return run_foreground([str(python),'-I','-m','pip','--isolated','check'],env=package_environment())
     probe = (
         "import importlib.metadata as m,sys; "
         f"sys.exit(0 if m.version('uv') == {UV_VERSION!r} else 1)"
@@ -238,6 +320,11 @@ def verify_runtime(python: Path, *, include_models: bool = True) -> int:
              "expected=" + repr(requirements + [['uv', UV_VERSION]]) + "; "
              "bad=[name for name,version in expected if m.version(name)!=version]; "
              "assert not bad, 'Installed package versions differ: '+repr(bad)")
+    payload = load_payload()
+    locked = (payload.locked_versions('application') if payload is not None else committed_versions('application',ROOT))
+    if locked is not None:
+        expected_locks = repr(locked)
+        probe += "; locked=" + expected_locks + "; assert all(m.version(name)==version for name,version in locked), 'Offline package lock differs'"
     checks = [
         [str(python), '-I', '-B', '-c', probe],
         [str(python), '-I', '-B', '-m', 'pip', '--isolated', 'check'],
@@ -260,10 +347,86 @@ def verify_installation() -> int:
     return verify_runtime(configured_python())
 
 
+def _write_generation_state(folder: Path, generation: str, state: str) -> None:
+    for parent in (folder,*folder.parents):
+        _ordinary_runtime(parent,directory=True)
+    value = {'schema':1,'dependency_identity':dependency_identity(ROOT),'generation':generation,'state':state}
+    target = folder/'.dgp-environment.json'
+    if target.exists():
+        _ordinary_runtime(target)
+    temporary = folder/('.dgp-environment.' + uuid.uuid4().hex + '.tmp')
+    with temporary.open('x',encoding='utf-8',newline='\n') as writer:
+        writer.write(json.dumps(value) + '\n')
+        writer.flush()
+        os.fsync(writer.fileno())
+    temporary.replace(target)
+
+
+def _install_offline(payload) -> int:
+    """Preserve failed/active generations and publish only a fully verified candidate."""
+    candidate = None
+    try:
+        candidate = expected_record()
+        python = Path(candidate['python'])
+        if python.is_file() and verify_runtime(python,include_models=False) == 0:
+            event('environment','running','Reusing verified offline environment')
+            result = install_models()
+            if result:
+                return result
+            result = verify_runtime(python)
+            if result == 0:
+                write_record(candidate)
+            return result
+    except (EnvironmentError,OSError,ValueError,subprocess.SubprocessError) as exc:
+        print('[environment] Existing runtime was preserved; preparing a separate repair generation: ' + str(exc),flush=True)
+    generation = uuid.uuid4().hex
+    candidate = expected_record(generation=generation)
+    folder = Path(candidate['environment_root'])
+    if folder.exists() or folder.is_symlink():
+        raise EnvironmentError('New environment generation already exists; existing files were preserved.')
+    for parent in folder.parents:
+        if parent.exists():
+            _ordinary_runtime(parent,directory=True)
+    folder.mkdir(parents=True,exist_ok=False)
+    _write_generation_state(folder,generation,'preparing')
+    previous_generation = os.environ.get('DGP_SETUP_GENERATION')
+    os.environ['DGP_SETUP_GENERATION'] = generation
+    try:
+        python = Path(candidate['python'])
+        event('environment','running','Preparing isolated offline environment')
+        venv.EnvBuilder(with_pip=True,clear=False,symlinks=False).create(folder)
+        check_python(python)
+        result = run_install_tasks({
+            'Application dependencies': lambda: install_dependencies(python),
+            'Model assets': install_models,
+            'Capture runtime': install_capture,
+        })
+        if result:
+            return result
+        check_cancel()
+        event('verification','running','Verifying offline packages, models and application')
+        result = verify_runtime(python)
+        if result:
+            return result
+        check_cancel()
+        _write_generation_state(folder,generation,'ready')
+        write_record(candidate)
+        event('environment','complete','Offline environment verified and ready')
+        return 0
+    finally:
+        if previous_generation is None:
+            os.environ.pop('DGP_SETUP_GENERATION',None)
+        else:
+            os.environ['DGP_SETUP_GENERATION'] = previous_generation
+
+
 def install() -> int:
     if sys.version_info[:2] not in SUPPORTED or struct.calcsize('P') != 8:
         raise EnvironmentError('Setup requires Python 3.12 or 3.13 64-bit.')
     check_cancel()
+    payload = load_payload()
+    if payload is not None and managed_root() is not None:
+        return _install_offline(payload)
     started = time.monotonic()
     record = expected_record()
     environment = Path(record['environment_root'])
@@ -334,7 +497,7 @@ def main(argv: list[str] | None = None) -> int:
     except SetupCancelled as exc:
         print(f'[CANCELLED] {exc}', file=sys.stderr)
         return 130
-    except (EnvironmentError, OSError, subprocess.SubprocessError) as exc:
+    except (EnvironmentError, OfflinePayloadError, OSError, subprocess.SubprocessError) as exc:
         print(f'[ERROR] {exc}', file=sys.stderr)
         return 1
     except KeyboardInterrupt:

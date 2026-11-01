@@ -8,6 +8,7 @@ import venv
 from .environment import expected_environment
 from .managed_paths import custom_install_root, managed_cache
 from .setup_events import SetupCancelled, check_cancel, event
+from .offline_payload import load_payload, package_environment, committed_versions
 
 PROBE = ("import importlib.metadata as m,cv2,numpy; "
          "assert m.version('opencv-python-headless')=='4.13.0.92'; "
@@ -22,7 +23,12 @@ def capture_python():
 def verified(python):
     if not python.is_file():
         return False
-    return subprocess.run([str(python), '-I', '-B', '-c', PROBE], stdout=subprocess.DEVNULL,
+    payload=load_payload()
+    probe=PROBE
+    locked=(payload.locked_versions('capture') if payload is not None else committed_versions('capture'))
+    if locked is not None:
+        probe += '; locked='+repr(locked)+"; assert all(m.version(name)==version for name,version in locked), 'Offline capture package lock differs'"
+    return subprocess.run([str(python), '-I', '-B', '-c', probe], stdout=subprocess.DEVNULL,
                           stderr=subprocess.DEVNULL, timeout=30, check=False).returncode == 0
 
 
@@ -45,8 +51,12 @@ def main(argv=None):
             venv.EnvBuilder(with_pip=True,clear=False).create(python.parent.parent)
         check_cancel()
         event('capture-runtime', 'running', 'Installing capture packages')
+        payload = load_payload()
         cache_args = ['--cache-dir', str(managed_cache('pip'))] if custom_install_root() else []
-        subprocess.run([str(python), '-I', '-m', 'pip', '--isolated', 'install', '--disable-pip-version-check',
+        if payload is not None:
+            subprocess.run(payload.package_command(python,'capture'),env=package_environment(),check=True)
+        else:
+            subprocess.run([str(python), '-I', '-m', 'pip', '--isolated', 'install', '--disable-pip-version-check',
                         '--index-url', 'https://pypi.org/simple', '--only-binary=:all:', *cache_args,
                         'opencv-python-headless==4.13.0.92', 'numpy==2.5.2'], check=True)
         check_cancel()
