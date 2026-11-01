@@ -23,6 +23,7 @@ import urllib.request
 import uuid
 
 from . import completion_assets as assets
+from .model_store import require_model_directory
 from .offline_payload import load_payload, protect_active_model, CopyProgress
 
 RELEASE_URL = "https://github.com/janusinss/forensic-dgp/releases/tag/completion-r1-models-v1"
@@ -188,6 +189,8 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
         raise CompletionInstallError("Use --verify-only separately from local staging.")
     check_cancel()
     manifest = assets.load_manifest()
+    if model_dir == assets.MODEL_DIR:
+        require_model_directory(assets.ROOT, 'completion', model_dir, prepare=not verify_only)
     folder = _directory(model_dir)
     supplied = {"completion_r1": local_r1, "covering_detector": local_detector}
     payload = load_payload() if not verify_only else None
@@ -235,7 +238,7 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
             continue
         if shutil.disk_usage(folder).free < asset["size"] + 4 * 1024**2:
             raise CompletionInstallError(f"Not enough free space to stage {destination.name} while preserving existing files.")
-        partial = folder / f".{destination.name}.{uuid.uuid4().hex}.partial"
+        partial = folder / f".model-{uuid.uuid4().hex}.partial"
         try:
             if source in ("verified_local_copy","verified_local_repair"):
                 print(f"[completion] Copying and verifying {destination.name}...", flush=True)
@@ -248,7 +251,7 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
                 item["download_url"] = url
             backup=None
             if source=='verified_local_repair':
-                backup=folder/('.'+destination.name+'.previous-'+uuid.uuid4().hex)
+                backup=folder/('.model-'+uuid.uuid4().hex+'.previous')
                 destination.rename(backup)
             try:
                 _publish(partial, destination, asset)

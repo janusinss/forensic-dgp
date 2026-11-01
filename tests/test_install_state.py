@@ -41,10 +41,12 @@ class InstallStateTests(unittest.TestCase):
         self.source_manifest=self.area/'candidate.json'
         self.source_manifest.write_text(json.dumps({'schema':1,'commit':B,'ancestors':[B,A]}))
 
-    def call(self,action='Inspect',root=None,previous=None,version='0.2.0',commit=B):
+    def call(self,action='Inspect',root=None,previous=None,version='0.2.0',commit=B,payload=None):
         cmd=[str(PS),'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',str(HELPER),
              '-Action',action,'-InstallRoot',str(root or self.new),'-RegisteredRoot',str(previous or self.old),
              '-ReleaseVersion',version,'-ReleaseCommit',commit,'-SourceManifest',str(self.source_manifest)]
+        if payload is not None:
+            cmd.extend(['-PayloadManifest',str(payload)])
         if action in ('CompleteMove','Cleanup'):
             env=dict(self.env,DGP_FIXTURE_HELPER=str(HELPER),DGP_FIXTURE_ROOT=str(root or self.new),
                      DGP_FIXTURE_OLD=str(previous or self.old),DGP_FIXTURE_ACTION=action,
@@ -198,6 +200,62 @@ class InstallStateTests(unittest.TestCase):
         self.assertFalse((self.new/'runtime/data/installations').exists())
         self.assertFalse((self.new/'runtime/environments').exists())
         self.assertEqual(self.result('StageMove')['mode'],'move-staged')
+
+    def model_payload(self):
+        model=self.old/'runtime/data/models/completion/codeformer_completion_r1.pth'
+        model.parent.mkdir(parents=True,exist_ok=True)
+        body=b'verified fixture model bytes'; model.write_bytes(body)
+        payload=self.area/'offline-models.json'
+        payload.write_text(json.dumps({'models':[{'group':'completion','filename':model.name,
+                           'path':'models/'+model.name}],
+                           'files':[{'path':'models/'+model.name,'sha256':sha(body)}]}))
+        return payload,model,body
+
+    def test_namespaced_move_stages_records_without_duplicating_legacy_models(self):
+        self.install(self.old); record,record_bytes=self.saved()
+        payload,model,model_bytes=self.model_payload()
+        manifest=json.loads(self.source_manifest.read_text())
+        manifest['files']={'implementation/model_store.py':'c'*40}
+        self.source_manifest.write_text(json.dumps(manifest))
+        data=self.result('StageMove',payload=payload)
+        copied=self.new/'runtime/data/scratch/capture_requests/evidence.json'
+        self.assertEqual(copied.read_bytes(),record_bytes)
+        self.assertEqual(record.read_bytes(),record_bytes)
+        self.assertEqual(model.read_bytes(),model_bytes)
+        self.assertFalse((self.new/'runtime/data/models').exists())
+        receipt=json.loads(Path(data['receipt']).read_text(encoding='utf-8-sig'))
+        self.assertFalse(any(item['path'].startswith('runtime\\data\\models\\') for item in receipt['copied_files']))
+
+    def test_legacy_move_still_reuses_verified_flat_model(self):
+        self.install(self.old); self.saved()
+        payload,model,model_bytes=self.model_payload()
+        manifest=json.loads(self.source_manifest.read_text())
+        manifest['files']={'implementation/setup_models.py':'d'*40}
+        self.source_manifest.write_text(json.dumps(manifest))
+        self.result('StageMove',payload=payload)
+        self.assertEqual((self.new/'runtime/data/models/completion'/model.name).read_bytes(),model_bytes)
+        self.assertEqual(model.read_bytes(),model_bytes)
+
+    def test_invalid_namespaced_source_pin_refuses_move_before_copy(self):
+        self.install(self.old); record,record_bytes=self.saved()
+        payload,model,model_bytes=self.model_payload()
+        manifest=json.loads(self.source_manifest.read_text())
+        manifest['files']={'implementation/model_store.py':'not-a-git-blob'}
+        self.source_manifest.write_text(json.dumps(manifest))
+        result=self.call('StageMove',payload=payload)
+        self.assertNotEqual(result.returncode,0)
+        self.assertFalse(self.new.exists())
+        self.assertEqual(record.read_bytes(),record_bytes)
+        self.assertEqual(model.read_bytes(),model_bytes)
+
+    def test_move_rejects_candidate_identity_even_when_old_commit_matches(self):
+        self.install(self.old,'0.2.0',B); record,record_bytes=self.saved()
+        self.source_manifest.write_text(json.dumps({'schema':1,'commit':A,'ancestors':[A,B],
+                                                  'files':{'implementation/model_store.py':'c'*40}}))
+        result=self.call('StageMove')
+        self.assertNotEqual(result.returncode,0)
+        self.assertFalse(self.new.exists())
+        self.assertEqual(record.read_bytes(),record_bytes)
 
     def test_move_retry_refuses_changed_destination_record(self):
         self.install(self.old); old_record,body=self.saved(); self.result('StageMove')

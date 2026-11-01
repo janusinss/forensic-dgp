@@ -16,10 +16,10 @@ import stat
 import sys
 import uuid
 
-from .managed_paths import data_path
+from .model_store import model_directory, require_model_directory
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = data_path(ROOT, 'models', 'completion')
+MODEL_DIR = model_directory(ROOT, 'completion')
 MANIFEST_PATH = Path(__file__).with_name("completion_assets.json")
 R1_SHA256 = "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0"
 R1_SIZE = 370764381
@@ -90,6 +90,8 @@ def verify_asset(path, asset):
 
 def asset_path(key, *, model_dir=MODEL_DIR, verify=True):
     body = load_manifest()
+    if model_dir == MODEL_DIR:
+        require_model_directory(ROOT, 'completion', model_dir)
     if key not in body["assets"]:
         raise CompletionAssetError("Unknown completion asset.")
     asset = body["assets"][key]
@@ -109,6 +111,8 @@ def stage_local(key, source, *, model_dir=MODEL_DIR):
     source = ordinary_file(source)
     if not verify_asset(source, asset):
         raise CompletionAssetError(f"Supplied {key} file failed the exact size/SHA-256 check.")
+    if model_dir == MODEL_DIR:
+        require_model_directory(ROOT, 'completion', model_dir, prepare=True)
     folder = Path(model_dir)
     for parent in (folder, *folder.parents):
         if parent.exists() or parent.is_symlink():
@@ -121,7 +125,7 @@ def stage_local(key, source, *, model_dir=MODEL_DIR):
         if verify_asset(destination, asset):
             return destination
         raise CompletionAssetError(f"Existing completion file was preserved because its hash differs: {destination.name}")
-    partial = folder / f".{destination.name}.{uuid.uuid4().hex}.partial"
+    partial = folder / f".model-{uuid.uuid4().hex}.partial"
     try:
         with source.open("rb") as reader, partial.open("xb") as writer:
             shutil.copyfileobj(reader, writer, 1024 * 1024)

@@ -18,12 +18,12 @@ import urllib.parse
 import urllib.request
 import uuid
 
-from .managed_paths import data_path
+from .model_store import model_directory, require_model_directory, ModelStoreError
 from .setup_events import SetupCancelled, check_cancel, event
 from .offline_payload import load_payload, OfflinePayloadError, protect_active_model, CopyProgress
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = data_path(ROOT, 'models', 'implementation')
+MODEL_DIR = model_directory(ROOT, 'implementation')
 BUNDLED_DIR = ROOT / "implementation" / "assets"
 MANIFEST_PATH = Path(__file__).with_name("models.json")
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/"
@@ -96,8 +96,10 @@ def _stage_bundled_asset_if_needed(asset: dict, model_dir: Path = MODEL_DIR) -> 
         return
     bundled = BUNDLED_DIR / asset["filename"]
     if verify_asset(bundled, asset):
+        if model_dir == MODEL_DIR:
+            require_model_directory(ROOT, 'implementation', model_dir, prepare=True)
         model_dir.mkdir(parents=True, exist_ok=True)
-        partial = model_dir / f".{destination.name}.{uuid.uuid4().hex}.partial"
+        partial = model_dir / f".model-{uuid.uuid4().hex}.partial"
         try:
             shutil.copyfile(bundled, partial)
             if verify_asset(partial, asset):
@@ -108,6 +110,8 @@ def _stage_bundled_asset_if_needed(asset: dict, model_dir: Path = MODEL_DIR) -> 
 
 def verify_models(manifest: dict | None = None, model_dir: Path = MODEL_DIR) -> dict[str, Path]:
     manifest = manifest or load_manifest()
+    if model_dir == MODEL_DIR:
+        require_model_directory(ROOT, 'implementation', model_dir)
     verified = {}
     for key, asset in manifest["assets"].items():
         _stage_bundled_asset_if_needed(asset, model_dir)
@@ -135,6 +139,8 @@ def _publish_without_overwrite(partial: Path, destination: Path) -> None:
 
 def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     check_cancel()
+    if model_dir == MODEL_DIR:
+        require_model_directory(ROOT, 'implementation', model_dir, prepare=True)
     payload = load_payload()
     if payload is not None:
         key = next((key for key,value in load_manifest()['assets'].items() if value['filename']==asset['filename']),None)
@@ -158,7 +164,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
                 raise ModelSetupError('Existing model is linked or has an unexpected type; it was preserved.')
             protect_active_model(destination,'restoration',asset)
         model_dir.mkdir(parents=True,exist_ok=True)
-        partial=model_dir/('.'+destination.name+'.'+uuid.uuid4().hex+'.partial')
+        partial=model_dir/('.model-'+uuid.uuid4().hex+'.partial')
         try:
             copied=0
             progress=CopyProgress(destination.name,asset['size'])
@@ -172,7 +178,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
             if not verify_asset(partial,asset):
                 raise ModelSetupError('Offline model copy failed verification.')
             if destination.exists():
-                backup=model_dir/('.'+destination.name+'.previous-'+uuid.uuid4().hex)
+                backup=model_dir/('.model-'+uuid.uuid4().hex+'.previous')
                 destination.rename(backup)
             try:
                 _publish_without_overwrite(partial,destination)
@@ -197,7 +203,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
             "Move it aside, then run install.bat again."
         )
     model_dir.mkdir(parents=True, exist_ok=True)
-    partial = model_dir / f".{destination.name}.{uuid.uuid4().hex}.partial"
+    partial = model_dir / f".model-{uuid.uuid4().hex}.partial"
     digest = hashlib.sha256()
     downloaded = 0
     next_progress = 0
@@ -258,7 +264,7 @@ def main(argv: list[str] | None = None) -> int:
     except SetupCancelled as exc:
         print(f'[CANCELLED] {exc}', file=sys.stderr)
         return 130
-    except (ModelSetupError,OfflinePayloadError) as exc:
+    except (ModelSetupError,OfflinePayloadError,ModelStoreError) as exc:
         print(f"[ERROR] {exc}", file=sys.stderr)
         return 1
 

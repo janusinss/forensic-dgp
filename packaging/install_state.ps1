@@ -257,6 +257,20 @@ try {
   if ($Action -eq 'StageMove') {
     if (!$SourceManifest) { throw 'Relocation requires the verified bundled source history.' }
     if (!$old.owned -or (Same-Root $old.root $target)) { throw 'A different, owned previous installation is required for relocation.' }
+    # GUI setup binds this source manifest to the compiled release before calling
+    # StageMove. Its file inventory uses Git blob IDs, not SHA-256 values.
+    $candidateSource=Read-Record $SourceManifest 16MB
+    if ($candidateSource.schema -isnot [int] -or $candidateSource.schema -ne 1 -or $candidateSource.commit -cne $ReleaseCommit) { throw 'Relocation source identity differs. Previous files were preserved.' }
+    $versionedModels=$false
+    $sourceFiles=$candidateSource.psobject.Properties['files']
+    if ($sourceFiles) {
+      if ($sourceFiles.Value -isnot [pscustomobject]) { throw 'Relocation source file inventory differs. Previous files were preserved.' }
+      $storeModule=$sourceFiles.Value.psobject.Properties['implementation/model_store.py']
+      if ($storeModule) {
+        if ($storeModule.Value -isnot [string] -or $storeModule.Value -cnotmatch '^[0-9a-f]{40}$') { throw 'Relocation model-store source pin differs. Previous files were preserved.' }
+        $versionedModels=$true
+      }
+    }
     # A retry has a prepared target owner but no published shell. Its bound receipt is the only adoption path.
     if (Test-Path -LiteralPath $pending) {
       $prior=Read-Record $pending 32MB
@@ -292,7 +306,10 @@ try {
       Copy-Verified $entry.FullName (Below $target $name) $expected
       $copies.Add([pscustomobject]@{path=$name;sha256=$expected})
     }
-    if ($PayloadManifest) {
+    # Namespaced candidates copy their verified offline payload into the new
+    # model store. Flat copies here would consume extra disk space and be unused.
+    # The backend still verifies every required model before activation.
+    if ($PayloadManifest -and !$versionedModels) {
       $payload=Read-Record $PayloadManifest 16MB
       foreach ($model in $payload.models) {
         $group=$(if ($model.group -eq 'restoration') {'implementation'} elseif ($model.group -eq 'completion') {'completion'} else { throw 'Invalid model group.' })

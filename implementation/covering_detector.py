@@ -12,10 +12,10 @@ from pathlib import Path
 
 import numpy as np
 
-from .managed_paths import data_path
+from .model_store import model_directory
 
 ROOT = Path(__file__).resolve().parents[1]
-DETECTOR_PATH = data_path(ROOT, 'models', 'completion') / 'covering_detector_segmenter_v1.pth'
+DETECTOR_PATH = model_directory(ROOT, 'completion') / 'covering_detector_segmenter_v1.pth'
 DETECTOR_BYTES = 2681549
 DETECTOR_SHA256 = 'ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf'
 DETECTOR_STATE = '888250f7a54aa95dac5789943bb09a8c3763ca9e986940421ed9aa400986dd0f'
@@ -113,7 +113,7 @@ def logical_state(params):
 def load_frozen_detector(path=DETECTOR_PATH):
     """Load only the exact admitted CPU segmenter; no inference occurs here."""
     path = Path(os.path.abspath(path))
-    model_root = data_path(ROOT, 'models', 'completion')
+    model_root = model_directory(ROOT, 'completion')
     need((path.is_relative_to(ROOT) or path.is_relative_to(model_root)) and path.is_file() and not path.is_symlink(),
          'A local ordinary detector asset is required. Run install.bat.')
     info = path.lstat()

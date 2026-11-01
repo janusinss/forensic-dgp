@@ -72,6 +72,13 @@ Preflight checks prerequisites, actual resolved destination, write access and
 payload-based temporary/destination space. Protected roots, links, unsupported
 paths, conflicting ownership and unintended downgrades remain refused.
 
+## Unreleased model-update support
+
+The working source adds manifest-bound model-family namespaces for future
+in-place model-changing releases. This support is not in the published 0.2.0
+installer. See [MODEL_UPDATES.md](MODEL_UPDATES.md) for storage, activation,
+legacy compatibility and required new-release acceptance.
+
 ## Existing installations
 
 Setup distinguishes fresh, same-version, update, repair and relocation using

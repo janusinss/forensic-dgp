@@ -20,10 +20,10 @@ import weakref
 import zipfile
 
 from . import conditioning_v2 as cond_v2
-from .managed_paths import data_path
+from .model_store import model_directory
 
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = data_path(ROOT, 'models', 'implementation')
+MODEL_DIR = model_directory(ROOT, 'implementation')
 SITES = ("32", "64", "128", "256")
 CHANNELS = {"32": 256, "64": 256, "128": 128, "256": 128}
 WIDTH = 32
@@ -62,7 +62,7 @@ def need(ok, message):
 def ordinary_file(path, maximum=512 * 1024**2):
     """Require bounded ordinary project assets, with no links/reparse points."""
     path = Path(os.path.abspath(path))
-    allowed_models = data_path(ROOT, 'models', 'implementation')
+    allowed_models = model_directory(ROOT, 'implementation')
     need(path.is_relative_to(ROOT) or path.is_relative_to(allowed_models), "Model/source must stay inside this installation.")
     for parent in path.parents:
         info = parent.lstat()

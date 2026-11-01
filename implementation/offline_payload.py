@@ -422,8 +422,8 @@ def prepare_private_python(selected: Path) -> None:
 def protect_active_model(destination: Path, group: str, replacement: dict) -> None:
     """A verified model of the active release cannot be replaced in place.
 
-    Future model-changing releases must use relocation until model generations
-    have their own transaction. Corrupt/missing models remain repairable.
+    Managed model sets use a manifest-bound namespace. Legacy shared models keep
+    their previous-release guard; corrupt/missing models remain repairable.
     """
     from .managed_paths import managed_root
     managed=managed_root()
@@ -435,7 +435,15 @@ def protect_active_model(destination: Path, group: str, replacement: dict) -> No
         raise OfflinePayloadError('Unknown active model group.')
     expected=managed/'data'/'models'/family/replacement['filename']
     if os.path.normcase(str(selected))!=os.path.normcase(str(expected)):
-        raise OfflinePayloadError('Active model repair escaped its computed installation directory.')
+        from .model_store import admitted_model_path
+        expected = admitted_model_path(Path(__file__).resolve().parents[1],family,replacement)
+        if os.path.normcase(str(selected))!=os.path.normcase(str(expected)):
+            raise OfflinePayloadError('Active model repair escaped its computed installation directory.')
+        # The full marker binds this exact inventory, not just the shortened key.
+        # A valid old release with different bytes resolves a different namespace.
+        # Missing/tampered markers and unrelated directories fail in the resolver.
+        _ordinary(selected)
+        return
     current_path=managed/'current.json'
     if not current_path.exists() and not current_path.is_symlink():
         return
