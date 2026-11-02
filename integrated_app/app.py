@@ -7,3 +7,6 @@ from implementation.app import app
 from implementation.completion_api import register
 
 register(app)
+
+from implementation.capture_api import register as register_capture
+register_capture(app)

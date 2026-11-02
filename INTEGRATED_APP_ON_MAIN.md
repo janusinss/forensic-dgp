@@ -1,6 +1,6 @@
 # Restoration and reviewed completion on main
 
-The `integrated_app/` folder contains the application published on `IMPLEMENTATION` at commit `6059fc32acbe04800241fc5be15f07549d30b0b9`. Its Conditioned SFT V2 (`p2_u0224`) restoration and optional reviewed CodeFormer R1 completion use separate model assets and workers. The full research application and its existing launchers remain in place.
+The `integrated_app/` folder contains the application published on `IMPLEMENTATION` at commit `9fd2d9f664d7d4b6924b010f6b8090cd49d36add`. Its Conditioned SFT V2 (`p2_u0224`) restoration and optional reviewed CodeFormer R2 completion use separate model assets and workers. The full research application and its existing launchers remain in place.
 
 On Windows, from the repository root, run `install-integrated.bat` once and then `start-integrated.bat`. Setup needs network access and 64-bit Python 3.12 or 3.13; all inference after setup is local. If the port is occupied, run `start-integrated.bat --port 0`. For details see `integrated_app/README.MD` and `integrated_app/COMPLETION_INSTALL.md`.
 

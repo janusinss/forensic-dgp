@@ -3,151 +3,206 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:">
   <meta name="referrer" content="no-referrer">
-  <title>ZCPO // Face restoration</title>
+  <meta name="application-name" content="Forensic DGP">
+  <meta name="apple-mobile-web-app-title" content="Forensic DGP">
+  <meta name="description" content="Local, experimental face restoration with reviewed blur preparation and covering removal.">
+  <meta name="theme-color" content="#176b52">
+  <title>Forensic DGP</title>
+  <link rel="icon" href="/static/branding/favicon.ico?v=1" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" href="/static/branding/favicon-32.png?v=1" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="/static/branding/favicon.svg?v=1" sizes="any">
+  <link rel="apple-touch-icon" href="/static/branding/apple-touch-icon.png?v=1" sizes="180x180">
   <link rel="stylesheet" href="/static/style.css">
   <link rel="stylesheet" href="/static/face_workflow.css">
-  <link rel="stylesheet" href="/static/restoration.css">
-  <link rel="stylesheet" href="/static/surroundings.css">
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
+  <link rel="stylesheet" href="/static/workbench.css">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=24">
+  <link rel="stylesheet" href="/static/left-progress.css?v=1">
+  <link rel="stylesheet" href="/static/capture.css?v=8">
+  <link rel="stylesheet" href="/static/capture-modern.css?v=2">
+  <link rel="stylesheet" href="/static/selects.css?v=1">
 </head>
 <body>
-  <div class="terminal-layout">
-    <header class="terminal-header border-bottom">
-      <div class="logo-block border-right"><div class="logo-text"><h1>ZCPO // FORENSICS</h1><span class="mono-label">REVIEWED V2 RESTORATION</span></div></div>
-      <div class="status-block"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div>
-    </header>
-    <main class="terminal-body">
-      <section class="panel input-panel border-right" aria-labelledby="restoration-input-heading">
-        <div class="panel-header border-bottom"><h2 id="restoration-input-heading">01 // FACE_INPUT</h2><span class="mono-label">ONE FRONTAL OR MILD-TURN CROP</span></div>
-        <div class="panel-content">
-          <p class="help-text">Conditioned SFT V2 (p2_u0224) workflow. Native CCTV usefulness and final acceptance remain under review. This page restores visible information; completion and covering removal are separate.</p>
-          <form id="brush-form" class="context-form">
-            <section aria-labelledby="brush-upload-heading">
-              <h2 id="brush-upload-heading">1. Inspect the original</h2>
-              <label for="brush-file">PNG or JPEG face crop, up to 10 MiB</label><input id="brush-file" type="file" accept="image/png,image/jpeg">
-              <img id="upload-preview" class="hidden" width="160" height="160" alt="Oriented original face crop before preparation">
-              <label for="brush-review">Visible facial information</label>
-              <select id="brush-review"><option value="">Inspect the original first</option><option value="usable">One face with readable visible facial structure</option><option value="needs_clearer">Too degraded or covered to read the face</option><option value="out_of_scope">Strong profile, multiple faces or uncropped scene</option></select>
-              <p class="help-text">Request a clearer or less-covered crop when the visible eyes, nose and mouth cannot be meaningfully inspected. A plausible sharper face is not proof of recovered identity.</p>
-            </section>
-            <section aria-labelledby="restoration-mode-heading">
-              <h2 id="restoration-mode-heading">2. Choose restoration</h2>
-              <input id="brush-model" type="hidden" value="v2">
-              <label for="brush-restoration">Visible face restoration (Conditioned SFT V2)</label>
-              <select id="brush-restoration"><option value="auto">Auto · original-input blur/noise suggestion</option><option value="on">On · restore with Conditioned SFT V2</option><option value="off">Off · keep the original resized input</option></select>
-              <p class="help-text">Auto assesses the original before optional preparation. You can override it. On uses one V2 inference call; Off uses none and skips preparation.</p>
-              <label for="brush-preparation">Input preparation</label>
-              <select id="brush-preparation"><option value="bypass">Bypass · use the original upload</option><option value="manual">Optional manual Protect + Apply</option></select>
-              <p class="help-text">Globally soft, unknown or mixed inputs can bypass. Surroundings blur helped some examples but was mixed or adverse in the paired study. Automatic blur detection and matching remain unavailable.</p>
-            </section>
-            <section id="brush-edit-section" class="hidden" aria-labelledby="brush-edit-heading">
-              <h2 id="brush-edit-heading">3. Review Protect and Apply</h2>
-              <p id="brush-dimensions" class="help-text"></p>
-              <div class="brush-controls">
-                <label for="brush-plane">Area<select id="brush-plane"><option value="protect">Protect · green</option><option value="apply">Apply · blue</option></select></label>
-                <label for="brush-action">Action<select id="brush-action"><option value="paint">Paint</option><option value="erase">Erase selected area</option></select></label>
-                <label for="brush-size">Brush diameter, native pixels<input id="brush-size" type="number" min="1" max="160" step="1" value="25"></label>
-              </div>
-              <p class="help-text">Protect the complete face, existing blur and soft edges. Apply starts empty: paint only where added blur is permitted. Green wins overlap. Every protected pixel and every pixel outside Apply stays unchanged during preparation.</p>
-              <canvas id="brush-editor" tabindex="0" role="img" aria-label="Native Protect and Apply editor. Arrow keys move the cursor. Space paints or erases. Coordinate fields and rectangle controls are available below."></canvas>
-              <p id="brush-cursor" class="help-text" aria-live="polite">Paint or use the coordinate controls.</p>
-              <div class="brush-controls"><label for="brush-x">Cursor X<input id="brush-x" type="number" min="0" step="1" value="0"></label><label for="brush-y">Cursor Y<input id="brush-y" type="number" min="0" step="1" value="0"></label><button id="brush-stamp" class="tool-btn" type="button">Use brush at cursor</button></div>
-              <div class="context-actions"><button id="brush-fill" class="tool-btn" type="button">Permit all surroundings</button><button id="brush-undo" class="tool-btn" type="button" disabled>Undo</button><button id="brush-clear" class="tool-btn" type="button">Clear selected area</button><button id="brush-reset" class="tool-btn" type="button">Reset both areas</button></div>
-              <details><summary>Start Protect with a rectangle</summary><div class="context-bounds"><label for="brush-left">Left pixel<input id="brush-left" type="number" min="0" step="1" value="0"></label><label for="brush-top">Top pixel<input id="brush-top" type="number" min="0" step="1" value="0"></label><label for="brush-right">Right pixel<input id="brush-right" type="number" min="0" step="1" value="0"></label><label for="brush-bottom">Bottom pixel<input id="brush-bottom" type="number" min="0" step="1" value="0"></label></div><button id="brush-rectangle" class="tool-btn" type="button">Add Protect rectangle</button></details>
-              <label for="brush-radius">Approximate surroundings blur radius at 256 pixels<input id="brush-radius" type="number" min="0" max="12" step="0.5" value="1"></label>
-              <p class="help-text">Manual Gaussian blur only, starting at radius 1. The preview adds an 8-pixel protection margin and a 16-pixel outside transition entirely within Apply. It rebuilds from the immutable original; previews never accumulate blur. No arbitrary noise, JPEG or mosaic is copied.</p>
-              <button id="brush-preview" class="tool-btn" type="button" disabled>Preview permitted surroundings</button>
-              <label class="context-confirm" for="brush-confirm"><input id="brush-confirm" type="checkbox" disabled>I reviewed the current preview. Existing facial blur and soft edges are protected; Apply contains only permitted surroundings.</label>
-            </section>
-            <section aria-labelledby="brush-run-heading">
-              <h2 id="brush-run-heading">4. Restore the selected input</h2>
-              <label class="context-confirm" for="brush-include-bundle"><input id="brush-include-bundle" type="checkbox" checked>Include original, masks, preparation, result and available RAW records in a ZIP</label>
-              <div class="context-actions"><button id="brush-run" class="execute-btn" type="submit" disabled>RESTORE SELECTED INPUT</button><button id="brush-refresh" class="tool-btn" type="button">Check service</button></div>
-              <p class="help-text">This sends one selected input to one model. It does not run covering detection or completion. Input protection applies only to preparation; the generated face can still change appearance.</p>
-            </section>
-            <p id="brush-progress" class="help-text" role="status" aria-live="polite">Checking the reviewed local service.</p>
-            <p id="brush-error" class="workflow-error hidden" role="alert"></p>
-          </form>
+<main class="viewport-workspace" id="workspace" aria-label="Face restoration workspace">
+  <form id="brush-form" class="work-form">
+    <section class="work-screen is-active input-split" data-screen="inspect" data-input-mode="picture" data-input-phase="review" data-capture-state="idle" aria-labelledby="brush-upload-heading">
+      <div class="work-controls input-controls">
+        <div class="intake-progress"></div>
+        <div class="input-titlebar">
+          <div class="work-heading"><h1 id="brush-upload-heading">Inspect the original</h1><p>Use a close-up of one face looking forward or slightly to the side.</p></div>
+          <div class="input-method" role="group" aria-label="Input type"><button id="input-mode-picture" type="button" aria-pressed="true"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Picture</span></button><button id="input-mode-video" type="button" aria-pressed="false"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg><span>Video</span></button></div>
         </div>
-      </section>
-      <section class="panel results-panel" aria-labelledby="restoration-results-heading">
-        <div class="panel-header border-bottom"><h2 id="restoration-results-heading">02 // RESTORATION_REVIEW</h2><span class="mono-label">ORIGINAL · SELECTED INPUT · ONE RESULT</span></div>
-        <div class="panel-content scrollable">
-          <p id="brush-standby" class="result-message">Upload and inspect one crop. Optional Protect + Apply preparation is reviewed before generation. Downloaded outputs remain experimental estimates.</p>
-          <section id="brush-preview-section" class="hidden" aria-labelledby="brush-preview-heading">
-            <h2 id="brush-preview-heading">Preparation preview</h2>
-            <div class="brush-previews"><figure><img id="brush-original" alt="Immutable oriented native original"><figcaption>Original upload</figcaption></figure><figure><img id="brush-overlay" alt="Green protection, blue permission and amber outside transition"><figcaption>Green: unchanged Protect. Blue: permitted Apply. Amber: transition inside Apply.</figcaption></figure><figure><img id="brush-derived" alt="Actual native input after optional preparation"><figcaption>Actual prepared input</figcaption></figure></div>
-            <p id="brush-preservation" class="help-text"></p>
-            <div class="context-actions"><a id="brush-prepared-download" class="tool-btn" download="reviewed-prepared-input.png">Download prepared PNG</a><a id="brush-preview-download" class="tool-btn" download="Protect-Apply-preparation.zip">Download preparation evidence</a></div>
-          </section>
-          <div id="brush-results" class="results-container has-estimate hidden" aria-label="Original, selected input and one restoration result">
-            <article class="result-card"><div class="result-card-header"><h3 class="rank-pill">ORIGINAL / RESIZE</h3><span class="mode-pill">256 × 256</span></div><div class="result-image-container"><img id="brush-result-input" class="result-image workflow-image" width="256" height="256" alt="Original input resized to 256 pixels"></div><div class="workflow-card-caption"><a id="brush-download-input" class="tool-btn" download="original-256.png">Download PNG</a></div></article>
-            <article class="result-card"><div class="result-card-header"><h3 id="brush-selected-heading" class="rank-pill">SELECTED INPUT</h3><span class="mode-pill">256 × 256</span></div><div class="result-image-container"><img id="brush-result-prepared" class="result-image workflow-image" width="256" height="256" alt="Selected original or reviewed prepared input at 256 pixels"></div><div class="workflow-card-caption"><a id="brush-download-prepared" class="tool-btn" download="selected-input-256.png">Download PNG</a></div></article>
-            <article class="result-card primary-card"><div class="result-card-header"><h3 id="brush-output-heading" class="rank-pill">V2 RESULT</h3><span class="mode-pill">CONDITIONED SFT V2</span></div><div class="result-image-container"><img id="brush-result-output" class="result-image workflow-image" width="256" height="256" alt="One V2 restoration result or original resized input when restoration is off"></div><div class="workflow-card-caption"><a id="brush-download-output" class="tool-btn" download="V2-restoration.png">Download PNG</a></div></article>
+        <section id="capture-controls" class="capture-controls hidden" data-capture-controls aria-label="Video and capture controls">
+          <div id="capture-source-settings">
+            <label class="capture-source-field" for="capture-source">Source<select id="capture-source"><option value="video">Video file</option><option value="webcam">Webcam</option><option value="rtsp">RTSP camera</option></select></label>
+            <div id="capture-video-field" class="capture-source-field"><label for="capture-video-file">Video file (up to 500 MB)</label><input id="capture-video-file" type="file" accept="video/*"></div>
+            <div id="capture-rtsp-field" class="capture-source-field hidden"><span>Local camera connection</span><button type="button" data-dialog="capture-camera-dialog">Camera settings</button></div>
+            <button id="capture-start" type="button" class="hidden">Start webcam</button>
           </div>
-          <p id="brush-result-summary" class="help-text hidden"></p>
-          <div id="brush-result-downloads" class="result-downloads hidden"><a id="brush-result-bundle" class="tool-btn" download="V2-restoration-evidence.zip">Download original + masks + preparation + result evidence</a></div>
-          <section id="completion-stage" class="completion-stage hidden" aria-labelledby="completion-heading">
-            <h2 id="completion-heading">5. Optional covering removal</h2>
-            <p class="help-text">No covering? Keep the restoration result above. For a covered face, review an automatic removal proposal before R1 estimates the hidden region. This separate step does not rerun or change V2 restoration.</p>
-            <div class="context-actions"><button id="completion-start" class="tool-btn" type="button">Review covering removal</button></div>
-            <p id="completion-progress" class="help-text" role="status" aria-live="polite">The restoration result is ready for optional completion.</p>
-            <p id="completion-error" class="workflow-error hidden" role="alert"></p>
-            <section id="completion-editor-section" class="hidden" aria-labelledby="completion-editor-heading">
-              <h3 id="completion-editor-heading">Review the removal area</h3>
-              <p class="help-text">Orange marks pixels R1 may replace. Automatic proposals can miss coverings or include visible features. Paint missed masks, sunglasses, strong glare, hands, obstructing hair, scarves or objects. Erase clear glasses, non-obstructing hair and visible features. Padding cannot be selected.</p>
-              <div class="completion-controls">
-                <label for="completion-action">Action<select id="completion-action"><option value="paint">Paint removal</option><option value="erase">Erase removal</option></select></label>
-                <label for="completion-size">Brush diameter, 256-canvas pixels<input id="completion-size" type="number" min="1" max="80" step="1" value="17"></label>
-                <button id="completion-propose" class="tool-btn" type="button">Propose area again</button>
-              </div>
-              <canvas id="completion-editor" width="256" height="256" tabindex="0" role="img" aria-label="Removal-area editor. Arrow keys move the cursor. Space paints or erases. Coordinate and rectangle controls are available below."></canvas>
-              <p id="completion-cursor" class="help-text" aria-live="polite">No removal pixels selected.</p>
-              <div class="completion-controls">
-                <label for="completion-x">Cursor X<input id="completion-x" type="number" min="0" max="255" step="1" value="128"></label>
-                <label for="completion-y">Cursor Y<input id="completion-y" type="number" min="0" max="255" step="1" value="128"></label>
-                <button id="completion-stamp" class="tool-btn" type="button">Use brush at cursor</button>
-              </div>
-              <div class="context-actions"><button id="completion-undo" class="tool-btn" type="button" disabled>Undo removal edit</button><button id="completion-clear" class="tool-btn" type="button">Clear removal area</button><button id="completion-download-mask" class="tool-btn" type="button">Download reviewed mask</button></div>
-              <details>
-                <summary>Paint a rectangle or import a binary mask</summary>
-                <div class="completion-rectangle">
-                  <label for="completion-left">Left<input id="completion-left" type="number" min="0" max="255" step="1" value="64"></label>
-                  <label for="completion-top">Top<input id="completion-top" type="number" min="0" max="255" step="1" value="128"></label>
-                  <label for="completion-right">Right, included<input id="completion-right" type="number" min="0" max="255" step="1" value="191"></label>
-                  <label for="completion-bottom">Bottom, included<input id="completion-bottom" type="number" min="0" max="255" step="1" value="223"></label>
-                </div>
-                <button id="completion-rectangle" class="tool-btn" type="button">Apply rectangle</button>
-                <label for="completion-import">Import a 256 × 256 opaque binary PNG mask</label><input id="completion-import" type="file" accept="image/png">
-                <p class="help-text">White means removal; black means preserve. The mask must contain only black and white pixels. Importing replaces the current removal area.</p>
-              </details>
-              <label class="context-confirm" for="completion-mask-confirm"><input id="completion-mask-confirm" type="checkbox">I reviewed this removal area. Only the selected covering and a small reviewed margin may be replaced.</label>
-              <label class="context-confirm" for="completion-visible-confirm"><input id="completion-visible-confirm" type="checkbox">Enough visible facial structure remains for a plausible estimate. I understand the hidden face cannot be verified.</label>
-              <p class="help-text">Use a clearer or less-covered crop when meaningful facial structure is unavailable. An empty reviewed area keeps the restoration result exactly and skips R1.</p>
-              <button id="completion-generate" class="execute-btn" type="button" disabled>GENERATE ONE R1 ESTIMATE</button>
-            </section>
-            <section id="completion-result-section" class="hidden" aria-labelledby="completion-result-heading">
-              <h3 id="completion-result-heading">6. Review the plausible estimate</h3>
-              <p class="help-text">Completion preserves every restored input pixel outside the reviewed removal area. Restored pixels can differ from the original upload. Generated hidden features are estimates, not recovered identity.</p>
-              <div class="completion-results">
-                <figure><img id="completion-original" width="256" height="256" alt="Original upload prepared at 256 pixels"><figcaption>Original / resize</figcaption><a id="completion-original-download" class="tool-btn" download="original-256.png">Download PNG</a></figure>
-                <figure><img id="completion-input" width="256" height="256" alt="Unchanged restoration result supplied to completion"><figcaption>Restoration result / R1 input</figcaption><a id="completion-input-download" class="tool-btn" download="restoration-before-completion.png">Download PNG</a></figure>
-                <figure><img id="completion-result-mask" width="256" height="256" alt="Reviewed binary removal mask"><figcaption>Reviewed removal area</figcaption><a id="completion-mask-download" class="tool-btn" download="reviewed-removal-mask.png">Download PNG</a></figure>
-                <figure><img id="completion-result" width="256" height="256" alt="One plausible R1 completion estimate"><figcaption>R1 plausible estimate</figcaption><a id="completion-result-download" class="tool-btn" download="R1-completion.png">Download PNG</a></figure>
-              </div>
-              <p id="completion-summary" class="help-text"></p>
-              <a id="completion-bundle" class="tool-btn" download="restoration-completion-evidence.zip">Download original + restoration + mask + result evidence</a>
-            </section>
+          <div id="capture-source-summary" class="capture-source-summary hidden"><svg class="capture-icon capture-file-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span id="capture-source-name">Video file</span><button id="capture-change-frame" type="button"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 11a9 9 0 0 1 15-6l3 3M21 3v5h-5M21 13a9 9 0 0 1-15 6l-3-3M3 21v-5h5"/></svg><span>Change frame</span></button></div>
+          <div class="capture-transport"><button id="capture-freeze" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="4"/></svg><span>Freeze frame</span></button><button id="capture-resume" class="hidden" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m8 5 11 7-11 7Z"/></svg><span>Resume video</span></button><button id="capture-stop" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="5" width="14" height="14" rx="1"/></svg><span>Stop</span></button></div>
+          <section class="capture-inspector" aria-labelledby="capture-selection-heading">
+            <h2 id="capture-selection-heading">Choose a face</h2>
+            <div id="capture-selection" class="capture-selection hidden"><div id="capture-faces" class="capture-faces" aria-label="Detected faces"></div><div class="capture-edit-actions"><button id="capture-full-frame" type="button" title="Show the full frame for crop adjustment. The selected crop stays unchanged." aria-pressed="true"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg><span>Full frame crop</span></button></div></div>
+            <div id="capture-crop-controls" class="hidden"><p id="capture-crop-size">Select an area.</p><button id="capture-precise" type="button" data-dialog="capture-precise-dialog">Adjust crop precisely</button><button id="capture-use" type="button" disabled><span>Use this face</span><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
           </section>
+          <div class="capture-feedback"><p id="capture-status" role="status" aria-live="polite">Choose a video file. It opens automatically.</p><p id="capture-error" class="capture-error hidden" role="alert"></p></div>
+        </section>
+        <div id="picture-upload-field" class="field"><label for="brush-file">Choose a PNG or JPEG image (up to 10 MB)</label><input id="brush-file" type="file" accept="image/png,image/jpeg"></div>
+        <div id="brush-standby" class="hidden"></div>
+        <figure id="input-picture" class="input-picture hidden"><img id="upload-preview" class="hidden" width="160" height="160" alt="Current Picture input"><figcaption id="input-picture-label">Uploaded picture</figcaption></figure>
+        <div class="review-input-actions"><button id="capture-restore-upload" class="text-btn hidden" type="button">Use uploaded picture</button></div>
+        <div class="input-review">
+        <fieldset class="choice-group"><legend>Can you see the face clearly?</legend><select id="brush-review" hidden><option value="">Inspect the original first</option><option value="usable">One face is clear enough to review</option><option value="needs_clearer">The face is too blurry or covered</option><option value="out_of_scope">The face is sideways, too small, or there are multiple faces</option></select><div class="choice-list review"><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="usable" data-select="brush-review"><span class="choice-content">One face is clear enough to review</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="needs_clearer" data-select="brush-review"><span class="choice-content">The face is too blurry or covered</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-review-choice" value="out_of_scope" data-select="brush-review"><span class="choice-content">The face is sideways, too small, or there are multiple faces</span></label></div></fieldset>
+        <p class="work-note">If the face is hard to see, use a clearer picture. A sharper image does not prove who someone is.</p>
+        <div class="work-actions"><button class="execute-btn" type="button" data-nav="options">Choose restoration <span aria-hidden="true">→</span></button><button id="capture-back" class="text-btn hidden" type="button">Back to capture</button></div>
         </div>
+        <div class="picture-feedback"><div class="status-block quiet-status"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div><div class="feedback-slot"></div></div>
+      </div>
+      <aside class="work-visual capture-visual" aria-label="Picture or video preview">
+        <div id="picture-preview" class="picture-preview"><img id="picture-main-preview" class="hidden" width="1280" height="720" alt="Current Picture input"><div id="picture-empty"><h2>Your picture appears here</h2><p>Choose a picture on the left, or switch to Video to capture a face.</p></div></div>
+        <div id="capture-preview" class="capture-preview hidden">
+          <div class="capture-preview-heading"><span>Preview</span><p id="capture-view-label" class="capture-view-label" role="status">Full frame</p></div>
+          <div id="capture-stage" class="capture-stage"><p id="capture-empty">Choose a video file or start a camera on the left.</p><video id="capture-video" class="hidden" width="1280" height="720" muted playsinline controls tabindex="0" aria-keyshortcuts="Space" aria-label="Video source preview" aria-describedby="capture-player-help"></video><img id="capture-stream" class="hidden" width="1280" height="720" alt="Local RTSP camera preview"><canvas id="capture-canvas" class="hidden" width="0" height="0" tabindex="0" aria-label="Frozen source frame. Select a detected face, drag to crop, or press Enter to create a crop. Arrow keys move the crop; Shift and arrow keys resize it."></canvas></div>
+          <div class="capture-playback" data-capture-controls>
+            <div id="capture-timeline" class="capture-timeline hidden">
+              <div class="capture-player-info"><span id="capture-quality">Original quality</span><span id="capture-player-help">Space: play / pause</span></div>
+              <div class="capture-speed" role="group" aria-label="Playback speed controls"><span class="capture-speed-label">Speed</span><button id="capture-speed-minus" type="button" aria-label="Decrease speed by 0.25">−</button><select id="capture-speed-select" aria-label="Playback speed"></select><button id="capture-speed-plus" type="button" aria-label="Increase speed by 0.25">+</button></div>
+            </div>
+            <p id="capture-speed-error" class="capture-error" role="alert"></p>
+          </div>
+        </div>
+      </aside>
+    </section>
+    <section class="work-screen" data-screen="options" aria-labelledby="restoration-mode-heading">
+      <div class="work-controls">
+        <div class="work-heading"><span class="work-kicker">RESTORATION / 02</span><h1 id="restoration-mode-heading">Choose restoration</h1><p>Choose whether to improve the picture and prepare it first.</p></div>
+        <input id="brush-model" type="hidden" value="v2">
+        <fieldset class="choice-group"><legend>Improve the face</legend><select id="brush-restoration" hidden><option value="auto">Auto</option><option value="on">On</option><option value="off">Off</option></select><div class="choice-list three"><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="auto" data-select="brush-restoration" checked><span class="choice-content">Auto</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="on" data-select="brush-restoration"><span class="choice-content">On</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="off" data-select="brush-restoration"><span class="choice-content">Off</span></label></div><p class="field-hint">Auto decides whether to improve the face. On always tries; Off keeps the resized original.</p></fieldset>
+        <fieldset class="choice-group"><legend>Prepare the picture</legend><select id="brush-preparation" hidden><option value="bypass">Bypass</option><option value="manual">Choose areas to protect or blur</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-preparation-choice" value="bypass" data-select="brush-preparation" checked><span class="choice-content">Bypass</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-preparation-choice" value="manual" data-select="brush-preparation"><span class="choice-content">Choose areas to protect or blur</span></label></div><p class="field-hint">Bypass uses the original picture. Choose areas to protect or blur when improving it. If Off is selected, or Auto keeps the original, preparation is skipped.</p></fieldset>
+        <div class="feedback-slot"></div>
+        <div class="work-actions"><button class="tool-btn" type="button" data-nav="inspect">Back</button><button class="execute-btn" type="button" data-nav="options-next">Continue <span aria-hidden="true">→</span></button><button class="text-btn" type="button" data-dialog="preparation-dialog">Preparation details</button></div>
+      </div>
+      <aside class="work-visual options-visual" aria-label="Original input preview"><img id="options-preview" alt="Original uploaded picture"><p class="visual-caption">Original input</p></aside>
+    </section>
+    <div id="brush-edit-section" class="hidden">
+      <section class="work-screen" data-screen="brush-paint" aria-labelledby="brush-edit-heading">
+        <div class="work-controls">
+          <div class="work-heading"><span class="work-kicker">OPTIONAL PREPARATION</span><h1 id="brush-edit-heading">Protect and Apply</h1><p id="brush-dimensions" class="field-hint"></p></div>
+          <div class="brush-choices"><fieldset class="choice-group brush-area-choice"><legend>Choose an area</legend><select id="brush-plane" hidden><option value="protect">Protect · green</option><option value="apply">Blur · blue</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-plane-choice" value="protect" data-select="brush-plane" checked><span class="choice-content">Protect · green</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-plane-choice" value="apply" data-select="brush-plane"><span class="choice-content">Blur · blue</span></label></div></fieldset><fieldset class="choice-group brush-action-choice"><legend>Choose an action</legend><select id="brush-action" hidden><option value="paint">Paint</option><option value="erase">Erase</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-action-choice" value="paint" data-select="brush-action" checked><span class="choice-content">Paint</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-action-choice" value="erase" data-select="brush-action"><span class="choice-content">Erase both</span></label></div></fieldset><div class="brush-size-control"><label class="brush-size-label" for="brush-size">Brush size <output id="brush-size-value" for="brush-size">10 px</output></label><input id="brush-size" type="range" min="1" max="100" step="1" value="10"></div></div>
+          <p id="brush-mode-summary" class="brush-mode-summary" role="status" aria-live="polite">Painting green protection</p>
+          <div class="brush-size-control"><label class="brush-size-label" for="brush-radius">Blur strength <output id="brush-radius-value" for="brush-radius">1 px</output></label><input id="brush-radius" type="range" min="0" max="12" step="0.5" value="1" aria-describedby="brush-radius-hint"><p id="brush-radius-hint" class="field-hint">Mark the picture to choose where to blur. Higher values add more blur; 0 means no blur. Radius is measured on a 256-pixel picture.</p></div>
+          <p class="work-note">Green protects an area; green alone selects the rest for blur, including already blurry areas. Mark any blur you want to keep in green. Blue selects only the areas you want to blur, with or without green. Green takes priority where they overlap. Check the preview before continuing.</p>
+          <div class="compact-actions"><button id="brush-undo" class="tool-btn" type="button" disabled>Undo</button><button id="brush-clear" class="tool-btn" type="button">Clear both areas</button></div>
+          <div class="feedback-slot"></div>
+          <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Back</button><button id="brush-preview" class="execute-btn" type="button" disabled>Preview areas</button></div>
+        </div>
+        <aside class="work-visual editor-visual"><canvas id="brush-editor" tabindex="0" role="img" aria-label="Protect and Apply editor. Arrow keys move the cursor. Space paints or erases."></canvas><p id="brush-cursor" class="visual-caption" aria-live="polite">Paint on the picture, or use the arrow keys and Space.</p></aside>
       </section>
-    </main>
-    <footer class="terminal-footer border-top"><span class="mono-label">V2 · RESTORATION FIRST</span><span class="mono-label">LOCAL INFERENCE · REVIEWED INPUT · 256 × 256</span></footer>
+      <section id="brush-preview-section" class="work-screen hidden" data-screen="brush-preview" aria-labelledby="brush-preview-heading">
+        <div class="work-controls">
+          <div class="work-heading"><span class="work-kicker">OPTIONAL PREPARATION</span><h1 id="brush-preview-heading">Review the preview</h1><p>Compare the original, your selections, and the prepared picture.</p></div>
+          <p id="brush-preservation" class="work-note"></p>
+          <label class="context-confirm" for="brush-confirm"><input id="brush-confirm" type="checkbox" disabled>I checked the preview and confirm that the areas to protect and blur are correct.</label>
+          <div class="compact-actions"><a id="brush-prepared-download" class="tool-btn" download="reviewed-prepared-input.png">Prepared PNG</a><a id="brush-preview-download" class="tool-btn" download="Protect-Apply-preparation.zip">Preparation evidence</a></div>
+          <div class="feedback-slot"></div><div class="work-actions"><button class="tool-btn" type="button" data-nav="brush-paint">Edit areas</button><button class="execute-btn" type="button" data-nav="run">Continue <span aria-hidden="true">→</span></button></div>
+        </div>
+        <aside class="work-visual gallery-visual"><div class="visual-gallery three-up"><figure><img id="brush-original" alt="Original picture"><figcaption>Original</figcaption><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-original" aria-label="Enlarge Original picture">Enlarge</button></figure><figure><img id="brush-overlay" alt="Picture with protected and selected areas marked"><figcaption>Marked areas</figcaption><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-overlay" aria-label="Enlarge Picture with protected and selected areas marked">Enlarge</button></figure><figure><img id="brush-derived" alt="Picture after preparation"><figcaption>Prepared input</figcaption><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-derived" aria-label="Enlarge Picture after preparation">Enlarge</button></figure></div><p class="visual-caption">Green: protected · Blue: selected for blur · Amber: softened edge. Check the preview for the actual areas selected.</p></aside>
+      </section>
+    </div>
+    <section class="work-screen" data-screen="run" aria-labelledby="brush-run-heading">
+      <div class="work-controls">
+        <div class="work-heading"><span class="work-kicker">RESTORATION / 03</span><h1 id="brush-run-heading">Restore the input</h1><p>Keep the original and result together so you can compare them.</p></div>
+        <label class="context-confirm" for="brush-include-bundle"><input id="brush-include-bundle" type="checkbox" checked>Save the original, selected areas, result, and available records in a ZIP file.</label>
+        <p class="work-note">Protection applies only while preparing the picture. The generated face may look different and is an experimental estimate.</p>
+        <div class="feedback-slot"></div>
+        <div class="work-actions"><button class="tool-btn" type="button" data-nav="run-back">Back</button><button id="brush-run" class="execute-btn" type="submit" disabled>Restore selected input</button><button id="brush-refresh" class="text-btn" type="button">Check service</button></div>
+      </div>
+      <aside class="work-visual decorative-visual restoration-visual">
+        <img id="restoration-idle" alt="Selected input before restoration">
+        <div id="restoration-loading" class="restoration-loading hidden" aria-hidden="true">
+          <div class="loading-orb"><span class="orb-label"><span>G</span><span>e</span><span>n</span><span>e</span><span>r</span><span>a</span><span>t</span><span>i</span><span>n</span><span>g</span></span><div class="orb-sheen"></div></div>
+        </div>
+      </aside>
+    </section>
+    <div id="brush-feedback" class="feedback"><p id="brush-progress" role="status" aria-live="polite">Checking if the app is ready.</p><p id="brush-error" class="workflow-error hidden" role="alert"></p><p id="workbench-notice" class="workflow-error hidden" role="alert"></p></div>
+  </form>
+  <section class="work-screen result-screen" data-screen="result" aria-labelledby="restoration-results-heading">
+    <div class="work-controls">
+      <div class="work-heading"><span class="work-kicker">RESTORATION / REVIEW</span><h1 id="restoration-results-heading">Review the result</h1><p>Compare the original, the picture used, and the result.</p></div>
+      <p id="brush-result-summary" class="work-note hidden"></p>
+      <div id="brush-result-downloads" class="hidden"><a id="brush-result-bundle" class="tool-btn" download="restoration-review-files.zip">Download review files (ZIP)</a></div>
+      <p class="field-hint">Results are experimental. A clearer face does not prove identity.</p>
+      <div class="feedback-slot"></div>
+      <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Change input settings</button><button id="completion-start" class="execute-btn" type="button" disabled>Start removal review</button></div>
+    </div>
+    <div class="work-visual gallery-visual"><div id="brush-results" class="visual-gallery three-up hidden" aria-label="Original, selected input and one restoration result">
+      <figure><img id="brush-result-input" width="256" height="256" alt="Original picture, resized"><figcaption>Original (resized)</figcaption><a id="brush-download-input" class="tool-btn" download="original-256.png">Download PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-result-input" aria-label="Enlarge Original picture, resized">Enlarge</button></figure>
+      <figure><img id="brush-result-prepared" width="256" height="256" alt="Picture used for restoration"><figcaption id="brush-selected-heading">Selected input</figcaption><a id="brush-download-prepared" class="tool-btn" download="selected-input-256.png">Download PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-result-prepared" aria-label="Enlarge Picture used for restoration">Enlarge</button></figure>
+      <figure><img id="brush-result-output" width="256" height="256" alt="Restored picture, or the resized original if restoration was off"><figcaption id="brush-output-heading">Result</figcaption><a id="brush-download-output" class="tool-btn" download="restored-picture.png">Download PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-result-output" aria-label="Enlarge Restored picture, or the resized original if restoration was off">Enlarge</button></figure>
+    </div></div>
+  </section>
+  <div id="completion-stage" class="hidden">
+    <div id="completion-editor-section" class="hidden">
+      <section class="work-screen" data-screen="completion-paint" aria-labelledby="completion-editor-heading">
+        <div class="work-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-editor-heading">Select the removal area</h1><p>Paint over the covering you want to remove. Keep the orange marks away from visible facial features.</p></div>
+          <div class="completion-choices"><fieldset class="choice-group"><legend>Action</legend><select id="completion-action" hidden><option value="paint">Paint removal</option><option value="erase">Erase removal</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="completion-action-choice" value="paint" data-select="completion-action" checked><span class="choice-content">Paint removal</span></label><label class="choice-option"><input class="choice-input" type="radio" name="completion-action-choice" value="erase" data-select="completion-action"><span class="choice-content">Erase removal</span></label></div></fieldset><label class="brush-size-label" for="completion-size">Brush size (px)<input id="completion-size" type="number" min="1" max="100" step="1" value="17"></label></div>
+          <div class="compact-actions"><button id="completion-undo" class="tool-btn" type="button" disabled>Undo</button><button id="completion-clear" class="tool-btn" type="button">Clear area</button></div>
+          <div class="feedback-slot"></div><div class="work-actions"><button class="tool-btn" type="button" data-nav="result" data-wizard-nav>Back</button><button class="tool-btn" type="button" data-nav="completion-tools" data-wizard-nav>More tools</button><button class="execute-btn" type="button" data-nav="completion-confirm" data-wizard-nav>Review</button></div>
+        </div>
+        <aside class="work-visual editor-visual"><canvas id="completion-editor" width="256" height="256" tabindex="0" role="img" aria-label="Removal-area editor. Arrow keys move the cursor. Space paints or erases. Coordinate and rectangle controls are available in More tools."></canvas><p id="completion-cursor" class="visual-caption" aria-live="polite">0 pixels selected</p></aside>
+      </section>
+      <section class="work-screen" data-screen="completion-tools" aria-labelledby="completion-tools-heading">
+        <div class="work-controls wide-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-tools-heading">Precise controls</h1><p>Choose the edges of a rectangle. Imported masks must use only black and white.</p></div>
+          <div class="field-row three"><label for="completion-x">Cursor X<input id="completion-x" type="number" min="0" max="255" step="1" value="128"></label><label for="completion-y">Cursor Y<input id="completion-y" type="number" min="0" max="255" step="1" value="128"></label><button id="completion-stamp" class="tool-btn" type="button">Use brush</button></div>
+          <div class="field-row four"><label for="completion-left">Left<input id="completion-left" type="number" min="0" max="255" step="1" value="64"></label><label for="completion-top">Top<input id="completion-top" type="number" min="0" max="255" step="1" value="128"></label><label for="completion-right">Right<input id="completion-right" type="number" min="0" max="255" step="1" value="191"></label><label for="completion-bottom">Bottom<input id="completion-bottom" type="number" min="0" max="255" step="1" value="223"></label></div>
+          <div class="compact-actions"><button id="completion-rectangle" class="tool-btn" type="button">Apply rectangle</button><button id="completion-download-mask" class="tool-btn" type="button">Download mask</button></div><div class="field"><label for="completion-import">Import a 256 × 256 black-and-white PNG</label><input id="completion-import" type="file" accept="image/png"><p class="field-hint">White marks what to remove; black marks what to keep. Importing replaces your current selection.</p></div>
+          <div class="feedback-slot"></div><div class="work-actions"><button class="execute-btn" type="button" data-nav="completion-paint" data-wizard-nav>Return to editor</button></div>
+        </div><aside class="work-visual decorative-visual"><div class="empty-state"><span class="work-kicker">PRECISE EDITING</span><h2>Only select the covering.</h2><p>Padding cannot be selected. Visible facial features should stay outside the removal area.</p></div></aside>
+      </section>
+      <section class="work-screen" data-screen="completion-confirm" aria-labelledby="completion-confirm-heading">
+        <div class="work-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION</span><h1 id="completion-confirm-heading">Check before continuing</h1><p>Review the selected area and the visible parts of the face.</p></div>
+          <fieldset class="review-checks"><legend>Before you continue</legend>
+            <label class="context-confirm review-check" for="completion-mask-confirm"><input id="completion-mask-confirm" type="checkbox"><span><strong>I checked the selected area.</strong><span>It includes only the covering and a small area around it.</span></span></label>
+            <label class="context-confirm review-check" for="completion-visible-confirm"><input id="completion-visible-confirm" type="checkbox"><span><strong>Enough of the face is visible.</strong><span>I understand that hidden features are guesses and cannot be verified.</span></span></label>
+          </fieldset>
+          <p class="work-note">If the face is too covered, use a clearer picture. If nothing is selected, the restored picture stays unchanged.</p><div class="feedback-slot"></div>
+          <div class="work-actions"><button class="tool-btn" type="button" data-nav="completion-paint" data-wizard-nav>Back to editor</button><button id="completion-generate" class="execute-btn" type="button" disabled>Generate result</button></div>
+        </div><aside class="work-visual completion-confirm-visual" aria-label="Restoration result preview">
+          <img id="completion-confirm-preview" alt="Restored picture before covering removal">
+          <div id="completion-loading" class="restoration-loading hidden" aria-hidden="true">
+            <div class="loading-orb"><span class="orb-label"><span>G</span><span>e</span><span>n</span><span>e</span><span>r</span><span>a</span><span>t</span><span>i</span><span>n</span><span>g</span></span><div class="orb-sheen"></div></div>
+          </div>
+        </aside>
+      </section>
+    </div>
+    <section id="completion-result-section" class="work-screen hidden" data-screen="completion-result" aria-labelledby="completion-result-heading">
+      <div class="work-controls"><div class="work-heading"><span class="work-kicker">OPTIONAL COMPLETION / REVIEW</span><h1 id="completion-result-heading">Review the estimate</h1><p>Hidden features are guesses and cannot confirm identity.</p></div><p id="completion-summary" class="work-note"></p><a id="completion-bundle" class="tool-btn" download="restoration-completion-evidence.zip">Download review files (ZIP)</a><div class="feedback-slot"></div><div class="work-actions"><button class="tool-btn" type="button" data-nav="result" data-wizard-nav>Back to restoration</button><button class="tool-btn" type="button" data-nav="completion-paint" data-wizard-nav>Edit removal area</button></div></div>
+      <div class="work-visual gallery-visual"><div class="visual-gallery four-up"><figure><img id="completion-original" width="256" height="256" alt="Original upload prepared at 256 pixels"><figcaption>Original</figcaption><a id="completion-original-download" class="tool-btn" download="original-256.png">PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="completion-original" aria-label="Enlarge Original upload prepared at 256 pixels">Enlarge</button></figure><figure><img id="completion-input" width="256" height="256" alt="Unchanged restoration result supplied to completion"><figcaption>Before removal</figcaption><a id="completion-input-download" class="tool-btn" download="restoration-before-completion.png">PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="completion-input" aria-label="Enlarge Unchanged restoration result supplied to completion">Enlarge</button></figure><figure><img id="completion-result-mask" width="256" height="256" alt="Reviewed area selected for removal"><figcaption>Reviewed area</figcaption><a id="completion-mask-download" class="tool-btn" download="reviewed-removal-mask.png">PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="completion-result-mask" aria-label="Enlarge reviewed area selected for removal">Enlarge</button></figure><figure><img id="completion-result" width="256" height="256" alt="Estimated result after removal"><figcaption>Estimated result</figcaption><a id="completion-result-download" class="tool-btn" download="removal-result.png">PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="completion-result" aria-label="Enlarge Estimated result after removal">Enlarge</button></figure></div></div>
+    </section>
+    <div id="completion-feedback" class="feedback"><p id="completion-progress" role="status" aria-live="polite">Your result is ready. Removing a covering is optional.</p><p id="completion-error" class="workflow-error hidden" role="alert"></p></div>
   </div>
-  <script src="/static/implementation.js"></script>
-  <script src="/static/completion.js"></script>
+</main>
+<dialog id="capture-camera-dialog" class="work-dialog" data-capture-controls aria-labelledby="capture-camera-title">
+  <h2 id="capture-camera-title">Connect an RTSP camera</h2>
+  <p>Use a camera on your local network.</p>
+  <label for="capture-url">RTSP address<input id="capture-url" type="url" placeholder="rtsp://192.168.1.10:554/stream" autocomplete="off" spellcheck="false"></label>
+  <div class="capture-credentials"><label for="capture-user">Username (optional)<input id="capture-user" autocomplete="off"></label><label for="capture-password">Password (optional)<input id="capture-password" type="password" autocomplete="off"></label></div>
+  <div class="compact-actions"><button id="capture-connect" type="button" class="execute-btn">Connect camera</button><button type="button" class="tool-btn" data-close-dialog>Cancel</button></div>
+</dialog>
+<dialog id="capture-precise-dialog" class="work-dialog" data-capture-controls aria-labelledby="capture-precise-title"><h2 id="capture-precise-title">Adjust crop</h2><p>Coordinates refer to the original frozen frame.</p><div class="capture-rect-fields"><label for="capture-x">Left<input id="capture-x" type="number" min="0" step="1"></label><label for="capture-y">Top<input id="capture-y" type="number" min="0" step="1"></label><label for="capture-width">Width<input id="capture-width" type="number" min="16" max="1600" step="1"></label><label for="capture-height">Height<input id="capture-height" type="number" min="16" max="1600" step="1"></label></div><button class="tool-btn" type="button" data-close-dialog>Done</button></dialog>
+<dialog id="about-dialog" class="work-dialog" aria-labelledby="about-heading"><h2 id="about-heading">About this workflow</h2><p>This app tries to improve a face picture. Its results are experimental and are still being reviewed. Removing a covering is an optional extra step.</p><p>Use a clearer or less-covered picture if the face is hard to see. A sharper face is not proof of identity.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
+<dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips it, and Auto may skip it if it keeps the original. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
+<dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
+<script src="/static/implementation.js?v=14"></script>
+<script src="/static/completion.js?v=12"></script>
+<script src="/static/viewport-workbench.js?v=15"></script>
+<script src="/static/capture_geometry.js?v=1"></script>
+<script src="/static/capture_playback.js?v=3"></script>
+<script src="/static/capture.js?v=10"></script>
+<script src="/static/shader-background.js?v=16"></script>
 </body>
 </html>
