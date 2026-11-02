@@ -2,7 +2,11 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Install on Windows
+## Windows installer 0.2.2
+
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.2](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2).
+
+## Developer batch installation
 
 1. Download [install.bat](https://raw.githubusercontent.com/janusinss/forensic-dgp/IMPLEMENTATION/install.bat) into an empty folder. Save the actual file, not the GitHub HTML page.
 2. Run `install.bat`. No Git, existing Python, administrator access, or complete repository download is required.
