@@ -79,8 +79,8 @@ saved records are preserved. Missing or changed R2 weights refuse completion;
 there is no silent fallback to R1. Exact local assets can be supplied through
 `implementation.completion_install --local-r2` and `--local-detector`.
 
-The new immutable model distribution targets `completion-r2-models-v1`.
-Publication and acceptance of the next EXE are pending in this working tree.
+The immutable model distribution is [completion-r2-models-v1](https://github.com/janusinss/forensic-dgp/releases/tag/completion-r2-models-v1).
+The offline Windows release is verified separately before publication.
 Old R1 releases remain historical artifacts. No new Windows CPU timing or
 arbitrary-hardware guarantee follows from the research L4 run. The existing
 2.5 GiB available-memory admission check, 6 GiB worker commitment cap and
