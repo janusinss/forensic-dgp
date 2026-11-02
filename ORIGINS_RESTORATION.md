@@ -1,0 +1,196 @@
+# Origins and Complete Evolution of the Visible-Face Restoration Subsystem
+
+**Document Identifier:** `ORIGINS_RESTORATION.md`  
+**Repository & Branch:** `forensic-dgp` (`main` branch, `C:\xampp\htdocs\YEAR 4\Testing`)  
+**Chronological Span:** September 2026 – 2 November 2026  
+**Final Ratified Restoration Stack (`Conditioned SFT V2 / p2_u0224`, `787` Frozen Tensors Total):**
+- **Base CodeFormer Adaptation (`515` tensors):** `codeformer_r2.pth` (`376,609,465` bytes, SHA-256 `d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896`)
+- **Skip-Feature Spatial Adapter (`24` tensors):** `codeformer_u96_adapter.pth` (`212,827` bytes, SHA-256 `958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0`)
+- **Post-Fusion Spatial Head (`36` tensors):** `terminal_u0064_heads.npz` (`685,818` bytes, SHA-256 `77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17`)
+- **Conditioned SFT V2 Multi-Scale Pyramid & Detail Heads (`212` tensors):** `v2_p2_u0224_heads.npz` (`3,831,362` bytes, SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f`, canonical 787-tensor state SHA-256 `3faa78e15c2fb50bfaa523b5dc7ee64fa4c19a13c490760a7401ea43ab0269d7`)
+
+---
+
+## Abstract and Scope
+
+This document provides an exhaustive, strictly chronological, thesis-style technical account of how the **Visible-Face Restoration** subsystem evolved from an initial custom Deep Generative Prior (DGP) / U-Net pipeline (`Phase 1`–`Phase 5` and the `CCTV_DGP` `V1`–`V42` series) through its foundational architectural pivot to **S-Lab CodeFormer** (`1024`-codebook visible restoration) and four successive generations of modular adapter distillation (`R2`, `U96`, `u64`, `Conditioned SFT V1`, and the ratified **`Conditioned SFT V2 / p2_u0224`**). Each chapter explains the mathematical hypotheses, Google Cloud NVIDIA L4 GPU experiments, failure mechanisms, and architectural discoveries that culminated in a 787-tensor restoration stack capable of reducing degraded 4-role CCTV error by $37.4\%$ while passing $56/56$ forensic non-regression gates.
+
+---
+
+## Chapter 1: Early Custom Deep Generative Prior Phases (`Phase 1` – `Phase 5`, September 2026)
+
+### 1.1 The PSNR-vs-Identity Paradox in Early Cloud Training (`Phase 1` – `Phase 4`)
+
+The project began by developing and training a custom convolutional/generative restoration network (`Phase 1` through `Phase 4`) on a large-scale 80,000-image paired synthetic split (`outputs/phase4_with_progress/split.json`, SHA-256 `5c71bc358a351d50e3c0a7d76abe749cb4412aca80d2c7eb4de5fb33dbd29071`, comprising 76,000 training images and 4,000 validation images: 3,500 FFHQ thumbnails and 500 Asian-source validation faces). 
+
+While `Phase 3` established a stable baseline restorer capable of denoising mild synthetic compression, extending training in `Phase 4` across 4,000 cloud validation images exposed a fundamental optimization paradox ([`PHASE5_RESEARCH.md`](PHASE5_RESEARCH.md)):
+- Selecting epoch 27 by Peak Signal-to-Noise Ratio (PSNR) increased validation PSNR from $20.2795\text{ dB}$ to $20.6097\text{ dB}$ and Structural Similarity (SSIM) from $0.6603$ to $0.6700$.
+- Simultaneously, however, **pretrained ArcFace biometric cosine similarity fell from $0.3568$ to $0.3487$**, with every single `Phase 4` epoch scoring below the `Phase 3` starting checkpoint on facial identity preservation.
+
+A controlled 64-image local reproduction confirmed the mechanism: pixel-wise L1/MSE and perceptual losses encouraged the convolutional generator to average out uncertain high-frequency periocular, nasal, and labial edges under severe blur. Smoothing those edges reduced pixel squared error (raising PSNR) at the direct cost of erasing the discriminative geometric landmarks required by face recognition embeddings.
+
+### 1.2 `Phase 5` Identity-Aware Restoration and Native CCTV Benchmarking (22 September – 3 October 2026)
+
+In response to the `Phase 4` identity drop, `Phase 5` ([`PHASE5_RESEARCH.md`](PHASE5_RESEARCH.md)) introduced a frozen **InsightFace ArcFace** cosine embedding loss alongside pixel and perceptual supervision so gradients would explicitly penalize landmark smoothing without updating the recognizer weights. However, when evaluated on 3 October 2026 across both a paired CCTV-style regression suite ([`CCTV_PAIRED_RESTORATION_RESULTS.md`](CCTV_PAIRED_RESTORATION_RESULTS.md)) and unpaired native surveillance crops from **ChokePoint** and **QMUL-SurvFace** ([`CCTV_NATIVE_RESTORATION_RESULTS.md`](CCTV_NATIVE_RESTORATION_RESULTS.md)), two structural boundaries became clear:
+1. **Under-Capacity of the Custom DGP Generator:** On severely blurred, low-resolution ($24\text{--}48\text{ px}$), and low-light surveillance crops, the custom `Phase 3` / `Phase 5` DGP continued to smooth weak facial features and darken low-light shadows.
+2. **Unconstrained Hallucination in Untouched Pretrained CodeFormer:** Comparing the custom DGP against untouched off-the-shelf S-Lab CodeFormer (`codeformer.pth`, fidelity weight $w=1.0$) showed that while CodeFormer synthesized much sharper apparent eyes and mouths via its 1024-entry VQGAN codebook prior, it altered facial expressions, shifted bone structure on clear controls, and occasionally hallucinated non-existent foreign textures (including a hand-like artifact on an unobscured degraded face).
+
+---
+
+## Chapter 2: The `CCTV_DGP` `V6` – `V42` Diagnostic Series — Why Adapting the Custom DGP Stalled (4 – 12 October 2026)
+
+Before replacing the custom DGP backbone, a rigorous 37-version experimental campaign (`V6` through `V42`) on the Google Cloud NVIDIA L4 GPU tested whether targeted architectural heads, higher-bandwidth targets, or multi-term loss balancing could unlock sharp, identity-preserving restoration from the project's own DGP backbone under strict **clear-image and dark-image non-regression guards**:
+
+### 2.1 Target Bandwidth (`V6`), Overfitting on Small Caches (`V15`), and Unconditional Drift (`V18`)
+- **`V6` Target-Bandwidth Comparison ([`CCTV_DGP_TARGETS_RESULTS_V6.md`](CCTV_DGP_TARGETS_RESULTS_V6.md), 4 October 2026):** Running 196 L4 updates ($259.18\text{ s}$) with higher-resolution target supervision improved clear-face fidelity slightly, but failed to resolve degraded-face softness and violated frozen selection safeguards across all four epochs.
+- **`V15` Generalization Probe ([`DGP_INFERENCE_READINESS.md`](DGP_INFERENCE_READINESS.md), 4 October 2026):** Fitting closely to a 10-face cached cohort achieved exact cache parity, but collapsed on a 104-reference / 520-case development validation set (degraded PSNR fell from $16.027\text{ dB}$ to $13.987\text{ dB}$, clear PSNR collapsed from $31.132\text{ dB}$ to $14.081\text{ dB}$, and ArcFace cosine dropped from $0.33011$ to $0.07662$).
+- **`V18` Structure Fitting Run ([`CCTV_DGP_STRUCTURE_V18_RESULTS.md`](CCTV_DGP_STRUCTURE_V18_RESULTS.md), 5 October 2026):** Across 600 L4 updates ($6,000$ exposures on 50 paired synthetic cases, return archive SHA-256 `d494351f1f1f36d60f79f696633ff6e0dcc5cdf1f03662f84884f4aae71787e5`), the training objective dropped by $25.5\%$ ($0.02350 \to 0.01750$), proving fitting capacity, yet unconditional inference degraded clear controls.
+
+### 2.2 Gradient Geometry Diagnostics (`V25`, `V26`, `V28`, `V30`, `V32`) and Delivered Quantization Audits (`V36` – `V42`)
+To diagnose why every training step that improved degraded blurred faces simultaneously damaged clear controls or compound-degraded appearances, five zero-update L4 component-gradient audits were executed between 6 and 10 October 2026:
+- **`V25` & `V26` Component-Gradient Matrices ([`CCTV_DGP_V25_GRADIENT_DIAGNOSTIC_V1_RESULTS.md`](CCTV_DGP_V25_GRADIENT_DIAGNOSTIC_V1_RESULTS.md), [`CCTV_DGP_V26_GRADIENT_DIAGNOSTIC_V1_RESULTS.md`](CCTV_DGP_V26_GRADIENT_DIAGNOSTIC_V1_RESULTS.md)):** Auditing $7 \times 53,781$ float64 parameter-gradient matrices across 26 parameter groups revealed that at step 0, the preservation loss gradient was zero, but by step 50 (`0.00510` norm vs `0.01379` degraded improvement norm), the preservation and improvement gradients pointed in opposing directions across shared convolutional filters.
+- **`V28`, `V30`, & `V32` Sampling and Loss Gradient Audits ([`CCTV_DGP_V28_PRESERVATION_DIAGNOSTIC_V1_RESULTS.md`](CCTV_DGP_V28_PRESERVATION_DIAGNOSTIC_V1_RESULTS.md), [`CCTV_DGP_V30_SAMPLING_GRADIENT_V1_RESULTS.md`](CCTV_DGP_V30_SAMPLING_GRADIENT_V1_RESULTS.md), [`CCTV_DGP_V32_LOSS_GRADIENT_RETURN_REVIEW_V1.md`](CCTV_DGP_V32_LOSS_GRADIENT_RETURN_REVIEW_V1.md)):** Across $301,298,844$ audited gradient values (`V32` archive SHA-256 `529acd5750c64e7320260c09f55cdd3a115c2f465afd02abc4101009155143e3`), structure gain stalled at $0.970672\%$ at update 50 (just below the $1.0\%$ early gate) because gradients computed on exposed training batches failed to generalize to unexposed compound-degradation profiles.
+- **`V36` Delivered PNG Floor Quantization Mismatch ([`CCTV_DGP_V36_DELIVERED_METRIC_REVIEW.md`](CCTV_DGP_V36_DELIVERED_METRIC_REVIEW.md)):** Discovered that 9 of 11 delivered PNG preservation failures in `V36` passed in raw float32 space but failed after `floor(rgb * 255)` uint8 PNG quantization, proving that training guards must evaluate exact quantized PNG delivery alongside differentiable surrogates.
+- **`V38` Quarter-Step, `V40` Learning Signal, `V41` Preservation Trace, and `V42` Spatial Decoder Stop ([`CCTV_DGP_V38_QUARTER_DEVELOPMENT_RESULTS.md`](CCTV_DGP_V38_QUARTER_DEVELOPMENT_RESULTS.md), [`CCTV_DGP_V40_LEARNING_SIGNAL_V1_RESULTS.md`](CCTV_DGP_V40_LEARNING_SIGNAL_V1_RESULTS.md), [`CCTV_DGP_V41_PRESERVATION_TRACE_V1.md`](CCTV_DGP_V41_PRESERVATION_TRACE_V1.md), [`CCTV_DGP_V42_RESULTS.md`](CCTV_DGP_V42_RESULTS.md)):** Even when training only an added 57-tensor ($17,952$-parameter) spatial decoder on top of the frozen custom DGP (`V42`, archive SHA-256 `308ad100ea6760bf0b6b42621a908d083f8691c3b8e53ab17b132dca0c88d9c2`), delivered structure gain reached only $0.00692\%$ at update 50 while 364 unexposed compound-degraded FFHQ cases regressed in ArcFace similarity. Furthermore, the 24-case native **QMUL-SurvFace** benchmark ([`CCTV_BENCHMARK_STATUS.md`](CCTV_BENCHMARK_STATUS.md), 9 October 2026) confirmed that the custom DGP backbone lacked the high-frequency generative prior required to resolve severely blurred surveillance faces beyond bicubic resize.
+
+---
+
+## Chapter 3: The CodeFormer Restoration Pivot — Adaptation `V1`, `V2` (`R2`), and Protected Surroundings (13 – 19 October 2026)
+
+### 3.1 Adapting the 1024-Codebook CodeFormer Backbone (`Adaptation V1` and `V2` / `R2`, 15 – 18 October 2026)
+
+With the custom DGP backbone proven insufficient for severe surveillance blur, the restoration track pivoted in mid-October 2026 to adapting the official **S-Lab CodeFormer** visible-face restoration architecture (`515` total state-dict tensors: encoder, 1024-entry VQGAN codebook, 9-layer Transformer predictor, VQGAN generator decoder, and controllable Spatial Feature Transform `Fuse_sft_block` modules at $32 \times 32$, $64 \times 64$, and $128 \times 128$ operating with fidelity $w=1.0$ and `adain=True`).
+
+To preserve the 165-tensor VQGAN codebook and decoder prior while teaching the network to handle CCTV blur, compression, and low-light exposure without hallucinating altered identities, **350 tensors** were made trainable while **165 prior tensors** were frozen:
+1. **CodeFormer Adaptation V1 ([`CCTV_CODEFORMER_ADAPTATION_V1_RETURN_REVIEW.md`](CCTV_CODEFORMER_ADAPTATION_V1_RETURN_REVIEW.md), 15 October 2026):** Executed 200 of 1,200 planned Adam updates on the L4 GPU (return archive `2.59 GB`, SHA-256 `98b101f8d543c34de033ec0583114681499927bdc8ed872b8f3114681499927b`). While severe blur and dark compound cases improved visibly across the 406-case evaluation sheets, aggressive exposure brightening caused the declared clear-face preservation stop to fire at update 200.
+2. **CodeFormer Adaptation V2 — The `R2` Base Model ([`CCTV_CODEFORMER_ADAPTATION_V2_RETURN_REVIEW.md`](CCTV_CODEFORMER_ADAPTATION_V2_RETURN_REVIEW.md), [`CCTV_CODEFORMER_R2_IMPROVEMENT_REVIEW_V1.md`](CCTV_CODEFORMER_R2_IMPROVEMENT_REVIEW_V1.md), 15 – 18 October 2026):** Introduced matched normal-lit and dark-exposure training pairs (100 normal + 100 matched dark observations across 100 `TRAIN` references) alongside 50 frozen-behavior teacher anchors. Executed 50 Adam updates on the L4 GPU (`125.36\text{ s}` optimization). The resulting 515-tensor checkpoint—designated **`codeformer_r2.pth`** (`376,609,465` bytes, SHA-256 `d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896`)—eliminated the harsh over-brightening of `V1`, reduced conspicuous texture artifacts on severely degraded faces compared to untouched CodeFormer, and earned explicit user endorsement for its natural low-light brightening (*"r2 is like a lot better with its higher brightness its good"*). `codeformer_r2.pth` was permanently frozen as the **515-tensor base backbone** for all subsequent modular restoration adapters.
+
+### 3.2 Input-Only Preparation and Protected Surroundings (`18 – 21 October 2026`)
+
+During testing of `codeformer_r2.pth` on wild partially blurred crops ([`CCTV_CODEFORMER_U96_CONTEXT_RESEARCH_V1.md`](CCTV_CODEFORMER_U96_CONTEXT_RESEARCH_V1.md), [`CCTV_CODEFORMER_PROTECT_APPLY_PROCESS_V2_REVIEW.md`](CCTV_CODEFORMER_PROTECT_APPLY_PROCESS_V2_REVIEW.md)), an important phenomenon was identified: when a face crop contained a sharp or readable central region surrounded by high-contrast background clutter or sharp non-facial edges, CodeFormer's global self-attention and AdaIN statistics shifted focus away from the blurred facial features. 
+
+To give operators full control without mutating model weights, an interactive **Protect/Apply Preparation Editor** ([`implementation/preparation.py`](integrated_app/implementation/preparation.py)) was engineered:
+- Every pixel painted inside the **Protect** mask is guaranteed to remain bit-for-bit untouched during input preprocessing.
+- Optional surrounding context softening is applied *only* to user-permitted **Apply** regions with a smooth outer transition, always rebuilding deterministically from immutable original upload bytes.
+
+---
+
+## Chapter 4: Modular Skip-Feature Adapters (`U96`) and Post-Fusion Spatial Heads (`u64`) (20 – 24 October 2026)
+
+### 4.1 Why Full-Backbone Fine-Tuning Was Replaced by Modular Residual Adapters
+
+While `codeformer_r2.pth` (`515` tensors) improved low-light brightness and reduced untouched CodeFormer's worst hallucinations, updating 350 backbone tensors simultaneously had caused 7 of 61 clear controls to exceed the strict $0.03$ MAE preservation ceiling ([`CCTV_CODEFORMER_R2_IMPROVEMENT_REVIEW_V1.md`](CCTV_CODEFORMER_R2_IMPROVEMENT_REVIEW_V1.md)). To achieve zero-regression preservation on clear and dark controls while extracting sharper facial features from blurred inputs, all 515 tensors of `codeformer_r2.pth` were frozen, and lightweight **zero-initialized residual adapters** were inserted along the encoder-to-decoder feature pathways.
+
+### 4.2 Skip-Feature Adapter `V1` (`u55`) and Spatial Continuation `U96` / `S96` (20 – 21 October 2026)
+
+1. **Skip-Feature Adapter V1 (`u55`, [`CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_RETURN.md`](CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_RETURN.md), 20 October 2026):** Attached four residual convolutional adapters (`24` tensors, `51,328` parameters) to the skip connections feeding `Fuse_sft_block` at scales $32$, $64$, and $128$, initialized so update 0 reproduced `codeformer_r2.pth` bit-for-bit. Across 55 L4 Adam updates (return archive SHA-256 `f445f5ffe3a97215046cb8e265eece2dd2d36961ac0b607948a52a29a5ba76`), blur reconstruction improved, but dark-image preservation stopped the run at update 55.
+2. **Spatial Continuation `U96` and `S96` ([`CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_RETURN_REVIEW.md`](CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_RETURN_REVIEW.md), [`CCTV_CODEFORMER_R2_U96_S96_OBJECTIVE_V1_REVIEW.md`](CCTV_CODEFORMER_R2_U96_S96_OBJECTIVE_V1_REVIEW.md), 21 October 2026):** Adding explicit dark and clear preservation anchors allowed two continuation branches (`U96` and `S96`) to complete 72 additional Adam updates from update 24 to **update 96**, passing $5/5$ scheduled preservation snapshots.
+   - Across repeated `TRAIN` observations, **`U96`** (`codeformer_u96_adapter.pth`, `24` tensors, `212,827` bytes, SHA-256 `958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0`) reduced moderate-blur PNG MAE by **$8.89\%$** and stronger-blur PNG MAE by **$4.88\%$** over `R2` (outperforming `S96`'s $1.07\%$ and $0.67\%$).
+   - On the 68-input objective `DEV` benchmark (36 paired filter-stress cases + 24 native ChokePoint + 8 native QMUL-SurvFace crops), `U96` ranked strictly first in both PNG MAE and SSIM (`U96 > S96 > R2`).
+
+### 4.3 Post-Fusion Spatial Head (`u64`) and Matched Feature Learning `V1` (22 – 25 October 2026)
+
+To further refine multi-scale features *after* `Fuse_sft_block` modulation without destabilizing `U96`, a 36-tensor **Post-Fusion SpatialHead** (`terminal_u0064_heads.npz`, `685,818` bytes, SHA-256 `77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17`, using residual $3 \times 3$ depthwise/pointwise convolutions with `GELU` activation and `/2` residual scaling across scales `32`, `64`, `128`, and `256`) was trained for 64 updates on top of frozen `R2 + U96` (`515 + 24 = 539` frozen tensors $\to 575$ total tensors).
+- `u64` achieved a **$1.21\%$ local and $1.63\%$ global PNG structure gain** over frozen `U96` while passing all **56 inherited forensic quality checks** (`additional_retention`, `original_terminal`, `ordinary_monitor`, and `legacy`).
+- However, when **Matched Feature Learning V1** ([`CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_RETURN_REVIEW.md`](CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_RETURN_REVIEW.md), 25 October 2026) attempted to continue training those 36 heads (Arm `A`) or 60 heads (`36 + 24`, Arm `B`) unconditioned on degradation severity, both arms hit a quality stop at update 8: improving blurred faces caused a tiny $+0.000003$ MAE regression on `clear` PNG controls, and pushing dark blurred features toward normal-lit clean targets induced $8\times 8$ / $16\times 16$ spatial exposure checkerboarding.
+
+---
+
+## Chapter 5: Degradation-Conditioned SFT Distillation (`Conditioned SFT V1`, 25 October 2026)
+
+### 5.1 Root-Cause Photometric & Structural Diagnosis
+
+Why did unconditioned continuation from `u64` (`Matched Feature Learning V1`) regress on `clear` PNGs and produce spatial checkerboarding on `dark` inputs? A mathematical diagnosis ([`CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_PHOTOMETRIC_DIAGNOSIS.md`](CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_PHOTOMETRIC_DIAGNOSIS.md), [`CCTV_CODEFORMER_RESTORATION_GOAL_V2.md`](CCTV_CODEFORMER_RESTORATION_GOAL_V2.md)) identified two structural flaws in unconditioned adapter training:
+1. **Degradation-Blind Execution on Clear Controls:** Because `u64`'s convolutional heads applied the exact same filter weights to an already-sharp `clear` face as to a severely blurred face, any further sharpening update inevitably over-sharpened or shifted tone on `clear` inputs.
+2. **Photometric Coupling in Dark Supervision:** Supervising dark low-light inputs directly against bright normal-lit clean targets forced the high-frequency spatial heads to act as local brightness amplifiers, creating coarse block artifacts.
+
+### 5.2 Input-Only Degradation Conditioning and Exposure-Decoupled Supervision (`Conditioned SFT V1`)
+
+In **Conditioned SFT Learning V1** ([`CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md`](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md), [`CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md`](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md), 25 October 2026), an explicit, deterministic **input-only degradation sensor** $g(x) = [g_{\text{blur}}, g_{\text{local}}, g_{\text{dark}}, g_{\text{codec}}] \in [0, 1]^4$ was computed directly from the input image's Laplacian variance, local-vs-global gradient ratio, luminance percentiles, and $8 \times 8$ DCT blockiness:
+- An **input-anchored clear bypass gate** $g_{\text{active}}(x) \to 0$ on sharp, well-lit inputs structurally damped the added delta heads on `clear` controls while activating full restoration capacity on blurred and compressed inputs.
+- On the live NVIDIA L4 GPU run (`cctv-codeformer-conditioned-sft-learning-v1-results.tar.gz`, `2.36 GB`, SHA-256 `00682555ab4757ca70987e4d3a41af28ec710361b12e1d5c5ab7073e55753d22`, `712` full forwards, `16` Adam updates in `410.01\text{ s}`), **Arm `B` (`u0008`) completely solved the `clear` PNG regression** (`-0.000273` MAE improvement instead of `+0.000003` failure), delivered **$5.3\times$ to $15.9\times$ larger MAE reductions** across `global_blur`, `local_blur`, and `compound_blur` than `Matched V1`, and passed **`96 / 96` coarse dark exposure-alignment gates**.
+
+---
+
+## Chapter 6: Multi-Scale Dilated SFT Pyramid and Frequency-Selective Decoder Fusion — Ratified `Conditioned SFT V2` (`p2_u0224`) (25 – 27 October 2026)
+
+### 6.1 Stage 1 Frequency-Fusion Headroom Discovery (`25 October 2026`)
+
+While `Conditioned SFT V1` solved the `clear` regression and achieved $5\text{--}16\times$ larger MAE gains, visual inspection showed that small single-scale delta updates on top of `u64` still left severely defocused (`global_gaussian2p0`) and compressed (`compound_g1p2_lr64_jpeg70`) faces visually softer than desired. Why?
+
+Stage 1 of **Goal V3 (`Conditioned SFT V2`)** ([`CCTV_CODEFORMER_RESTORATION_GOAL_V3.md`](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md), [`CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md`](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md)) ran a local CPU diagnostic across 7 paired cases and 4 native CCTV crops (`ChokePoint` and `QMUL-SurvFace`) and uncovered the exact architectural bottleneck inside CodeFormer's decoder:
+- When a blurred image enters CodeFormer, the 9-layer Transformer still predicts sharp discrete facial tokens from the 1024-entry VQGAN codebook, so the pre-SFT VQGAN decoder features (`decoder_32`, `decoder_64`, `decoder_128`) contain crisp eyes, eyebrows, nostrils, and lip contours.
+- However, CodeFormer's `Fuse_sft_block` (`enc_feat -> scale/shift -> dec_feat * scale + shift`) modulates those sharp decoder features using the **blurry encoder skip features** (`enc_32`, `enc_64`, `enc_128`). Because the encoder skip features are degraded by blur and sensor noise, `Fuse_sft_block` **washes out the VQGAN decoder's sharp high-frequency facial edges**, while post-decoder sharpening alone caps out below $+0.008$ SSIM!
+- Cleaning the pre-SFT encoder skip pyramid (`32`, `64`, `128`, `256`) and injecting frequency-selective VQGAN decoder detail unlocked **$+0.073$ to $+0.141$ `SSIM7` headroom** ($0.8452 \to 0.9186$ on `global_gaussian2p0` with $+60\%$ central Laplacian sharpness; $0.7759 \to 0.9174$ on `compound_g1p2_lr64_jpeg70` with $+47\%$ sharpness) while slashing low-light MAE in half ($0.2340 \to 0.1240$).
+
+### 6.2 Architecture of the 212-Tensor `Conditioned SFT V2` Pyramid (`787` Total Tensors)
+
+Implemented in [`research/codeformer_conditioned_sft_learning_v2/`](research/codeformer_conditioned_sft_learning_v2) and portable inference module [`implementation/conditioning_v2.py`](integrated_app/implementation/conditioning_v2.py), **Conditioned SFT V2** freezes all **575 parent tensors** (`515` `codeformer_r2.pth` + `24` `codeformer_u96_adapter.pth` + `36` `terminal_u0064_heads.npz`, guaranteeing exact $0.0$ step-0 parity with `u64`) and adds **212 trainable tensors** (`3,831,362` bytes in `v2_p2_u0224_heads.npz`):
+1. **6-Dimensional Physical Degradation Conditioning Vector $c(x) \in [0, 1]^6$:** Augments the 4D sensor with **4-directional minimum directional Laplacian sharpness (`min_dir_lap`)** and **shadow chroma sensor-noise variance (`g_sensor_noise`)**, achieving **$100\%$ zero-overlap separation** between genuinely sharp `clear` images (`max g_degraded = 0.0063`) and all degraded roles (`min g_degraded = 0.7279`) across all 484 benchmarked images.
+2. **Top-Down Multi-Scale Dilated Pre-SFT Pyramid (`32 -> 64 -> 128 -> 256`):** At each encoder skip scale before `Fuse_sft_block`, a conditioned residual block with parallel dilation rates $d \in \{1, 2, 4\}$ and top-down coarse-to-fine feature guidance reconstructs clean structural edges from the blurred encoder features before they modulate the VQGAN decoder.
+3. **Dark Sensor-Noise Refiner & Smooth $16 \times 16$ Exposure Alignment:** Suppresses high-ISO shadow chroma/luminance noise prior to SFT modulation and aligns coarse $16 \times 16$ low-frequency luminance without block boundaries.
+4. **Frequency-Selective VQGAN Decoder Detail Synthesis:** Extracts high-frequency anatomical detail (`eyes`, `eyebrows`, `nose`, `lips`) from the pre-SFT VQGAN decoder stream, gated by degradation severity and an outer-ring boundary mask so background/border regions remain completely free of halo artifacts.
+
+### 6.3 Host-RAM Zero-Cache Fix, Live NVIDIA L4 Execution, and `p2_u0224` Ratification (25 – 27 October 2026)
+
+During L4 execution on a `g2-standard-4` instance ($16\text{ GB}$ host RAM, $24\text{ GB}$ NVIDIA L4 VRAM), Attempt 2 verified exact step-0 parity (`0.0` diff) in $45.2\text{ s}$ before hitting a Linux host RAM Out-Of-Memory kill (`exit_code: -9`) when caching $20.16\text{ GB}$ of 4-scale FP32 feature pyramids in CPU memory. Replacing CPU feature caching in [`worker_v2.py`](research/codeformer_conditioned_sft_learning_v2/worker_v2.py) with **zero-CPU-cache on-the-fly batched GPU extraction** reduced host RSS below $3.5\text{ GiB}$ (with a hard $12\text{ GiB}$ RSS guard).
+
+The resealed packet (`outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz`, SHA-256 `f373cf3b1eb217a409381ff133c47061f4bf06a4db0bb99b34bc78af3eb01d1d`, protocol SHA-256 `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0`) executed cleanly to completion on the NVIDIA L4 GPU in **$2,731.7\text{ s}$** (`~45.5 min`, `exit_code: 0`, return archive `cctv-codeformer-conditioned-sft-learning-v2-results.tar.gz`, `158,864,004` bytes, SHA-256 `8b9632c4f85b46deeb061e63cdefb4318aef48da06adbf07dead81e77b006c22`, audited in [`CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md`](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md)):
+- **Two-Phase Training Trajectory (`u0000_init -> p1_e040 -> p2_u0224`):** Phase 1 ran 40 epochs of multi-scale clean-SFT feature distillation (`p1_e040`), followed by Phase 2 end-to-end frozen-`R2` image/perceptual/SSIM7/Laplacian optimization through update 224 (`p2_u0224`, `max_linf_displacement = 0.250982`).
+- **Passed `56 / 56` Inherited Forensic Non-Regression Gates (`100%`):** With calibrated VQGAN detail synthesis and smooth $16 \times 16$ dark exposure alignment, `p2_u0224` passed $100\%$ of all 56 `old_quality` forensic gates (`additional_retention`, `original_terminal`, `ordinary_monitor`, and `legacy`).
+- **Massive Quantitative & Visual Gains Across Held-Out `monitor_v2` (`48` cases) and Native CCTV:**
+  - **4-Role Degraded Mean MAE:** Reduced from $0.04452 \to \mathbf{0.02785}$ (**$-37.4\%$ error reduction**).
+  - **4-Role Degraded Mean `SSIM7`:** Improved from $0.83276 \to \mathbf{0.85338}$ (**$+0.02062$ structural similarity gain**).
+  - **4-Role Degraded Mean Central Laplacian Sharpness:** Increased from $0.01897 \to \mathbf{0.01985}$ (**$+4.65\%$ sharper central facial features than `u64`**; $+39.3\%$ sharper on `global_defocus_blur` $0.01995 \to 0.02779$, and $+14.4\%$ sharper on `compound_cctv_codec` $0.02136 \to 0.02443$).
+  - **Clear Controls (`8` held-out faces):** Improved MAE ($0.03172 \to 0.03160$), `SSIM7` ($0.92940 \to 0.92947$), and Central Laplacian ($0.025480 \to 0.025485$) with zero over-sharpening.
+  - **Unpaired Native CCTV (`ChokePoint` & `QMUL-SurvFace`) Central Sharpness:** Increased central facial sharpness by **$+27.9\%$** on `ChokePoint_C1_01` ($0.00886 \to 0.01133$), **$+27.6\%$** on `ChokePoint_C1_03` ($0.01023 \to 0.01305$), **$+47.1\%$** on `QMUL_SurvFace_24to39` ($0.01253 \to 0.01844$), and **$+22.1\%$** on `QMUL_SurvFace_ge40` ($0.00833 \to 0.01017$).
+
+On 27 October 2026 (`IMPLEMENTATION` commit `320ec20` and `main` commit `0d1be0a`), **Conditioned SFT V2 (`p2_u0224`)** was promoted as the sole production restoration model in the application, where it remains the protected 787-tensor restoration foundation alongside **Trained CodeFormer Completion R2 (`v3`)** (`IMPLEMENTATION` `9fd2d9f` / `v0.2.2` and `main` `baf7278`).
+
+---
+
+## Chapter 7: Synthesis, Forensic Epistemology, and Summary Tables
+
+### 7.1 Architectural and Epistemological Synthesis
+
+The five-week evolution of the visible-face restoration subsystem established three foundational principles for forensic surveillance enhancement:
+1. **Why Modular Conditioned SFT Distillation Defeated Monolithic Retraining:** Unfreezing an entire generative backbone on small paired datasets destroys pretrained facial priors and causes catastrophic drift on clear controls (`V15`, `V18`, `Adaptation V1`). Conversely, freezing the 515-tensor `CodeFormer R2` prior and training a 6D-degradation-conditioned, multi-scale dilated pre-SFT pyramid (`Conditioned SFT V2`) cleans the encoder skip features *before* they modulate the VQGAN decoder—recovering crisp anatomical detail on blurred/compressed CCTV inputs while mathematically guaranteeing near-zero intervention (`g_degraded <= 0.0063`) on already-clear faces.
+2. **Strict Separation of Photometry and High-Frequency Structure:** Low-light surveillance enhancement must decouple coarse luminance/exposure alignment from high-frequency spatial convolution (`V1` & `V2` exposure decoupling). Supervising high-frequency spatial heads directly against bright targets on dark inputs creates block checkerboarding; aligning coarse $16 \times 16$ exposure smoothly while suppressing shadow sensor noise preserves natural skin tone and shadow continuity.
+3. **Forensic Epistemology of Visible-Face Restoration:** Even when conditioned on visible facial gradients without occlusions, super-resolving and deblurring a $24 \times 24$ or $48 \times 48$ CCTV frame is an ill-posed inverse problem. **Conditioned SFT V2 (`p2_u0224`)** produces a forensically conservative, structure-preserving enhancement of readable visible features—not biometric proof of identity. Every output retains the unmodified original upload alongside the restored canvas and records exact cryptographic hashes of all four model assets.
+
+### 7.2 Consolidated Chronological Table of Visible-Face Restoration Runs
+
+| Date (2026) | Model / Experiment | Architecture & Trainable Tensors | Training Data & Objective Summary | Key Quantitative Result | Verdict & Scientific Reason |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Sep (Pre-22)** | Custom DGP `Phase 1` – `Phase 3` | Custom convolutional / DGP restorer | 76,000 train / 4,000 val synthetic split (`L1 + perceptual`) | Val PSNR `20.28 dB`, SSIM `0.6603`, ArcFace `0.3568` | **Initial App Baseline** — Stable on mild noise, but smoothed weak CCTV features. |
+| **22 Sep** | Custom DGP `Phase 4` & `Phase 5` | Custom DGP + frozen ArcFace cosine loss | 80,000 split (`Phase 4` epoch 27) + 64-pair identity pilot (`Phase 5`) | `Phase 4` PSNR rose `20.28 -> 20.61 dB`, but ArcFace fell `0.3568 -> 0.3487` | **Diagnostic Discovery** — Pixel L1/MSE averages uncertain edges, hurting biometric identity. |
+| **4 – 5 Oct** | `CCTV_DGP` `V6`, `V15`, `V18` | Custom DGP + high-bandwidth targets / 10-face cache / 600-step fit | L4 GPU runs testing target bandwidth and fitting capacity | `V18` fit loss `-25.5%`; `V15` val PSNR dropped `16.03 -> 13.99 dB` | **Rejected** — Severe overfitting on small cohorts and clear-control degradation. |
+| **6 – 10 Oct** | `CCTV_DGP` `V25` – `V42` & QMUL Benchmark | Custom DGP + 57-tensor (`17,952`-param) spatial decoder (`V42`) | Zero-update L4 gradient matrices (`V25`–`V32`), PNG floor audit (`V36`), `V42` L4 run | `V42` stopped at update `50/3,905` (`0.0069%` structure gain vs `1.0%` gate) | **Terminated Custom DGP Track** — Custom DGP lacked high-frequency generative prior on QMUL/ChokePoint. |
+| **15 Oct** | CodeFormer Adaptation `V1` | S-Lab CodeFormer (`350 / 515` trainable; `165` VQGAN prior frozen) | 200 L4 Adam updates across 406 evaluation cases | Improved severe blur, but stopped at update 200 on clear-face brightening | **Retained Research State** — Proved CodeFormer prior value, but needed matched dark/clear anchoring. |
+| **15 – 18 Oct** | **CodeFormer Adaptation `V2` (`codeformer_r2.pth`)** | S-Lab CodeFormer (`350 / 515` trainable; `165` frozen) | 50 L4 Adam updates on 100 normal + 100 matched dark pairs + 50 teacher anchors | Fewer artifacts than untouched CodeFormer; natural low-light brightening (`7/61` clear > `0.03`) | **Frozen 515-Tensor Base (`R2`)** — Locked as base backbone (`d4abda08...`) for all modular adapters. |
+| **20 – 21 Oct** | Skip-Feature Adapter `u55` & **`U96` (`codeformer_u96_adapter.pth`)** | `24` skip-adapter tensors (`51,328` params) on frozen `515`-tensor `R2` | 96 total L4 Adam updates with 5 preservation snapshots (`U96` vs `S96`) | Moderate blur MAE **`-8.89%`**, strong blur MAE **`-4.88%`** over `R2`; `U96 > S96 > R2` on 36 DEV cases | **Frozen 24-Tensor Skip Adapter (`U96`)** — Passed `5/5` preservation gates (`958e8338...`). |
+| **22 – 24 Oct** | **Post-Fusion SpatialHead (`terminal_u0064_heads.npz`)** | `36` post-fusion spatial head tensors on frozen `R2 + U96` (`575` total) | 64 L4 Adam updates with residual `GELU / 2` spatial blocks across scales `32..256` | **`+1.21%` local / `+1.63%` global** structure gain over `U96`; passed **`56/56` forensic gates** | **Frozen 36-Tensor SpatialHead (`u64`)** — Locked as 575-tensor (`515+24+36`) parent state (`77c0e1f2...`). |
+| **25 Oct** | Matched Feature Learning `V1` (`Arm A` & `Arm B`) | `36` (`Arm A`) or `60` (`Arm B`) tensors from `u64` (unconditioned) | 8 L4 Adam updates across matched multi-role batches without degradation gating | `Arm B` clear PNG MAE regressed `+0.000003`; dark roles showed $8\times 8$ exposure checkerboarding | **Rejected at Update 8** — Proved unconditioned filters cannot sharpen blur without perturbing clear/dark controls. |
+| **25 Oct** | Conditioned SFT Learning `V1` (`Arm B u0008`) | `60` tensors + 4D input degradation sensor $g(x)$ & clear bypass gate | 8 L4 Adam updates (`712` forwards, `410.0s`) with exposure-decoupled dark supervision | Solved `clear` PNG (`-0.000273` MAE); **`5.3x–15.9x` larger blur MAE gains**; **`96/96` dark gates PASS** | **Validated Conditioning Law** — Proved input-anchored conditioning eliminates the clear/blur trade-off. |
+| **25 – 27 Oct** | **Conditioned SFT V2 (`p2_u0224` / `v2_p2_u0224_heads.npz`)** | **`212` V2 tensors** on frozen `575` `R2+U96+u64` (**`787` tensors total**) | 6D sensor (`100%` clear separation), top-down dilated `1/2/4` pre-SFT pyramid, dark refiner, VQGAN detail head (`2,731.7s` L4) | **`56/56` inherited gates PASS**; 4-role degraded MAE **`-37.4%`** (`0.04452 -> 0.02785`), `SSIM7` **`+0.02062`**, Central Lap **`+4.65%`**, Native CCTV sharpness **`+22.1%` to `+47.1%`** | **RATIFIED & DEPLOYED (`IMPLEMENTATION` `320ec20` / `9fd2d9f` & `main` `0d1be0a` / `baf7278`)** |
+
+### 7.3 Cryptographic Provenance and Artifact Ledger
+
+| Artifact / Milestone | Path / Identifier | Size (Bytes) | SHA-256 Digest |
+| :--- | :--- | ---: | :--- |
+| **Original Phase 4 80,000-Image Split Manifest** | `outputs/downloaded_phase4/outputs/phase4_with_progress/split.json` | — | `5c71bc358a351d50e3c0a7d76abe749cb4412aca80d2c7eb4de5fb33dbd29071` |
+| **CCTV DGP V18 L4 Return Archive** | `outputs/cctv_dgp_structure_v18_results.tar.gz` | `481,723,919` | `d494351f1f1f36d60f79f696633ff6e0dcc5cdf1f03662f84884f4aae71787e5` |
+| **CCTV DGP V32 Loss Gradient Return Archive** | `outputs/cctv-dgp-v32-loss-gradient-v1-results.tar.gz` | `721,569,318` | `529acd5750c64e7320260c09f55cdd3a115c2f465afd02abc4101009155143e3` |
+| **CCTV DGP V42 Spatial Decoder Return Archive** | `outputs/cctv-dgp-v42-results.tar.gz` | `1,156,863,656` | `308ad100ea6760bf0b6b42621a908d083f8691c3b8e53ab17b132dca0c88d9c2` |
+| **CodeFormer Adaptation V1 Return Archive** | `outputs/cctv-codeformer-adaptation-v1-results.tar.gz` | `2,594,787,706` | `98b101f8d543c34de033ec0583114681499927bdc8ed872b8f31d4d8d5edac92` |
+| **Base CodeFormer Adaptation R2 (`515` tensors)** | `models/implementation/codeformer_r2.pth` | `376,609,465` | `d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896` |
+| **Skip-Feature Spatial Adapter U96 (`24` tensors)** | `models/implementation/codeformer_u96_adapter.pth` | `212,827` | `958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0` |
+| **Post-Fusion Spatial Head u64 (`36` tensors)** | `models/implementation/terminal_u0064_heads.npz` | `685,818` | `77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17` |
+| **Conditioned SFT V1 Sealed Execution Archive** | `outputs/cctv-codeformer-conditioned-sft-learning-v1-execution.tar.gz` | `107,283,842` | `4e3d07432ea1951a60050bb5aba5dfbbf30f6ad7b2cdc5e54232f0fa62b7af64` |
+| **Conditioned SFT V1 L4 GPU Return Archive** | `outputs/cctv-codeformer-conditioned-sft-learning-v1-results.tar.gz` | `2,360,962,311` | `00682555ab4757ca70987e4d3a41af28ec710361b12e1d5c5ab7073e55753d22` |
+| **Conditioned SFT V2 Dataset Manifest (`384` PNGs)** | `outputs/codeformer_conditioned_sft_learning_v2_preparation/v2_data_manifest.json` | `430,694` | `f060229847a70b80e8a833a49f4a0764b2e813caad58a991ed2d98d225793a15` |
+| **Conditioned SFT V2 Sealed Execution Archive** | `outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz` | `124,224,129` | `f373cf3b1eb217a409381ff133c47061f4bf06a4db0bb99b34bc78af3eb01d1d` |
+| **Conditioned SFT V2 Frozen Protocol Manifest** | `outputs/cctv_codeformer_conditioned_sft_learning_v2_vm/protocol_v2.json` | `661,935` | `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0` |
+| **Conditioned SFT V2 L4 GPU Return Archive** | `outputs/cctv-codeformer-conditioned-sft-learning-v2-results.tar.gz` | `158,864,004` | `8b9632c4f85b46deeb061e63cdefb4318aef48da06adbf07dead81e77b006c22` |
+| **Ratified Conditioned SFT V2 Heads (`212` tensors)** | `implementation/assets/v2_p2_u0224_heads.npz` | `3,831,362` | `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f` |
+| **Ratified V2 Canonical 787-Tensor Logical State** | `codeformer_r2 + u96 + u64 + v2_p2_u0224` (`787` tensors) | `787` tensors | `3faa78e15c2fb50bfaa523b5dc7ee64fa4c19a13c490760a7401ea43ab0269d7` |
