@@ -1,10 +1,25 @@
-# 2 November 2026: Trained CodeFormer Completion R2 (`v3`) ratified (`60/60` gates), promoted to `IMPLEMENTATION` (`9fd2d9f` / `v0.2.2`), and `FACE_MASK_COMPLETION` consolidated into `main`
+# 2 November 2026: Master All-Folder Handoff Consolidation (`Testing`, `Testing_FACE_MASK_COMPLETION`, `Testing_RESTORATION`, `Testing_INNO_INSTALLER` / `codex/r2-installer-release`, and `IMPLEMENTATION`)
 
-STATUS: UNIFIED_R2_V3_60_OF_60_GATES_PASSED_PROMOTED_TO_IMPLEMENTATION_AND_MAIN_CONSOLIDATED.
+STATUS: ALL_WORKTREE_HANDOFFS_CONSOLIDATED_IN_TESTING_MAIN_AND_PUSHED_TO_ORIGIN.
+
+## 0. Cross-Folder & Branch Consolidation Matrix (2 November 2026)
+
+| Folder / Worktree | Branch | Head / Source Commit | Canonical Status in `C:\xampp\htdocs\YEAR 4\Testing` (`main`) |
+| :--- | :--- | :--- | :--- |
+| `C:\xampp\htdocs\YEAR 4\Testing` | `main` (`origin/main`) | Current `HEAD` | **Canonical master repository**: contains 100% of `RESTORATION`, `FACE_MASK_COMPLETION`, `integrated_app/` (`IMPLEMENTATION` `9fd2d9f`), `packaging/` (`codex/r2-installer-release` `fa88841`), `ORIGINS_FACE_MASK_COMPLETION.md`, `ORIGINS_RESTORATION.md`, and all `22,953` synced gitignored `outputs/` & `scratch/` artifacts (`17,614` completion + `5,339` restoration). |
+| `C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION` | `FACE_MASK_COMPLETION` | Synced to `origin/main` | **100% merged & consolidated into `Testing` (`main`)**: all `557` completion research/test files and all `17,614` gitignored `outputs/`, `scratch/`, and fixture files are in `Testing`. Safe to remove when desired. |
+| `C:\xampp\htdocs\YEAR 4\Testing_RESTORATION` | `RESTORATION` | Synced to `origin/main` | **100% merged & consolidated into `Testing` (`main`)**: all `Conditioned SFT V1/V2` commits and all `5,339` gitignored `outputs/` & `scratch/` files are in `Testing`. Safe to remove when desired. |
+| `C:\xampp\htdocs\YEAR 4\Testing_INNO_INSTALLER` & `Testing/scratch/r2-installer` | `feature/inno-desktop-installer` (`6673f0d`) -> `codex/r2-installer-release` (`fa88841`, `origin/codex/r2-installer-release`) | `fa88841c09c8a56a2c4445746e7f7c95ec45862e` | **100% documented & `packaging/` tracked in `Testing` (`main`)**: `Testing_INNO_INSTALLER` (`6673f0d`) was superseded by `codex/r2-installer-release` (`fa88841`, `v0.2.2` offline installer release). Full `packaging/` directory and handoff history are consolidated in `Testing`. Safe to remove when desired. |
+| `C:\Users\janus\.codex\worktrees\implementation-one-shot\Testing` | `IMPLEMENTATION` (`origin/IMPLEMENTATION`) | `9fd2d9f664d7d4b6924b010f6b8090cd49d36add` | **Mirrored in `Testing/integrated_app/` on `main`** and pushed to `origin/IMPLEMENTATION` (`9fd2d9f`). |
+
+---
+
+## 1. `Testing_FACE_MASK_COMPLETION` (`FACE_MASK_COMPLETION`) Complete Handoff (28 Oct – 2 Nov 2026)
+
 - **Branch & Deployment Consolidation (2 November 2026)**:
-  - **`main` (`C:\xampp\htdocs\YEAR 4\Testing`, pushed to `origin/main`)**: Consolidated 100% of `FACE_MASK_COMPLETION` research commits, documentation, scripts, and tests alongside `RESTORATION`, updated `integrated_app/` on `main` to **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`), and synced all `17,614` gitignored `outputs/`, `scratch/`, and fixture files from `C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION` into `C:\xampp\htdocs\YEAR 4\Testing`. `Testing_FACE_MASK_COMPLETION` is fully merged and synced into `Testing` (`main`).
-  - **`IMPLEMENTATION` (`C:\xampp\htdocs\YEAR 4\Testing` / `origin/IMPLEMENTATION` commit `9fd2d9f`, Windows installer `v0.2.2` & release `completion-r2-models-v1`)**: Promoted **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`, `370,773,572` bytes, `497` `params_ema` tensors, SHA-256 `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c`, logical SHA-256 `300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0`) while preserving all 18 protected **Conditioned SFT V2 (`p2_u0224`)** restoration files with zero modifications (`0` diff).
-- **Stage 1 & Stage 2 Unified CodeFormer Completion R2 (`v3`) L4 Return Audit ([COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md](COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md))**:
+  - **`main` (`C:\xampp\htdocs\YEAR 4\Testing`, pushed to `origin/main`)**: Consolidated 100% of `FACE_MASK_COMPLETION` research commits, documentation, scripts, and tests alongside `RESTORATION`, updated `integrated_app/` on `main` to **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`), and synced all `17,614` gitignored `outputs/`, `scratch/`, and fixture files from `C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION` into `C:\xampp\htdocs\YEAR 4\Testing`.
+  - **`IMPLEMENTATION` (`origin/IMPLEMENTATION` commit `9fd2d9f`, Windows installer `v0.2.2` & release `completion-r2-models-v1`)**: Promoted **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`, `370,773,572` bytes, `497` `params_ema` tensors, SHA-256 `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c`, logical SHA-256 `300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0`) while preserving all 18 protected **Conditioned SFT V2 (`p2_u0224`)** restoration files with zero modifications (`0` diff).
+- **2 November 2026 — Unified CodeFormer Completion R2 (`v3`) Ratified (`60/60` Gates) ([COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md](COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md))**:
   - Sealed execution archive: `outputs/cctv-completion-codeformer-unified-r2-v3-execution.tar.gz` (SHA-256 `80c4b4f992e08fb1e5135ddc7e34c51c90714cd1c0de5625140f29dc57c228af`, protocol SHA-256 `463c1977e9cd74f0a4fd0240df7a784f48b613043ef667714f1ef94adb4cd60a`).
   - Returned L4 archive: `outputs/cctv-completion-codeformer-unified-r2-v3-results.tar.gz` (`1,456,894,853` bytes, SHA-256 `f2eba0ddbc881c0f0abce7d207c03e22a1633391eaab4255d135aff8e608a199`), audited in `outputs/completion_codeformer_unified_r2_v3_return/independent_return_audit.json`.
   - Passed **`60/60` numeric ratchet gates** (`2/2` overall + `20/20` clear monitor + `28/28` challenge monitor + `10/10` strict-gray chroma guard):
@@ -12,11 +27,69 @@ STATUS: UNIFIED_R2_V3_60_OF_60_GATES_PASSED_PROMOTED_TO_IMPLEMENTATION_AND_MAIN_
     - Challenge Monitor (`16` paired cases): `macro.PNG_hole_L1` `0.050733 -> 0.049370` (**`-2.6873%`**), `macro.PNG_boundary_L1` **`-4.7020%`** (`28/28` subgroup metrics improved).
     - Strict-Gray Chroma Guard (`8` cases): `macro.GRAY_PNG_mean_channel_spread` `4.6712 -> 4.1891` (**`-10.3204%`**; `10/10` metrics improved).
     - Exact Outside-Support Preservation: `44,001,540 / 44,001,540` exact RGB bytes across all `256` evaluated PNGs (`168` empty-mask bypasses).
-- **Stage 3 Covering Proposal Segmenter Audit & Replaceability Report ([COVERING_DETECTOR_AND_R2_REPLACEABILITY_REPORT.md](COVERING_DETECTOR_AND_R2_REPLACEABILITY_REPORT.md))**:
+- **2 November 2026 — Covering Proposal Segmenter Audit & Replaceability Report ([COVERING_DETECTOR_AND_R2_REPLACEABILITY_REPORT.md](COVERING_DETECTOR_AND_R2_REPLACEABILITY_REPORT.md))**:
   - Audited `covering_detector_segmenter_v1.pth` (`2,681,549` bytes, SHA-256 `ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf`) against all 4 historical VM-returned `GatedUNet(3, 1, 24)` checkpoints (`balanced_penalty_ep9`, `balanced_ctrl_ep10`, `replay_ep10`, `consistency_ep10`) on the 9 `Conditioned SFT V2` restored integration canvases (`outputs/completion_codeformer_unified_r2_v3_candidate/nine_case_restored_r1_vs_r2_audit.json`).
   - All 4 historical VM candidates fail the uncovered control (`08_uncovered_degraded`: `1,251` to `12,525` false-positive mask pixels vs `0` for `v1`) while still missing `05_white_glare_degraded` (`0` px) and `val_362_hair_eye_degraded` (`0` px). Retained `covering_detector_segmenter_v1.pth` as the proposal-only segmenter with mandatory human mask review.
-- **Stage 4 Selective Drop-In Integration Verification**:
+- **2 November 2026 — Selective Drop-In Integration Verification**:
   - Nine-case `Conditioned SFT V2` restored-canvas comparison (`outputs/completion_codeformer_unified_r2_v3_candidate/nine_case_restored_r1_vs_r2_comparison.png`): `1,521,399 / 1,521,399` exact outside-mask RGB bytes preserved, `-5.11%` grayscale chroma spread reduction on `val_362_hair_eye_degraded` (`13.2211 -> 12.5458`), and verified live via inline Playwright (`375x667`, `768x1024`, `1280x800`, `0` overflow, `0` console/page errors, `13.42s` E2E browser generation).
+- **1 November 2026 — Unified CodeFormer Completion R2 (`v2`) L4 Return Audited (`59/60` Gates; Rejected at Promotion Gate) ([COMPLETION_CODEFORMER_UNIFIED_R2_V2_RESULTS.md](COMPLETION_CODEFORMER_UNIFIED_R2_V2_RESULTS.md))**:
+  - Returned L4 archive `outputs/cctv-completion-codeformer-unified-r2-v2-results.tar.gz` (`1,456,870,928` bytes, SHA-256 `4c29197252f71c4347a8966b88488ab816d887e91ab72b3b5594c9d346b94592`).
+  - Solved all `30/30` clear and strict-gray gates (including `CLEAR_LOWER_FACE.PNG_hole_L1` `-1.2584%` and `GRAY_PNG_mean_channel_spread` `-7.4793%`), passing `59/60` total gates, but missed a single challenge subgroup metric (`CHALLENGE_LOWER_FACE.PNG_hole_L1` `+0.4789%`, `3/6` cases improved). Re-weighted lower-face hole/chroma scale to `1.15x` and `lambda_chroma = 0.08` to produce the winning `v3` packet.
+- **29 October 2026 — Unified CodeFormer Completion R2 (`v1`) L4 Return Audited (`56/60` Gates; Rejected at Promotion Gate) ([COMPLETION_CODEFORMER_UNIFIED_R2_V1_RESULTS.md](COMPLETION_CODEFORMER_UNIFIED_R2_V1_RESULTS.md) & [FACE_MASK_COMPLETION_HANDOFF_2026-10-29.md](FACE_MASK_COMPLETION_HANDOFF_2026-10-29.md))**:
+  - Returned L4 archive `outputs/cctv-completion-codeformer-unified-r2-v1-results.tar.gz` (`1,456,829,113` bytes, SHA-256 `a668a7303503bfbe14e2214aa9e0b1ef414f5df6cd9ed2a1c44606fa4ba4e72e`).
+  - Jointly unfreezing `332` tensors (`164` encoder + `114` predictor + `54` SFT fusion) broke the `< 1%` ceiling (`challenge macro.PNG_hole_L1` `-1.8253%`, `clear macro.PNG_boundary_L1` `-1.6632%`, `56/60` gates), diagnosing the `0.35` hole-cell weight floor on large lower-face masks that led to `v2` and `v3`.
+- **28–29 October 2026 — Spatial-Code Intervention V1 Audited (`0` Updates, `108` Forwards) ([COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_RESULTS.md](COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_RESULTS.md))**:
+  - Returned L4 archive `outputs/cctv-completion-codeformer-spatial-code-intervention-v1-results.tar.gz` (`19,534,544` bytes, SHA-256 `4422546141a036c6db226c0c98a3b2c6bc4039535069a120ff337906725a70ee`).
+  - Proved `87.31%` of total oracle headroom (`-14.396%` clear / `-14.374%` challenge `PNG_hole_L1`) resides in masked/touching cells (`H`), while visible-only cell replacement (`V`) improves hole L1 by only `-1.364%` / `-1.231%` and degrades boundaries by `+6.161%` / `+5.749%`.
+
+---
+
+## 2. `Testing_RESTORATION` (`RESTORATION`) Complete Handoff (25–27 Oct 2026)
+
+- **Conditioned SFT V1 Feasibility & L4 Return Audit ([CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md))**:
+  - **Stage 1 Feasibility (`outputs/codeformer_conditioned_sft_learning_v1_feasibility/feasibility_receipt_v1.json`)**: `single_pass_input_anchored_B8_beta0p005` passed `56/56` inherited + `40/40` monitor gates at `u8` and `u24/u48` (`-48,923` RGB8 code improvement on clear monitors).
+  - **Returned L4 GPU Run (`outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/`)**: `cctv-codeformer-conditioned-sft-learning-v1-results.tar.gz` (`2,360,962,311` bytes, `3,825` members, `712` full forwards, `18` checkpoints, `16` Adam commits). Arm `B` solved the `clear` PNG regression (`-0.000273`), delivered `5.3x`–`15.9x` larger degraded-role MAE gains, and passed `96/96` coarse `g_dark` exposure drift sign alignment gates (`inh8`, `inh48`, `sup8`, `sup48`).
+- **Conditioned SFT V2 (`p2_u0224`) Ratified & Promoted to Production ([CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md))**:
+  - **Stage 1 Headroom Proof ([CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md))**: Proved `+0.073` to `+0.141` `SSIM7` headroom via Exposure-Matched SFT (`outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`).
+  - **Stage 3 Sealed Manual L4 VM Packet ([CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md))**: `outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz` (`124,224,129` bytes, `849` PAX members, SHA-256 `f373cf3b1eb217a409381ff133c47061f4bf06a4db0bb99b34bc78af3eb01d1d`, Protocol SHA-256 `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0`).
+  - **Stage 4 Live NVIDIA L4 Return Audit (`outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1/return_audit_v2.json`)**: `cctv-codeformer-conditioned-sft-learning-v2-results.tar.gz` (`158,864,004` bytes, `1,020` PAX members, SHA-256 `8b9632c4f85b46deeb061e63cdefb4318aef48da06adbf07dead81e77b006c22`, `2,731.7s`). Winning checkpoint **`p2_u0224`** (`v2_p2_u0224_heads.npz`, `12,188` bytes, SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f` over `787` frozen `u64` base tensors) passed **`56/56` inherited forensic retention checks**, reduced 4-role degraded `MAE` by **`-37.4%`** (`0.04452 -> 0.02785`), raised `SSIM7` by **`+0.02062`** (`0.83276 -> 0.85338`), increased paired degraded `Central Laplacian Sharpness` (`0.01897 -> 0.01985`), and boosted native CCTV (`ChokePoint` & `QMUL-SurvFace`) sharpness by **`+22.1%` to `+47.1%`**.
+  - **Stage 5 Promotion & Branch Consolidation (27 October 2026)**: Promoted **Conditioned SFT V2 (`p2_u0224`)** as the sole production restoration model in `IMPLEMENTATION` (`320ec20`, preserved unchanged through `6059fc3` and `9fd2d9f`) and consolidated 100% of `RESTORATION` commits and `5,339` gitignored `outputs/` & `scratch/` files into `C:\xampp\htdocs\YEAR 4\Testing` (`main`).
+
+---
+
+## 3. `Testing_INNO_INSTALLER` (`feature/inno-desktop-installer`) & `codex/r2-installer-release` (`fa88841`) Complete Desktop Installer Handoff (30 Oct – 2 Nov 2026)
+
+- **Canonical Installer Documentation Tracked in `C:\xampp\htdocs\YEAR 4\Testing\packaging\`**:
+  - [packaging/R2_VERIFICATION.md](packaging/R2_VERIFICATION.md) — Version `0.2.2` Completion R2 offline installer verification & Cloudflare Pages release (`2 Nov 2026`).
+  - [packaging/PAYLOAD_PATH_HOTFIX.md](packaging/PAYLOAD_PATH_HOTFIX.md) — Version `0.2.1` Windows 8.3 short-path `Verify-Payload` hotfix (`1 Nov 2026`).
+  - [packaging/MODEL_UPDATES.md](packaging/MODEL_UPDATES.md) — Content-addressed `runtime/data/models/<family>/<inventory-key>/` model-set isolation (`1 Nov 2026`, `Testing_INNO_INSTALLER` commit `6673f0d`).
+  - [packaging/VERIFICATION.md](packaging/VERIFICATION.md) — Version `0.2.0` full offline bundled installer (`1 Nov 2026`) and historical `0.1.0`/`0.1.1` bootstrap installers (`30–31 Oct 2026`).
+  - [packaging/BUILD.md](packaging/BUILD.md), [packaging/DESKTOP_LIFECYCLE.md](packaging/DESKTOP_LIFECYCLE.md), [packaging/INNO_INSTALLER_PLAN.md](packaging/INNO_INSTALLER_PLAN.md) — Build pipeline, C# desktop launcher (`packaging/launcher/Program.cs`), and Inno Setup (`packaging/installer.iss`) lifecycle specifications.
+- **Release Progression Summary (`v0.1.0 -> v0.1.1 -> v0.2.0 -> v0.2.1 -> v0.2.2`)**:
+  - **`v0.2.2` (2 November 2026 — Current Published Release, `codex/r2-installer-release` commit `fa88841`, build source `453d563bdd6c1c36b92107b869dcc6e6f70e4a8e`, app revision `2c5d8fd7c557b68ecd1eed2c6f29091ac1dcd6d9`)**:
+    - Offline installer `ForensicDGP_Setup-0.2.2.exe`: **`1,045,576,043` bytes**, SHA-256 `bc9952a5e54a3955a06a7e3b636d008f8dee2f227ef470224ee927463d733a25`, offline payload manifest SHA-256 `59a4d99c977e209273fc2ff2e4d08e4b474a224f55184be18e2660467bcde215`.
+    - Combines **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`, SHA-256 `ed9f92ba...`), **Conditioned SFT V2 (`p2_u0224`)** restoration, content-addressed model-set isolation (`6673f0d`), and the Windows 8.3 short-path payload verifier fix (`0.2.1`).
+    - Verified native `0.2.1 -> 0.2.2` in-place upgrade under a Windows 8.3 `TEMP/TMP` path (`318.03s`), preserving all 6 prior flat model files and 4 saved-record hashes while populating the 6 namespaced model files.
+    - Regression suites passed: `132` `IMPLEMENTATION` Python tests (`4` skips), `391` integrated installer Python tests (`6` skips), `34/34` JavaScript capture/playback tests, `19/19` download-site tests, and live Edge `375px`/`768px`/`1280px` layout & E2E V2+R2 inference checks.
+    - Published at [v0.2.2 Release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2), [completion-r2-models-v1](https://github.com/janusinss/forensic-dgp/releases/tag/completion-r2-models-v1), and [forensic-dgp.pages.dev](https://forensic-dgp.pages.dev/) (`ff9edb57.forensic-dgp.pages.dev`).
+  - **`v0.2.1` (1 November 2026 — Windows 8.3 Short-Path Hotfix, build source `6f7cf0b59b7391d154da9ec9be573d6a74f77b90`)**:
+    - Offline installer `ForensicDGP_Setup-0.2.1.exe`: `1,045,722,009` bytes, SHA-256 `431fd74e2f643ccfc7b31407deaabeebaf12e6240e53f7ef8f2b6f35da78a884` ([v0.2.1 Release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.1)). Fixed PowerShell 5.1 `Get-ChildItem` 8.3 short-path expansion mismatch in `Verify-Payload`.
+  - **`v0.2.0` (1 November 2026 — First Full Offline Preview, build source `c8ff04e83bd4a722bc73134f67c0c1b1719ecb36`)**:
+    - Offline installer `ForensicDGP_Setup-0.2.0.exe`: `1,045,716,354` bytes, SHA-256 `4287feb22c96c9abaf5804592938b0c4de2dbfbeecc747cb00a93543a9a5635a` ([v0.2.0 Release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.0)). Bundled private Python, hashed wheel sets, admitted V2 + R1 models, and receipt-bound relocation.
+  - **`v0.1.0` & `v0.1.1` (30–31 October 2026 — Historical Bootstrap Installers)**:
+    - `ForensicDGP_Setup-0.1.1.exe` (`6,304,374` bytes, SHA-256 `280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2`, source `fe7d30a`) and `ForensicDGP_Setup-0.1.0.exe` (`6,300,322` bytes, SHA-256 `9f1df2bc8ff189166086f16d47d2a7bf285fc44ff4eb475714e6b1deff0fb467`, source `7b4f78c`).
+
+---
+
+## 4. `IMPLEMENTATION` (`origin/IMPLEMENTATION` `9fd2d9f` & `Testing/integrated_app/`) Complete Handoff (2 Nov 2026)
+
+- **Repository & Branch**: `https://github.com/janusinss/forensic-dgp/tree/IMPLEMENTATION` at commit `9fd2d9f664d7d4b6924b010f6b8090cd49d36add` (and mirrored in `C:\xampp\htdocs\YEAR 4\Testing\integrated_app\` on `main`, documented in [INTEGRATED_APP_ON_MAIN.md](INTEGRATED_APP_ON_MAIN.md)).
+- **Active Admitted Model Inventory**:
+  1. **Restoration (`implementation/assets.json`)**: **Conditioned SFT V2 (`p2_u0224`)** (`787` frozen tensors across `codeformer_dgp_sft_u64_s42_best.pth`, `vqgan_codebook.pth`, `parsing_parsenet.pth`, `detection_Resnet50_Final.pth`, plus `v2_p2_u0224_heads.npz` SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f`).
+  2. **Reviewed Completion (`implementation/completion_assets.json`)**: **Trained CodeFormer Completion R2 (`v3`)** (`codeformer_completion_r2.pth`, `370,773,572` bytes, SHA-256 `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c`, logical SHA-256 `300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0`) + proposal-only segmenter (`covering_detector_segmenter_v1.pth`, `2,681,549` bytes, SHA-256 `ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf`).
+- ** Thesis-Style Origins References on `main`**:
+  - [ORIGINS_FACE_MASK_COMPLETION.md](ORIGINS_FACE_MASK_COMPLETION.md) — Complete chronological origins of the Face Mask Detection + Completion pipeline (25 Sep – 2 Nov 2026).
+  - [ORIGINS_RESTORATION.md](ORIGINS_RESTORATION.md) — Complete chronological origins of the CCTV Blind Face Restoration pipeline (Sep – 2 Nov 2026).
 
 ---
 
