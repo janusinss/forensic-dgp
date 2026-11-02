@@ -1,5 +1,6 @@
 """Destination preflight behavior, without altering installed application folders."""
 import json
+import ctypes
 import hashlib
 import zipfile
 import os
@@ -47,6 +48,7 @@ class DestinationPreflightTests(unittest.TestCase):
 @unittest.skipUnless(PS.is_file(),'Windows PowerShell required')
 class SetupWrapperTests(unittest.TestCase):
     def setUp(self):
+        (BASE/'scratch').mkdir(exist_ok=True)
         self.temp=tempfile.TemporaryDirectory(prefix='gui-life-',dir=BASE/'scratch')
         self.addCleanup(self.temp.cleanup)
         self.area=Path(self.temp.name)
@@ -79,9 +81,10 @@ exit 0
                        'payload_expanded_bytes':1,'files':files}
         (self.stage/'release.json').write_text(json.dumps(self.manifest))
         self.manifest_hash=hashlib.sha256((self.stage/'release.json').read_bytes()).hexdigest()
-    def run_setup(self):
+    def run_setup(self, stage=None):
+        stage=str(self.stage) if stage is None else str(stage)
         return subprocess.run([str(PS),'-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File',str(self.stage/'gui_setup.ps1'),
-           '-Stage',str(self.stage),'-InstallRoot',str(self.target),'-EventsFile',str(self.area/'events.jsonl'),
+           '-Stage',stage,'-InstallRoot',str(self.target),'-EventsFile',str(self.area/'events.jsonl'),
            '-CancelFile',str(self.area/'cancel'),'-LogPath',str(self.log),'-ExpectedManifestHash',self.manifest_hash,
            '-PreviousRoot',str(self.area/'missing')],
            capture_output=True,text=True,encoding='utf8',timeout=25,
@@ -94,6 +97,72 @@ exit 0
         self.assertEqual(probe['sha256'],self.manifest['files']['offline-payload-manifest.json'])
         config=json.loads((self.target/'install-location.json').read_text(encoding='utf-8-sig'))
         self.assertEqual(config,{'schema':1,'install_root':str(self.target),'managed_root':str(self.target/'runtime')})
+    def assert_offline_setup_succeeded(self, result, context=''):
+        self.assertEqual(result.returncode,0,context+result.stdout+result.stderr)
+        probe=json.loads((self.target/'runtime/probe.json').read_text(encoding='utf-8-sig'))
+        self.assertTrue(Path(probe['payload']).samefile(self.stage/'payload'))
+        self.assertEqual(probe['sha256'],self.manifest['files']['offline-payload-manifest.json'])
+        self.assertTrue((self.target/'install-location.json').is_file())
+    def test_short_83_stage_alias_accepts_the_exact_payload_inventory(self):
+        spaced=self.area/'payload stage with spaces'
+        self.stage.rename(spaced); self.stage=spaced
+        get_short=ctypes.WinDLL('kernel32',use_last_error=True).GetShortPathNameW
+        get_short.argtypes=(ctypes.c_wchar_p,ctypes.c_wchar_p,ctypes.c_uint32)
+        get_short.restype=ctypes.c_uint32
+        required=get_short(str(self.stage),None,0)
+        self.assertGreater(required,0,'GetShortPathNameW failed for the existing fixture stage')
+        output=ctypes.create_unicode_buffer(required)
+        self.assertGreater(get_short(str(self.stage),output,required),0)
+        alias=output.value
+        if os.path.normcase(alias)==os.path.normcase(str(self.stage)):
+            self.skipTest('This filesystem does not provide an 8.3 alias for the fixture stage')
+        self.assertTrue(Path(alias).samefile(self.stage))
+        result=self.run_setup(alias)
+        self.assert_offline_setup_succeeded(result,'8.3 stage alias: '+alias+'; expanded stage: '+str(self.stage)+'\n')
+    def test_spaced_unicode_stage_accepts_the_exact_payload_inventory(self):
+        spaced=self.area/'payload stage Łódź'
+        self.stage.rename(spaced); self.stage=spaced
+        self.assert_offline_setup_succeeded(self.run_setup())
+    def test_stage_with_trailing_separator_accepts_the_exact_payload_inventory(self):
+        self.assert_offline_setup_succeeded(self.run_setup(str(self.stage)+'\\'))
+    def test_mixed_case_stage_accepts_the_exact_payload_inventory(self):
+        self.assert_offline_setup_succeeded(self.run_setup(str(self.stage).swapcase()))
+    def test_unlisted_payload_file_is_named_and_rejected_before_destination_creation(self):
+        extra=self.stage/'payload/python/unlisted-extra.bin'
+        extra.write_bytes(b'not in the pinned payload inventory')
+        result=self.run_setup()
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('Unexpected offline payload file',result.stderr)
+        self.assertIn('python/unlisted-extra.bin',result.stderr)
+        self.assertEqual(extra.read_bytes(),b'not in the pinned payload inventory')
+        self.assertFalse(self.target.exists())
+    def test_tampered_payload_file_is_rejected_before_destination_creation(self):
+        payload=self.stage/'payload/python/python-3.13.9-amd64.zip'
+        payload.write_bytes(b'changed payload')
+        result=self.run_setup()
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('Offline payload file differs: python/python-3.13.9-amd64.zip',result.stderr)
+        self.assertFalse(self.target.exists())
+    def test_missing_payload_file_is_rejected_before_destination_creation(self):
+        (self.stage/'payload/python/python-3.13.9-amd64.zip').unlink()
+        result=self.run_setup()
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('python-3.13.9-amd64.zip',result.stderr)
+        self.assertFalse(self.target.exists())
+    def test_linked_payload_directory_is_rejected_without_traversing_it(self):
+        outside=self.area/'outside'; outside.mkdir()
+        sentinel=outside/'keep.bin'; sentinel.write_bytes(b'outside payload')
+        link=self.stage/'payload/linked-directory'
+        quote=lambda value: "'"+str(value).replace("'","''")+"'"
+        created=subprocess.run([str(PS),'-NoProfile','-NonInteractive','-Command',
+            "$ErrorActionPreference='Stop'; New-Item -ItemType Junction -Path "+quote(link)+
+            " -Target "+quote(outside)+" | Out-Null"],capture_output=True,text=True,encoding='utf8',timeout=15)
+        self.assertEqual(created.returncode,0,created.stdout+created.stderr)
+        result=self.run_setup()
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('Offline payload paths cannot contain links',result.stderr)
+        self.assertEqual(sentinel.read_bytes(),b'outside payload')
+        self.assertFalse(self.target.exists())
     def test_changed_embedded_payload_fails_before_destination_is_created(self):
         (self.stage/'payload/manifest.json').write_text('changed')
         result=self.run_setup()

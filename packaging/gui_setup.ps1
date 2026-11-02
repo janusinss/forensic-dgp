@@ -46,16 +46,19 @@ function Verify-Payload([string]$root,[string]$expectedHash) {
     $item=Get-Item -LiteralPath $path -Force
     if ($item.PSIsContainer -or $item.Length -ne $file.bytes -or (Hash-File $path) -cne $file.sha256) { throw ('Offline payload file differs: '+$file.path) }
   }
-  $queue=New-Object 'System.Collections.Generic.Queue[string]'; $queue.Enqueue($root)
+  # Windows can expand an 8.3 stage path during enumeration. Carry the manifest
+  # prefix explicitly instead of slicing FullName by a differently spelled root.
+  $queue=New-Object 'System.Collections.Generic.Queue[object]'
+  $queue.Enqueue([pscustomobject]@{path=$root;relative=''})
   $count=0
   while ($queue.Count) {
     $directory=$queue.Dequeue()
-    foreach ($entry in Get-ChildItem -LiteralPath $directory -Force) {
+    foreach ($entry in Get-ChildItem -LiteralPath $directory.path -Force) {
       if (($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) { throw 'Offline payload paths cannot contain links.' }
-      if ($entry.PSIsContainer) { $queue.Enqueue($entry.FullName); continue }
-      $relative=$entry.FullName.Substring($root.TrimEnd('\').Length+1).Replace('\','/')
+      $relative=$(if ($directory.relative) { $directory.relative+'/'+$entry.Name } else { $entry.Name })
+      if ($entry.PSIsContainer) { $queue.Enqueue([pscustomobject]@{path=$entry.FullName;relative=$relative}); continue }
       if ($relative -ceq 'manifest.json') { continue }
-      if (!$seen.Contains($relative)) { throw 'Unexpected offline payload file.' }
+      if (!$seen.Contains($relative)) { throw ('Unexpected offline payload file: '+$relative) }
       $count++
     }
   }
