@@ -1,0 +1,132 @@
+{
+  "format": "completion-data-only-continuation-independent-count-resource-witness-v1",
+  "complete": true,
+  "status": "Design arithmetic and combinatorial feasibility only; actual data/sampler/trainer not admitted",
+  "existing_sources": {
+    "fit": 32,
+    "adaptive_originalTRAIN_monitor": 8,
+    "disjoint_sourceIDs_not_identity_proof": true
+  },
+  "fit_case_counts": {
+    "anchors": 128,
+    "augmented": 128,
+    "total": 256,
+    "each_case_once_per_route": true,
+    "each_cycle": {
+      "anchors": 2,
+      "augmented": 2,
+      "distinct_references_in_witness": 4
+    },
+    "conditions": {
+      "strict_gray_clear": 32,
+      "RGB_mild_degraded": 32,
+      "strict_gray_mild_degraded": 32,
+      "RGB_clear_irregular": 32
+    },
+    "condition_geometry_cells": {
+      "strict_gray_clear__lower_face": 8,
+      "RGB_mild_degraded__lower_face": 8,
+      "strict_gray_mild_degraded__lower_face": 8,
+      "RGB_clear_irregular__lower_face": 8,
+      "RGB_mild_degraded__eye_band": 8,
+      "strict_gray_mild_degraded__eye_band": 8,
+      "RGB_clear_irregular__eye_band": 8,
+      "strict_gray_clear__eye_band": 8,
+      "strict_gray_mild_degraded__image_left_lens": 8,
+      "RGB_clear_irregular__image_left_lens": 8,
+      "strict_gray_clear__image_left_lens": 8,
+      "RGB_mild_degraded__image_left_lens": 8,
+      "RGB_clear_irregular__cheek_object": 8,
+      "strict_gray_clear__cheek_object": 8,
+      "RGB_mild_degraded__cheek_object": 8,
+      "strict_gray_mild_degraded__cheek_object": 8
+    },
+    "new_irregular_masks": 32,
+    "witness_not_actual_sampler": true
+  },
+  "challenge_counts": {
+    "cases": 16,
+    "two_per_monitor_source": true,
+    "geometry_offset_rule": "gray=i%4; RGBirregular=(i+2)%4",
+    "condition_geometry_cells": {
+      "strict_gray_mild_degraded__lower_face": 2,
+      "RGB_irregular_mild_degraded__image_left_lens": 2,
+      "strict_gray_mild_degraded__eye_band": 2,
+      "RGB_irregular_mild_degraded__cheek_object": 2,
+      "strict_gray_mild_degraded__image_left_lens": 2,
+      "RGB_irregular_mild_degraded__lower_face": 2,
+      "strict_gray_mild_degraded__cheek_object": 2,
+      "RGB_irregular_mild_degraded__eye_band": 2
+    }
+  },
+  "teacher": {
+    "original_frozen_encoder_codebook_required": true,
+    "source_styles": [
+      "RGB",
+      "strict_gray"
+    ],
+    "reference_style_labelsets": 80,
+    "component_forwards": 160,
+    "raw_latent_code_bytes": 21135360,
+    "retention_cap_bytes": 25165824
+  },
+  "neural_accounting": {
+    "whole_breakdown": {
+      "learning": 512,
+      "clear_monitor": 128,
+      "challenge": 32,
+      "public_nonempty": 56,
+      "fresh_R1_parity": 8
+    },
+    "whole_total": 736,
+    "teacher_components": 160,
+    "typed_total": 896,
+    "typed_cap": 1000,
+    "new_backwards": 512,
+    "new_paired_cycles": 64,
+    "new_code_steps": 64,
+    "new_fusion_steps": 64,
+    "new_Adam_total": 128,
+    "parent_steps_per_route": 32,
+    "terminal_steps_per_route": 96,
+    "cumulative_Adam_total": 192,
+    "cumulative_paired_cycles": 96,
+    "cumulative_backwards": 768
+  },
+  "conservative_storage": {
+    "nonempty_cases": 216,
+    "nonempty_array_bytes_each": 4980736,
+    "empty_cases": 8,
+    "empty_array_bytes_each": 1835008,
+    "parity_pair_array_bytes_each": 15208448,
+    "all_array_raw_bytes": 1151352832,
+    "arrays_plus_one_percent_NPZ_reserve": 1162866361,
+    "224_PNGs_256KiB_each": 58720256,
+    "terminal_or_failedpartial_cap": 1073741824,
+    "metadata_logs_protocol_cap": 8388608,
+    "80teacher_latent_code_cap": 25165824,
+    "payload_total": 2328882873,
+    "archive_overhead_allowance": 2097152,
+    "payload_plus_archive_allowance": 2330980025,
+    "raw_and_compressed_cap_each": 2415919104,
+    "headroom_bytes": 84939079,
+    "start_free_bytes": 7516192768,
+    "free_after_two_full_caps_bytes": 2684354560,
+    "stop_floor_bytes": 2147483648,
+    "caveats": [
+      "All file/stream reservations and single-terminal-or-partial limits need source enforcement before packet.",
+      "Fresh7GiB required after installation/shared parent resolution, not inferred from prior VM inventory.",
+      "Revalidate export TAR/gzip namespace overhead against actual bounded member count; both raw/compressed streams still hard capped.",
+      "Streaming terminal/export writers must honor disk floor and retain bounded failure partials."
+    ]
+  },
+  "local_execution": {
+    "JSON_metadata_and_integer_math_only": true,
+    "image_or_NPZ_reads": 0,
+    "model_loads_or_neural_calls": 0,
+    "gradients_backwards_optimizers": 0,
+    "VM_or_network_calls": 0
+  },
+  "model_qualified": false,
+  "packet_prepared": false
+}

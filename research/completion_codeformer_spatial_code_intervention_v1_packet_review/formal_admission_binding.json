@@ -1,0 +1,9 @@
+{
+  "complete": true,
+  "only_change": "UNBOUND formal admission SHA literal to independently admitted exactSHA",
+  "previous_source_sha256": "6319215295d496abaff231fbb7543377886ee465e4a7d194cb8d27bd1e1fd234",
+  "new_source_sha256": "21b69666a4d59b1c37a065705845a5c8b65caafe9ff4a8e4eede2312f35b10ab",
+  "formal_admission_sha256": "4f6ea7134e9c8628efb7deae4ca5dc137b35dc9f1d0471c796c8aa03692e63b5",
+  "old_source_preserved": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_packet_review\\prepare_before_formal_admission_binding.py",
+  "model_VM_calls": 0
+}

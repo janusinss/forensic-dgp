@@ -1,0 +1,44 @@
+"""Independent frozen predictor CE design admission; no scientific runtime imports."""
+from pathlib import Path
+from datetime import datetime,timezone
+import hashlib,json,time
+ROOT=Path(__file__).resolve().parents[2]
+EXPECTED='077ed97ec5dc4ca75f6b6bdc3caf8def09344113c3b7ce927d13b7b68a4f2b78'
+checks=[]
+def need(ok,label):
+ if not ok: raise ValueError(label)
+ checks.append(label)
+def sha(p):return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+def read(p):return json.loads(Path(p).read_text(encoding='utf-8-sig'))
+def pin(p):p=Path(p);return {'path':str(p),'bytes':p.stat().st_size,'sha256':sha(p)}
+def main():
+ started=time.monotonic();path=ROOT/'research/completion_codeformer_predictor_ce_design_v1/root_design.json';need(sha(path)==EXPECTED,'Exact frozen formal design');d=read(path)
+ for label,v in d['evidence'].items():
+  p=Path(v['path']);need(p.is_file() and p.stat().st_size==v['bytes'] and sha(p)==v['sha256'],'Evidence exact '+label)
+ s=d['state'];need(s['trainable114_scalars']==19450880 and s['frozen383']=={'encoder':164,'fusion':54,'original_prior':165},'114 predictor/383 frozen partition')
+ need(s['trainable_allowlist']==['position_emb','feat_emb.','ft_layers.','idx_pred_layer.'] and s['ordinary_inference_w']==1 and s['adain'] is False and s['oracle_override'] is False,'Ordinary predictor-only path')
+ o=d['optimizer'];need(o['objects']==1 and o['algorithm']=='Adam' and o['active_tensors']==114 and o['lr']==1e-5 and o['betas']==[.9,.99] and o['eps']==1e-8 and o['weight_decay']==0 and o['name_mapped_parent_step']==32 and o['maximum_final_step']==64 and not o['reset'],'Exact mapped parent Adam continuation')
+ objective=d['objective'];need(objective['identifier']=='predictor_only_CE_all256_same_inpainting_codebook_v1' and objective['CE_reduction']=='mean_over_all256_positions' and objective['microbatch_divisor_once']==4 and not any(objective[k] for k in ['latent_MSE','pixel_loss','fusion_loss','GAN','STE','unavailable_clean_indices_at_evaluation']) and objective['teacher_neural_calls']==0,'Distinct CE objective without hard-argmax image gradient fiction')
+ data=d['data'];subset=read(data['subset_and_schedule_pin']['path']);need(subset['complete'] and subset['subset_cases']==128 and subset['source_full_pool_cases']==256,'Previously independently admitted balanced subset')
+ cases=subset['cases_in_reference_role_order'];schedule=subset['schedule'];need(len(cases)==128 and len(schedule)==32 and all(len(c)==4 for c in schedule) and len(set(sum(schedule,[])))==128,'32 steps consume128 unique observations')
+ fit=set(data['FIT_reference_ids']);mon=set(data['monitor_reference_ids']);need(len(fit)==32 and len(mon)==8 and not fit&mon and {c['reference_id'] for c in cases}==fit and len({c['teacher_key'] for c in cases})==64,'64 FIT labels only; monitor16 excluded')
+ for reference in fit:
+  rows=[c for c in cases if c['reference_id']==reference];need(len(rows)==4 and len({c['mask_kind'] for c in rows})==4,'All4 geometries for '+reference)
+ e=d['execution'];need(e['maximum_optimizer_steps']==32 and e['maximum_backwards']==128 and e['paired_snapshots']==[0,8,16,32] and e['public_snapshots']==[0,32] and e['saved_evaluation_outputs']==48*4+32*2==256,'Expanded complete-run snapshot scope')
+ need(e['typed_max']=={'parity':8,'fit_code':128,'monitor':128,'challenge':64,'public_development':56} and sum(e['typed_max'].values())==e['all_model_invocations_planned']==384 and e['full_generation_calls']==256 and e['code_only_calls']==128 and e['all_model_invocations_hard_cap']==420,'Exact384 planned typed invocations;420 hard ceiling')
+ need(e['all_empty_bypasses']==40*4+4*2==168 and e['fresh_parity_pairs']==4 and e['historical_R1_matches_before_any_backward']==48,'Parity, initial compatibility and empty accounting')
+ q=d['quality'];need(q['acceptance_endpoint_only']==32 and q['failed_final_cannot_select_earlier_snapshot'] and q['minimum_clear_PNG_hole_gain_fraction']==q['minimum_challenge_PNG_hole_gain_fraction']==.01 and q['nonworse_tolerance']==1e-12 and q['catastrophe_cohorts']==['clear','challenge'],'Final32 alone and all inherited hole/boundary gates')
+ inherited=read(d['evidence']['inherited_fixed_data_protocol']['path']);gray=[c for c in inherited['challenge_cases'] if c['style']=='GRAY'];g=q['GRAY_style_additional_gate'];need(g['case_ids']==[c['id'] for c in gray] and len(gray)==8 and all(sum(c['mask_kind']==k for c in gray)==2 for k in ['lower_face','eye_band','image_left_lens','cheek_object']),'Exact8 fixed GRAY cases,2 per geometry')
+ need(g['RAW_units']==[0,1] and g['PNG_units']==[0,255] and g['RAW_tolerance']==g['PNG_tolerance']==1e-12 and g['required_only_final32'] and g['no_recoloring'],'Additional prospective GRAY raw/PNG appearance safeguard')
+ r=d['resources'];need(r['initial_free_bytes']==8*1024**3 and r['stop_free_bytes']==2*1024**3 and r['terminal_bytes']==1024**3 and r['whole_output_bytes']==2560*1024**2 and r['raw_tar_bytes']==r['gzip_bytes']==2816*1024**2,'Pre-release storage caps unchanged by source implementation')
+ need(r['worker_hard_seconds']==1800 and r['cooperative_neural_seconds']==1680 and r['terminal_save_reserve_seconds']==120 and r['export_cooperative_seconds']==900,'Finite timing plus terminal reserve')
+ resource=read(d['evidence']['resource_arithmetic']['path']);need(resource['output_upper_bound_bytes']<=r['whole_output_bytes'] and resource['tar_upper_bound_bytes']<=r['raw_tar_bytes'] and resource['gzip_upper_bound_bytes']<=r['gzip_bytes'],'Independent conservative serialization bounds fit declared caps')
+ need(r['generated_NPZ_max']==388 and r['retained_teacher_NPZ']==80 and d['evidence_output']['NPZ_count_includes_copied_teachers']==468 and r['max_regular_return_members']==1000,'388 generated plus80 copied exact retained NPZs')
+ t=d['terminal'];need(t['save_attempts_max']==1 and t['actual_nonprior_model_tensors']==332 and t['mixed_historical_code_Adam_slots']==278 and t['updated_predictor_slots']==114 and t['unchanged_encoder_slots']==164 and t['unchanged_fusion_slots']==54 and not t['duplicate_active114_moment_payload'] and t['actual_failed_prior165_if_mutated'],'Full honest mixed-step recovery state,one bounded attempt')
+ need(not any(d[k] for k in ['ready_to_upload','new_model_created','model_qualified','automatic_launch','RESTORATION_IMPLEMENTATION_changed','goal_complete']),'No qualification/release/automatic training claims')
+ out=ROOT/'research/completion_codeformer_predictor_ce_design_independent_review_v1/independent_formal_design_admission.json';need(not out.exists(),'Never overwrite formal admission')
+ clarification=ROOT/'research/completion_codeformer_predictor_ce_design_v1/pre_release_clarifications_v1.json'
+ need(clarification.is_file(),'Root-owned standalone runtime clarifications required')
+ result={'format':'independent-predictor-CE-formal-design-admission-v1','complete':True,'independent':True,'UTC':datetime.now(timezone.utc).isoformat(),'formal_design':pin(path),'root_runtime_clarifications':pin(clarification),'auditor':pin(__file__),'design_admitted':True,'scope':'Design only; source, protocol, packet, actual runtime and quality admission remain separate.','amendments_to_prior_scoped_admission':['Expanded paired48 at0/8/16/32 plus public32 at0/32 gives256 saved evaluation outputs and384 network invocations, replacing provisional224/352 scope.','New predeclared8-GRAY RAW/PNG macro+geometry style nonworse guard supplements all original quality gates.','Bounded terminal writer enforces1GiB before every write; exact closed-partial ZIP/CRC/internal caps checked before exclusive commit, preserving failures.','On catastrophic early8/16 stop, public output at recorded terminal replaces planned32, with no additional typed dispatches or earlier eligibility.','Return80 exact existing cache NPZs and original index without regeneration.'],'evidence_limits':['Original TRAIN FIT/MONITOR split uses distinct reference files, not independently verified true person/pretraining identities.','ORACLE same-codebook gains motivate predictor diagnosis but use unavailable clean information and do not promise achievable improvement.','Finite32 steps is a bounded diagnostic; lower CE/code agreement does not qualify app output.','Failure, interruption or hardware/IO caps may prevent recovery; retain partial and do not resume automatically.'],'checks_passed':len(checks),'check_labels':checks,'runtime_or_packet_admitted':False,'ready_to_upload':False,'model_qualified':False,'goal_complete':False,'local_actions':{'NN_calls':0,'model_objects':0,'optimizer_objects':0,'gradient_calls':0,'actual_checkpoint_reads':0,'VM_calls':0,'training':False},'seconds':time.monotonic()-started}
+ out.write_text(json.dumps(result,indent=2,allow_nan=False)+'\n',encoding='utf-8');print(json.dumps({'path':str(out),'sha256':sha(out),'checks':len(checks),'complete':True}))
+if __name__=='__main__':main()

@@ -1,0 +1,42 @@
+{
+  "format": "same-codebook-probe-v1-source-packet-checks-v1",
+  "complete": true,
+  "same_author_not_independent": true,
+  "protocol_sha256": "51782b57fca9ad9cf7161b0f4451a65e545e3eb2f8f58788fa40b64aec48d1ec",
+  "checks": [
+    "all254payload_hashes_closed_namespace",
+    "fixed48evaluation_4parity_8adaptive_monitor_references_16original_labels",
+    "all_oracle_labels_exact_declared_membership_and_unavailable_clean_information_paths",
+    "all48R1raw256_and_exactPNG_references_retained",
+    "no_checkpoint_or_all551FIT_dataset_copy",
+    "Python3_10_source_and_installer_parse",
+    "preparation_forbids_scientific_model_imports",
+    "root_unreleased_receipt_refuses_before_archive_publication",
+    "existing_stage_refuses_without_mutation"
+  ],
+  "count": 9,
+  "payload_files": 254,
+  "payload_bytes_including_protocol": 34597428,
+  "source_pins": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_same_codebook_probe_v1.py",
+      "bytes": 31141,
+      "sha256": "1047cb25506a02ca2f3eb376314702eb0bacaa61d86aeb2b8b670dbe695c12e7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_same_codebook_probe_v1.py",
+      "bytes": 11630,
+      "sha256": "a565021e59e82fd22173061f7d1f421415c95ade0fc60e794d2f480bef799e67"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\run_completion_codeformer_same_codebook_probe_v1.sh",
+      "bytes": 815,
+      "sha256": "bcf823f5af02f3094b4b54e4706dec569fc55b659b4efc0d7bf056baf964dc2c"
+    }
+  ],
+  "model_checkpoint_deserializations": 0,
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "archive_prepared": false,
+  "seconds": 1.622122799999488
+}

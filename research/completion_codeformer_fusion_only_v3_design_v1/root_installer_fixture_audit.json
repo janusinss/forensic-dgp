@@ -1,0 +1,21 @@
+{
+  "format": "root-fusion-only-v3-installer-fixtures-v1",
+  "complete": true,
+  "preparer_source_sha256": "d4a2fe6822ba3a67dd038b9378ff08a929e5ff36554d9fc749abc60741974777",
+  "INSTALL_CODE_sha256": "b33e3c29e54808097393b5bd8b2e01e713acdd819986fb072e27bebf8e706476",
+  "checks": [
+    "Python310 syntax and safety guards independent of assert optimization",
+    "exact closed member set installs",
+    "missing refuses and retains existing/staging",
+    "extra refuses and retains existing/staging",
+    "duplicate refuses and retains existing/staging",
+    "traversal refuses and retains existing/staging",
+    "symlink refuses and retains existing/staging",
+    "hash refuses and retains existing/staging",
+    "existing refuses and retains existing/staging"
+  ],
+  "toy_archives_only": true,
+  "simulated_free_space_bytes": 21474836480,
+  "actual_NN_gradient_optimizer_VM_calls": 0,
+  "scope": "Installer fixtures, not actual VM install or runtime preflight."
+}

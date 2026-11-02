@@ -1,0 +1,27 @@
+{
+  "complete": true,
+  "checks": {
+    "five_single_remote_scp_commands": true,
+    "windows_upload_download_folder_twice": true,
+    "new_stem_only": true,
+    "LF_only": true,
+    "no_unreplaced_template_tokens": true,
+    "root_tested_installer_literal_unchanged": true,
+    "heredoc_close_line_present": true,
+    "actual_tmux_session_present": true,
+    "finite_and_scope_truth": true,
+    "zero_update_and_oracle_truth": true,
+    "one_remote_source_each": true,
+    "checksum_before_install": true,
+    "source_root_and_stored_C_comparison_truth": true,
+    "installer_Py310_AST": true
+  },
+  "check_count": 14,
+  "builder": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_spatial_code_intervention_v1.py",
+    "bytes": 34033,
+    "sha256": "568e0b5ed0f0a7582af369a443561343bb1ee42b94eca5948c7246b610baa0e5"
+  },
+  "unpublished_template_only": true,
+  "neural_VM_calls": 0
+}

@@ -1,0 +1,154 @@
+{
+  "format": "independent-predictor-CE-v1-actual-return-milestone-closure",
+  "complete": true,
+  "independent": true,
+  "UTC": "2026-10-26T16:54:08.678151+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_state_review\\audit_return_milestone.py",
+    "bytes": 14724,
+    "sha256": "d40f856ff1898446d71ad486cbbf5eea140ce4c752fef61225e28feceb4f5415"
+  },
+  "root_milestone": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\return_milestone_v1.json",
+    "bytes": 9746,
+    "sha256": "181b00064b9e3c4862095d651c8298a2e3f00b75d6c8f8c2071c8806a0c0c1d9"
+  },
+  "results_report": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_PREDICTOR_CE_V1_RESULTS.md",
+    "bytes": 7533,
+    "sha256": "85f1aef910241b3d91a3f8ca29740d37dabb4585ce6acf949ab4d231452d0aa0"
+  },
+  "checks_passed": 2616,
+  "all_bound_evidence_pins_exact": true,
+  "scientific_numeric_and_status_claims_supported": true,
+  "metrics": {
+    "monitor": {
+      "PNG_gain_percent": 0.30756100669541225,
+      "worse_holes": 14,
+      "worse_boundaries": 15,
+      "matches_before": 5183,
+      "matches_after": 5182,
+      "changed_positions": 386
+    },
+    "challenge": {
+      "PNG_gain_percent": 0.4460273046000809,
+      "worse_holes": 5,
+      "worse_boundaries": 6,
+      "matches_before": 1331,
+      "matches_after": 1344,
+      "changed_positions": 251
+    }
+  },
+  "precise_counts": {
+    "regular_return_files_including_manifest": 835,
+    "manifest_listed_payloads": 834,
+    "retained_NPZ": 468,
+    "evaluation_PNGs": 256,
+    "exact_outside_RGB_bytes": 44001540
+  },
+  "doc_transition_checks": [
+    {
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_PREDICTOR_CE_V1_VM.md",
+        "bytes": 10707,
+        "sha256": "9ad4e39ca48abacf2fd0349c183436d3737ade1008fa5f9fb124a10049a0e8a0"
+      },
+      "backup": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\documents_before_actual_return_milestone\\guide_before_retirement_canonical.md",
+        "bytes": 10265,
+        "sha256": "0c35dd81e95dd96b72b127e7d58a91e40fec76ed04930113d9ca91f92b1e1749"
+      },
+      "old_bytes_offset": 442,
+      "all_previous_bytes_exact": true
+    },
+    {
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\COMPLETION_CODEFORMER_PREDICTOR_CE_V1_VM.md",
+        "bytes": 10707,
+        "sha256": "9ad4e39ca48abacf2fd0349c183436d3737ade1008fa5f9fb124a10049a0e8a0"
+      },
+      "backup": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\documents_before_actual_return_milestone\\guide_before_retirement_original_outputs.md",
+        "bytes": 10265,
+        "sha256": "0c35dd81e95dd96b72b127e7d58a91e40fec76ed04930113d9ca91f92b1e1749"
+      },
+      "old_bytes_offset": 442,
+      "all_previous_bytes_exact": true
+    },
+    {
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_PREDICTOR_CE_V1_PREPARATION.md",
+        "bytes": 6227,
+        "sha256": "0cf9c00f613e2f7709ba9ca1324669910e8d327a5d0d5300159a90e59729b6f7"
+      },
+      "backup": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\documents_before_actual_return_milestone\\preparation_before_actual_return.md",
+        "bytes": 5863,
+        "sha256": "7601b78ce2fa1a99da444a274ff1b2f9f9615463f26cf4d211598b0cb2daa375"
+      },
+      "old_bytes_offset": 364,
+      "all_previous_bytes_exact": true
+    },
+    {
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\PROJECT_HANDOFF.md",
+        "bytes": 1163645,
+        "sha256": "1f33c386bc9a009ef80f4e14a5af207f722722e7c6c80ec722fcb1bacd4f8fd0"
+      },
+      "backup": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\documents_before_actual_return_milestone\\PROJECT_HANDOFF.md",
+        "bytes": 1161624,
+        "sha256": "74a30b71b8df3b5534ac843c9e52ab401270d34c8d1015fc1fabd4bfbadd0333"
+      },
+      "old_bytes_offset": 2021,
+      "all_previous_bytes_exact": true
+    },
+    {
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\FACE_MASK_COMPLETION_SPEC_V1.md",
+        "bytes": 24816,
+        "sha256": "6b31a07f08d92fa41b10e51af7d56dd14ce3ad89f8ed23bdde4a4c3dc8a917af"
+      },
+      "backup": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\documents_before_actual_return_milestone\\FACE_MASK_COMPLETION_SPEC_V1.md",
+        "bytes": 23423,
+        "sha256": "7a8434ca38a68208e98ea6d55d153042e87e5ba6019533807a6dfb50241cf303"
+      },
+      "old_bytes_offset": 0,
+      "all_previous_bytes_exact": true
+    }
+  ],
+  "historical_guides_identical_previous10265bytes_exact_at442": true,
+  "visual_material_integrity": {
+    "sheets_rehashed": 20,
+    "unique_cases": 80,
+    "exact256cells_rechecked": 496,
+    "all256distinct_saved_output_cells_match_actualPNGs": true,
+    "mask_overlays_exact": true,
+    "public_information_tiles_explicitlynotreferences": true,
+    "root_all20visual_assessment_records_match_exact_sheetpins": true,
+    "independent_visual_usefulness_review_performed_in_this_QA": false,
+    "independent_human_FINAL_still_pending": true
+  },
+  "HTML": {
+    "attribute_links_checked": 44,
+    "unique_existing_confined_targets": 24,
+    "noJSforms_externalrequests": true,
+    "all20sheetslinked": true
+  },
+  "all22_current_R1_app_model_pins_exact": true,
+  "next_successor_packet_ready": false,
+  "next_training_launched": false,
+  "working_model": "R1 retained",
+  "model_qualified": false,
+  "full_goal_complete": false,
+  "local_actions": {
+    "model_loads": 0,
+    "Torch_imported": false,
+    "neural_calls": 0,
+    "gradients": 0,
+    "optimizer_updates": 0,
+    "VM_calls": 0,
+    "root_documents_modified": false
+  }
+}

@@ -1,0 +1,15 @@
+from pathlib import Path
+import ast
+D=Path(r'C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION\research\completion_codeformer_spatial_code_intervention_v1_development');p=D/'cctv_completion_codeformer_spatial_code_intervention_v1_vm.py';s=p.read_text()
+s=s.replace("    need(sha(member(root,p['evidence']['original_probe_protocol']))==PROBE_PROTOCOL_SHA,'Original probe source protocol differs')", "    need(sha(member(root,p['evidence']['formal_design_admission']))=='4f6ea7134e9c8628efb7deae4ca5dc137b35dc9f1d0471c796c8aa03692e63b5','Independent formal design admission')\n    need(sha(member(root,p['evidence']['pre_release_clarifications']))=='98c3521e5e7e0043479862923d03cc21c9b6b7c2e5371a0ffcd292d919ca1d78','Prospective interpretation/resource clarification')\n    need(sha(member(root,p['evidence']['original_probe_protocol']))==PROBE_PROTOCOL_SHA,'Original probe source protocol differs')")
+s=s.replace(";original_quantize=None;witness=", ";original_quantize=None;original_quantize_had_instance_attr=False;witness=")
+s=s.replace("        original_quantize=net.quantize.get_codebook_feat", "        original_quantize_had_instance_attr='get_codebook_feat' in net.quantize.__dict__\n        original_quantize=net.quantize.get_codebook_feat")
+s=s.replace("        if original_quantize is not None:net.quantize.get_codebook_feat=original_quantize", "        if original_quantize is not None:\n            if original_quantize_had_instance_attr:net.quantize.get_codebook_feat=original_quantize\n            else:delattr(net.quantize,'get_codebook_feat')")
+s=s.replace("    Transfer-only mode imports", "    Transfer-only mode imports")
+s=s.replace("Manual L4 zero-optimizer SAME-codebook representation diagnostic only.","Manual L4 zero-update fixed spatial-code intervention diagnostic only.")
+s=s.replace("    need(p['export']['allowed_output_paths']==output_paths(p),'Closed prospective output namespace')", "    need(p['export']['allowed_output_paths']==output_paths(p) and len(output_paths(p))<395,'Closed prospective output namespace/member bound')")
+ast.parse(s,feature_version=(3,10));p.write_text(s,encoding='utf-8',newline='\n')
+b=D/'optimized_budget.py';v=b.read_text();v=v.replace("metadata_cap=CONTRACT['metadata_bytes']-self.supervisor_reserve-(0 if emergency else 512*1024)","need(end<=1024**2,'Individual JSON/log metadata1MiB cap')\n   metadata_cap=CONTRACT['metadata_bytes']-self.supervisor_reserve-(0 if emergency else 512*1024)")
+v=v.replace("len(budget.entries)<995", "len(budget.entries)<395")
+ast.parse(v,feature_version=(3,10));b.write_text(v,encoding='utf-8',newline='\n')
+print({'worker_bytes':p.stat().st_size,'Python3_10_AST_pass':True})

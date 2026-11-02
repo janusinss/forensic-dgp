@@ -1,0 +1,47 @@
+{
+  "format": "spatial-code-intervention-v1-source-only-preparation-tests",
+  "complete": true,
+  "tests": 21,
+  "seconds": 3.717748200000642,
+  "sources": [
+    {
+      "path": "research\\completion_codeformer_spatial_code_intervention_v1_development\\cctv_completion_codeformer_spatial_code_intervention_v1_vm.py",
+      "bytes": 52567,
+      "sha256": "ffe76c1cf2c0329c8b719687be21db4d775081f9df47d4369137a84bd1dab411"
+    },
+    {
+      "path": "research\\completion_codeformer_spatial_code_intervention_v1_development\\contracts.py",
+      "bytes": 7437,
+      "sha256": "364e467c58381ed8d54bdec7c604b8690a57bf34d42873edfc2c554d7758cf97"
+    },
+    {
+      "path": "research\\completion_codeformer_spatial_code_intervention_v1_development\\probe_forward.py",
+      "bytes": 3446,
+      "sha256": "27c5c7a0d21464efedcca7fd8449fd45c2a0610f2ccb24ec00a8bfc8c8b29100"
+    },
+    {
+      "path": "research\\completion_codeformer_spatial_code_intervention_v1_development\\optimized_budget.py",
+      "bytes": 9970,
+      "sha256": "35ee233b175bd948e38045bfd1c1d67aab062a011d21203ba1e180d7b414511b"
+    },
+    {
+      "path": "research\\completion_codeformer_spatial_code_intervention_v1_development\\app_delivery.py",
+      "bytes": 1077,
+      "sha256": "cebdf6b36bc06edd51a1d42bb7cd97b91b58c5628280d050e40eba1280f3393e"
+    },
+    {
+      "path": "research\\completion_codeformer_spatial_code_intervention_v1_development\\source_tests.py",
+      "bytes": 18506,
+      "sha256": "2e51900870191b90708d6ca289cb73785af2be55b0811b36ef6dee46bf83b2df"
+    }
+  ],
+  "local_actions": {
+    "real_model_constructions": 0,
+    "neural_network_calls": 0,
+    "optimizer_objects_or_steps": 0,
+    "gradient_queries_or_backwards": 0,
+    "real_checkpoint_reads": 0,
+    "VM_calls": 0,
+    "plain_CPU_tensor_and_toy_serialization_only": true
+  }
+}

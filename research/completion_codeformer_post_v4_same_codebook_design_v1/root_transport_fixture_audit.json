@@ -1,0 +1,103 @@
+{
+  "format": "root-same-codebook-probe-v1-actual-installer-exporter-fixtures-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T13:58:15.381719+00:00",
+  "installer_source_sha256": "1047cb25506a02ca2f3eb376314702eb0bacaa61d86aeb2b8b670dbe695c12e7",
+  "INSTALL_CODE_sha256": "be26db60f5e9498ccc4e7146d6d1a71f40f33596f6db84ab8127bbb83d1e6e96",
+  "exporter_source_sha256": "a565021e59e82fd22173061f7d1f421415c95ade0fc60e794d2f480bef799e67",
+  "checks_passed": 35,
+  "checks": [
+    "actual stable installer literal bound",
+    "installer safety independent of python-O",
+    "installer exact namespace publishes",
+    "installer missing refuses without publication",
+    "installer extra refuses without publication",
+    "installer duplicate refuses without publication",
+    "installer traversal refuses without publication",
+    "installer symlink refuses without publication",
+    "installer hash refuses without publication",
+    "installer existing target preserved",
+    "actual stable exporter byte bound",
+    "failure diagnostic is not checkpoint success",
+    "export regular unique namespace",
+    "export exact payload protocol.json",
+    "export exact payload supervisor.json",
+    "export exact payload trainer.log",
+    "export exact payload outputs/array.npy.partial",
+    "export exact payload outputs/failure.json",
+    "exact archive receipt",
+    "LF checksum exact",
+    "partial diagnostic retained",
+    "existing export refused",
+    "export exit0_no_results refused",
+    "export exit2_no_results refused",
+    "export drift refused",
+    "export empty refused",
+    "export PTH refused",
+    "export PTH_partial refused",
+    "export PT_partial refused",
+    "export NPZ_count197 refused",
+    "export member_count1000 refused",
+    "completed zero-update diagnostic exports WITHOUT checkpoint",
+    "2GiB disk floor enforced",
+    "900s export cooperative cap enforced",
+    "byte cap rejects before oversized write"
+  ],
+  "installer_cases": [
+    {
+      "case": "exact",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": []
+    },
+    {
+      "case": "missing",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": [
+        "cctv_completion_codeformer_same_codebook_probe_v1_vm.installing-f53be85c12724f068146316518878f03"
+      ]
+    },
+    {
+      "case": "extra",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": [
+        "cctv_completion_codeformer_same_codebook_probe_v1_vm.installing-ea5f6625d64a44d793f30eb6a3c913a2"
+      ]
+    },
+    {
+      "case": "duplicate",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": [
+        "cctv_completion_codeformer_same_codebook_probe_v1_vm.installing-ba21b0ac70444f9f84b74ebfcd7f28ca"
+      ]
+    },
+    {
+      "case": "traversal",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": []
+    },
+    {
+      "case": "symlink",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": [
+        "cctv_completion_codeformer_same_codebook_probe_v1_vm.installing-af37c77ef6c34281a6dd1e89a95d8536"
+      ]
+    },
+    {
+      "case": "hash",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": [
+        "cctv_completion_codeformer_same_codebook_probe_v1_vm.installing-405dc538103b481c84508290d0c0f081"
+      ]
+    },
+    {
+      "case": "existing",
+      "original_fixture_assertions_passed_before_publication_error": true,
+      "staging_retained": []
+    }
+  ],
+  "toy_fixture_root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\same_codebook_root_transport_fixtures_2fb890d560cc486e997b3b21ff7ca5c3",
+  "fixture_bytes_not_actual_models": true,
+  "receipt_publication_correction": "All runtime assertions passed, then original receipt writer hit missing datetime import. A first publication correction miscounted35 checks as34 and stopped before writing. This correction rechecks existing toy receipts/artifacts and writes the accurate35-check audit, without repeating passing runtime fixtures.",
+  "actual_model_neural_gradient_optimizer_training_VM_calls": 0,
+  "scope": "Root exact installer/exporter fixtures; source/graph/full archive admission remain separate."
+}

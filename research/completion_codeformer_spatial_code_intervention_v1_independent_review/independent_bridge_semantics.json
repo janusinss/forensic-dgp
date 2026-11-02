@@ -1,0 +1,388 @@
+{
+  "format": "independent-spatial-code-intervention-v1-pure-bridge-semantics",
+  "complete": true,
+  "independent": true,
+  "UTC": "2026-10-26T17:06:16.786668+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\audit_bridge_semantics.py",
+    "bytes": 9414,
+    "sha256": "5ccbd2382c75113802dc2eb0472afc5dd0adfcf393bd35100211c382c5e2ac93"
+  },
+  "owned_helper": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_development\\probe_forward.py",
+    "bytes": 3446,
+    "sha256": "27c5c7a0d21464efedcca7fd8449fd45c2a0610f2ccb24ec00a8bfc8c8b29100"
+  },
+  "pinned_original_architecture": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_packet\\draft_001\\cctv_completion_codeformer_same_codebook_probe_v1_vm\\third_party\\codeformer\\codeformer_arch.py",
+    "bytes": 11377,
+    "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb"
+  },
+  "checks_passed": 350,
+  "ordinary_forward_normalized_AST_exact_after_only3authorizedwitness_selector_additions": true,
+  "all48actual_reviewed_masks_and96_HVintegerselections_exact": true,
+  "percase": [
+    {
+      "id": "tr_ffhq_05179__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05179__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05179__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05179__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05302__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05302__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05302__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_05302__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06781__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06781__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06781__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06781__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06809__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06809__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06809__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06809__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06995__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06995__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06995__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_06995__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07087__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07087__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07087__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07087__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07202__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07202__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07202__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07202__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07386__lower_face",
+      "cohort": "monitor",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07386__eye_band",
+      "cohort": "monitor",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07386__image_left_lens",
+      "cohort": "monitor",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "tr_ffhq_07386__cheek_object",
+      "cohort": "monitor",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_05179_g0_gd",
+      "cohort": "challenge",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_05179_g2_rid",
+      "cohort": "challenge",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_05302_g1_gd",
+      "cohort": "challenge",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_05302_g3_rid",
+      "cohort": "challenge",
+      "touched": 21,
+      "visible": 235,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_06781_g2_gd",
+      "cohort": "challenge",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_06781_g0_rid",
+      "cohort": "challenge",
+      "touched": 93,
+      "visible": 163,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_06809_g3_gd",
+      "cohort": "challenge",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_06809_g1_rid",
+      "cohort": "challenge",
+      "touched": 51,
+      "visible": 205,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_06995_g0_gd",
+      "cohort": "challenge",
+      "touched": 81,
+      "visible": 175,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_06995_g2_rid",
+      "cohort": "challenge",
+      "touched": 16,
+      "visible": 240,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_07087_g1_gd",
+      "cohort": "challenge",
+      "touched": 50,
+      "visible": 206,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_07087_g3_rid",
+      "cohort": "challenge",
+      "touched": 21,
+      "visible": 235,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_07202_g2_gd",
+      "cohort": "challenge",
+      "touched": 15,
+      "visible": 241,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_07202_g0_rid",
+      "cohort": "challenge",
+      "touched": 62,
+      "visible": 194,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_07386_g3_gd",
+      "cohort": "challenge",
+      "touched": 18,
+      "visible": 238,
+      "H_V_sources_exact": true
+    },
+    {
+      "id": "v2m_07386_g1_rid",
+      "cohort": "challenge",
+      "touched": 51,
+      "visible": 205,
+      "H_V_sources_exact": true
+    }
+  ],
+  "edge_gridfixtures": 4,
+  "invalid_selector_rejections": [
+    "oracledtype",
+    "oracleshape",
+    "oracledevice",
+    "negativeoracle",
+    "oracle512",
+    "griddtype",
+    "gridshape",
+    "gridwithoutoracle"
+  ],
+  "fullC_noneordinary_copy_alias_contracts_pass": true,
+  "invalid_geometric_masks_rejected": 3,
+  "CPU_tensor_runtime": "2.13.0+cpu",
+  "scope": "Pure integerwhere/grid and AST fixtures only. Does not run or reproduce a neural model; freshactual parity/Cbridge stillrequired onVM. Geometric cells are notreceptivefields oridentityaccuracy.",
+  "local_actions": {
+    "neural_modules_or_models": 0,
+    "neural_forward_calls": 0,
+    "autograd_calls": 0,
+    "optimizer_objects_or_steps": 0,
+    "checkpoint_loads": 0,
+    "VM_calls": 0,
+    "actual_returned_code_executed": false
+  },
+  "packet_or_transfer_ready": false,
+  "model_qualified": false
+}

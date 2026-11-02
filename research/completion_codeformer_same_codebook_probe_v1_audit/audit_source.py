@@ -1,0 +1,70 @@
+"""Independent SAME-codebook zero-optimizer source/packet admission, no NN/VM."""
+from pathlib import Path,PurePosixPath
+from datetime import datetime,timezone
+import argparse,ast,hashlib,importlib.abc,importlib.util,json,sys,time
+ROOT=Path(__file__).resolve().parents[2];DEV=ROOT/'research/completion_codeformer_same_codebook_probe_v1_development';AUDIT=ROOT/'research/completion_codeformer_same_codebook_probe_v1_audit'
+def need(ok,msg):
+ if not ok:raise ValueError(msg)
+def sha(p):
+ h=hashlib.sha256()
+ with p.open('rb') as f:
+  for b in iter(lambda:f.read(8*1024*1024),b''):h.update(b)
+ return h.hexdigest()
+def read(p):return json.loads(p.read_text(encoding='utf-8-sig'))
+def pin(p):return {'path':str(p.resolve()),'bytes':p.stat().st_size,'sha256':sha(p)}
+def named(node,name):return next(n for n in node.body if isinstance(n,ast.FunctionDef) and n.name==name)
+def callname(n):return n.id if isinstance(n,ast.Name) else callname(n.value)+'.'+n.attr if isinstance(n,ast.Attribute) else ''
+class BlockScientific(importlib.abc.MetaPathFinder):
+ def find_spec(self,fullname,path=None,target=None):
+  if fullname.split('.')[0] in ('torch','numpy','PIL'):raise ValueError('Scientific import forbidden '+fullname)
+def main():
+ parser=argparse.ArgumentParser();parser.add_argument('--stage',type=Path,required=True);parser.add_argument('--expected-sha',required=True);parser.add_argument('--output',type=Path,required=True);a=parser.parse_args();start=time.monotonic();stage=a.stage.resolve(strict=True);checks=[]
+ def check(ok,msg):need(ok,msg);checks.append(msg)
+ check(sha(stage/'protocol.json')==a.expected_sha,'Exact staged protocol');p=read(stage/'protocol.json');files={r['path']:r for r in p['files']};check(len(files)==len(p['files'])==254,'Unique254payloadmanifest');check({q.relative_to(stage).as_posix() for q in stage.rglob('*') if q.is_file()}==set(files)|{'protocol.json'},'Closed exact source namespace')
+ total=(stage/'protocol.json').stat().st_size
+ for name,row in files.items():
+  rel=PurePosixPath(name);q=stage/name;check(not rel.is_absolute() and '..' not in rel.parts and ':' not in name and '\\' not in name and str(rel)==name,'Safe packet path '+name);check(q.is_file() and not q.is_symlink() and q.stat().st_size==row['bytes'] and sha(q)==row['sha256'],'Exact source/asset '+name);total+=row['bytes']
+ check(total==34597428 and total<128*1024**2,'Compact source execution bytes/cap')
+ source_names=['scripts/cctv_completion_codeformer_same_codebook_probe_v1_vm.py']+['research/completion_codeformer_same_codebook_probe_v1/'+n+'.py' for n in ('contracts','optimized_budget','probe_forward','app_delivery')]+['scripts/'+n for n in ('prepare_completion_codeformer_same_codebook_probe_v1.py','export_completion_codeformer_same_codebook_probe_v1.py','run_completion_codeformer_same_codebook_probe_v1.sh')]
+ for name in source_names:
+  q=stage/name;canonical=DEV/q.name if q.name in ('cctv_completion_codeformer_same_codebook_probe_v1_vm.py','contracts.py','optimized_budget.py','probe_forward.py','app_delivery.py') else ROOT/name;check(q.read_bytes()==canonical.read_bytes(),'Canonical/staged final source '+name)
+  if q.suffix=='.py':t=ast.parse(q.read_text(),feature_version=(3,10));check(not any(isinstance(n,ast.Attribute) and n.attr=='file_digest' for n in ast.walk(t)),'Python310syntax/chunkedhash '+name)
+ design=ROOT/'research/completion_codeformer_post_v4_same_codebook_design_v1/root_design.json';check(sha(design)=='2ca6fafbaf2a3008459dace2d83bfc0cecb6594ae6e33adc7ac4aaef5bd0effb','Current resource-adjusted scientific design');d=read(design)
+ for name,h in [('independent_design_admission.json','148b5cce56a1ba71b71f5c4e5ad4cfb6e1b78f2df0ef40f6f6e587a89e01821f'),('independent_resource_revision_admission.json','4c9b2a1da70e508e0482f06235f079ab513dc3910c99073c7c678a67886cef86'),('independent_bridge_semantics.json','58f0f314b0a57edb7a4f1ca70afe6f42d9c45a2977f1206ea101f2ee1f3bc6b2'),('independent_failure_counter_fixtures.json','47df25db4dad66de57954c2c4929b6f4258f143f9d60a831ed61914683668b9d')]:check(sha(AUDIT/name)==h,'Independent design/resource/semantic fixture '+name)
+ bridge=read(AUDIT/'independent_bridge_semantics.json');check(sha(stage/'research/completion_codeformer_same_codebook_probe_v1/probe_forward.py')==bridge['owned_bridge']['sha256'],'Exact18check bridge source binding');failure=read(AUDIT/'independent_failure_counter_fixtures.json');check(sha(stage/source_names[0])==failure['worker']['sha256'],'Exact extracted failure/cap fixture binding')
+ s=(stage/source_names[0]).read_text();tree=ast.parse(s);w=named(tree,'worker');calls=[n for n in ast.walk(w) if isinstance(n,ast.Call)]
+ check(not any(callname(n.func).endswith(('.step','.backward','.grad','.Adam','.SGD')) for n in calls),'No optimizer/gradient operation call');check('torch.optim' not in s and 'torch.save' not in s and 'requires_grad_(True)' not in s,'No optimizer/checkpoint/grad-enabled model');check('net=net.to(\'cuda\',dtype=torch.float32).eval().requires_grad_(False)' in s,'Exact frozen FP32 eval model');check('torch.no_grad()' in s and "'all_parameters_frozen'" in s and "'all_parameter_gradients_none'" in s and "'all_modules_eval'" in s,'Frozen/gradient/eval state records')
+ check('len(hashes)==497' in s and 'after==before' in s and 'len(prior_names)==165' in s,'All497 state and original165prior invariants');check("'all_tensors_finite'" in s and "'finite':finite" in s and "record(out/'state_on_failure.json'" in s,'Failed actual497 hashes retained even nonfinite');check("'equals_R1_before':actual==before" in s and "'partial_outputs_retained':True" in s,'Failure/interrupt evidence preserved')
+ check("counts['forward_slots']+1<=CONTRACT['forward_slots_max']" in s and 'actual_whole_model_forward_calls' in s and 'typed[kind]+=1' in s,'Prospective hardcap and actual/typed counters');check("net.register_forward_pre_hook(count_original_call)" in s and "counts['actual_whole_model_forward_calls']+=1" in s,'Separate ordinary/owned actual fullcall accounting')
+ check("all(r['max_raw256_error']<=1e-6" in s and "'all4_saved_before_gate':True" in s and "'input_stride_exact'" in s,'All4 ordinary app calls saved before original parity gate');check("for arm in ARMS:" in s and "if arm['id']=='A':" in s and "All48actual R1 historical compatibility failed; no subsequent controls/oracle" in s,'A historical gate before other arms/oracle')
+ check("indices=oracle[case['teacher_key']] if arm['oracle'] else None" in s and "x=app_input(rgb,m)" in s and "target=image(case['clean256'])" in s,'Observed app input reused; clean target metrics only');check("np.array_equal(predicted_np,baseline_predictions[case['id']])" in s and "torch.equal(used,indices)" in s and "torch.equal(used,predicted)" in s,'Prediction unchanged across arms; exact selected indices');check("'unused_prequant_latents_not_passed_to_model':True" in s and "codes.copy()" in s,'Existing cached indices only; no latent/teacherNN intervention')
+ check("'__ORACLE_unavailable_clean_information' if arm['oracle']" in s and "oracle_unavailable_clean_information=np.asarray(arm['oracle'],dtype=np.uint8)" in s,'Oracle filenames and numeric metadata explicit');check("torch.equal(result*(1-m),rgb*(1-m))" in s and "np.array_equal(array[~support],source[~support])" in s,'Exact outside raw/PNG preservation')
+ check("len(arrays)<=10 and saved_npz_count<196" in s and 'header.tell()<=512' in s and 'np.savez_compressed' in s and 'len(path.relative_to(root).as_posix().encode(\'utf-8\'))<=240' in s,'Bound196NPZ/10arrays/512header/240path');check("value.shape==(1,256)" in s and "value.dtype==np.int64" in s and "value.shape==()" in s,'Exact code int64/scalar flags schema');budget=(stage/source_names[2]).read_text();check('len(budget.entries)<995' in budget and "not rel.endswith(('.pth','.partial'))" in budget and "self.supervisor_reserve=1024**2" in budget,'Bound995outputmembers/no checkpoint/failure reserve');check('1536' in (stage/'scripts/export_completion_codeformer_same_codebook_probe_v1.py').read_text(),'Exportperartifact1536MiB')
+ # Pure actual worker import under blocked scientific modules.
+ blocker=BlockScientific();sys.meta_path.insert(0,blocker)
+ try:
+  spec=importlib.util.spec_from_file_location('independent_same_codebook_source',stage/source_names[0]);module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+ finally:sys.meta_path.remove(blocker)
+ check(module.CONTRACT==p['contract'],'Pure imported frozen contract equals packet');check(module.ARMS==p['arms'] and [(x['id'],x['w'],x['oracle']) for x in module.ARMS]==[('A',1,False),('B',0,False),('C',1,True),('D',0,True)],'Exact ordered four arm intervention');c=module.CONTRACT;check(c['forward_slots_planned']==200 and c['forward_slots_max']==220 and c['optimizer_steps_max']==c['optimizer_objects']==c['gradient_calls']==c['backward_calls_max']==c['teacher_component_calls_planned']==0,'Exact200/220zerooptgradteacher');check(c['worker_seconds']==900 and c['cooperative_stop_seconds']==840 and c['output_bytes']==1536*1024**2 and c['terminal_bytes']==c['teacher_bytes']==0 and c['minimum_free_bytes']==7*1024**3 and c['stop_free_bytes']==2*1024**3,'Exact finite storage/time/floor limits')
+ v4stage=ROOT/'outputs/completion_codeformer_delivered_objective_v4_packet/draft_001/cctv_completion_codeformer_delivered_objective_v4_vm';v4=read(v4stage/'protocol.json');v4files={r['path']:r for r in v4['files']}
+ check(p['monitor_cases']==v4['monitor_cases'] and p['challenge_cases']==v4['challenge_cases'],'Exact original48case source metadata');check([r['id'] for r in p['monitor_cases']+p['challenge_cases']]==d['data']['case_ids_in_fixed_protocol_order'],'Exact declared48case order');check(len(p['parity_cases'])==4 and len(p['references'])==8,'Only4parity/8monitor metadata')
+ for case in p['monitor_cases']+p['challenge_cases']+p['parity_cases']:
+  for key in ('input256','clean256','clean512','mask'):check(files[case[key]]['sha256']==v4files[case[key]]['sha256'],'Exact frozen case bytes '+case['id']+'/'+key)
+ labels={r['teacher_key']:r for r in d['data']['reuse_only_original16_exact_clean_context_teacher_labels']};check(len(p['oracle_labels'])==16,'Exactly16 cached label sets')
+ for row in p['oracle_labels']:
+  original=labels[row['teacher_key']];check(row['sha256']==original['original_label']['sha256']==files[row['path']]['sha256'] and row['clean512_sha256']==original['clean512_sha256'] and row['teacher_original_logical_sha256']==d['data']['original_teacher_logical_sha256'],'Exact same-codebook original label '+row['teacher_key']);check('ORACLE_unavailable_clean_information' in row['path'] and row['oracle_unavailable_clean_information'] is True,'Label explicit oracle metadata '+row['teacher_key'])
+ for kind in ('monitor','challenge'):
+  check(p['historical_control']['initial_rows'][kind]==v4['historical_control']['initial_rows'][kind],'Exact48 historical baseline raw/PNG rows '+kind)
+  for row in p['historical_control']['initial_rows'][kind]:
+   for field in ('result256','PNG'):check(files[row[field]]['sha256']==v4files[row[field]]['sha256'],'Exact historical raw/PNG bytes '+row['id']+'/'+field)
+ check(p['terms']==v4['terms'] and p['data_limits']==v4['data_limits'],'Terms/source/identity limits retained');check(not any(n.endswith(('.pth','.pt')) for n in files) and not any('hq512_teacher_assets' in n for n in files),'No uploaded weights or incompatible HQ512 teacher');check(p['source_subset']['public_unpaired_or_FINAL_cases']==0 and p['diagnostic_only'] is True and p['new_model_created'] is False,'No publicFINAL/newtrainedmodel scope')
+ metrics=('raw_hole_L1','raw_boundary_L1','PNG_hole_L1','PNG_boundary_L1');rows=[dict(mask_kind=k,condition='a',**{m:.1 for m in metrics}) for k in ('lower_face','eye_band','image_left_lens','cheek_object')];baseline={'metrics':module.aggregate(rows,True)};good=[dict(r,PNG_hole_L1=.0989) for r in rows];check(module.compare({'metrics':module.aggregate(good,True)},baseline,conditions=True)['prospective_numeric_screen_pass'],'Unchanged1percent diagnostic comparator positive control');good[0]['raw_boundary_L1']=.11;check(not module.compare({'metrics':module.aggregate(good,True)},baseline,conditions=True)['prospective_numeric_screen_pass'],'Any boundary regression rejects diagnostic meanwin')
+ app=read(ROOT/'outputs/completion_codeformer_finetune_r1_app/source_admission.json');R1=app['source_files']+[app['candidate_manifest'],app['checkpoint']]
+ for row in R1:
+  q=Path(row['path']);check(q.stat().st_size==row['bytes'] and sha(q)==row['sha256'],'Current R1 app/model exact '+q.name)
+ check(sha(stage/'protocol.json')==a.expected_sha,'Finalprotocol unchanged')
+ for name in source_names:
+  q=stage/name;canonical=DEV/q.name if q.name in ('cctv_completion_codeformer_same_codebook_probe_v1_vm.py','contracts.py','optimized_budget.py','probe_forward.py','app_delivery.py') else ROOT/name;check(q.read_bytes()==canonical.read_bytes(),'Final source stability '+name)
+ report={'format':'independent-same-codebook-probe-final-source-admission-v1','complete':True,'independent':True,'audited_UTC':datetime.now(timezone.utc).isoformat(),'auditor':pin(Path(__file__)),'protocol_sha256':a.expected_sha,'stage_root':str(stage),'checks_passed':len(checks),'checks':checks,'payload_files':254,'payload_bytes_including_protocol':total,'source_files':[pin(stage/n) for n in source_names],'bridge_semantics_admission_sha256':sha(AUDIT/'independent_bridge_semantics.json'),'failure_cap_fixture_sha256':sha(AUDIT/'independent_failure_counter_fixtures.json'),'capacity_format_conditions_bound':True,'actual_VM_preflight':False,'neural_gradient_optimizer_VM_calls':0,'Torch_imported':False,'current_R1_unchanged':True,'diagnostic_only':True,'new_model_created':False,'model_qualified':False,'seconds':time.monotonic()-start}
+ need(not a.output.exists(),'Preserve prior admission');a.output.write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8');print(json.dumps({'complete':True,'admission':pin(a.output),'checks':len(checks),'seconds':report['seconds']},indent=2))
+if __name__=='__main__':main()

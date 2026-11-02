@@ -1,0 +1,16 @@
+        after=state();record(out/'state_after.json',after)
+        need(after['state_tensors']==497 and after['all_tensors_finite'] and after==before,'Frozen497 model state, flags or gradients changed')
+        comparisons={arm['id']:{control:{kind:compare(all_summaries[(arm['id'],kind)],all_summaries[(control,kind)],conditions=kind=='challenge') for kind in ('monitor','challenge')} for control in ('A','C')} for arm in ARMS}
+        gray={}
+        for arm in ('A','C','H','V'):
+            rows=[r for r in all_summaries[(arm,'challenge')]['records'] if r['style']=='GRAY'];need(len(rows)==8,'All8fixedGRAYchallenge diagnostics')
+            def style_mean(items):return {key:sum(r[key] for r in items)/len(items) for key in ('GRAY_raw_mean_channel_spread','GRAY_PNG_mean_channel_spread')}
+            gray[arm]={'cases':rows,'macro':style_mean(rows),'geometry':{kind:style_mean([r for r in rows if r['mask_kind']==kind]) for kind in ('lower_face','eye_band','image_left_lens','cheek_object')},'not_a_deployable_model':True}
+        need(saved_npz_count==104,'Exactly96 H/V outputs plus4parity4bridge arrays')
+        need(counts=={'forward_slots':108,'actual_whole_model_forward_calls':108,'backward_calls':0,'gradient_queries':0,'optimizer_objects':0,'optimizer_steps':0,'teacher_neural_calls':0} and typed==TYPED_CAPS,'Exact finite actual diagnostic counts')
+        need(witness=={'quantizer':108,'generator_starts':108,'generator_completions':108},'Actual quantizer and generator numerical path must witness all108 calls')
+        need(sha(checkpoint)==ORIGINAL_SHA and sha(parent_path)==PARENT_SHA,'Original or R1 parent checkpoint changed')
+        for relative in external_files:source_file(relative)
+        budget.assert_ledger_consistent()
+        final={'format':'completion-codeformer-spatial-code-intervention-v1-results','complete':True,'protocol_sha256':expected,'counts':counts,'typed_forward_slots':typed,'actual_path_witness':witness,'outputs_saved':96,'new_NPZ_saved':104,'reused_A_C_outputs':96,'reused_control_files':196,'all497_state_before_after_identical':True,'R1_logical_sha256':PARENT_LOGICAL,'ordinary_app_parity':parity,'fresh_C_control_bridge':bridges,'all_external_sources_hash_unchanged':True,'diagnostic_comparisons_vs_reused_A_C':comparisons,'GRAY_style_diagnostics':gray,'oracle_not_deployable_or_identity_recovery':True,'geometric_proxy_not_receptive_field':True,'same_codebook_target_not_mathematical_upper_bound':True,'quality_stop_or_candidate_selection':False,'diagnostic_only':True,'new_model_created':False,'checkpoint_saved':False,'optimizer_steps':0,'backward_calls':0,'visual_review_pending':True,'model_qualified':False,'automatic_app_promotion':False,'seconds':time.monotonic()-started,'output_budget_bytes':budget.total(),'output_categories':{key:budget.total(key) for key in ('terminal','teacher','metadata','array','PNG')}}
+        record(out/'results.json',final,emergency=True);return 0

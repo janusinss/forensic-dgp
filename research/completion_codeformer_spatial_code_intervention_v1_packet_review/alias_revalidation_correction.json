@@ -1,0 +1,9 @@
+{
+  "complete": true,
+  "event": "Independent tiny-file fixture confirmed alias metadata drift can occur after initial inventory because retained .partial alias is omitted from streamed files.",
+  "previous_exporter_sha256": "e4f3bf117032b24a20752c1d955523972c570e4dff7170a8c22c79c1dcd4ba09",
+  "independent_finding": "research/completion_spatial_code_intervention_v1_transport_review/independent_alias_drift_fixture_r1.json",
+  "correction": "Revalidate exact alias/canonical device,inode,uid,nlink,size,hash with stat-before/after hashing at initial inventory and post-tar immediately before exclusive publication. Reject and retain archive partial on mismatch.",
+  "scientific_data_limits_unchanged": true,
+  "real_VM_model_calls": 0
+}

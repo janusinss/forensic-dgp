@@ -1,0 +1,10 @@
+{
+  "format": "root-fusion-v3-final-tested-function-rebinding-v1",
+  "complete": true,
+  "stable_worker_sha256": "3ddc903b3f2f5af6d76150bb26deb677bf68e693f4fe592633f052fc13614365",
+  "save_state_AST_sha256_unchanged": "83b351f4faebb5703ca94344fe378cc3c1cc9076c0893f6658ee93ccf3c22963",
+  "negative_save_fixture_receipt_sha256": "b6f9c316ab15e0c2e6397d51ef49d111ee355eef738c94a6c3a6a7fd61addeaa",
+  "current_preparer_sha256": "a1ef5948cba7864e450fc4a282a8031c0cf77e61812de97b2d943c2e8835b2a7",
+  "INSTALL_CODE_exactly_same_as_9tested_fixtures": true,
+  "fixture_only_claim": "No need to repeat identical semantic tests after unrelated source changes. No VM preflight or neural work."
+}

@@ -1,0 +1,114 @@
+{
+  "format": "completion-spatial-code-intervention-v1-prospective-interface-clarifications-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T17:04:03.483072+00:00",
+  "root_design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\root_design.json",
+    "bytes": 243979,
+    "sha256": "1983f9fed9bede2078ffc6a1af0dd6ca08fe6ec532e5c3de9c4ce41d4db2c657"
+  },
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\clarify_completion_spatial_code_intervention_v1_before_release.py",
+    "bytes": 5727,
+    "sha256": "da279a4ac51da8dd8bdeecc5367d25be12dbd55da37df01002e424dd95980101"
+  },
+  "reason": "Resolve implementation interfaces before any source/packet release. Preserve all frozen scientific choices, limits and fixed48/bridgecase membership.",
+  "fresh_C_bridge_NPZ": {
+    "same_core_schema_as_HV": true,
+    "input512_saved": false,
+    "arrays": [
+      "input256",
+      "mask256",
+      "result256",
+      "raw512",
+      "predicted_codes",
+      "used_codes",
+      "grid_mask",
+      "arm_code",
+      "oracle_unavailable_clean_information"
+    ],
+    "maximum_fields": 10,
+    "single_file_cap_bytes": 6291456,
+    "explanation": "HistoricalC has no input512 array. Fourordinaryapp parity bundles already retain both512conditioning inputs. The bridge compares matching input256/mask/raw512/result256/predicted/used and in-memoryPNG, without redundantadditional512array."
+  },
+  "grid_selector": "Boolean[1,256,1] fixed from exact256support; clean/predictedlong[1,256,1]. H=where(touched,clean,predicted); V=where(touched,predicted,clean). No learned mask, threshold search, dilation or output-support change.",
+  "actual_forward_witness": {
+    "reason": "The owned forward function bypasses net.__call__; quantizer.get_codebook_feat is a direct bound method. A top-levelModule hook alone would not witness these decodes.",
+    "method": "Instance-only pass-through wrapper increments quantizer lookup count and calls the exact original bound method with unchangedargs/results; firstgeneratorblock pre-hook and lastgeneratorblock post-hook count starts/completions. All hooks/wrappers restorefinally.",
+    "exact_completion_counts": {
+      "typed_dispatch": 108,
+      "quantizer_lookup": 108,
+      "generator_start": 108,
+      "generator_complete": 108
+    },
+    "ordinary_app_calls_included": true,
+    "no_global_class_or_model_source_patch": true,
+    "scientific_numerics_changed": false
+  },
+  "parity_and_control_truth": {
+    "four_ordinary_pairs": 8,
+    "four_fresh_C_bridge_calls": 4,
+    "H_cases": 48,
+    "V_cases": 48,
+    "total_new_full_generation_calls": 108,
+    "historical196_A_C_control_files_reused": true,
+    "new_48_A_or_48_full_C_call_claim_forbidden": true
+  },
+  "labels_and_return_truth": {
+    "label_input_NPZ_sets": 16,
+    "copied_label_NPZs_in_new_return": 0,
+    "historical_A_C_NPZs_copied_to_return": 0,
+    "new_HV_NPZ": 96,
+    "new_parity_NPZ": 4,
+    "new_fresh_C_bridge_NPZ": 4,
+    "all_new_return_NPZ": 104,
+    "new_PNG_only_HV": 96,
+    "historical_inputs_retained_exact_at_source": true
+  },
+  "failure_state_safety": {
+    "normal_unchanged_checkpoint_saved": false,
+    "unexpected_mutation_nonfinite_capture_actual497": true,
+    "state_capture_attempts_max": 1,
+    "actual_RNG_progress_counters_retained": true,
+    "optimizer_objects_or_state": 0,
+    "failure384MiB_single_payload_cap": true,
+    "partial_retained": true,
+    "zip_member_cap": 1615,
+    "pickle_bytes_cap": 1048576,
+    "pre_write_byte_guard": true,
+    "closed_partial_internal_ZIP_CRC_before_commit": true,
+    "safe_hash_finite_receipts_do_not_substitute_original_state": true,
+    "same_inode_alias_export_once_only_if_exact_dev_inode_uid_size_hash_nlink_ge2": true,
+    "scientific_failed_guard_does_not_prevent_resource_bounded_capture": true,
+    "IO_hardkill_can_prevent_recovery": true,
+    "automatic_retry_resume": false
+  },
+  "passive_original_ZIP_resource_evidence": {
+    "file": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\checkpoints\\codeformer_inpainting.pth",
+      "bytes": 370786611,
+      "sha256": "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797"
+    },
+    "members": 499,
+    "tensor_storage_members": 497,
+    "tensor_storage_bytes": 370611468,
+    "full_failure_worst_bound_with_metadata_headers": 373324044,
+    "cap": 402653184,
+    "no_checkpoint_load": true
+  },
+  "resource_bounds_unchanged": {
+    "parity_data_bytes_each": 15208448,
+    "HV_or_bridge_data_bytes_each": 4985090,
+    "all104_numeric_data_plus64KiB_each": 566158536,
+    "arrays_560MiB_reserve_pass": true,
+    "whole_category_reservation_bytes": 1023410176,
+    "output_1GiBcap_pass": true
+  },
+  "all_scientific_decisions_unchanged": true,
+  "source_and_transfer_independent_review_still_required": true,
+  "actual_neural_calls": 0,
+  "actual_optimizer_updates": 0,
+  "VM_calls": 0,
+  "runtime_ready": false,
+  "model_qualified": false
+}

@@ -1,0 +1,52 @@
+{
+  "format": "independent-spatial-code-intervention-v1-final-source-packet-admission-interface-v1",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T17:33:51.780043+00:00",
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\join_final_source_admission_interface.py",
+    "bytes": 4153,
+    "sha256": "fff855681276e8b02446074591a1cc529516eca4d42af5cdc4ccc5925fe426f9"
+  },
+  "protocol_sha256": "cc52d1c5554f7aa0ea3cd61dec9b8348dde37b47cd7ca82640805c4ba658e052",
+  "protocol": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_003\\cctv_completion_codeformer_spatial_code_intervention_v1_vm\\protocol.json",
+    "bytes": 298075,
+    "sha256": "cc52d1c5554f7aa0ea3cd61dec9b8348dde37b47cd7ca82640805c4ba658e052"
+  },
+  "actual_CLI_source_packet_admission": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\independent_packet_actual_transfer_CLI_admission_draft003.json",
+    "bytes": 275697,
+    "sha256": "0c69ba7b8b387366cd9eaaf65a055c96fc8d03ea1130371bbbd4f5ea65b839fa"
+  },
+  "independent_runtime_source_semantics": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\independent_runtime_source_semantics.json",
+    "bytes": 4820,
+    "sha256": "cb038d0e5746295eba36fe5313ee5a1006bc3634f8a5055523553ccb9df7b354"
+  },
+  "metadata_interface_join_checks": 10,
+  "checks": 10,
+  "checks_passed": 10,
+  "underlying_source_packet_checks": 1667,
+  "underlying_runtime_semantic_checks": 2988,
+  "all166payloads_and_protocol167regular_exact": true,
+  "all196external_controls_48fixedcases_16labels_exact": true,
+  "actual_unmodified_verify_transfer_CLI_exit": 0,
+  "prior_receipt_preserved_exact": true,
+  "source_or_CLI_tests_rerun": false,
+  "released_for_root_manual_archive_preparation_only": true,
+  "archive_review_pending": true,
+  "actual_VM_launch_authorized_by_this_metadata": false,
+  "automatic_launch_or_resume": false,
+  "model_qualified": false,
+  "goal_complete": false,
+  "local_actions": {
+    "metadata_reads_and_new_receipt_only": true,
+    "model_loads": 0,
+    "neural_calls": 0,
+    "gradients": 0,
+    "optimizer_updates": 0,
+    "VM_calls": 0,
+    "old_receipt_or_source_changes": false
+  }
+}

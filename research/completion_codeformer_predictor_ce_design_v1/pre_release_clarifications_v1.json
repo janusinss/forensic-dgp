@@ -1,0 +1,47 @@
+{
+  "format": "root-predictor-CE-v1-pre-release-design-enforcement-clarifications-v1",
+  "status": "PROSPECTIVE_DESIGN_ONLY_RUNTIME_AND_PACKET_NOT_ADMITTED",
+  "root_design_sha256": "077ed97ec5dc4ca75f6b6bdc3caf8def09344113c3b7ce927d13b7b68a4f2b78",
+  "root_design_bytes_unchanged": true,
+  "scientific_paths_and_quality_gates_changed": false,
+  "clarifications": {
+    "terminal_serialization": {
+      "all_writes_prechecked_by_cumulative_1GiB_terminal_writer": true,
+      "internal_ZIP_member_pickle_namespace_and_CRC_admission": "Inspect the closed bounded terminal.partial BEFORE exclusive checkpoint commit. Refuse more than1615 ZIP members, data.pkl over1MiB, unsafe namespace or CRC failure. This is not a claim that PyTorch internal pickle bytes were predicted exactly before writing.",
+      "internal_admission_failure": "Retain the bounded partial and explicit failed single-attempt receipt; do not commit, retry, reconstruct or claim recovery.",
+      "save_guards": "Terminal guards enforce resource/path/byte/deadline bounds. Failed scientific invariants are recorded as actual state hashes/finite flags and retention failures rather than reasserted in a way that prevents bounded failure retention. Normal neural and optimizer guards remain strict.",
+      "hardkill_disk_or_serialization_failure_can_prevent_recovery": true
+    },
+    "public_readouts": {
+      "complete_run_snapshots": [0, 32],
+      "catastrophic_stop_at8_or16": "Replace the planned final32 public readout with the actual stopped terminal cycle8or16, retaining those unpaired failure outputs. Do not add a third public readout, exceed typed caps or perform further neural work after a resource/deadline stop.",
+      "final_acceptance_eligible_only_at32_without_stop_reason": true,
+      "early_stopped_outputs_and_checkpoint_are_not_selectable_winners": true
+    },
+    "cached_targets": {
+      "retained_source_NPZ_sets": 80,
+      "copied_byteexact_output_NPZ_sets": 80,
+      "copied_original_index_sha256": "0567a9ad54e6397390341a8dfc1ffa8ec50ceb9159da299605fee021ec678a69",
+      "optimization_FIT_sets": 64,
+      "monitor_diagnostic_only_sets": 16,
+      "teacher_neural_calls": 0,
+      "reencoding_or_new_targets": false,
+      "generated_NPZ_max": 388,
+      "total_NPZ_max_including80copiedteachers": 468,
+      "teacher_copies_and_metadata_are_inside_existing_budgets": true
+    },
+    "successful_terminal_hardlink_alias_at_export": {
+      "one_payload_only": true,
+      "condition": "Committed checkpoint and successful.partial alias must both be exact regular nonsymlink files in the allowed outputs root, with matching device/inode/owner/size/hash. Hash equality on different inodes is insufficient.",
+      "evidence": "Export the committed checkpoint once and record the preserved alias filename, device/inode/uid/nlink, bytes and SHA in manifest and export sidecar. Leave VM files untouched. Retain other failure partials; refuse unexplained distinct committed-plus-partial checkpoint files under the single-attempt invariant.",
+      "deletion_or_VM_cleanup_performed": false
+    }
+  },
+  "counts_and_resource_caps_unchanged": true,
+  "runtime_source_admission_still_required": true,
+  "ready_to_upload": false,
+  "new_model_created": false,
+  "automatic_launch": false,
+  "model_qualified": false,
+  "goal_complete": false
+}

@@ -1,0 +1,60 @@
+{
+  "format": "independent-same-codebook-owned-bridge-semantic-admission-v1",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T13:38:02.953642+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_same_codebook_probe_v1_audit\\audit_bridge_semantics.py",
+    "bytes": 6142,
+    "sha256": "57200ebc0d9aefd98018da98eb38ae444e0bd269cc8700c7bb12c300605a902a"
+  },
+  "original_architecture": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\codeformer_arch.py",
+    "bytes": 11377,
+    "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb"
+  },
+  "owned_bridge": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_same_codebook_probe_v1_development\\probe_forward.py",
+    "bytes": 2638,
+    "sha256": "507101cacc6b2d42bf0ebb8e53fa1a39f2f2c2945625aaa9aad3207129912a69"
+  },
+  "checks": [
+    "Exact admitted local CodeFormer architecture",
+    "Owned bridge imports no scientific/model modules",
+    "All late scientific dependencies explicitly injected",
+    "Exactly three diagnostic-only AST insertions",
+    "Full ordinary forward AST identical after removing override/observations",
+    "Override occurs immediately before same-codebook vector lookup",
+    "Observed encoder feature and quantized detach semantics intact",
+    "Bridge has no training/state replacement operations",
+    "Pure bridge module import does not load Torch",
+    "No oracle returns identical predicted indices without copy/change",
+    "Oracle is an exact detached independent clone",
+    "Selection never mutates actual prediction or label",
+    "Returned oracle mutation cannot affect source/prediction",
+    "Invalid shape override refused",
+    "Invalid dtype override refused",
+    "Invalid negative override refused",
+    "Invalid too_large override refused",
+    "Owned source stable through tests"
+  ],
+  "checks_passed": 18,
+  "ordinary_path_entire_forward_AST_exact": true,
+  "only_selected_code_override_plus_predicted_used_observation": true,
+  "plain_CPU_index_selection_tests_only": true,
+  "full_probe_forward_not_executed": true,
+  "actual_vm_parity_still_required": {
+    "fresh_pairs": 4,
+    "initial48A_raw_tolerance": 1e-06,
+    "initial48A_PNG_byte_exact": true
+  },
+  "local_actions": {
+    "Torch_imported_for_plain_tensor_index_fixtures": true,
+    "neural_modules_or_forwards": 0,
+    "gradients": 0,
+    "optimizer_objects_or_steps": 0,
+    "VM_calls": 0
+  },
+  "runtime_or_packet_admitted": false,
+  "model_qualified": false
+}

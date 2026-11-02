@@ -1,0 +1,379 @@
+{
+  "format": "completion-codeformer-predictor-only-CE-finite-design-v1",
+  "frozen_UTC": "2026-10-26T15:29:54.612121+00:00",
+  "status": "FROZEN_PROSPECTIVE_DESIGN_RUNTIME_PREPARATION_NOT_TRANSFER_READY",
+  "question": "Can ordinary covered-input code prediction improve delivered completion while exact R1 encoder/fusion and original prior remain fixed?",
+  "evidence": {
+    "actual_probe_transport": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\transport_audit.json",
+      "bytes": 91048,
+      "sha256": "ee4980dcd22a04f4315d7369a16c6fb2ce8ad8704532f6e1b284d35a45d24fa4"
+    },
+    "actual_probe_state_codes": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\independent_state_code_audit.json",
+      "bytes": 93257,
+      "sha256": "794fed73804eabfa081805cdd0d3db3dda89d5a1fbd6138df725b6b404ad922d"
+    },
+    "actual_probe_pixels": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\independent_saved_output_audit.json",
+      "bytes": 748984,
+      "sha256": "4f5042edc19496bd3dee515dc052928c03e4f6d9e12b246efdcca4262a54d02f"
+    },
+    "actual_probe_root_visual": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\root_visual_review.json",
+      "bytes": 13322,
+      "sha256": "3d2568cfd19614f7d8b98da71b027d471fc32c27753cee017ed512b394931a53"
+    },
+    "independent_design_research": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_probe_predictor_review_v1\\independent_design_research.md",
+      "bytes": 9594,
+      "sha256": "b4bcb18388ccd33a8df58f688ffb86d74d47d757f9a471b5df64787fa46e81a7"
+    },
+    "partition": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_probe_predictor_review_v1\\independent_predictor_partition.json",
+      "bytes": 139386,
+      "sha256": "286b42ab32449568061b5b62cd09368c40c5c5e9f7c77c2cfd4c2c1a67bc87fd"
+    },
+    "scoped_design_admission": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\independent_scoped_design_admission.json",
+      "bytes": 57158,
+      "sha256": "3f6c67961efd28e4d405d628b6dcab285d839557f73df9b8b9944e74badc2f50"
+    },
+    "balanced128": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\balanced128_subset.json",
+      "bytes": 206868,
+      "sha256": "8ec2d535cd6fb231af815d0ec833a1cd08f418458cbc4919c0ebd13f638f2a1d"
+    },
+    "parent114_Adam_mapping": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\predictor_parent_Adam_mapping.json",
+      "bytes": 129216,
+      "sha256": "157bb777bda588ff89786d8d4a5a80bb4252ca1a66c412811dcc8f6039a92465"
+    },
+    "resource_arithmetic": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_probe_resource_review_v1\\serialization_resource_admission.json",
+      "bytes": 19332,
+      "sha256": "00773a66b805c66b0d9daebc0fda7eb6108704ffd3f3d6e43003715403835e59"
+    },
+    "readable_design": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_PREDICTOR_CE_V1_DESIGN.md",
+      "bytes": 10368,
+      "sha256": "5368611397506df16c835575774a8af18e3009fc817f2f7b4cc81fd4727e508d"
+    },
+    "inherited_fixed_data_protocol": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_delivered_objective_v4\\protocol.json",
+      "bytes": 690434,
+      "sha256": "8bbb3dd611e95cfbce76e7e6426ffdadb31ce23dadb1dfdcd0246e501213069d"
+    }
+  },
+  "scope": "Paired adaptive TRAIN plus fixed unpaired public photographs. No independent FINAL/native CCTV clean truth, hidden identity or oracle deployment claim.",
+  "state": {
+    "original_checkpoint_sha256": "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797",
+    "R1_parent_sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd",
+    "R1_logical_sha256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "trainable114_scalars": 19450880,
+    "trainable114_names_from_partition": true,
+    "trainable_allowlist": [
+      "position_emb",
+      "feat_emb.",
+      "ft_layers.",
+      "idx_pred_layer."
+    ],
+    "frozen383": {
+      "encoder": 164,
+      "fusion": 54,
+      "original_prior": 165
+    },
+    "all_modules_eval": true,
+    "requires_grad_only114_during_FIT": true,
+    "ordinary_inference_w": 1,
+    "adain": false,
+    "oracle_override": false,
+    "unchanged_app_input_and_delivery": true
+  },
+  "optimizer": {
+    "objects": 1,
+    "algorithm": "Adam",
+    "active_tensors": 114,
+    "lr": 1e-05,
+    "betas": [
+      0.9,
+      0.99
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0.0,
+    "clip_global_L2": 1.0,
+    "name_mapped_parent_step": 32,
+    "maximum_final_step": 64,
+    "reset": false,
+    "blind_positional278_to114_load": false,
+    "actual_gradient_and_update_diagnostics": true,
+    "every_intended_gradient_present_finite": true,
+    "all_frozen_gradients_none": true,
+    "zero_gradient_values_retained_honestly": true,
+    "restore_exact_parent_RNG_after_initial_readouts": true
+  },
+  "objective": {
+    "identifier": "predictor_only_CE_all256_same_inpainting_codebook_v1",
+    "CE_reduction": "mean_over_all256_positions",
+    "microbatches": 4,
+    "microbatch_divisor_once": 4,
+    "cached_same_original_inpainting_codes": true,
+    "teacher_neural_calls": 0,
+    "latent_MSE": false,
+    "pixel_loss": false,
+    "fusion_loss": false,
+    "GAN": false,
+    "STE": false,
+    "unavailable_clean_indices_at_evaluation": false
+  },
+  "data": {
+    "full_retained_FIT_pool_cases": 256,
+    "selected_optimization_observations": 128,
+    "FIT_reference_ids": [
+      "tr_ffhq_00084",
+      "tr_ffhq_00178",
+      "tr_ffhq_00323",
+      "tr_ffhq_00616",
+      "tr_ffhq_01210",
+      "tr_ffhq_01639",
+      "tr_ffhq_01672",
+      "tr_ffhq_01926",
+      "tr_ffhq_02068",
+      "tr_ffhq_02147",
+      "tr_ffhq_02421",
+      "tr_ffhq_02473",
+      "tr_ffhq_02665",
+      "tr_ffhq_02932",
+      "tr_ffhq_02983",
+      "tr_ffhq_03089",
+      "tr_ffhq_03147",
+      "tr_ffhq_03212",
+      "tr_ffhq_03313",
+      "tr_ffhq_03437",
+      "tr_ffhq_03483",
+      "tr_ffhq_03497",
+      "tr_ffhq_03735",
+      "tr_ffhq_03761",
+      "tr_ffhq_03917",
+      "tr_ffhq_04169",
+      "tr_ffhq_04436",
+      "tr_ffhq_04454",
+      "tr_ffhq_04476",
+      "tr_ffhq_04498",
+      "tr_ffhq_04759",
+      "tr_ffhq_05002"
+    ],
+    "FIT_label_sets": 64,
+    "monitor_reference_ids": [
+      "tr_ffhq_05179",
+      "tr_ffhq_05302",
+      "tr_ffhq_06781",
+      "tr_ffhq_06809",
+      "tr_ffhq_06995",
+      "tr_ffhq_07087",
+      "tr_ffhq_07202",
+      "tr_ffhq_07386"
+    ],
+    "monitor_label_sets": 16,
+    "monitor_never_optimized": true,
+    "all80_label_arrays_retained": true,
+    "new_targets": 0,
+    "per_reference_observations": 4,
+    "per_reference_roles": {
+      "anchor": 2,
+      "gray_augmentation": 1,
+      "RGB_augmentation": 1
+    },
+    "total_anchors": 64,
+    "total_augmentations": 64,
+    "GRAY": 32,
+    "RGB": 96,
+    "each_augmentation_condition": 16,
+    "each_mask_geometry": 32,
+    "each_cycle_distinct_references": 4,
+    "subset_and_schedule_pin": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\balanced128_subset.json",
+      "bytes": 206868,
+      "sha256": "8ec2d535cd6fb231af815d0ec833a1cd08f418458cbc4919c0ebd13f638f2a1d"
+    },
+    "subset_selection_uses_quality_scores": false,
+    "this_is_not_a_full256_epoch": true,
+    "true_person_identity_or_pretraining_disjointness_established": false
+  },
+  "execution": {
+    "maximum_optimizer_steps": 32,
+    "maximum_backwards": 128,
+    "microbatches_per_step": 4,
+    "paired_snapshots": [
+      0,
+      8,
+      16,
+      32
+    ],
+    "paired_cases_each": 48,
+    "public_snapshots": [
+      0,
+      32
+    ],
+    "public_cases_each": 32,
+    "saved_evaluation_outputs": 256,
+    "saved_evaluation_empty_bypasses": 8,
+    "nonempty_evaluation_full_calls": 248,
+    "fresh_parity_pairs": 4,
+    "fresh_parity_full_calls": 8,
+    "full_generation_calls": 256,
+    "code_only_calls": 128,
+    "all_model_invocations_planned": 384,
+    "all_model_invocations_hard_cap": 420,
+    "typed_max": {
+      "parity": 8,
+      "fit_code": 128,
+      "monitor": 128,
+      "challenge": 64,
+      "public_development": 56
+    },
+    "teacher_calls": 0,
+    "additional_empty_control_bypasses": 160,
+    "all_empty_bypasses": 168,
+    "historical_R1_matches_before_any_backward": 48,
+    "fresh_parity_before_any_backward": true,
+    "pre_dispatch_guards": true,
+    "snapshots_do_not_add_FIT_calls": true
+  },
+  "quality": {
+    "acceptance_endpoint_only": 32,
+    "intermediate8_16_purpose": "safety and diagnostics only; never selectable winners",
+    "minimum_clear_PNG_hole_gain_fraction": 0.01,
+    "minimum_challenge_PNG_hole_gain_fraction": 0.01,
+    "all_existing_RAW_PNG_hole_boundary_macro_geometry_and_challenge_condition_nonworse": true,
+    "nonworse_tolerance": 1e-12,
+    "catastrophic_stop_fraction": 0.1,
+    "catastrophe_cohorts": [
+      "clear",
+      "challenge"
+    ],
+    "outside_source_pixels_float_and_PNG_exact": true,
+    "empty_exact": true,
+    "GRAY_style_additional_gate": {
+      "case_ids": [
+        "v2m_05179_g0_gd",
+        "v2m_05302_g1_gd",
+        "v2m_06781_g2_gd",
+        "v2m_06809_g3_gd",
+        "v2m_06995_g0_gd",
+        "v2m_07087_g1_gd",
+        "v2m_07202_g2_gd",
+        "v2m_07386_g3_gd"
+      ],
+      "RAW_measure": "mean_over_generated_support(max_RGB-min_RGB) on delivered float256",
+      "RAW_units": [
+        0,
+        1
+      ],
+      "PNG_measure": "mean_over_generated_support(max_RGB-min_RGB) on downloaded uint8 PNG256",
+      "PNG_units": [
+        0,
+        255
+      ],
+      "nonworse_groups": [
+        "macro",
+        "lower_face",
+        "eye_band",
+        "image_left_lens",
+        "cheek_object"
+      ],
+      "cases_per_geometry": 2,
+      "RAW_tolerance": 1e-12,
+      "PNG_tolerance": 1e-12,
+      "required_only_final32": true,
+      "all8_individual_values_and_visual_review": true,
+      "no_recoloring": true,
+      "limited_small_sample_regression_guard": true
+    },
+    "all_planned_outputs_and_sheets_reviewed": true,
+    "user_and_independent_FINAL_acceptance_still_required": true,
+    "lower_CE_or_higher_grid_agreement_not_qualification": true,
+    "oracle_gain_not_achievable_promise": true,
+    "failed_final_cannot_select_earlier_snapshot": true
+  },
+  "resources": {
+    "worker_hard_seconds": 1800,
+    "cooperative_neural_seconds": 1680,
+    "terminal_save_reserve_seconds": 120,
+    "export_cooperative_seconds": 900,
+    "initial_free_bytes": 8589934592,
+    "installer_extra_free": "exact_uncompressed_install_payload",
+    "stop_free_bytes": 2147483648,
+    "CUDA_allocated_bytes": 21474836480,
+    "terminal_bytes": 1073741824,
+    "whole_output_bytes": 2684354560,
+    "teacher_bytes": 25165824,
+    "metadata_including_log_bytes": 8388608,
+    "log_bytes": 4194304,
+    "PNG_bytes_each": 262144,
+    "raw_tar_bytes": 2952790016,
+    "gzip_bytes": 2952790016,
+    "max_regular_return_members": 1000,
+    "max_return_path_UTF8_bytes": 240,
+    "generated_NPZ_max": 388,
+    "retained_teacher_NPZ": 80,
+    "NPZ_arrays_max": 10,
+    "NPY_header_bytes_max": 512,
+    "checkpoint_ZIP_members_max": 1615,
+    "checkpoint_pickle_bytes_max": 1048576,
+    "exact_single_L4_RNG_schema_bound": true,
+    "new_unsealed_resource_revision_not_historical_gate_change": true
+  },
+  "evidence_output": {
+    "evaluation256_npz": [
+      "input256",
+      "mask256",
+      "result256",
+      "raw512_or_absent_empty",
+      "predicted_codes_or_empty"
+    ],
+    "fresh_parity4_npz": "all10 pinned same-codebook parity schema arrays",
+    "FIT128_npz": [
+      "logits_FP32_1x256x512",
+      "target_codes_int64_1x256",
+      "case_index",
+      "cycle",
+      "microbatch"
+    ],
+    "FIT_CE_replay_possible": true,
+    "all_per_case_metrics_preserved": true,
+    "no_false_predictions_for_empty_masks": true,
+    "NPZ_count_includes_copied_teachers": 468,
+    "all_generation_public_cases_unpaired": true
+  },
+  "terminal": {
+    "save_attempts_max": 1,
+    "actual_nonprior_model_tensors": 332,
+    "mixed_historical_code_Adam_slots": 278,
+    "updated_predictor_slots": 114,
+    "unchanged_encoder_slots": 164,
+    "unchanged_fusion_slots": 54,
+    "duplicate_active114_moment_payload": false,
+    "actual_failed_prior165_if_mutated": true,
+    "all497_actual_byte_hashes_and_finite_flags_before_gate": true,
+    "partial114_gradients_retained": true,
+    "RNG_sampler_progress_counts_retained": true,
+    "successful_partial_alias_not_archived_twice": true,
+    "hardkill_or_IO_can_prevent_recovery_explicit": true,
+    "automatic_resume": false
+  },
+  "admission_pending": [
+    "independent_final_formal_design_review",
+    "runtime_ownership_gradient_mapping_and_loss_tests",
+    "runtime_byte_schema_and_terminal_failure_enforcement",
+    "source_data_protocol_and_actual_guarded_transfer_CLI",
+    "safe_installer_exporter_namespace_and_resource_fixtures",
+    "closed_execution_archive_and_manual_guide"
+  ],
+  "ready_to_upload": false,
+  "new_model_created": false,
+  "model_qualified": false,
+  "automatic_launch": false,
+  "RESTORATION_IMPLEMENTATION_changed": false,
+  "goal_complete": false
+}
