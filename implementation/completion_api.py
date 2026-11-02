@@ -2,7 +2,7 @@
 
 The passive receipt middleware observes successful restoration responses without
 changing their bytes. Completion accepts only one of those exact canvases. It
-never calls restoration, changes its model, or restores an R1-generated result.
+never calls restoration, changes its model, or restores an R2-generated result.
 """
 from __future__ import annotations
 
@@ -425,7 +425,7 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
     if proposal:
         for name in ('detector-probability.npy','detector-raw-mask.png','detector-proposed-mask.png','receipt.json'):
             payloads['proposal/'+name] = (proposal['path']/name).read_bytes()
-    payloads['README.txt'] = ("Original upload, restoration and completion are separate stages. R1 changes only the reviewed removal area of restoration-result.png. "
+    payloads['README.txt'] = ("Original upload, restoration and completion are separate stages. R2 changes only the reviewed removal area of restoration-result.png. "
                                "Restoration may change observed appearance. Hidden pixels are one plausible estimate, not recovered identity. "
                                "Automatic proposals can miss coverings and require review. source records automatic_reviewed versus assisted correction. "
                                "No training or external inference API is used.\n").encode()
@@ -449,7 +449,7 @@ def register(app):
             available, error = True, None
         except (OSError, ValueError, RuntimeError) as exc:
             available, error = False, str(exc)
-        return {'available': available, 'error': error, 'model': 'completion_r1', 'state': dict(STATE),
+        return {'available': available, 'error': error, 'model': 'completion_r2', 'state': dict(STATE),
                 'automatic_proposal_requires_review': True, 'model_qualified': False, 'local_cpu': True}
 
     @app.post('/face/completion/prepare')

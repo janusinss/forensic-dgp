@@ -1,4 +1,4 @@
-/* Optional R1 stage. V2 restoration remains owned by implementation.js. */
+/* Optional R2 completion. V2 restoration remains owned by implementation.js. */
 (() => {
     'use strict';
     const byId = id => document.getElementById(id), api = '/face/completion';
@@ -46,7 +46,7 @@
             [/6 GiB owned-worker memory limit/i, 'The request used too much memory and stopped. Close unused apps and try again.'],
         ];
         for (const [pattern, message] of messages) if (pattern.test(detail)) return message;
-        if (/\b(?:R1|V2|model|detector|worker|provenance|fingerprint|sha256|metadata|artifact|mask|binary|padding|bounds|receipt|session|review_id|proposal_id|neural)\b/i.test(detail)) {
+        if (/\b(?:R1|R2|V2|model|detector|worker|provenance|fingerprint|sha256|metadata|artifact|mask|binary|padding|bounds|receipt|session|review_id|proposal_id|neural)\b/i.test(detail)) {
             return 'The request could not be completed. Please review your image and try again.';
         }
         return detail;
