@@ -156,7 +156,7 @@ def stage(stage_id):
     need(sha(installer_fixtures) == '610177441433cbb5f282c8264d35a0b63696e13b72cb4c3bcb627eb2c6b58e6e', 'Independent exact installer fixtures drift')
     need(read(installer_fixtures)['installer_literal_sha256'] == hashlib.sha256(INSTALL_CODE.encode()).hexdigest(), 'Independently tested installer literal differs')
     evidence_add('root_installer_fixtures', installer_fixtures)
-    readable = ROOT / 'COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_DESIGN.md'
+    readable = ROOT / 'docs/archive/completion/COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_DESIGN.md'
     need(sha(readable) == '6a03cc0ff96501b842606cae878bae00eabb8d5e44d0b90f74ba7bc0bac61c81', 'Readable formal design drift')
     evidence_add('readable_design', readable)
     fixtures = ROOT / ('research/' + NAME + '_packet_review/source_fixtures_release.json')

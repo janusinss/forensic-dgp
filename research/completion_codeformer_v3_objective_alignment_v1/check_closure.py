@@ -18,7 +18,7 @@ def read(p):return json.loads(Path(p).read_text(encoding='utf-8-sig'))
 def pin(p):return {'path':str(p.resolve()),'bytes':p.stat().st_size,'sha256':sha(p)}
 def main():
  start=time.monotonic();publication=read(RET/'return_document_publication_v1.json');precision=read(RET/'results_precision_review_v2.json');first_precision=read(RET/'results_precision_review_v1.json');preservation=read(RET/'root_current_R1_preservation_after_V3.json')
- result=ROOT/'COMPLETION_CODEFORMER_FUSION_ONLY_V3_RESULTS.md';need(sha(result)==precision['after_sha256']=='106c2a2a2ca3e5ed02e81ef34c5fc27746c19db4728014e70e0139a5df59a473','Revised results changed')
+ result=ROOT/'docs/archive/completion/COMPLETION_CODEFORMER_FUSION_ONLY_V3_RESULTS.md';need(sha(result)==precision['after_sha256']=='106c2a2a2ca3e5ed02e81ef34c5fc27746c19db4728014e70e0139a5df59a473','Revised results changed')
  need(sha(Path(precision['before_exact_backup']))==precision['before_sha256']==first_precision['after_sha256'] and sha(Path(first_precision['before_exact_backup']))==first_precision['before_sha256']==publication['results']['sha256'],'Prior results exact backup differs')
  sections={result:result.read_text()};docs=[]
  for stem in ('handoff','spec'):

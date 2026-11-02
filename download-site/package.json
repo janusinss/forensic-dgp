@@ -1,0 +1,27 @@
+{
+  "name": "forensic-dgp-download",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:release": "node scripts/prepare-release.mjs",
+    "build": "npm run prepare:release && tsc --noEmit && vite build",
+    "dev": "vite --host 127.0.0.1",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/*.test.mjs",
+    "deploy": "npm run build && node scripts/cloudflare.mjs deploy",
+    "login": "node scripts/cloudflare.mjs login",
+    "whoami": "node scripts/cloudflare.mjs whoami"
+  },
+  "dependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "wrangler": "4.156.0"
+  }
+}
