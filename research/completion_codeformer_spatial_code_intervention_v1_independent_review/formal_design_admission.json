@@ -1,0 +1,65 @@
+{
+  "format": "independent-spatial-code-intervention-v1-formal-design-admission",
+  "complete": true,
+  "independent": true,
+  "UTC": "2026-10-26T17:02:58.384581+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\admit_formal_design.py",
+    "bytes": 12665,
+    "sha256": "036d1bcabc742e7a5708ca027b240a0ee6bf3048f68371acad7aa9e94787442a"
+  },
+  "root_design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\root_design.json",
+    "bytes": 243979,
+    "sha256": "1983f9fed9bede2078ffc6a1af0dd6ca08fe6ec532e5c3de9c4ce41d4db2c657"
+  },
+  "root_design_sha256": "1983f9fed9bede2078ffc6a1af0dd6ca08fe6ec532e5c3de9c4ce41d4db2c657",
+  "scientific_scope_admitted_for_source_preparation": true,
+  "checks_passed": 1245,
+  "frozen_R1_no_failed_predictor_initialization": true,
+  "same48cases16labels196controls_exact": true,
+  "all96prior_control_code_provenance_verified": true,
+  "fourfreshparity_then_fourfreshC_before96HV_required": true,
+  "counts": {
+    "newfullforwards": 108,
+    "typed": {
+      "parity": 8,
+      "fresh_C_bridge": 4,
+      "H": 48,
+      "V": 48
+    },
+    "newNPZ": 104,
+    "newPNG": 96,
+    "historicalA_C_files": 196,
+    "newoptimizer_backwards_gradients_teacher": 0
+  },
+  "resource_arithmetic": {
+    "numeric_arrays_bytes": 559342792,
+    "with104times64KiBZIPreserve": 566158536,
+    "arrays_cap": 587202560,
+    "whole_category_caps": 1023410176,
+    "output_cap": 1073741824,
+    "bridge_input512_omitted_not_unauthorized_cap_raise": true
+  },
+  "source_binding_clarifications_and_checks_remaining": {
+    "fresh_C_bridge_no_redundant_input512": "Root decision27October2026: bridge NPZ uses same9 corefields asH/V, not input512; oldC neverretained input512. Exact own/app512conditioning is saved byfourfreshordinaryparity pairs. Therefore frozen6MiBbridge and560MiBarray caps remain valid; noadditional12MiB schema is authorized.",
+    "actual_call_instrumentation_to_verify": "Ownedforward bypassesnet.__call__. Runtime must independentlyinstrument actualquantizer.get_codebook_feat plusgeneratorfirstpre/lastpost perowned+ordinary invocation; all108/globaltypedcounts must agree. Name bridge versusfresh_C_bridge maytranslate consistently withoutchanging4calls.",
+    "retained_inputs_not_newreturnNPZ": "All16labels and196A/Ccontrol files are exact retained external/packetinputs; no copy into return.104NPZmeans96H/V+4parity+4freshC only."
+  },
+  "all22currentR1pins_exact": true,
+  "runtime_source_audited": false,
+  "packet_or_transfer_ready": false,
+  "actual_execution_authorized_by_this_receipt": false,
+  "no_newmodel_or_qualityclaim": true,
+  "model_qualified": false,
+  "goal_complete": false,
+  "local_actions": {
+    "Torch_imported": false,
+    "model_construction": 0,
+    "neural_calls": 0,
+    "gradient_calls": 0,
+    "optimizer_objects": 0,
+    "VM_calls": 0,
+    "root_design_modified": false
+  }
+}

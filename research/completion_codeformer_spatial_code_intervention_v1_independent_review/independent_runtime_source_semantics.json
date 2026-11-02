@@ -1,0 +1,116 @@
+{
+  "format": "independent-spatial-code-intervention-v1-runtime-source-semantics",
+  "complete": true,
+  "independent": true,
+  "UTC": "2026-10-26T17:19:43.534013+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\audit_runtime_semantics.py",
+    "bytes": 13801,
+    "sha256": "175ef31281a2130b00b091efa8303ff0ddfc64bca797bc8836db34cd3a6ef25c"
+  },
+  "source_pins": {
+    "cctv_completion_codeformer_spatial_code_intervention_v1_vm.py": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_development\\cctv_completion_codeformer_spatial_code_intervention_v1_vm.py",
+      "bytes": 52567,
+      "sha256": "ffe76c1cf2c0329c8b719687be21db4d775081f9df47d4369137a84bd1dab411"
+    },
+    "contracts.py": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_development\\contracts.py",
+      "bytes": 7437,
+      "sha256": "364e467c58381ed8d54bdec7c604b8690a57bf34d42873edfc2c554d7758cf97"
+    },
+    "optimized_budget.py": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_development\\optimized_budget.py",
+      "bytes": 9970,
+      "sha256": "35ee233b175bd948e38045bfd1c1d67aab062a011d21203ba1e180d7b414511b"
+    },
+    "probe_forward.py": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_development\\probe_forward.py",
+      "bytes": 3446,
+      "sha256": "27c5c7a0d21464efedcca7fd8449fd45c2a0610f2ccb24ec00a8bfc8c8b29100"
+    },
+    "app_delivery.py": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_development\\app_delivery.py",
+      "bytes": 1077,
+      "sha256": "cebdf6b36bc06edd51a1d42bb7cd97b91b58c5628280d050e40eba1280f3393e"
+    }
+  },
+  "checks_passed": 2988,
+  "source_no_training_no_unbound_markers": true,
+  "exactparitymembership_and_raw512gate": true,
+  "historicalC_input512_truthful_no_reconstructedclaim": true,
+  "actual_dispatch_helper": {
+    "valid_fake_callbacks": 108,
+    "invalid_typed_global_gradient_mode_CUDA_cases_refuse_beforecallback": 8,
+    "allquantizer_generatorwitnesses_checked": true,
+    "no_real_neural_function_called": true
+  },
+  "bounded_writer_prewrite_fixtures": [
+    {
+      "kind": "HV",
+      "cap_bytes": 6291456,
+      "retained_prefix_exact": true
+    },
+    {
+      "kind": "parity",
+      "cap_bytes": 16777216,
+      "retained_prefix_exact": true
+    },
+    {
+      "kind": "metadata",
+      "cap_bytes": 1048576,
+      "retained_prefix_exact": true
+    },
+    {
+      "kind": "PNG",
+      "cap_bytes": 262144,
+      "retained_prefix_exact": true
+    },
+    {
+      "kind": "failure",
+      "cap_bytes": 402653184,
+      "retained_prefix_exact": true
+    }
+  ],
+  "cooperative840_hard900_reserve_enforced": true,
+  "additive_effects": {
+    "all48cases4metrics": 192,
+    "all8gray2metricseparate": true,
+    "interactionformula_exact": true
+  },
+  "actual_failure_helper_toy_fixture": {
+    "tensors": 497,
+    "NaN_actualbytes_flag_retained": true,
+    "workingdeadline_expired850_resourcefinishstillpermitscapture": true,
+    "actualsource_singleattempt_save_CRC_exclusivecommit": true,
+    "CPU_weights_only_toy_loads": 1,
+    "secondattempt_refused": true,
+    "payloads": [
+      {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\runtime_fixture_payloads_r2\\actual_failure_toy\\outputs\\failed_actual_model_state.pth",
+        "bytes": 228761,
+        "sha256": "a2e1a11c5d5e810db740b5ea3e6091d9d000c18fad43aa7bb6f7b54bf7a8bba1"
+      },
+      {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\runtime_fixture_payloads_r2\\actual_failure_toy\\outputs\\failure_state_receipt.json",
+        "bytes": 703,
+        "sha256": "d3e9490c955269f03f13c749ee61b2917e2f342d4aa8c07ee5b942b1c7eb746b"
+      }
+    ],
+    "realcheckpoint_or_model": false
+  },
+  "prepared_runtime_admitted_as_source_only": true,
+  "packet_transfer_review_still_required": true,
+  "local_actions": {
+    "real_model_constructions": 0,
+    "neural_forwards": 0,
+    "autograd_calls": 0,
+    "optimizer_objects_or_steps": 0,
+    "realcheckpoint_loads": 0,
+    "VM_calls": 0,
+    "returned_code_executed": false,
+    "plainCPUinteger_and_fake497serialization_only": true
+  },
+  "model_qualified": false,
+  "goal_complete": false
+}

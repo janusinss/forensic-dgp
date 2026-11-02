@@ -1,0 +1,182 @@
+{
+  "format": "completion-r1-context-continuation-source-design-v1",
+  "status": "finalized_data_coverage_only_design_not_execution_packet",
+  "created_UTC": "2026-10-25T14:04:55.771041+00:00",
+  "starting_model": {
+    "name": "Our trained completion R1",
+    "checkpoint_SHA256": "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0",
+    "logical_SHA256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "comparison_original_preserved": true,
+    "frozen_R1_matched_control": true,
+    "automatic_promotion": false
+  },
+  "source_evidence_sha256": "cdd6a5e8e4f89310f5b3d397508a92a95bc2b3f8df640bff233a0e373370aed3",
+  "fit_sources": 32,
+  "adaptive_TRAIN_monitor_sources": 8,
+  "original_split_preserved": true,
+  "reserved_VAL_FINAL_not_accessed": true,
+  "fit_plan": {
+    "total": 256,
+    "original_clear_anchors": 128,
+    "new_bounded_irregular_cases": 32,
+    "conditions": {
+      "original_clear_anchor": 128,
+      "strict_gray_clear": 32,
+      "RGB_mild_degraded": 32,
+      "strict_gray_mild_degraded": 32,
+      "RGB_clear_irregular": 32
+    },
+    "sampling": "64 cycles, exactly2 distinct anchor+2 distinct augmented pairs percycle; each32source gets fourold+fournew cases; conditions rotate bysource/geometry; oldsamplerstate preserved,newphaseexplicit",
+    "new_mask_bounds": {
+      "translation_pixels256": [
+        -8,
+        8
+      ],
+      "scale": [
+        0.85,
+        1.15
+      ],
+      "rotation_degrees": [
+        -10,
+        10
+      ],
+      "support": "Bounded irregular variants; no padding; existing visibility check; pre-reviewed before output generation",
+      "geometry": "Do not alter existing DEV/MONITOR masks or enlarge delivery masks"
+    },
+    "appearance": {
+      "strict_gray_saturation": 0.0,
+      "low_chroma_saturation": "not added in this data-only pilot; low-chroma public outputs remain separate visual stress evidence",
+      "RGB_saturation": 1.0,
+      "formula": "A_s(X)=s*X+(1-s)*Y(X),Y=.299R+.587G+.114B, replicated to3channels",
+      "same_A_on_input_and_target": true,
+      "target": "A_s(originalHQ512), with exact A_s retained256 for delivered supervision; original anchors remain byte-identical"
+    },
+    "context_degradation": {
+      "only_on_input256_after_A_before_masking": true,
+      "Gaussian_sigma_pixels256": [
+        0.4,
+        0.8
+      ],
+      "downsample_side": [
+        128,
+        192
+      ],
+      "upsample": "bilinear to256",
+      "Gaussian_noise_std_8bit": [
+        0,
+        2
+      ],
+      "JPEG_quality": [
+        75,
+        90
+      ],
+      "near_gray_noise": "shared scalar noise across RGB to preserve synthetic low-chroma intent; no independent channel color noise",
+      "semantics": "Known synthetic low-quality visible context -> appearance-matched HQ hidden target; source-visible pixels are still copied exactly at delivery; no native CCTV equivalence claimed",
+      "parameters": "Deterministic percase seed; freeze actual transform bytes before VM packet"
+    },
+    "existing_geometry_augmented_conditions": 96,
+    "exact_microbatch_plan": "Each64cycle has two anchors andtwo augmented pairs. Deterministic seeded roundrobin over256uniquecaseIDs; eachcase appears once perroute, each source4anchor+4augmentation. Code andfusion routes useidenticalfour IDs eachcycle."
+  },
+  "learning": {
+    "one_learning_arm_plus_frozen_R1_control": true,
+    "routes": "same278 code tensors and54 fusion tensors;165 quantizer/generator tensors frozen",
+    "generator_unfreeze": false,
+    "actual_optimizer_steps_max": 128,
+    "paired_cycles_max": 64,
+    "microbatches_per_route": 4,
+    "batch_size": 1,
+    "backward_calls_max": 512,
+    "Adam": "Restore exact R1 named code/fusion Adam states at step32, same LR1e-5/betas(.9,.99)/eps1e-8/wd0/clip1;64newsteps perroute => terminal step96,128new/192cumulative updates",
+    "gradient_clip_L2": 1.0,
+    "code_loss": "UNCHANGED CE_all256 + original prequant_encoder_latent_MSE, weights1+1",
+    "teacher": "UNCHANGED same original frozen inpainting encoder prequantlatent andnearest quantizer codes;40RGB+40gray targets=80labelsets/160componentcalls beforeloadR1learner",
+    "fusion_loss": "UNCHANGED unclampedHQ512maskedRGB_L1 + innerboundaryRGB512_L1_kernel7, weights1+1",
+    "chroma_loss": "DEFERRED; no new chroma/luminance/perceptual/GAN/identity loss in the data-only pilot",
+    "delivered_loss": "DEFERRED; actual delivered raw/PNG evaluation remains unchanged, no new training term",
+    "weight_note": "Only data/sampler coverage changes. Original teacher definition, existinglosses/LR/Adam continuation and frozen generator/codebook remain; this is not an exact copy of official CodeFormer training.",
+    "RNG_transition": "Restore and hash-check original R1 CPU/CUDA/Python/NumPy RNG at declared start ofnewoptimization; separate seededprematerialized data/schedule doesnotconsume restoredglobalRNG; record oldandnew samplerphase,cumulativeandphase-localcounters.",
+    "auxiliary_losses_and_quantized_teacher": "Deferred to separate target audit/ablation. Official model uses frozen HQVQGAN quantizedfeatures; our existing prior labels are declared original prequantencoderlatent."
+  },
+  "evaluation": {
+    "original32clear_MONITOR": "unchanged inputs/targets/masks and existing raw/PNG hole/boundary macro/pergeometry gates, including1%relative deliveredPNGhole gain vs frozenR1",
+    "new16challenge_MONITOR": "SameeightadaptiveTRAINsources, twofrozen conditions perref: strictgray+milddegradation andnewirregularRGB+milddegradation;4pergeometry overall; prospective source-only review",
+    "challenge_gates": ">=1%relative meanPNGholeL1improvement vs frozenR1, all raw/PNGhole/boundary condition andgeometry endpoints nonworse; strictgrayrawchroma is separately reported diagnostic, not a new undeclaredgate",
+    "snapshots": [
+      0,
+      16,
+      32,
+      64
+    ],
+    "challenge_snapshots": [
+      0,
+      64
+    ],
+    "public_development": "same32 exposed unpaired cases at0/terminal, original-photo vsdegraded andfamilies separate; not traininglabels or hiddenPSNR/SSIM",
+    "all_outputs": "exact visible raw/PNG, zero-empty forward, allplannedvisualsreview, original/mask/raw/result retained; rawmodel scores separately from optional grayscale/displayprocessing",
+    "catastrophic_stop": "same>10%regression on any existing clear monitor raw/PNG macro/pergeometry hole/boundary endpoint at16/32; resources/nonfinite/parity/preservation stops unchanged",
+    "independent_FINAL": "not used for design, gradientupdates or modelselection; later independent humanreview still required",
+    "report_both_baselines": "Incremental vs currentR1 andcumulative vs original onidentical unchanged32monitor;16challenge endpoints are separate andnotpooled.",
+    "clear_gates": ">=1%relative macroPNGholeL1improvement vsR1 plus every existing raw/PNGmacro/pergeometry hole/boundary nonworse; report cumulative same32cohort vs original separately"
+  },
+  "finite_limits": {
+    "whole_model_forwards_planned": 736,
+    "teacher_component_calls_planned": 160,
+    "typed_slots_planned": 896,
+    "typed_slots_cap": 1000,
+    "worker_hard_seconds": 1800,
+    "cooperative_stop_seconds": 1680,
+    "start_free_GiB": 7,
+    "stop_free_GiB": 2,
+    "CUDA_allocated_cap_GiB": 20,
+    "output_cap_MiB": 2304,
+    "export_cap_MiB": 2304,
+    "export_cooperative_seconds": 900,
+    "resource_admission": "Root-approved prospective2304MiB raw/export caps,7GiBstartfree/2GiBstopfree. Conservative source-enforced payload2,303,717,049B plus<=2MiBarchiveoverhead fits2,415,919,104B. Requires1GiBterminalwritecap,8MiBmetadata/logs cap and256KiBperPNG beforepacket.",
+    "terminal_retention": "one complete terminal delta+bothAdam+orderednames+RNG/schedule/counters/partialgradients; no recoverable intermediatecheckpoint rescue",
+    "size_bound": {
+      "nonempty_eval_arrays": 1075838976,
+      "empty_eval_arrays": 14680064,
+      "four_parity_pair_arrays": 60833792,
+      "arrays_plus1percent_ZIP_overhead": 1162866361,
+      "PNG_cap_bytes": 58720256,
+      "terminal_serialized_bound_bytes": 1073741824,
+      "metadata_receipts_logs_bound_bytes": 8388608,
+      "conservative_payload_total_bytes": 2303717049,
+      "archive_overhead_allowance_bytes": 2097152,
+      "cap_bytes": 2415919104,
+      "warning": "Bounds must be source-enforced before actualexecution; not inferred outputcompressibility. If unsupported, redesignbeforepacket rather than discardlater."
+    }
+  },
+  "preconditions_before_packet": [
+    "Review actual augmented TRAIN/monitor masks and transformed target/source previews withoutmodelinference; verify truegray/lowchroma and readable context",
+    "Recount schedule and typedcalls, targetteacher semantics, exactoutside/empty parity against current R1wrapper",
+    "Independent source/data/terms/overlap admission and storage budget; original states retained",
+    "Root selects this design and user manuallylaunches a distinct finite L4packet; no automatic historical rerun"
+  ],
+  "primary_sources": [
+    {
+      "url": "https://arxiv.org/abs/2206.11253",
+      "use": "Codebook/context-method motivation only; not evidence of ouradaptation quality"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/README.md",
+      "use": "Official inpainting uses white masks on aligned crops; separate restoration/colorization entrypoints"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/basicsr/data/ffhq_blind_dataset.py",
+      "use": "Officialdataset branches corruption separately from gen_inpaint_mask; gray_prob transforms inputonly; ourbothsidesgraychoiceis task-specific"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/master/basicsr/models/codeformer_model.py",
+      "use": "Root primary-source review: officialfeaturetargetisquantizedfrozenHQVQGAN feature, notourprequantoriginalencoderlatent. Preserveourdefinitionforisolateddatatest; noexactofficialrecipeclaim."
+    }
+  ],
+  "local_neural_calls": 0,
+  "gradient_calls": 0,
+  "optimizer_updates": 0,
+  "VM_calls": 0,
+  "packet_prepared": false,
+  "model_qualified": false,
+  "updated_UTC": "2026-10-25T14:13:48.058657+00:00",
+  "prospective_source_evidence_section_superseded": "The prospective_256case_continuation_plan section in saved_source_and_support_evidence.json is an earlier nonexecuted draft; actualsource/schedule/scarf findings remain authoritative. This finaldesigncontrols futureplan."
+}

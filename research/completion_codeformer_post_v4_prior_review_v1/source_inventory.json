@@ -1,0 +1,277 @@
+{
+  "format": "completion-post-v4-official512-HQ-prior-source-inventory-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T13:00:35.764116+00:00",
+  "status": "SOURCE_ONLY_ACQUISITION_READINESS_COMPATIBILITY_UNVERIFIED",
+  "scope": "Bounded original Testing and FACE_MASK_COMPLETION checkpoints/outputs filenames, existing relevant source/ledgers, official release metadata and pinned current-master source snapshots. No user-drive-wide scan.",
+  "local_filename_inventory": [
+    {
+      "workspace": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION",
+      "command_argv": [
+        "rg",
+        "--files",
+        "--hidden",
+        "--no-ignore",
+        "-g",
+        "*vqgan_code512*",
+        "-g",
+        "*latent_gt_code512*",
+        "checkpoints",
+        "outputs"
+      ],
+      "exit_code": 1,
+      "matches": [],
+      "stderr": "",
+      "bounded_scope": [
+        "checkpoints",
+        "outputs"
+      ],
+      "ignored_files_included": true,
+      "hidden_files_included": true,
+      "symlink_following": false
+    },
+    {
+      "workspace": "C:\\xampp\\htdocs\\YEAR 4\\Testing",
+      "command_argv": [
+        "rg",
+        "--files",
+        "--hidden",
+        "--no-ignore",
+        "-g",
+        "*vqgan_code512*",
+        "-g",
+        "*latent_gt_code512*",
+        "checkpoints",
+        "outputs"
+      ],
+      "exit_code": 1,
+      "matches": [],
+      "stderr": "",
+      "bounded_scope": [
+        "checkpoints",
+        "outputs"
+      ],
+      "ignored_files_included": true,
+      "hidden_files_included": true,
+      "symlink_following": false
+    }
+  ],
+  "local_512_asset_found": false,
+  "local_existing_1024": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\codeformer_teacher_pretrained_v1\\vqgan_code1024.pth",
+    "exists": true,
+    "current_stat_bytes": 255078528,
+    "acquisition_ledger": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\codeformer_teacher_pretrained_v1\\acquisition.json",
+      "bytes": 743,
+      "sha256": "fae3b9511898669ce4b9210cb4c576614f81f09145c9ea6d8c44621b3b2b6ae9"
+    },
+    "ledger_reported_sha256": "4d1c6741b3cffcbdc2cd1a12b2c3c2442282e042d5de66909cb643d4fa31b20f",
+    "checkpoint_binary_hashed_in_this_inventory": false,
+    "deserialized": false,
+    "note": "1024-code asset is not interchangeable with the current512 inpainting prior; existing historical teacher evidence remains separate."
+  },
+  "official_release": {
+    "url": "https://api.github.com/repos/sczhou/CodeFormer/releases/tags/v0.1.0",
+    "release_id": 74096273,
+    "tag_name": "v0.1.0",
+    "html_url": "https://github.com/sczhou/CodeFormer/releases/tag/v0.1.0",
+    "published_at": "2022-08-10T12:54:36Z",
+    "snapshot": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_release_v0_1_0.json",
+      "bytes": 29910,
+      "sha256": "24f9ee757cdc18cb5f722ed44e93d5810426081fe9724089d443f5f91d829e92"
+    },
+    "assets": [
+      {
+        "id": 102896823,
+        "name": "codeformer_inpainting.pth",
+        "size": 370786611,
+        "content_type": "application/octet-stream",
+        "state": "uploaded",
+        "created_at": "2023-04-09T06:51:34Z",
+        "updated_at": "2023-04-09T06:53:49Z",
+        "browser_download_url": "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer_inpainting.pth",
+        "digest": null,
+        "url": "https://api.github.com/repos/sczhou/CodeFormer/releases/assets/102896823"
+      },
+      {
+        "id": 104079222,
+        "name": "latent_gt_code512.pth",
+        "size": 317145711,
+        "content_type": "application/octet-stream",
+        "state": "uploaded",
+        "created_at": "2023-04-17T14:39:13Z",
+        "updated_at": "2023-04-17T14:41:36Z",
+        "browser_download_url": "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/latent_gt_code512.pth",
+        "digest": null,
+        "url": "https://api.github.com/repos/sczhou/CodeFormer/releases/assets/104079222"
+      },
+      {
+        "id": 97069546,
+        "name": "vqgan_code1024.pth",
+        "size": 255078528,
+        "content_type": "application/octet-stream",
+        "state": "uploaded",
+        "created_at": "2023-02-25T11:35:50Z",
+        "updated_at": "2023-04-17T14:44:38Z",
+        "browser_download_url": "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/vqgan_code1024.pth",
+        "digest": null,
+        "url": "https://api.github.com/repos/sczhou/CodeFormer/releases/assets/97069546"
+      },
+      {
+        "id": 104086574,
+        "name": "vqgan_code512.pth",
+        "size": 254550931,
+        "content_type": "application/octet-stream",
+        "state": "uploaded",
+        "created_at": "2023-04-17T15:28:14Z",
+        "updated_at": "2023-04-17T15:29:49Z",
+        "browser_download_url": "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/vqgan_code512.pth",
+        "digest": null,
+        "url": "https://api.github.com/repos/sczhou/CodeFormer/releases/assets/104086574"
+      }
+    ],
+    "publisher_checksums_available": false,
+    "checksum_limitation": "GitHub API digest is null for these historical assets; exact advertised length is metadata integrity, not a publisher cryptographic checksum."
+  },
+  "supplemental_official_source": {
+    "current_master_resolved_commit": "b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b",
+    "commit_metadata_url": "https://api.github.com/repos/sczhou/CodeFormer/commits/master",
+    "commit_metadata_sha256": "f4f70f18181fb3847908c5daad7abe438c539604d7644dc8fe59c97d932135a7",
+    "sources": [
+      {
+        "relative_path": "docs/train.md",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/docs/train.md",
+        "bytes": 2029,
+        "sha256": "c008dc1c5c6799287b3a130d37ba15f80aae31a62e16e0f3945502459bb85353",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\docs\\train.md",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "scripts/generate_latent_gt.py",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/scripts/generate_latent_gt.py",
+        "bytes": 2744,
+        "sha256": "c1401e9a9176e49cdab5c4fc1454a47b8a4e247f523a54a59ecb28ad7821be41",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\scripts\\generate_latent_gt.py",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "scripts/download_pretrained_models.py",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/scripts/download_pretrained_models.py",
+        "bytes": 2415,
+        "sha256": "3aff472c37a7b62abb2aa67e692d83e78fff56dc78800243e54ef5a42074c080",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\scripts\\download_pretrained_models.py",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "basicsr/models/codeformer_idx_model.py",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/basicsr/models/codeformer_idx_model.py",
+        "bytes": 8883,
+        "sha256": "d68d134a35d23d29ecbaeb745e9fe248dbbbdf4c37df4b94c81674b42ab232df",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\basicsr\\models\\codeformer_idx_model.py",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "basicsr/models/codeformer_model.py",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/basicsr/models/codeformer_model.py",
+        "bytes": 14263,
+        "sha256": "6797e5dbfec9e54785ed2f93e847636c6c8f1e635e3f0ad52fb3ac469c18a58f",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\basicsr\\models\\codeformer_model.py",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "options/CodeFormer_inpainting.yml",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/options/CodeFormer_inpainting.yml",
+        "bytes": 3095,
+        "sha256": "4734d1734fb770796538212f4e1b8205de07ab87d88fe947a6cd1906fac7cd47",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\options\\CodeFormer_inpainting.yml",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "basicsr/archs/vqgan_arch.py",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/basicsr/archs/vqgan_arch.py",
+        "bytes": 15428,
+        "sha256": "5ef00125ce448e34c9c02655bdebff5dca51589597c7c43a0b4bf2326d32e8cb",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\basicsr\\archs\\vqgan_arch.py",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "inference_inpainting.py",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/inference_inpainting.py",
+        "bytes": 4364,
+        "sha256": "805e0e313124856b07ff0dc8fb770d23fc648a04b7f3c66f0c8faf2b37691867",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\inference_inpainting.py",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      },
+      {
+        "relative_path": "LICENSE",
+        "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/LICENSE",
+        "bytes": 1717,
+        "sha256": "cfd654022bdc44fdd809670d50239bcb1ebf2f4a661dca7e328f93c269538246",
+        "local_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_prior_review_v1\\source_inventory_assets\\official_sources\\LICENSE",
+        "source_role": "Pinned snapshot of current master, supplemental to the original deployed checkpoint source; not evidence of checkpoint tensor compatibility."
+      }
+    ]
+  },
+  "findings": [
+    {
+      "claim": "The official release has a512-code HQVQGAN asset and a separate512latent file.",
+      "support": "official GitHub release API asset104086574/104079222",
+      "interpretation": "This supplies a plausible same-codebook-size candidate, not tensor equality or useful-completion evidence."
+    },
+    {
+      "claim": "Official CodeFormer models can derive labels by fixed HQVQGAN encoder plus quantization, then supervise quantized codebook features.",
+      "support": "pinned official basicsr/models/codeformer_idx_model.py and codeformer_model.py",
+      "interpretation": "Current old inpainting-derived unquantized teacher latents are not the same declared method."
+    },
+    {
+      "claim": "Generic official training documentation and inpainting YAML currently specify1024-code assets/configuration.",
+      "support": "pinned docs/train.md and options/CodeFormer_inpainting.yml",
+      "interpretation": "Those documents do not prove compatibility with the existing512-code released inpainting checkpoint."
+    },
+    {
+      "claim": "Official latent-generation script accepts configurable codebook_size and generates per-image indices.",
+      "support": "pinned scripts/generate_latent_gt.py",
+      "interpretation": "The official latent_gt_code512 cache is not automatically appropriate for our audited crop/resize/gray/mask dataset; no precomputed labels should be imported without exact matching provenance."
+    }
+  ],
+  "acquisition_draft": {
+    "status": "NOT_DOWNLOADED_NO_ACQUISITION_LAUNCHED",
+    "candidate_asset_id": 104086574,
+    "filename": "vqgan_code512.pth",
+    "official_download_URL": "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/vqgan_code512.pth",
+    "advertised_exact_bytes": 254550931,
+    "maximum_download_bytes": 254550931,
+    "download_timeout_seconds": 900,
+    "chunk_bytes": 8388608,
+    "minimum_free_disk_bytes_before_download": 2402034579,
+    "destination_policy": "New exclusive candidate acquisition directory, retain partial on failure, never overwrite existing checkpoints. Root coordinates exact target before download.",
+    "checks_before_any_tensor_use": [
+      "Only official GitHub release download URL and its legitimate redirect; record final URL.",
+      "Stream count no more than254550931bytes; require exact advertised length at EOF and observed SHA256; checksum is local fingerprint only.",
+      "Read ZIP central-directory metadata safely with bounded entries/expanded bytes before weights-only CPU deserialization; no model import/forward required for compatibility.",
+      "Independently compare codebook embedding and every existing frozen generator/prior tensor: exact names/shapes/dtypes/values, and encoder structure.512size alone is insufficient.",
+      "Keep R1/fulloriginalprior untouched; if codebook/generator values differ, do not feed candidate indices into existing codebook as interchangeable labels.",
+      "If compatible, separately test clean HQencoding+quantized-feature targets in a new finite design with explicit dataset provenance and no automatic training."
+    ],
+    "latent_gt_code512_download_proposed": false,
+    "reason_not_to_download_latent_cache": "Not tied to our exact reviewed crops/transforms; contains cached dataset labels whose overlap and object schema are not audited."
+  },
+  "limitations": [
+    "Filename inventory does not inspect archives, cloud backups or filenames outside the bounded roots.",
+    "No checkpoint compatibility or clean-image reconstruction has been measured.",
+    "A compatible HQteacher does not establish restoration/completion usefulness or justify app adoption.",
+    "Original pretrained overlap/terms and all independent final evaluation requirements remain unresolved."
+  ],
+  "local_actions": {
+    "asset_binary_downloads": 0,
+    "model_checkpoint_deserializations": 0,
+    "neural_calls": 0,
+    "gradients": 0,
+    "optimizer_updates": 0,
+    "VM_calls": 0,
+    "text_metadata_and_source_downloads_only": true
+  },
+  "seconds": 6.1779133
+}

@@ -1,0 +1,179 @@
+{
+  "format": "completion-delivered-objective-v4-prospective-design-v1",
+  "created_UTC": "2026-10-26T11:50:18.036136+00:00",
+  "status": "PROSPECTIVE_DESIGN_ONLY_RUNTIME_AND_PACKET_NOT_PREPARED",
+  "scientific_question": "Can app-delivered256 hole-only learning improve on the working R1 completion without allowing a separate boundary-loss improvement to compensate worse holes?",
+  "scope": "Completion only; restoration and current R1 app stay fixed. Every actual training run is finite and manually launched on the L4 VM.",
+  "evidence": {
+    "V3_results": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_FUSION_ONLY_V3_RESULTS.md",
+      "bytes": 6665,
+      "sha256": "106c2a2a2ca3e5ed02e81ef34c5fc27746c19db4728014e70e0139a5df59a473"
+    },
+    "V3_state": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_fusion_only_v3_return\\independent_state_audit.json",
+      "bytes": 110111,
+      "sha256": "52d2c3040b050bd544231ba0ea1ed577444770f6b88655fc3ea081355909a365"
+    },
+    "V3_outputs": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_fusion_only_v3_return\\independent_saved_output_audit.json",
+      "bytes": 471617,
+      "sha256": "9788881c412173e9f564aaf512859b07179a2977089d9ffd878cb044a3da49a0"
+    },
+    "V3_visuals": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_fusion_only_v3_return\\root_visual_review.json",
+      "bytes": 17931,
+      "sha256": "44d478963a56a16f09f6f6050257957132d6bba98494e3c352f5d72ccba90f24"
+    },
+    "objective_diagnosis": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_v3_objective_alignment_v1_r1\\analysis.json",
+      "bytes": 636090,
+      "sha256": "89396f99bb21cd57743e3549e201ae8a12f0a514cff0baf63d74421923144a51"
+    },
+    "independent_design_review": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_v3_next_objective_independent_review_v1\\independent_design_review.json",
+      "bytes": 49297,
+      "sha256": "c3fc9c2235517b088e963ef8756656b17c52c2bd229e20bdd56f9c0595f88dfc"
+    },
+    "FIT256_targets": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_v3_objective_alignment_v1_r1\\FIT256_target_availability.json",
+      "bytes": 116754,
+      "sha256": "4dd1c4b8088fc20104937d8b9efebb4aca0c9b6292d3bf2a54973fc2e5921741"
+    }
+  },
+  "retained_incumbent": "User-selected trained R1; no V3 app adoption. V3 and V2 historical outputs are diagnostic controls only.",
+  "parent": {
+    "checkpoint_sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd",
+    "bytes": 701952165,
+    "logical_sha256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "inference_only_parent_allowed": false,
+    "failed_V2_or_V3_parent_allowed": false,
+    "restore_both_named_Adam_states_and_CPU_CUDA_python_numpy_RNG": true
+  },
+  "distinct_intervention": {
+    "old_objective": "unclamped HQ512 masked RGB L1 plus kernel7 HQ512 inner-boundary L1, coefficient1+1",
+    "prospective_objective": "mean_RGB_L1(app_float256, exact_clean256) inside the fixed reviewed support only",
+    "formula": [
+      "p512=clamp((raw512+1)/2,0,1)",
+      "p256=bilinear(p512,(256,256),align_corners=False), identical app operator",
+      "app_float256=active-index compose(source256,p256,reviewed_mask256)",
+      "loss=((abs(app_float256-clean256)*mask256).sum()/(3*mask256.sum()))/4 for each of4microbatches",
+      "Do not round toPNG in autograd. PNG quantization stays in independent evaluation; no straight-through estimator."
+    ],
+    "separate_boundary_loss": false,
+    "boundary_acceptance_gates_removed": false,
+    "same_masks_and_outside_copy": true,
+    "limitations": [
+      "Changes objective resolution/target and removes additive boundary term together; practical package test, not sole causal isolation.",
+      "Clamping can create zero-gradient saturated channels; record clipping fractions, never insert an undisclosed gradient surrogate.",
+      "Hole RGB L1 alone can favor smooth estimates; all-case anatomy and texture review remain binding.",
+      "Unknown hidden identity and original pretrained overlap cannot be resolved by a small TRAIN pilot."
+    ]
+  },
+  "data": {
+    "same_256_FIT_ids_schedule_once": true,
+    "FIT_references": 32,
+    "MONITOR_references": 8,
+    "no_MONITOR_CHALLENGE_FINAL_optimization": true,
+    "RGB_FIT_cases": 192,
+    "strict_gray_FIT_cases": 64,
+    "existing_unique_clean256_FIT_targets": 64,
+    "target_source": "Exact pinned fit_cases[*].clean256 and teacher_targets[case.teacher_key].clean256 = coverage_data/data/t256/<reference_id>_<rgb|gray>.png; load RGB/255 FP32 NCHW, existing clean[teacher_key][0].",
+    "no_target_downsample_from512_or_regrayscale": true,
+    "use_clean512_only_for_diagnostic_measurements": true,
+    "no_new_teacher_network": true,
+    "old_32_clear_plus16_challenge_plus32_unpaired_public_fixed": true
+  },
+  "training": {
+    "frozen_tensors": 443,
+    "fusion_trainable_tensors": 54,
+    "original_prior_frozen_tensors": 165,
+    "code_Adam_step32_wholly_unchanged": true,
+    "fusion_Adam_step32_to96": true,
+    "new_fusion_updates_maximum": 64,
+    "backward_calls_maximum": 256,
+    "actual_whole_forward_calls_maximum": 480,
+    "typed_forward_calls_hard_cap": 600,
+    "empty_bypasses_planned": 168,
+    "sampler": "Same256FITIDs exactlyonce,64cycles,4distinctreference microbatches,2anchors+2augmentations percycle",
+    "learning_rate": 1e-05,
+    "betas": [
+      0.9,
+      0.99
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0,
+    "gradient_clip_L2": 1,
+    "loss_microbatch_divisor_once": 4,
+    "no_LR_epoch_optimizer_architecture_data_changes": true
+  },
+  "preflight": {
+    "four_fresh_canonical_parity_pairs_all_saved_before_gate": true,
+    "fresh_wrapper_raw_error_maximum": 1e-06,
+    "all48_initial_historical_R1_raw256_max_error": 1e-06,
+    "all48_initial_historical_R1_PNG_byte_exact": true,
+    "split_asset_provenance_and_256target_audit_required": true,
+    "loss_operator_synthetic_forward_and_gradient_path_tests_before_release": true,
+    "no_local_model_or_optimizer_training_for_preparation": true
+  },
+  "evaluation": {
+    "clear_snapshots": [
+      0,
+      16,
+      32,
+      64
+    ],
+    "challenge_snapshots": [
+      0,
+      64
+    ],
+    "public_snapshots": [
+      0,
+      64
+    ],
+    "saved_outputs": 224,
+    "visual_sheets": 20,
+    "incremental_PNG_hole_gain_required_clear": 0.01,
+    "incremental_PNG_hole_gain_required_challenge": 0.01,
+    "all_old_macro_geometry_and_challenge_condition_RAW_PNG_hole_and_boundary_nonworse": true,
+    "nonworse_tolerance": 1e-12,
+    "early_10percent_catastrophic_clear_gates_at": [
+      16,
+      32
+    ],
+    "exact_outside_support_and_empty_refusal_controls": true,
+    "independent_saved_raw_PNG_state_all_visual_reviews_before_any_app_adoption": true,
+    "automatic_promotion": false
+  },
+  "limits": {
+    "worker_hard_seconds": 1800,
+    "cooperative_seconds": 1680,
+    "VM_free_GiB_start": 7,
+    "VM_free_GiB_floor": 2,
+    "CUDA_allocated_GiB_cap": 20,
+    "terminal_MiB_cap": 1024,
+    "metadata_MiB_cap": 8,
+    "PNG_KiB_cap": 256,
+    "export_cooperative_seconds": 900,
+    "reuse_O1_writer_and_all_failed_partial_phase_receipts": true,
+    "checkpoint_contains_full_R1_delta_both_named_Adam_RNG_sampler_counts_and_progress": true,
+    "automatic_resume": false,
+    "unchanged_failed_rerun_or_epoch_extension": false,
+    "raw_outputs_MiB_cap": 2304,
+    "export_raw_tar_MiB_cap": 2304,
+    "export_compressed_archive_MiB_cap": 2304,
+    "export_caps_are_per_artifact_not_combined": true,
+    "teacher_metadata_target_MiB_cap": 24,
+    "trainer_log_MiB_cap": 4
+  },
+  "next_actions": [
+    "Implement distinct V4 runtime and tests in a fresh folder without altering sealed V3.",
+    "Independently audit loss graph, source/targets, save failures, pure transfer CLI, packet namespace and exact manual guide.",
+    "Publish verified upload/install/tmux/download only after packet passes; user manually launches.",
+    "Audit returned state/raw/PNG/all224 outputs and20sheets; reject if either cohort or subgroup gates fail."
+  ],
+  "ready_to_upload": false,
+  "training_run": false,
+  "new_model_created": false,
+  "goal_complete": false
+}

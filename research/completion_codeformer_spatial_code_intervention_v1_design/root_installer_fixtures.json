@@ -1,0 +1,145 @@
+{
+  "format": "root-spatial-code-intervention-exact-installer-toy-fixtures-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T17:08:48.156463+00:00",
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\check_completion_spatial_code_installer_root.py",
+    "bytes": 4776,
+    "sha256": "4a18800b7343296878151ba02127daba3f176ed1a6c802703bc53ac798d359b5"
+  },
+  "builder_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_spatial_code_intervention_v1.py",
+    "bytes": 33061,
+    "sha256": "e513ea7e8f369119821f7e56b90a493464c0bc6abc5114455afa76b1922a1948"
+  },
+  "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+  "Python310_parse": true,
+  "fixtures": [
+    {
+      "fixture": "valid",
+      "expected_accept": true,
+      "accepted": true,
+      "error": null,
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\valid\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 387,
+        "sha256": "1bc8da3a2c9a52576ee0f64c2c28331509390eedde6c4ea5346150ef1276fc64"
+      }
+    },
+    {
+      "fixture": "already_installed",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Preserve existing experiment; do not reinstall')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\already_installed\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 387,
+        "sha256": "1bc8da3a2c9a52576ee0f64c2c28331509390eedde6c4ea5346150ef1276fc64"
+      }
+    },
+    {
+      "fixture": "wrong_protocol_SHA",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Protocol SHA differs')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\wrong_protocol_SHA\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 387,
+        "sha256": "1bc8da3a2c9a52576ee0f64c2c28331509390eedde6c4ea5346150ef1276fc64"
+      }
+    },
+    {
+      "fixture": "missing_payload",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Missing payload members')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\missing_payload\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 345,
+        "sha256": "9fb21ee4d987f519d427b7531ece015ae81e591c02f872d1f8027662c4936e91"
+      }
+    },
+    {
+      "fixture": "payload_hash_drift",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Member SHA differs')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\payload_hash_drift\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 372,
+        "sha256": "b5eb0e2418ff147e2bad8804c65fc0536e562966aef33ca13c1f5d09b4dfa605"
+      }
+    },
+    {
+      "fixture": "duplicate_payload",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\duplicate_payload\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 390,
+        "sha256": "3e87ed23217808c1fefcb2a4191faee5eefde4b9c71ad41e61b4216733f1ed76"
+      }
+    },
+    {
+      "fixture": "symlink_payload",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\symlink_payload\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 373,
+        "sha256": "0d2237c73e4bf9fb37f2b1bf49bc1c8c9dc65fa64a86d90eb79ad467d1b5d98b"
+      }
+    },
+    {
+      "fixture": "unsafe_member",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\unsafe_member\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 413,
+        "sha256": "b4a5d1e2695bf477c6e7ce84b4a961f0a431a044ad4d77d28303090f85423580"
+      }
+    },
+    {
+      "fixture": "insufficient_payload_plus6GiB",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Need6GiB plus exact installation payload free')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2\\insufficient_payload_plus6GiB\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+        "bytes": 387,
+        "sha256": "1bc8da3a2c9a52576ee0f64c2c28331509390eedde6c4ea5346150ef1276fc64"
+      }
+    }
+  ],
+  "all9_expected_verdicts": true,
+  "fixture_home_and_disk_usage_patched_only_in_own_test_process": true,
+  "fixture_namespace": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_installer_root_fixture_1ee365b324934c7a95601311681a5cd2",
+  "actual_VM_or_gcloud_calls": 0,
+  "scientific_imports": 0,
+  "NN_calls": 0,
+  "optimizer_objects": 0,
+  "real_model_or_protocol_execution": false,
+  "runtime_or_packet_admitted": false
+}

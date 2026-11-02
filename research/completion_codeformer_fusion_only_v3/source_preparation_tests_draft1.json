@@ -1,0 +1,36 @@
+{
+  "format": "fusion-only-v3-source-preparation-tests-v1",
+  "complete": true,
+  "tests": 14,
+  "seconds": 5.715897000000041,
+  "sources": [
+    {
+      "path": "scripts\\cctv_completion_codeformer_fusion_only_v3_vm.py",
+      "bytes": 58532,
+      "sha256": "fbe9a8d2376d24ad2b21b37a4b5d4bdf35d9d603c2926a7bffe9cef4e6c7511f"
+    },
+    {
+      "path": "research\\completion_codeformer_fusion_only_v3\\contracts.py",
+      "bytes": 4299,
+      "sha256": "ed4d5782aa6fe73a37afe6bf6e8647ad9650bf177113f0e6a9900261fe030927"
+    },
+    {
+      "path": "research\\completion_codeformer_fusion_only_v3\\optimized_budget.py",
+      "bytes": 8829,
+      "sha256": "09b5cd1b64db6266180a2252426c4660da078f69ecd4f223af85ff71a51cfa2c"
+    },
+    {
+      "path": "research\\completion_codeformer_fusion_only_v3\\source_tests.py",
+      "bytes": 12672,
+      "sha256": "0c83b724f0baf05a222beedee52b9af5965f4c36411fa2cfed096af91aa4a10e"
+    }
+  ],
+  "local_actions": {
+    "neural_calls": 0,
+    "gradients": 0,
+    "optimizer_objects_or_steps": 0,
+    "VM_calls": 0,
+    "real_model_checkpoint_reads": 0,
+    "toy_CPU_tensor_serialization_only": true
+  }
+}

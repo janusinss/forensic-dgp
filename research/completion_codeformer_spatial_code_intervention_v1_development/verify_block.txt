@@ -1,0 +1,64 @@
+def external_base(root,p):
+    named=Path.home()/'forensic-dgp/cctv_completion_codeformer_same_codebook_probe_v1_vm/outputs'
+    need(p['external_controls']['root']=='../cctv_completion_codeformer_same_codebook_probe_v1_vm/outputs','Exact external old-probe root spelling')
+    need((root/p['external_controls']['root']).resolve(strict=True)==named.resolve(strict=True),'External controls must be named old-probe outputs')
+    need(not any(v.is_symlink() for v in (named,*named.parents)),'External control root links refused')
+    return named.resolve(strict=True)
+
+def verify(root,expected):
+    root=root.resolve(strict=True);protocol=root/'protocol.json'
+    need(protocol.stat().st_size<=1024**2 and sha(protocol)==expected,'Exact protocol SHA/size')
+    p=read(protocol);need(p['format']=='completion-codeformer-spatial-code-intervention-v1' and p['contract']==CONTRACT,'Spatial code intervention contract differs')
+    need(p.get('manual_execution_only') is True and p.get('automatic_resume_or_promotion') is False,'Manual-only diagnostic required')
+    files={r['path']:r for r in p['files']};need(len(files)==len(p['files']) and files,'Unique nonempty source manifest')
+    for row in files.values():
+        path=member(root,row['path']);need(path.is_file() and path.stat().st_size==row['bytes'] and sha(path)==row['sha256'],'Packet source/asset drift '+row['path'])
+    required=list(SOURCE_MODULES.values())+['scripts/cctv_completion_codeformer_spatial_code_intervention_v1_vm.py']+[f'research/completion_codeformer_spatial_code_intervention_v1/{name}.py' for name in ('contracts','optimized_budget','probe_forward','app_delivery')]
+    need(all(name in files for name in required),'Every imported runtime source pinned')
+    designpath=member(root,p['evidence']['route_design_review']);need(DESIGN_SHA!='UNBOUND_ROOT_DESIGN' and sha(designpath)==DESIGN_SHA,'Root scientific/resource design binding')
+    design=read(designpath)
+    need(sha(member(root,p['evidence']['original_probe_protocol']))==PROBE_PROTOCOL_SHA,'Original probe source protocol differs')
+    need(sha(member(root,p['evidence']['oracle_label_index']))=='0567a9ad54e6397390341a8dfc1ffa8ec50ceb9159da299605fee021ec678a69','Original same-codebook label index differs')
+    need(sha(member(root,p['original_parent_protocol']))==PARENT_PROTOCOL_SHA,'Original complete R1 protocol differs')
+    need(sha(member(root,'third_party/codeformer/codeformer_arch.py'))=='ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb','Exact original architecture')
+    refs={r['id']:r for r in p['references']};need(len(refs)==8 and all(r['role']=='monitor' and r['original_role']=='train' and r['legacy_completion_split']=='train' for r in refs.values()),'Eight adaptive originalTRAIN monitor references')
+    cases=p['monitor_cases']+p['challenge_cases'];need(len(p['monitor_cases'])==32 and len(p['challenge_cases'])==16 and len({r['id'] for r in cases})==48,'Fixed32clear16challenge cases')
+    need([r['id'] for r in cases]==design['data']['case_ids_in_fixed_protocol_order'],'Exact48 root-design case order')
+    for row in cases:
+        need(row['reference_id'] in refs and re.fullmatch(r'[A-Za-z0-9_-]{1,100}',row['id']) and row['teacher_key']==row['reference_id']+'::'+row['style'],'Case ID/split/style binding')
+        for field in ('input256','clean256','clean512','mask'):need(row[field] in files,'Case asset unpinned')
+    need(p['arms']==ARMS,'Two fixed H/V arms only')
+    labels={r['teacher_key']:r for r in p['oracle_labels']};declared={r['teacher_key']:r for r in design['data']['original16labels_exact_only']}
+    need(len(labels)==16 and set(labels)==set(declared)=={ref+'::'+style for ref in refs for style in ('RGB','GRAY')},'Exact16 labels with no FIT target additions')
+    for key,row in labels.items():
+        old=declared[key];need(row['path'] in files and row['sha256']==old['sha256'] and row['bytes']==old['bytes'] and row['clean512_sha256']==old['clean512_sha256'] and row['teacher_original_logical_sha256']==ORIGINAL_LOGICAL and row['oracle_unavailable_clean_information'] is True,'Exact original same-codebook target provenance')
+        need(sha(member(root,row['path']))==row['sha256'] and sha(member(root,row['clean512']))==row['clean512_sha256'],'Oracle clean512/label exactbinding')
+    need(len(p['parity_cases'])==4 and len({r['id'] for r in p['parity_cases']})==4,'Four app parity cases')
+    for row in p['parity_cases']:
+        for field in ('input256','mask'):need(row[field] in files,'Parity input pin')
+    need([r['id'] for r in p['bridge_cases']]==design['data']['bridge_case_ids'],'Four prospectively chosen C bridge IDs')
+    case_by_id={r['id']:r for r in cases};need(len(p['bridge_cases'])==4 and all(row==case_by_id[row['id']] for row in p['bridge_cases']),'Bridge rows are exact fixed cases')
+    need(p['export']['allowed_output_paths']==output_paths(p),'Closed prospective output namespace')
+    ext=p['external_controls'];base=external_base(root,p)
+    need(ext['source_protocol_sha256']==PROBE_PROTOCOL_SHA and set(ext['arms'])=={'A','C'},'External A/C provenance')
+    external_files={r['path']:r for r in ext['files']};need(len(external_files)==len(ext['files'])==196,'Exact196 external reused control files')
+    for row in external_files.values():
+        path=member(base,row['path']);need(path.is_file() and path.stat().st_size==row['bytes'] and sha(path)==row['sha256'],'External control source drift '+row['path'])
+    required_controls=set()
+    for arm,folder in EXTERNAL_ARMS.items():
+        need(set(ext['arms'][arm])=={'monitor','challenge'},'Only two paired control cohorts')
+        for kind,key in [('monitor','monitor_cases'),('challenge','challenge_cases')]:
+            reportname=folder+'/'+kind+'/results.json';need(reportname in external_files,'External summary pin');summary=read(member(base,reportname));need(summary==ext['arms'][arm][kind],'Control summary exactbytes/semantic join')
+            need(summary['arm']==arm and summary['w']==1 and summary['kind']==kind and summary['oracle_unavailable_clean_information']==(arm=='C'),'Reused control semantics')
+            need([r['id'] for r in summary['records']]==[r['id'] for r in p[key]],'Control exact ordered cohort')
+            required_controls.add(reportname)
+            for row in summary['records']:
+                relative=row['PNG'];need(relative.startswith(folder+'/'+kind+'/') and relative in external_files and row['PNG_sha256']==external_files[relative]['sha256'],'Pinned control PNG binding')
+                array=str(PurePosixPath(relative).with_suffix('.npz'));need(array in external_files,'Pinned control NPZ binding');required_controls.update((relative,array))
+    need(set(external_files)==required_controls,'No omitted or extra external controls')
+    def weight(row,name,want_sha,want_bytes):
+        raw=root/row['path'];need(not any(v.is_symlink() for v in (raw,*raw.parents)),'Linked original/R1 weight path');path=raw.resolve(strict=True)
+        need(path.is_relative_to((Path.home()/'forensic-dgp').resolve()) and path.name==name and path.is_file() and row['sha256']==want_sha and row['bytes']==want_bytes and path.stat().st_size==want_bytes and sha(path)==want_sha,'Exact original/R1 byte pin');return path
+    checkpoint=weight(p['checkpoint'],'codeformer_inpainting.pth',ORIGINAL_SHA,370786611);parent=weight(p['parent'],'terminal_training_state.pth',PARENT_SHA,701952165)
+    need(p['parent']['protocol_sha256']==PARENT_PROTOCOL_SHA and p['parent']['logical_sha256']==PARENT_LOGICAL,'Only full R1 parent, never failed predictor CE state')
+    return p,checkpoint,parent

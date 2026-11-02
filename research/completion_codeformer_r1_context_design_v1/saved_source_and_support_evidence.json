@@ -1,0 +1,3042 @@
+{
+  "format": "completion-r1-source-data-coverage-and-scarf-support-diagnosis-v1",
+  "complete": true,
+  "audited_UTC": "2026-10-25T14:02:00.525926+00:00",
+  "protocol_sha256": "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d",
+  "source_references": [
+    {
+      "id": "tr_ffhq_00084",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "88e387bb051fa8d830f1c821db4731bc5f46b570117b24e7df8cc7ec85f99dd3",
+      "target256_sha256": "0cfe95966113c9dbc43bbaee4fef50afddfaf20e7c81dcfcc8070f984bc70f36",
+      "HQ512_sha256": "863f26a7ddf4f888497aee838e75799cda6e4cd20a920dd0a498f3ed5c7e46aa",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 111,
+      "mean_channel_spread_8bit": 36.57579040527344,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/80038275@N00/32958708742/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_00178",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "4f77ecad82d0fccff5f940a5baeba0ac1a0a66a613dbb609e2bd3362763af22a",
+      "target256_sha256": "d419ad0f909772a14280048e1196514c9b82d7d60fab4839b559e93ddab7b3f3",
+      "HQ512_sha256": "508dc4cc328efc3cc253845240faa25464080e2b4dbc747cdf53acf8009c20db",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 183,
+      "mean_channel_spread_8bit": 57.02507019042969,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/peiphotos/2723596319/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_00323",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "fa8e161711d6280a41b4f444d0eeacfe61a4047beba2754b041af46e5041519c",
+      "target256_sha256": "ce85468e9476eadd75954457542d875f6f004b64fb08ae3f2b9f9317b15e1a14",
+      "HQ512_sha256": "d05bbc8be7db3565be26993bfcbf7ebb79621a4a261e147fbbd3126340bab14f",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 141,
+      "mean_channel_spread_8bit": 28.027603149414062,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/krystynahaywood/25316976317/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_00616",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "3e6101f1917890a5573352934c6ce22b93a842b60709bc9ec5ca18854e6675d6",
+      "target256_sha256": "51c9b660744f30c21263a5828d537b64a7d827ef1e44e379b7654f774bfb1512",
+      "HQ512_sha256": "93c5e7c4e186e0a656b9c74a3ff6c138c1f9b8252495b567b527c5b44192ee8e",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 136,
+      "mean_channel_spread_8bit": 18.822250366210938,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/colacaoufg/27470923721/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_01210",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "ddd45ab30f0a9dd2d87836d38fca07ca14939eee8ff185103f000e5a5859bb01",
+      "target256_sha256": "7afaddf7ec320f437a3859ff1c7bd98d5f7e3ee7a9db29e188e04a57c6160513",
+      "HQ512_sha256": "ec8a176cdbf95c797ee5ee321aa438e2a5213328c179f3d117cb7ef8482ab4ed",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 137,
+      "mean_channel_spread_8bit": 23.9598388671875,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/28613992@N07/2966709746/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_01639",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "e4d87e20ea22e80a4b3f47164d5b99c7b211632e57abab6179b93ad6df8892f8",
+      "target256_sha256": "3fc94eeecff668f0d997cfbcac7471980d4b0f1cb0def5d3aca6f7652ab1bb97",
+      "HQ512_sha256": "bfc09965a123a102b7454ccfd0fe370cc365e92f0695d503107008f98dd10f3d",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 193,
+      "mean_channel_spread_8bit": 55.675079345703125,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/singapore2010/4925788003/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_01672",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "0cdbbf8673adfcbac85869a23d20bd810b001edca048e937da22d38c4ffbcaca",
+      "target256_sha256": "f74d71ad538b4009a8439e71696503f892507ed3d620e0829a880802ccefeefc",
+      "HQ512_sha256": "1309f969834eb3a0f967564450673b1d8f927908d311bc3747a0cef011c81412",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 216,
+      "mean_channel_spread_8bit": 31.838760375976562,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/23104721@N08/14050351822/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_01926",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "76b741454ea3d7acd0c7410593af88d4e1a1afdcaf1eb3d1d6f879ddd5b6b8cf",
+      "target256_sha256": "7df58ab5ff0313d1a295ba70847b1d7feb786f3a1f60b57f1439511a08639c22",
+      "HQ512_sha256": "bdc3c21aea11c1cb5f553c4b29fe608d5bb477497db6e1e9b077e592b08015e4",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 160,
+      "mean_channel_spread_8bit": 50.11967468261719,
+      "license": "Public Domain Dedication (CC0)",
+      "photo_url": "https://www.flickr.com/photos/au_unistphotostream/35235791391/",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02068",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "bd5c1d33a48f830999389fe64f5dd783a42683f95d14c671814759698e9f89c7",
+      "target256_sha256": "92421c092070b2ec72d12bb8ab4474f83a196129391767d81fa20d70280563d3",
+      "HQ512_sha256": "17953d8112ea42e7c12ca8c5e4741a789472821d0bb343c400805314a4be4413",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 147,
+      "mean_channel_spread_8bit": 28.150726318359375,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/kathmandu/15242829480/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02147",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "d59f91d7e1d34397bb05291dfeefedfeb1b5963dc4ecd4ee1f4592b2e911318a",
+      "target256_sha256": "aa0e3957d9aa9a8144702c8881388510f8506ed3c9b94576a8d38e139533484b",
+      "HQ512_sha256": "97f27afa0aa16e5693905c83bc6377da2220e4792043636375eb139aa789dc92",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 94,
+      "mean_channel_spread_8bit": 35.76139831542969,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/caitlinmscott/3068852305/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02421",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "10a444e2ed87cc6aa86d99b1e3e9faa8da32d8e14cf0df2e9f565ae373c816a7",
+      "target256_sha256": "fcdde72b4fe8a5024239146c1375520e759dc1148c4c679ad835a2317138bd00",
+      "HQ512_sha256": "d60a2bc938d8d01dc94fc21ea51370c4233ab06b15113a6b1f883df265d7d863",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 100,
+      "mean_channel_spread_8bit": 31.836502075195312,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/sedsucsd/40649445260/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02473",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "3127c18c573a9c435aa743866581a5e35816549509eb87e559e5e02adc8d4547",
+      "target256_sha256": "8e365140c418f91db23adb4a129062f7002dc2e9d84ee6eee5d826adcfa84338",
+      "HQ512_sha256": "7bed634733f33997275ecd84425056e727bd777fc56c0dfa35aaa40d4c02643e",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 187,
+      "mean_channel_spread_8bit": 66.55728149414062,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/solardecathlonaut2013/8352265611/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02665",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "59b2471cf1811a9f09321f41e29e82147971496f511e2faf50fd16d33411bc78",
+      "target256_sha256": "b08f0a8a749a9736c5de699708d34e222eaee8c323b5d18f262146617d842611",
+      "HQ512_sha256": "9ca817a10f552727c8af5f5375190705fad28344d04d1538cd811b969bbfc305",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 169,
+      "mean_channel_spread_8bit": 43.73643493652344,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/swissmeetings/41261268900/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02932",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "9291447fc3b6677e78651f957c0378ed6da9fbb4c9b3feac6d3656978a19bbd6",
+      "target256_sha256": "2a1874ba902bbcd0ce1139dffdf62cf30199f0c4312266dde8db758c1e092345",
+      "HQ512_sha256": "729fa16f1881d96288aa21d9443a506d0e97363605c9675aa82dfa7935d86ebd",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 134,
+      "mean_channel_spread_8bit": 36.03485107421875,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/tedconference/10300629273/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_02983",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "1395348ee5d67eefe5a4dd95c86e0741ea764d0f917057ebccd8a68b457266d3",
+      "target256_sha256": "9b8a968c8649378929e1fb8c95481a8c1c94860e6ecec759da7a92294935eeda",
+      "HQ512_sha256": "5d7e9ae7e390696ddf9c0ca40b31d1aaa7044345a4b4932196106b5f9f2c36f3",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 196,
+      "mean_channel_spread_8bit": 37.70721435546875,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/passion_in_action/3375102958/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03089",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "cfba243632d02d7ee502a38801e22bc595846c06f162c3d0243625e5c16dd5e8",
+      "target256_sha256": "dba5ddc0edba6a03372899dfba455f336b361b94621171af434ea748d9d753c7",
+      "HQ512_sha256": "d4329a052ea73492a36f364fb76da62d634af3bc795cc07f77691c0d7428367d",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 117,
+      "mean_channel_spread_8bit": 36.297088623046875,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/rohit_saxena/34368072851/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03147",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "d15dd71d3a9768d9d4c347df01c301c75d325398f3cd94932c9bae4e83c6a167",
+      "target256_sha256": "df6c8c1c242e9c4985370e1205498d216e052c315046a187875af2009cfc91fa",
+      "HQ512_sha256": "9fa7880fbcce2db868562689a71973c3927a5190b541dd9d55bcfcddb3b6d02b",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 254,
+      "mean_channel_spread_8bit": 69.61972045898438,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/carmelanava/11938749255/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03212",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "6846b395dc26e3dddab50026a2196e14898ce956e88af825375073fdaeb560cc",
+      "target256_sha256": "6d359974e74c637b3dabdbdba2822b8b7ceedb19ebc4522c0d5ce449ba4fdd60",
+      "HQ512_sha256": "93e01130b81cc95983b8ca583d0f8a0f180476006998d8460e017cfacd79a10e",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 113,
+      "mean_channel_spread_8bit": 29.37225341796875,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/151908459@N04/27539928048/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03313",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "4a8ac17a84009f0ea6eb57ff308255d7d0cfd2056aac0d79cf2832e14a0cfc27",
+      "target256_sha256": "9d9ea74c3a0239f38ee857dae6d897adefdccb0063dfc3c4716af60cfc0db8c7",
+      "HQ512_sha256": "dd7a0d6648f1ce72953767d9586f80403b731991bab748f28fba68126d745103",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 179,
+      "mean_channel_spread_8bit": 40.19355773925781,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/vancouverfilmschool/8033912012/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03437",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "ec0d0d8e5af1d5af53a9d48f1d71f93f7e8ad83090df9ba0643e8d80571cc379",
+      "target256_sha256": "431e9d2b9486634603a1c9c4bc96e7c8f193b5a1c0aab8a77735100ea4637b78",
+      "HQ512_sha256": "2f17076529f41cbd052ac28a235b86987699137d8c9cb1277bc7e0b1a6d39246",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 181,
+      "mean_channel_spread_8bit": 32.785430908203125,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/foto4go/39949944051/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03483",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "dc36760a4f521c5daf3c807362ab66ade760ca7314501be86f931dd2f69b4ed4",
+      "target256_sha256": "61acdc67ecd3ebb4dfc4d91ca2c34ed1b510a6ae6127d92c752d5e7aa967ce80",
+      "HQ512_sha256": "40685af75ee648e7859a644bba70e67b33eb35a016065e17821dc0ecf31760ff",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 125,
+      "mean_channel_spread_8bit": 35.23481750488281,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/tukulti/27276922099/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03497",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "4f057890a4616e59531007578855ef9ed20de2602c66a024a388c9bfe50a3717",
+      "target256_sha256": "9c88fd3a5474db64af00aa138116da2a8d21f23628b080eaa8bede60dabd5f9a",
+      "HQ512_sha256": "f87beae679c57d6a9ee5db8bde3221cc786c5395d8fc7b4dfd294d28fc1e3b85",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 169,
+      "mean_channel_spread_8bit": 29.501724243164062,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/127774774@N08/33642918726/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03735",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "7846a364d605a061f232868ad2671a895a75e2c0bd6c5f0c6c32f62051b833b5",
+      "target256_sha256": "c8ffd9da22da5a6e52c52e171d7cd7108ae80161a3361d3384851d822434e8f9",
+      "HQ512_sha256": "b10c6834259dcf1f2dbe454f737c300556c1c657767779d61a68de9b898bc0e1",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 141,
+      "mean_channel_spread_8bit": 36.284576416015625,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/nickwebb/10522756695/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03761",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "08107af601ad48b3f664b738e01e81c29dcdf41600d48f7777bc3d593813d242",
+      "target256_sha256": "e8f7710f1139291fd37856a8af619555472838ab984282752083f77f636f79d5",
+      "HQ512_sha256": "1e9aa9f0c65ebd84f198428a5956f3b5ecb89b08995622d0977c5a705c0eae87",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 209,
+      "mean_channel_spread_8bit": 49.54142761230469,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/joelosfeliz/5591486338/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_03917",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "e298c18b1ba6996be6b6ffdccf5b394847152ece4d3f4f6f93c38476853985b2",
+      "target256_sha256": "e79b52eadd481daf042ac80072a32ac596750d89779b3746d3396740ffd4b85a",
+      "HQ512_sha256": "ef25513ad24e10607bc91d3c33152ed25da2e6110d4a655f1fd5c4b9c11d2734",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 103,
+      "mean_channel_spread_8bit": 38.59619140625,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/mrbakke/41689934512/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_04169",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "99afca738aa142808c85c410026a85b5b51881c08dc76efc2f4f659147b61dc0",
+      "target256_sha256": "cc94b7f40733d62e8094ca7f809d429f32334411c6e6ab1f16cf06a4ebba27c5",
+      "HQ512_sha256": "408068a87b5e020397dfed4c23797471cba9358fc0cfae2a1354bf4d080b3872",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 161,
+      "mean_channel_spread_8bit": 59.33924865722656,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/robert_trudeau/40474847160/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_04436",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "ba5c44594a9133f7c125e479cd086cee9db095d842bdad4fe45cf48f638289a8",
+      "target256_sha256": "9220be69e1dbf470d63973fbd57b15454371dd9e16441b3ff7a4889cd6b40c82",
+      "HQ512_sha256": "57ca57c90657b90d21d6cbe4e63622e6783097bc97e281c6049c3c73d29750eb",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 252,
+      "mean_channel_spread_8bit": 63.57148742675781,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/m_kajo/28305673959/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_04454",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "26941d98016343c3a8b3215931dd47f15e8e3b462f4ce7904598d7976a954660",
+      "target256_sha256": "5f392faa1cc9d31053f82532e52951cbbb8fc3e3736a545b397d60d9a8c387dd",
+      "HQ512_sha256": "5c5a65b94ce701d1af8307e33d30e9f22020e22f2b4f0221c2cf09e657898043",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 200,
+      "mean_channel_spread_8bit": 54.18309020996094,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/bcplphoto/24419593398/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_04476",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "6017faf7aee16a01852b9debe2af6bc641ac56df2100bf5ef4778613a53d1c5b",
+      "target256_sha256": "24c942ba3487b466e911b288a9700c847bf1f576207692245fd44fb84f91342a",
+      "HQ512_sha256": "3bd527442904dc66de811164fac8b83c9c188b89167472ad5a869571c44d863d",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 129,
+      "mean_channel_spread_8bit": 43.89216613769531,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/attig/4902195812/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "Sweden",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_04498",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "1975c4d8414b41798702287fae63edb7656d9580bc5733bb208cf3ddc5b70cd6",
+      "target256_sha256": "b4792ff265d52742be01a09accf870eaaba660ac166c0a6d612e8749f46b82a6",
+      "HQ512_sha256": "0ca06d5e09413add3fa7f76791257303d784718acfdce68704fb0bf771c5817e",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 173,
+      "mean_channel_spread_8bit": 53.426055908203125,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/p_d_gibson/469546155/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_04759",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "c91bfd4f00c3086aa1154513d903ff6581f26a904e15c9b0c356fb538a72f791",
+      "target256_sha256": "30b88d5a47cd06eae533e4ef2ee2fc6316082e03f7256aa845209bd7c4ff55aa",
+      "HQ512_sha256": "ccfcf395482fb80198125157ec5760549ca73ac61288695dc340e7b7a7a04db9",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 105,
+      "mean_channel_spread_8bit": 46.64453125,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/bigfoot/33645194194/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_05002",
+      "role": "fit",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "3cb8176d202db94c2f0a096829ec634d23824b33e830bd18aaf53f5eb6950f77",
+      "target256_sha256": "a8589749fb0a29a3d06d995002579edaecbcca42ffe457b3ef718a684a8fff31",
+      "HQ512_sha256": "0e5e4bb6d4bcca9ee80888b89645f9646e5ca2c1033eee6c827b4f3cc0a15c28",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 148,
+      "mean_channel_spread_8bit": 76.03593444824219,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/lobinhoot/3278020263/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_05179",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "f17722b08deb45c31fb5212bf270d99dcf49381de0728d387e1b16183b2e5b74",
+      "target256_sha256": "319e293325cf3844e1ae7f277e4a0bee27d400616170903a71e04bf8efaa75f1",
+      "HQ512_sha256": "61239889027e5c3ff4cf8f0fa08e79850d9a84babbf3581850501ded3c814535",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 255,
+      "mean_channel_spread_8bit": 109.01136779785156,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/moneyconf/27908190717/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_05302",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "54d844667b0c34c142bba08e2d6d297dfefc9b24bd3892f50cf91a272a1b67bf",
+      "target256_sha256": "f756ce24492eb486e256ddf7d46c667a5f4d8a9580c3e2cced39f7c99015c641",
+      "HQ512_sha256": "cc16fa9943e19f94a062a0367bc50b2cc0363ffd77babd6c095b00e3d9a26df5",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 100,
+      "mean_channel_spread_8bit": 29.145401000976562,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/j_benson/34799293061/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_06781",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "8adaa11778a8dbde9097e09ed9eecb45f2a59147b5cedb08d11aa102dfd59504",
+      "target256_sha256": "a47aa336d834ca1b1556a8c355943a0f107615a61d5f5ceccd0593cb362c85c3",
+      "HQ512_sha256": "448083858da58b88e8559bd2043b580a3cf407f1acd4d87edf3a25763de57457",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 132,
+      "mean_channel_spread_8bit": 48.19859313964844,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/mn_francis/2332516783/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_06809",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "7bc9253a606c7341f0351ec8cca1103daae1cc2e4536fa4373b85de02c37ea91",
+      "target256_sha256": "551ca6924fb869f6a467da05dd4198fc35dfa2f24b839790c8122de81216c3d5",
+      "HQ512_sha256": "9b81565aada35a41b6e392c243af76050081e2a6cce6c59e134b1552d5d851d6",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 204,
+      "mean_channel_spread_8bit": 44.378753662109375,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/13990523@N07/15718552045/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_06995",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "8b399f768791698c4e5ca66a3657cb821d6935fd625dbb81e4e0ece672bfc654",
+      "target256_sha256": "a9a1dba0c01a991367bb5fa7f2f7948b5a81b48caee7bd97fd740b367eaccb32",
+      "HQ512_sha256": "4746c329b77323292c20ee4c721b8deb91178f3ff279143fc0ed0ab733977131",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 166,
+      "mean_channel_spread_8bit": 36.13905334472656,
+      "license": "Attribution-NonCommercial License",
+      "photo_url": "https://www.flickr.com/photos/benidormone/27932776589/",
+      "license_url": "https://creativecommons.org/licenses/by-nc/2.0/",
+      "country_metadata": "Spain",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_07087",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "30271e128879aa3bd67e365c485e5461d36ee3ab7bc04c48fbc030e5ffd5741d",
+      "target256_sha256": "46ab28d83b1e650ef1400f2c62e6f84f56aa863ff1dcf7dfdc61860c0d5abe69",
+      "HQ512_sha256": "44e9d02f17060a367c7f5dfe5494927f8197545c02985b7dcda11655d1f88c3b",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 171,
+      "mean_channel_spread_8bit": 54.40330505371094,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/davidspinks/5159864356/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_07202",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "b76ae442d3d9a99ec01f420f5591d2d97faf49afd9a0fe85deda254f97a8ee3e",
+      "target256_sha256": "f3412a8c6bf8efd96a68ab2228a550ff7080e797fee399346e10cc9a7abdbc03",
+      "HQ512_sha256": "e8d060447d778f456d00365d33b9c29c1ebbd6ed27ef344d075feec273c1c195",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 122,
+      "mean_channel_spread_8bit": 39.40321350097656,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/usfsregion5/37818051065/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "",
+      "ethnicity_inferred": false
+    },
+    {
+      "id": "tr_ffhq_07386",
+      "role": "monitor",
+      "original_role": "train",
+      "source1024_verified": true,
+      "original_size": [
+        1024,
+        1024
+      ],
+      "source_mode": "RGB",
+      "source_sha256": "7318bd62d8ed1ffc751ecce453b6044c7106e2a499193939f47a837d3c25be17",
+      "target256_sha256": "d9414f2017b99711a245d02aee4fdb88822afb1e4b3dfdb51f57cde3a9804bb6",
+      "HQ512_sha256": "0fd5c4ed96a36b9f5e545c286719d2c77cd283597cfdd4acbdaa081620257f7d",
+      "strict_grayscale_all_pixels": false,
+      "max_channel_spread_8bit": 198,
+      "mean_channel_spread_8bit": 43.08290100097656,
+      "license": "Attribution License",
+      "photo_url": "https://www.flickr.com/photos/shalynn/15105964251/",
+      "license_url": "https://creativecommons.org/licenses/by/2.0/",
+      "country_metadata": "United States",
+      "ethnicity_inferred": false
+    }
+  ],
+  "source_counts": {
+    "FIT": 32,
+    "MONITOR": 8,
+    "all_original_train": true,
+    "FIT_MONITOR_disjoint_source_ids": true,
+    "identity_disjointness_not_established": true,
+    "FFHQ_pretraining_overlap_unknown": true,
+    "strict_gray_FIT": 0,
+    "strict_gray_MONITOR": 0,
+    "licenses": {
+      "Attribution License": 21,
+      "Attribution-NonCommercial License": 18,
+      "Public Domain Dedication (CC0)": 1
+    }
+  },
+  "mask_counts": {
+    "FIT_files": 128,
+    "unique_actual_mask_files": 4,
+    "by_geometry": {
+      "lower_face": 32,
+      "eye_band": 32,
+      "image_left_lens": 32,
+      "cheek_object": 32
+    }
+  },
+  "mask_examples": [
+    {
+      "id": "tr_ffhq_05002__lower_face",
+      "kind": "lower_face",
+      "bytes_sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c",
+      "pixels": 15277,
+      "bbox_xyxy": [
+        38,
+        140,
+        219,
+        233
+      ]
+    },
+    {
+      "id": "tr_ffhq_05002__eye_band",
+      "kind": "eye_band",
+      "bytes_sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154",
+      "pixels": 8640,
+      "bbox_xyxy": [
+        48,
+        78,
+        208,
+        132
+      ]
+    },
+    {
+      "id": "tr_ffhq_05002__image_left_lens",
+      "kind": "image_left_lens",
+      "bytes_sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265",
+      "pixels": 2219,
+      "bbox_xyxy": [
+        54,
+        82,
+        117,
+        127
+      ]
+    },
+    {
+      "id": "tr_ffhq_05002__cheek_object",
+      "kind": "cheek_object",
+      "bytes_sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659",
+      "pixels": 2908,
+      "bbox_xyxy": [
+        148,
+        126,
+        208,
+        188
+      ]
+    }
+  ],
+  "actual_schedule": {
+    "cycles": 32,
+    "fit_case_slots_per_route": 128,
+    "each_fit_reference_mask_pair_seen_once_per_route": true,
+    "same128_pairs_code_and_fusion": true,
+    "optimizer_steps_per_route": 32,
+    "microbatch_backwards_per_route": 128,
+    "all_pairs": [
+      "tr_ffhq_01639__lower_face",
+      "tr_ffhq_04169__eye_band",
+      "tr_ffhq_02983__image_left_lens",
+      "tr_ffhq_03483__cheek_object",
+      "tr_ffhq_01672__lower_face",
+      "tr_ffhq_00323__eye_band",
+      "tr_ffhq_03497__image_left_lens",
+      "tr_ffhq_03147__cheek_object",
+      "tr_ffhq_02932__lower_face",
+      "tr_ffhq_03212__eye_band",
+      "tr_ffhq_00084__image_left_lens",
+      "tr_ffhq_03917__cheek_object",
+      "tr_ffhq_04454__lower_face",
+      "tr_ffhq_03089__eye_band",
+      "tr_ffhq_01926__image_left_lens",
+      "tr_ffhq_03437__cheek_object",
+      "tr_ffhq_03313__lower_face",
+      "tr_ffhq_02068__eye_band",
+      "tr_ffhq_05002__image_left_lens",
+      "tr_ffhq_01210__cheek_object",
+      "tr_ffhq_04476__lower_face",
+      "tr_ffhq_03761__eye_band",
+      "tr_ffhq_02473__image_left_lens",
+      "tr_ffhq_02421__cheek_object",
+      "tr_ffhq_03735__lower_face",
+      "tr_ffhq_02665__eye_band",
+      "tr_ffhq_04759__image_left_lens",
+      "tr_ffhq_00178__cheek_object",
+      "tr_ffhq_04436__lower_face",
+      "tr_ffhq_02147__eye_band",
+      "tr_ffhq_04498__image_left_lens",
+      "tr_ffhq_00616__cheek_object",
+      "tr_ffhq_04169__lower_face",
+      "tr_ffhq_02983__eye_band",
+      "tr_ffhq_03483__image_left_lens",
+      "tr_ffhq_01639__cheek_object",
+      "tr_ffhq_00323__lower_face",
+      "tr_ffhq_03497__eye_band",
+      "tr_ffhq_03147__image_left_lens",
+      "tr_ffhq_01672__cheek_object",
+      "tr_ffhq_03212__lower_face",
+      "tr_ffhq_00084__eye_band",
+      "tr_ffhq_03917__image_left_lens",
+      "tr_ffhq_02932__cheek_object",
+      "tr_ffhq_03089__lower_face",
+      "tr_ffhq_01926__eye_band",
+      "tr_ffhq_03437__image_left_lens",
+      "tr_ffhq_04454__cheek_object",
+      "tr_ffhq_02068__lower_face",
+      "tr_ffhq_05002__eye_band",
+      "tr_ffhq_01210__image_left_lens",
+      "tr_ffhq_03313__cheek_object",
+      "tr_ffhq_03761__lower_face",
+      "tr_ffhq_02473__eye_band",
+      "tr_ffhq_02421__image_left_lens",
+      "tr_ffhq_04476__cheek_object",
+      "tr_ffhq_02665__lower_face",
+      "tr_ffhq_04759__eye_band",
+      "tr_ffhq_00178__image_left_lens",
+      "tr_ffhq_03735__cheek_object",
+      "tr_ffhq_02147__lower_face",
+      "tr_ffhq_04498__eye_band",
+      "tr_ffhq_00616__image_left_lens",
+      "tr_ffhq_04436__cheek_object",
+      "tr_ffhq_02983__lower_face",
+      "tr_ffhq_03483__eye_band",
+      "tr_ffhq_01639__image_left_lens",
+      "tr_ffhq_04169__cheek_object",
+      "tr_ffhq_03497__lower_face",
+      "tr_ffhq_03147__eye_band",
+      "tr_ffhq_01672__image_left_lens",
+      "tr_ffhq_00323__cheek_object",
+      "tr_ffhq_00084__lower_face",
+      "tr_ffhq_03917__eye_band",
+      "tr_ffhq_02932__image_left_lens",
+      "tr_ffhq_03212__cheek_object",
+      "tr_ffhq_01926__lower_face",
+      "tr_ffhq_03437__eye_band",
+      "tr_ffhq_04454__image_left_lens",
+      "tr_ffhq_03089__cheek_object",
+      "tr_ffhq_05002__lower_face",
+      "tr_ffhq_01210__eye_band",
+      "tr_ffhq_03313__image_left_lens",
+      "tr_ffhq_02068__cheek_object",
+      "tr_ffhq_02473__lower_face",
+      "tr_ffhq_02421__eye_band",
+      "tr_ffhq_04476__image_left_lens",
+      "tr_ffhq_03761__cheek_object",
+      "tr_ffhq_04759__lower_face",
+      "tr_ffhq_00178__eye_band",
+      "tr_ffhq_03735__image_left_lens",
+      "tr_ffhq_02665__cheek_object",
+      "tr_ffhq_04498__lower_face",
+      "tr_ffhq_00616__eye_band",
+      "tr_ffhq_04436__image_left_lens",
+      "tr_ffhq_02147__cheek_object",
+      "tr_ffhq_03483__lower_face",
+      "tr_ffhq_01639__eye_band",
+      "tr_ffhq_04169__image_left_lens",
+      "tr_ffhq_02983__cheek_object",
+      "tr_ffhq_03147__lower_face",
+      "tr_ffhq_01672__eye_band",
+      "tr_ffhq_00323__image_left_lens",
+      "tr_ffhq_03497__cheek_object",
+      "tr_ffhq_03917__lower_face",
+      "tr_ffhq_02932__eye_band",
+      "tr_ffhq_03212__image_left_lens",
+      "tr_ffhq_00084__cheek_object",
+      "tr_ffhq_03437__lower_face",
+      "tr_ffhq_04454__eye_band",
+      "tr_ffhq_03089__image_left_lens",
+      "tr_ffhq_01926__cheek_object",
+      "tr_ffhq_01210__lower_face",
+      "tr_ffhq_03313__eye_band",
+      "tr_ffhq_02068__image_left_lens",
+      "tr_ffhq_05002__cheek_object",
+      "tr_ffhq_02421__lower_face",
+      "tr_ffhq_04476__eye_band",
+      "tr_ffhq_03761__image_left_lens",
+      "tr_ffhq_02473__cheek_object",
+      "tr_ffhq_00178__lower_face",
+      "tr_ffhq_03735__eye_band",
+      "tr_ffhq_02665__image_left_lens",
+      "tr_ffhq_04759__cheek_object",
+      "tr_ffhq_00616__lower_face",
+      "tr_ffhq_04436__eye_band",
+      "tr_ffhq_02147__image_left_lens",
+      "tr_ffhq_04498__cheek_object"
+    ]
+  },
+  "loss_scales": {
+    "CE": {
+      "all128_mean": 1.7940031946636736,
+      "all128_min": 0.7116066813468933,
+      "all128_max": 3.819671392440796,
+      "first8cycle_mean": 2.523110669106245,
+      "last8cycle_mean": 1.3072785679250956,
+      "first_last_caveat": "Different case groups; descriptive scale only, not paired learning improvement"
+    },
+    "latent_MSE": {
+      "all128_mean": 0.028975075405469397,
+      "all128_min": 0.0058944011107087135,
+      "all128_max": 0.0945974588394165,
+      "first8cycle_mean": 0.034423168341163546,
+      "last8cycle_mean": 0.026495939411688596,
+      "first_last_caveat": "Different case groups; descriptive scale only, not paired learning improvement"
+    },
+    "mask_RGB512_L1": {
+      "all128_mean": 0.05549318254634272,
+      "all128_min": 0.01717420667409897,
+      "all128_max": 0.13003653287887573,
+      "first8cycle_mean": 0.05737942340783775,
+      "last8cycle_mean": 0.056387413875199854,
+      "first_last_caveat": "Different case groups; descriptive scale only, not paired learning improvement"
+    },
+    "inner_boundary_RGB512_L1": {
+      "all128_mean": 0.02734609809704125,
+      "all128_min": 0.011598125100135803,
+      "all128_max": 0.06365299969911575,
+      "first8cycle_mean": 0.028516238264273852,
+      "last8cycle_mean": 0.026346872851718217,
+      "first_last_caveat": "Different case groups; descriptive scale only, not paired learning improvement"
+    }
+  },
+  "gradient_clipping": {
+    "code": {
+      "steps": 32,
+      "preclip_norm_min": 5.658923625946045,
+      "preclip_norm_max": 23.634035110473633,
+      "steps_norm_gt1": 32
+    },
+    "fusion": {
+      "steps": 32,
+      "preclip_norm_min": 0.23318660259246826,
+      "preclip_norm_max": 0.6707642674446106,
+      "steps_norm_gt1": 0
+    }
+  },
+  "monitor_snapshots": [
+    {
+      "cycle": 0,
+      "macro": {
+        "raw_hole_L1": 0.05186035036662819,
+        "raw_boundary_L1": 0.02990209072828478,
+        "PNG_hole_L1": 0.05184828308888644,
+        "PNG_boundary_L1": 0.02988463663296518
+      },
+      "geometry": {
+        "lower_face": {
+          "raw_hole_L1": 0.0615485948087897,
+          "raw_boundary_L1": 0.02427310559121352,
+          "PNG_hole_L1": 0.06153552843973661,
+          "PNG_boundary_L1": 0.024243517024432386
+        },
+        "eye_band": {
+          "raw_hole_L1": 0.06380585858851302,
+          "raw_boundary_L1": 0.03186261946828956,
+          "PNG_hole_L1": 0.06379300562817719,
+          "PNG_boundary_L1": 0.0318314532009385
+        },
+        "image_left_lens": {
+          "raw_hole_L1": 0.05005188039854445,
+          "raw_boundary_L1": 0.0370538642463601,
+          "PNG_hole_L1": 0.050046096251329136,
+          "PNG_boundary_L1": 0.03705332350805246
+        },
+        "cheek_object": {
+          "raw_hole_L1": 0.0320350676706656,
+          "raw_boundary_L1": 0.02641877360727595,
+          "PNG_hole_L1": 0.03201850203630283,
+          "PNG_boundary_L1": 0.02641025279843738
+        }
+      }
+    },
+    {
+      "cycle": 8,
+      "macro": {
+        "raw_hole_L1": 0.05044574764682262,
+        "raw_boundary_L1": 0.02809346995446111,
+        "PNG_hole_L1": 0.05042843988691773,
+        "PNG_boundary_L1": 0.028069757650011202
+      },
+      "geometry": {
+        "lower_face": {
+          "raw_hole_L1": 0.06007598632578112,
+          "raw_boundary_L1": 0.02321237241438995,
+          "PNG_hole_L1": 0.0600650257702959,
+          "PNG_boundary_L1": 0.02318672273564455
+        },
+        "eye_band": {
+          "raw_hole_L1": 0.06338746694870936,
+          "raw_boundary_L1": 0.03053294873645163,
+          "PNG_hole_L1": 0.06336847161704189,
+          "PNG_boundary_L1": 0.030504886249371546
+        },
+        "image_left_lens": {
+          "raw_hole_L1": 0.04739147345010128,
+          "raw_boundary_L1": 0.034230325995966766,
+          "PNG_hole_L1": 0.0473715564038444,
+          "PNG_boundary_L1": 0.03421120082019736
+        },
+        "cheek_object": {
+          "raw_hole_L1": 0.030928063862698717,
+          "raw_boundary_L1": 0.024398232671036118,
+          "PNG_hole_L1": 0.030908705756488748,
+          "PNG_boundary_L1": 0.024376220794831344
+        }
+      }
+    },
+    {
+      "cycle": 16,
+      "macro": {
+        "raw_hole_L1": 0.04970351911138888,
+        "raw_boundary_L1": 0.027383038055339624,
+        "PNG_hole_L1": 0.049689183091023124,
+        "PNG_boundary_L1": 0.027358624228262497
+      },
+      "geometry": {
+        "lower_face": {
+          "raw_hole_L1": 0.05845070505347176,
+          "raw_boundary_L1": 0.022298987270491576,
+          "PNG_hole_L1": 0.058437402802538396,
+          "PNG_boundary_L1": 0.022273055107329714
+        },
+        "eye_band": {
+          "raw_hole_L1": 0.062488017847508556,
+          "raw_boundary_L1": 0.029903663401929743,
+          "PNG_hole_L1": 0.062476133200193656,
+          "PNG_boundary_L1": 0.029880095734875146
+        },
+        "image_left_lens": {
+          "raw_hole_L1": 0.04753554144904154,
+          "raw_boundary_L1": 0.03397925487011347,
+          "PNG_hole_L1": 0.04752133240257196,
+          "PNG_boundary_L1": 0.0339578260498099
+        },
+        "cheek_object": {
+          "raw_hole_L1": 0.030339812095533648,
+          "raw_boundary_L1": 0.02335024667882371,
+          "PNG_hole_L1": 0.030321863958788466,
+          "PNG_boundary_L1": 0.023323520021035236
+        }
+      }
+    },
+    {
+      "cycle": 32,
+      "macro": {
+        "raw_hole_L1": 0.048655168778252524,
+        "raw_boundary_L1": 0.026951480225606093,
+        "PNG_hole_L1": 0.0486412934648548,
+        "PNG_boundary_L1": 0.026929193759349733
+      },
+      "geometry": {
+        "lower_face": {
+          "raw_hole_L1": 0.05685505242021128,
+          "raw_boundary_L1": 0.021796395951078417,
+          "PNG_hole_L1": 0.056844840443214015,
+          "PNG_boundary_L1": 0.02177399638159503
+        },
+        "eye_band": {
+          "raw_hole_L1": 0.060905858028082197,
+          "raw_boundary_L1": 0.02928507047840673,
+          "PNG_hole_L1": 0.060892622095134345,
+          "PNG_boundary_L1": 0.029262637213004858
+        },
+        "image_left_lens": {
+          "raw_hole_L1": 0.046835544214281606,
+          "raw_boundary_L1": 0.03375812839059269,
+          "PNG_hole_L1": 0.04682112592671138,
+          "PNG_boundary_L1": 0.03373248536887522
+        },
+        "cheek_object": {
+          "raw_hole_L1": 0.03002422045043498,
+          "raw_boundary_L1": 0.022966326082346538,
+          "PNG_hole_L1": 0.03000658539435949,
+          "PNG_boundary_L1": 0.022947656073923822
+        }
+      }
+    }
+  ],
+  "scarf_saved_support_findings": [
+    {
+      "id": "val_244_knit_scarf_native",
+      "condition": "original_photo",
+      "mask_sha256": "7142017716345086c83a8b6e638c3e37f8aea36556549a48100c297db9c51579",
+      "mask_pixels": 14259,
+      "outside_pixels": 51277,
+      "outside_source_RGB_bytes_unchanged": 153831,
+      "outside_RGB_changed_bytes": 0,
+      "outside_raw_changed_coordinates": 0,
+      "outside_3pixel_ring_RGB_bytes_unchanged": 4752,
+      "R1_vs_original_generated_hole_MAE_8bit": 8.635575192276223,
+      "R1_vs_original_generated_hole_maxdelta_8bit": 87,
+      "generated_hole_pixels_with_any_change_from_original_model": 14141,
+      "R1_vs_observed_source_hole_MAE_8bit": 32.24735254926713,
+      "semantic_limitation": "No hidden clean target or covering segmentation truth: these deltas locate changed/copied support; they cannot quantify remaining cloth/anatomy quality."
+    },
+    {
+      "id": "val_244_knit_scarf_degraded",
+      "condition": "synthetic_degraded_photo",
+      "mask_sha256": "7142017716345086c83a8b6e638c3e37f8aea36556549a48100c297db9c51579",
+      "mask_pixels": 14259,
+      "outside_pixels": 51277,
+      "outside_source_RGB_bytes_unchanged": 153831,
+      "outside_RGB_changed_bytes": 0,
+      "outside_raw_changed_coordinates": 0,
+      "outside_3pixel_ring_RGB_bytes_unchanged": 4752,
+      "R1_vs_original_generated_hole_MAE_8bit": 10.710428501297427,
+      "R1_vs_original_generated_hole_maxdelta_8bit": 82,
+      "generated_hole_pixels_with_any_change_from_original_model": 14187,
+      "R1_vs_observed_source_hole_MAE_8bit": 32.63742197910092,
+      "semantic_limitation": "No hidden clean target or covering segmentation truth: these deltas locate changed/copied support; they cannot quantify remaining cloth/anatomy quality."
+    },
+    {
+      "id": "val_336_scarf_gloves_native",
+      "condition": "original_photo",
+      "mask_sha256": "aad3b5b60d6e9e560e9d7ea62de0a6cc7cb6ae6e2e37670855bb9e94949a9fd8",
+      "mask_pixels": 18757,
+      "outside_pixels": 46779,
+      "outside_source_RGB_bytes_unchanged": 140337,
+      "outside_RGB_changed_bytes": 0,
+      "outside_raw_changed_coordinates": 0,
+      "outside_3pixel_ring_RGB_bytes_unchanged": 5970,
+      "R1_vs_original_generated_hole_MAE_8bit": 9.662863642018092,
+      "R1_vs_original_generated_hole_maxdelta_8bit": 114,
+      "generated_hole_pixels_with_any_change_from_original_model": 18722,
+      "R1_vs_observed_source_hole_MAE_8bit": 58.74242505020348,
+      "semantic_limitation": "No hidden clean target or covering segmentation truth: these deltas locate changed/copied support; they cannot quantify remaining cloth/anatomy quality."
+    },
+    {
+      "id": "val_336_scarf_gloves_degraded",
+      "condition": "synthetic_degraded_photo",
+      "mask_sha256": "aad3b5b60d6e9e560e9d7ea62de0a6cc7cb6ae6e2e37670855bb9e94949a9fd8",
+      "mask_pixels": 18757,
+      "outside_pixels": 46779,
+      "outside_source_RGB_bytes_unchanged": 140337,
+      "outside_RGB_changed_bytes": 0,
+      "outside_raw_changed_coordinates": 0,
+      "outside_3pixel_ring_RGB_bytes_unchanged": 5970,
+      "R1_vs_original_generated_hole_MAE_8bit": 9.398908851806437,
+      "R1_vs_original_generated_hole_maxdelta_8bit": 107,
+      "generated_hole_pixels_with_any_change_from_original_model": 18732,
+      "R1_vs_observed_source_hole_MAE_8bit": 54.65308951324839,
+      "semantic_limitation": "No hidden clean target or covering segmentation truth: these deltas locate changed/copied support; they cannot quantify remaining cloth/anatomy quality."
+    }
+  ],
+  "prospective_256case_continuation_plan": {
+    "prepared_not_executed": true,
+    "references": 32,
+    "case_rows": 256,
+    "original_anchor_rows": 128,
+    "augmented_rows": 128,
+    "condition_counts": {
+      "original_clear_anchor": 128,
+      "strict_gray_clear": 32,
+      "RGB_mild_degraded": 32,
+      "low_chroma_mild_degraded": 32,
+      "RGB_clear_irregular": 32
+    },
+    "each_ref_has4_original_plus4_augmented": true,
+    "rows": [
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00084",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00178",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00323",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_00616",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01210",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01639",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01672",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_01926",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02068",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02147",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02421",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02473",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02665",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02932",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_02983",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03089",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03147",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03212",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03313",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03437",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03483",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03497",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03735",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03761",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_03917",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04169",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04436",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04454",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "lower_face",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "eye_band",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "image_left_lens",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04476",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "lower_face",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "eye_band",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04498",
+        "mask_kind": "cheek_object",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "lower_face",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "eye_band",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "image_left_lens",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_04759",
+        "mask_kind": "cheek_object",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "lower_face",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "lower_face",
+        "condition": "RGB_clear_irregular",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "eye_band",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "eye_band",
+        "condition": "strict_gray_clear",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "image_left_lens",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "image_left_lens",
+        "condition": "RGB_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "cheek_object",
+        "condition": "original_clear_anchor",
+        "same_original_input_target_mask": true
+      },
+      {
+        "reference_id": "tr_ffhq_05002",
+        "mask_kind": "cheek_object",
+        "condition": "low_chroma_mild_degraded",
+        "mask": "new prospectively generated bounded irregular variant of this geometry",
+        "same_original_source_role": "train"
+      }
+    ]
+  },
+  "local_neural_calls": 0,
+  "local_gradient_calls": 0,
+  "local_training_calls": 0,
+  "new_VM_packet_prepared": false
+}

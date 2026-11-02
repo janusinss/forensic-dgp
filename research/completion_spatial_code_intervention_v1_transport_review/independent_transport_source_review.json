@@ -1,0 +1,169 @@
+{
+  "format": "spatial-code-intervention-v1-independent-transport-source-review-v1",
+  "complete": true,
+  "independent": true,
+  "source_pins": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_spatial_code_intervention_v1.py",
+      "bytes": 35352,
+      "sha256": "c400df520cc383aedccd3f192f7e9a9c32eecc3d1fe245d7177617ab6832ab5a"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_spatial_code_intervention_v1.py",
+      "bytes": 16848,
+      "sha256": "fd7b7bf5879c3c785d65c9f0ce0884811d11a28c22e16eb084b348f2f96711b5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\run_completion_codeformer_spatial_code_intervention_v1.sh",
+      "bytes": 851,
+      "sha256": "0604a063589a4f30a14694906502ceedc81a880d17bad9406a2b836ff43976f0"
+    }
+  ],
+  "checks_passed": 61,
+  "checks": [
+    "No model import prepare_completion_codeformer_spatial_code_intervention_v1.py",
+    "No model import export_completion_codeformer_spatial_code_intervention_v1.py",
+    "Exact export resources",
+    "Exact root installer admission",
+    "Current installer equals actually exercised root literal",
+    "All nine actual installer fixtures match outcomes",
+    "Guide LF and all templates resolved",
+    "Exactlyfive SCP commands",
+    "Each SCP has two arguments and one remote",
+    "Exact project and zone",
+    "Upload direction/file",
+    "Each SCP has two arguments and one remote",
+    "Exact project and zone",
+    "Upload direction/file",
+    "Each SCP has two arguments and one remote",
+    "Exact project and zone",
+    "Download direction/file",
+    "Each SCP has two arguments and one remote",
+    "Exact project and zone",
+    "Download direction/file",
+    "Each SCP has two arguments and one remote",
+    "Exact project and zone",
+    "Download direction/file",
+    "Both Windows current folders exact",
+    "Exact tmux session",
+    "Literal installer exact in guide",
+    "Checksum before install",
+    "1280MiB cap refuses before write",
+    "Short writes rejected",
+    "2GiB floor enforced before write",
+    "Exportfixture empty_log_valid expected behavior",
+    "Exportfixture empty_log_valid source evidence untouched",
+    "Fixture return400cap",
+    "Exportfixture stable_alias expected behavior",
+    "Exportfixture stable_alias source evidence untouched",
+    "Fixture return400cap",
+    "Actual sameinode payload exported once and finalrevalidated",
+    "Exportfixture distinct_alias expected behavior",
+    "Exportfixture distinct_alias source evidence untouched",
+    "Rejectedfixture neverpublishesfinalarchive",
+    "Exportfixture success_checkpoint expected behavior",
+    "Exportfixture success_checkpoint source evidence untouched",
+    "Rejectedfixture neverpublishesfinalarchive",
+    "Exportfixture partial expected behavior",
+    "Exportfixture partial source evidence untouched",
+    "Fixture return400cap",
+    "Corrupt failedpartial retained without checkpoint loading",
+    "Exportfixture unknown_file expected behavior",
+    "Exportfixture unknown_file source evidence untouched",
+    "Rejectedfixture neverpublishesfinalarchive",
+    "Exportfixture unknown_directory expected behavior",
+    "Exportfixture unknown_directory source evidence untouched",
+    "Rejectedfixture neverpublishesfinalarchive",
+    "Exportfixture members expected behavior",
+    "Exportfixture members source evidence untouched",
+    "Rejectedfixture neverpublishesfinalarchive",
+    "Exportfixture source_drift expected behavior",
+    "Exportfixture source_drift source evidence untouched",
+    "Rejectedfixture neverpublishesfinalarchive",
+    "Independent sourcealiasreplacement repair fixture current",
+    "Source bytes stable through independent fixtures"
+  ],
+  "actual_export_fixtures": [
+    {
+      "case": "empty_log_valid",
+      "accepted": true,
+      "error": null,
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\empty_log_valid"
+    },
+    {
+      "case": "stable_alias",
+      "accepted": true,
+      "error": null,
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\stable_alias"
+    },
+    {
+      "case": "distinct_alias",
+      "accepted": false,
+      "error": "ValueError('Distinct failed-state pair refused; retain VM evidence')",
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\distinct_alias"
+    },
+    {
+      "case": "success_checkpoint",
+      "accepted": false,
+      "error": "ValueError('Successful frozen diagnostic must not return checkpoint/partial')",
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\success_checkpoint"
+    },
+    {
+      "case": "partial",
+      "accepted": true,
+      "error": null,
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\partial"
+    },
+    {
+      "case": "unknown_file",
+      "accepted": false,
+      "error": "ValueError('Unlisted output evidence outputs/unlisted.txt')",
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\unknown_file"
+    },
+    {
+      "case": "unknown_directory",
+      "accepted": false,
+      "error": "ValueError('Unlisted output directory')",
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\unknown_directory"
+    },
+    {
+      "case": "members",
+      "accepted": false,
+      "error": "ValueError('Return regular member cap400 including manifest')",
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\members"
+    },
+    {
+      "case": "source_drift",
+      "accepted": false,
+      "error": "ValueError('Installed source/data drift asset.txt')",
+      "pass": true,
+      "root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_policy_001\\source_drift"
+    }
+  ],
+  "exact_installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+  "root_installer_admission": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\root_installer_fixtures.json",
+    "bytes": 6827,
+    "sha256": "610177441433cbb5f282c8264d35a0b63696e13b72cb4c3bcb627eb2c6b58e6e"
+  },
+  "independent_alias_repair": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_alias_drift_repair_fixture.json",
+    "bytes": 1161,
+    "sha256": "fb98877b30ed1cda7b60858cedbe16bea7f84d7353e74e33a51bcf6c7af78f51"
+  },
+  "archive_ready_claim": false,
+  "published_archive_not_yet_reviewed": true,
+  "unpublished_guide_template_only": true,
+  "neural_calls": 0,
+  "model_construction": false,
+  "VM_calls": 0,
+  "scope": "Read-only other-agent builder/exporter/shell source, exact actually-tested installer literal, own tinyfile export fixtures and guide-template commands. No original model/research sources altered; no VM operations or real checkpoint load."
+}

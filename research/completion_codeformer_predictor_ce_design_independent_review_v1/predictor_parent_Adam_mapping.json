@@ -1,0 +1,4602 @@
+{
+  "format": "prospective-predictor114-exact-parent-Adam-subset-map-v1",
+  "complete": true,
+  "independent": true,
+  "parent": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_return\\cctv_completion_codeformer_finetune_v1_r1_results\\outputs\\terminal_training_state.pth",
+    "bytes": 701952165,
+    "sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd"
+  },
+  "parent_code_group_size": 278,
+  "new_predictor_group_size": 114,
+  "mapping_rule": "Filter original parent optimizer_parameter_names.code in its retained order by exact114allowlist; use corresponding oldgroup.params index to fetch state. Enumerate newIDs0..113. Preserve everyother group option.",
+  "new_group_configuration": {
+    "lr": 1e-05,
+    "betas": [
+      0.9,
+      0.99
+    ],
+    "eps": 1e-08,
+    "weight_decay": 0.0,
+    "amsgrad": false,
+    "maximize": false,
+    "foreach": null,
+    "capturable": false,
+    "differentiable": false,
+    "fused": null,
+    "decoupled_weight_decay": false,
+    "params": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94,
+      95,
+      96,
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113
+    ]
+  },
+  "mapped_states": [
+    {
+      "new_parameter_id": 0,
+      "name": "position_emb",
+      "parent_code_parameter_index": 164,
+      "parent_state_id": 164,
+      "R1_parameter": {
+        "shape": [
+          256,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 524288,
+        "sha256": "bf70e2ededa01dac6c1a562fb71578c95bfa26e3590e01f1ba33d0523c5a4c15"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          256,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 524288,
+        "sha256": "78b65856ec77c5c942d431a366d4a07a9da5807c404c84a62ca73a4ceb55feff"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          256,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 524288,
+        "sha256": "60860957f8742993186836120ca7744b73add2028348dd69c462a3b660895250"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 1,
+      "name": "feat_emb.weight",
+      "parent_code_parameter_index": 165,
+      "parent_state_id": 165,
+      "R1_parameter": {
+        "shape": [
+          512,
+          256
+        ],
+        "dtype": "torch.float32",
+        "bytes": 524288,
+        "sha256": "02fe45fbf201e0225914e55311e1ce2410f05d55e732073f2151ba92e4b9dd19"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          256
+        ],
+        "dtype": "torch.float32",
+        "bytes": 524288,
+        "sha256": "2b077cd0f991fadf22d5f787495c188523ee4d0a5c8a4643f26995ed2d536fdb"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          256
+        ],
+        "dtype": "torch.float32",
+        "bytes": 524288,
+        "sha256": "e84843d929525b341537740dbe3d6675ecc74ac204348462478e418b66f2b8a3"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 2,
+      "name": "feat_emb.bias",
+      "parent_code_parameter_index": 166,
+      "parent_state_id": 166,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "fdd3e494a2cc0c75a98c2e8f50d121a52a76bdfc5ca5ceac6a8e27e110811dce"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "8e7c1ac09cb6fa43d52aa9e06585ef52812b0db603c71fc6cacc231996d1231f"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b425619afd8fd8054be846b60d8c9dfb773d1fbc1aadd3f9f9ae96f8683b3689"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 3,
+      "name": "ft_layers.0.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 167,
+      "parent_state_id": 167,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "e462d3318296072d8a4b42f6ff5649224b8dc2347af64f865c98385aacfbceb8"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "d7028e90f90d4e3ce3f38f9d3cc9a985943b09c1e3882ce21890a9d9839ef5f3"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "6c040ab79e2971826943b02756d019546e2742e533dac82187262c9ab9bef8e7"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 4,
+      "name": "ft_layers.0.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 168,
+      "parent_state_id": 168,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "4c5d63a38485b11ab537c042bed243dfb241ec4a26d1dcb3565c01e10d895e42"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "0b7a03a22853a9e3d1babc20fb848eb063260dfa0e934bd8bd5a5cf44c7e8480"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "15681435ac2bfb48c597238bca0560ebc7a1762fd73848b3f6e501edebb16250"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 5,
+      "name": "ft_layers.0.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 169,
+      "parent_state_id": 169,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "303f7e45ea2ea051fbe47b7cc43d2cc9e58f637d37981da010a2632544c36a3a"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "2d143f2bebd14cb92fec3b23a699e4083b51a340296949f46c70edb33ed8631a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "5cf7536ea42ee0d33691c8519bd3124b36b1cd8c5809ace544fe36bbce85f31b"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 6,
+      "name": "ft_layers.0.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 170,
+      "parent_state_id": 170,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "4d0fb43e2640b72b52137abde3af60792b320d713df8c683aeb33687d548d34c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "8c706aefef0dcdc7638cebe54b1ba36d3b2853716319abfd445f84909f2b9d18"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1eeb4628d76ad5938c9358be4dde3eafb2308db4e0e9b554938dd9425c5c6359"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 7,
+      "name": "ft_layers.0.linear1.weight",
+      "parent_code_parameter_index": 171,
+      "parent_state_id": 171,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "7338944fff23d5dd76c26aa27ffd869d59800fc1e1f754333c3901d183d77250"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "09bc019be5ced2fcf03c1961d42ce5d7e8c0a6b2aeb40066b6fdb11f56688222"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "cfec7ec5edab14f39032b7a48b64d3e809fa30b639fcedd184745a9f127208ce"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 8,
+      "name": "ft_layers.0.linear1.bias",
+      "parent_code_parameter_index": 172,
+      "parent_state_id": 172,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "17776f7d2bcc8549f7ed84a0146ea382121abf0ee7e6712729543697a5798b2b"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "18e34bbd4d58fcc4b8bd82340ce6b22b62654476a69b96c50a13d83c52155fff"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "66d4c12aa21966b8b74dec0843217b22bab0e032c8c02c0880e4b3be628096e7"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 9,
+      "name": "ft_layers.0.linear2.weight",
+      "parent_code_parameter_index": 173,
+      "parent_state_id": 173,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "6d6bf79ea532af6b02eb4ba058ccf59db1ff50c46712780d255ba33042107b8b"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "3420961339bde3040ea08f4ccb9a7193fdf2435bf80c9e6c83839d770b93091a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "db40aa598c9a25d30131d1ffaf6f0539c7ab2dd7138fa09a87df62c0b89fddce"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 10,
+      "name": "ft_layers.0.linear2.bias",
+      "parent_code_parameter_index": 174,
+      "parent_state_id": 174,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2d29cf14b6451c4ecca44cb253080c379aed025079563165c1f91a625c4c3e7c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5921e5345410eaed4174b31cdab85e7a4c715a2874bfddcdaf79f4f6b7d4c770"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "669b8daee014a04ca2b73a701bdb1824d0bf042b0bd675dd58cb26f605ad3108"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 11,
+      "name": "ft_layers.0.norm1.weight",
+      "parent_code_parameter_index": 175,
+      "parent_state_id": 175,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "f4082a4fd3598723bf83330d2d5a0cfae8c8485ab73413a8ce7d9afebd4b4957"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "3638d440e2a9dca6f91ae9bacf005e47eb4c5c47aff021844c3cf5dfe43380fd"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9cd6b42888f19955efc700014426abc86c00d485e851c56f3dfe139a65dda9a5"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 12,
+      "name": "ft_layers.0.norm1.bias",
+      "parent_code_parameter_index": 176,
+      "parent_state_id": 176,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "96cae9400f3586275aefcc733ed3886501354a91e6a47a0e1ff0af01684f0a95"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "78bf9b4a985005648b707816bdb97bb5accba9f01ad87a8571b90a17027a9633"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a90cac923d53db729fbcc3e69cde43d5ccbe5e1d653a7eee41f6617bc5e1802f"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 13,
+      "name": "ft_layers.0.norm2.weight",
+      "parent_code_parameter_index": 177,
+      "parent_state_id": 177,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "008bcdb1954881cdd4dcd6b6a14fa4a8a322d519e99bc4f3bc531c8f5517bf94"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "37446c979d55da748c0a63bf9f0664a55c2e0af0ff5794386d1a75d109f65b97"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "624c33e7fdd152119e5b3b5fba7e77a1404d288abf0f23d1e5e56d8f8c06cd14"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 14,
+      "name": "ft_layers.0.norm2.bias",
+      "parent_code_parameter_index": 178,
+      "parent_state_id": 178,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "43ea0b1d152d5a90eaf039a33a806304666721ff63f63020c02936ea1e03e4f3"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a78e02209c142a0d94ea8f6dce504ed5b6968a1f4b741cefe559b1fa219ed422"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "0f75305a905323c9056de2810d6d6dc24fb573d944fa6c1693edcd10be803c99"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 15,
+      "name": "ft_layers.1.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 179,
+      "parent_state_id": 179,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "fe84ac727cbf1d44f0aee15c7beca5342437b34bc1355d50dd2d938fef57d72a"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "c8ef47f5717562908323f29ecc70bfe906f7a0353e810c7ba69a2cd1598594b7"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "2f5ed82c794149be2f589db01fec50ee4a6d442bc42dd76f772707b84b39bb1c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 16,
+      "name": "ft_layers.1.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 180,
+      "parent_state_id": 180,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "193c35267d8d69bed13057120b7d5cee0444ca3664b1905f2fb0f1b908799695"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "1eb73336ea783b4e779fe68266e24f9167844549979b28249b5a0739fddb8eb9"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "a594f9b32f8d43d7c1d031fa47b8b8ef969d4777d234be2e315761d0f561e401"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 17,
+      "name": "ft_layers.1.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 181,
+      "parent_state_id": 181,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "b8f4653e38a5510fdfecb7d6496db3eb74809367bba4638d561d74c797c11b5c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "b9da2d46f9394cf5122d8e211dcc9ea29f3227bef508c04a1b6f61db5398efc5"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "fe3d4dae2559760c088d876e88279afd0b11290e8e065cadd262ce15f469cc33"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 18,
+      "name": "ft_layers.1.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 182,
+      "parent_state_id": 182,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e8bb1194fbe1b6f187692a1347a441469ee42b68c016cddc2bb42510fd1ad3cf"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "7d4d3a7feccde1fb081f532d795b217a7f1241531a08e51522417de13b57e700"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5c3f507a44ceb9edd3d21f2ae19bdcf7a0e1c1e53fce1185ea693c8351f611f6"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 19,
+      "name": "ft_layers.1.linear1.weight",
+      "parent_code_parameter_index": 183,
+      "parent_state_id": 183,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "9e94e84abd5dffecedf0556c3c629376272d21171bf5f593b14afc5e312abe77"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "a8fe67575fd6d5d80e8434b21e94f232ccb637d4c443a916b65240023193c0f1"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "7213313f70136294f7b44efb6b1f27d6cdd91d435b83e4649ddba3eee07f3ab2"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 20,
+      "name": "ft_layers.1.linear1.bias",
+      "parent_code_parameter_index": 184,
+      "parent_state_id": 184,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "bfa3496cae500b9bf43809cf78b062d7bfad3052b58ccab22f2ff20a27513558"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "d572dfab0b61fc31c829f26f232892c53246bd9e782a51c48928058ac8bd33b7"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "d3176f28397a8d62e5ff04e04acf200464416c34f4837ef0f32ee4d463c0ee8c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 21,
+      "name": "ft_layers.1.linear2.weight",
+      "parent_code_parameter_index": 185,
+      "parent_state_id": 185,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "8e29a85e3b1602d3ba57a008d6aa287b19e8681441933d8815e07cd27572373c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "842025c18bb980d596b1f61b83292b9340b713ae13d1294da004acc81aa84abd"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "3de295c0424d5fc330f81a11534375b9d3f866ff0f5da5ea90fcf3009c4b8ead"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 22,
+      "name": "ft_layers.1.linear2.bias",
+      "parent_code_parameter_index": 186,
+      "parent_state_id": 186,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "50c1e62a466e5ba0517f5985cf5202f78d9c4d7fa537ca22998c037f0b92b3f7"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "79626064bbc2347599d487e17079d61a19a06567dca42370ec28c76761ab2d84"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2cb7f606625c5a6f5804544f20639e2d3760bfc46e9605b0dc4ce0888dc983f1"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 23,
+      "name": "ft_layers.1.norm1.weight",
+      "parent_code_parameter_index": 187,
+      "parent_state_id": 187,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5fbc17f9badd477ee53f73aaf7713e1340ccf631366241c47aac42a0abcde37d"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "45a5caa159e58aa3bfad0d201ce8aafaca37b32c7f02ea1a263d126d7c4c5f65"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a0ae6414b5048c1b8295b709ef854267ba2873a6951b93015b22ab223bc39897"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 24,
+      "name": "ft_layers.1.norm1.bias",
+      "parent_code_parameter_index": 188,
+      "parent_state_id": 188,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "7d13b881ad5618d9694a3cd59b40cef1ce53da684b7e813e2a84d24fc0a85edc"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "551ac7ad0813812a5a33687371d1ec236d0576f07b9301f57bbee4fbf3911aa6"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "0065b03a0701bc973631b0d7c0c234d3803425d9ef2c9192aaf27d8971824bda"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 25,
+      "name": "ft_layers.1.norm2.weight",
+      "parent_code_parameter_index": 189,
+      "parent_state_id": 189,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "d9ede0ff6f27f91ab08f374d6ab35a7b35dec1f8a9862e0d89ea7c35b0760a75"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "345ee714210d4bd6104e37db6384806f0d494686f30ae42c67fc0eaeb3efcda3"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2157dd38d4cf0d416b229059ec2111c2ec350ab7e079c3660459f20561c75b6a"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 26,
+      "name": "ft_layers.1.norm2.bias",
+      "parent_code_parameter_index": 190,
+      "parent_state_id": 190,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5f22b3f99370444ba21465fb54851c4805d4815b5f3521ca34ef71cfad8dd02f"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2737ae88790c4c423f06120c517c2936cedb60a2184a7b10a4e7d3914f07e221"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e13d9f8c4b76a4507d53625be870637c2976b0003d4558ae63c0f5312a0eab5f"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 27,
+      "name": "ft_layers.2.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 191,
+      "parent_state_id": 191,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "e51fb56e3e31e9e11c30d7be5cb501d80f39115ffa0869fab04db9e92655e148"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "6c9f04cd4fa3e30546a0e6fd347ee04f63dfbbb99bc74bce8991e19fd29bbe25"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "77b20fa6e7cb97689f7354c57f33019d1bbd3bb8b93c54e047b5dea83c3de9ed"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 28,
+      "name": "ft_layers.2.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 192,
+      "parent_state_id": 192,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "7a98f54f6fe5c940947f4080c01d7fc4256bb36d25e9bb372af415608e042b22"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "6c4a4f5c14e0d87df89195511c1ccd3e63cdb43d0d2b77e174ffe089cf56a720"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "dfa23ac71c65918581b1942a708a7ce1fe6578db71b882bf49fc464c1cb334f9"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 29,
+      "name": "ft_layers.2.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 193,
+      "parent_state_id": 193,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "bf98853954dc30bde2e4d6e96dddb97d1eb6fb99be827ddd171e8c08f0dfd117"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "851fb35b7c9e5233d187432ff6db1fb99ff75f166d41bac52d45d9ade1e9c6a0"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "10ba0a0e7aba6f30c0e90e3e81cffdfe46ef97028cf6fbac389766896de3d697"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 30,
+      "name": "ft_layers.2.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 194,
+      "parent_state_id": 194,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "fa57123963c761e0978fe582afb34edb1622a7b40ea8e677e8db61ba8bd1a407"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "3cb3c6e88c004daa94affc960414fbc23fd7bb411ddf18e80bfe90652efe2b06"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "717572c983ecc31585b3f7fc35da6597f29efc257d9113b231d85ce2048b8975"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 31,
+      "name": "ft_layers.2.linear1.weight",
+      "parent_code_parameter_index": 195,
+      "parent_state_id": 195,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "483e883e67de80fa436390c044c3f709d1ce59d060158a02e2fe842d16afe8d8"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "b2b04b3cb43ce0ccd84335b6e8f999b7e9c3bcdc0de0ee4bab9447d19de0def5"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "5edae48bebe387f48fb0087e609dabcbe1c2886c04d1c0b6b60dfb9f3a49509b"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 32,
+      "name": "ft_layers.2.linear1.bias",
+      "parent_code_parameter_index": 196,
+      "parent_state_id": 196,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "dc5489c3ea1227c3483f1d4399f21019fc3ce0ef759ebd7f85a3e261bc0ee243"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "72095ac17a5352bf0f1ffea7241555b83f5c24939c8cdb6abdce88fc7cb4f6a1"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "8b6e66485a78434edc477320ae6ed82a432f7b4ed20530ecce02a049cd4d652a"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 33,
+      "name": "ft_layers.2.linear2.weight",
+      "parent_code_parameter_index": 197,
+      "parent_state_id": 197,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "a2a91e0d9b6d18f00782a26420fb8dd0eba4b1342cc9584ba57d716d66fb45b1"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "6ae2e0923e2a5de70da6cf372413d8f0386d651ebd77343143d08a82a07a6c5d"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "d945e3b5dfdb7b2b143bf3bbb673458f69dc384558cac70b40b3d0325a64dea4"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 34,
+      "name": "ft_layers.2.linear2.bias",
+      "parent_code_parameter_index": 198,
+      "parent_state_id": 198,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "28e3e8a24d66b2e1972329d6574178f7a389e80f5a9ff78b6d27786621a8fc9c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9f8625183c6b205c1a0c1ef02839516ab8c2a884f3c15b94cd835f82c4d5bf59"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1cb50baa4018b1f84596be41af4a910237843e042bbc2abbef1180c7ccbe63e5"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 35,
+      "name": "ft_layers.2.norm1.weight",
+      "parent_code_parameter_index": 199,
+      "parent_state_id": 199,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5844d3af6a28c93d82407ffbf13afd5c5b45add63ce94bcced69622548406c58"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2e09c53da0f163509937c71b9cec5dfba5eee1366651bbdbead2e3cf66a0eecd"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b0652d9fd5fe6d566a83987686036f5464f9f08e61be5bf3bae8e5971d1d7f08"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 36,
+      "name": "ft_layers.2.norm1.bias",
+      "parent_code_parameter_index": 200,
+      "parent_state_id": 200,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "0d31746897031c895cd1ec4a8553b8be17902a9fb24b1e37c8c919f8bc2882c9"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6676a4e0b2bc2b0300832d64d89facd72eb571f54cd1e4d972a8c9ca54afac02"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "beb5d3be514639a9aac8c3529508693795f3d600b87a0e7465c134900e597eed"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 37,
+      "name": "ft_layers.2.norm2.weight",
+      "parent_code_parameter_index": 201,
+      "parent_state_id": 201,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "53423044b0acdf3ce3134060749f5213d3832ee36020738af6f4a4aa18778b09"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b7706f68c2d597095571af047aef01b9a74067df8abdc6277ca92c631b664d3b"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "093ed20411ee856d1fac2698e2514121db392908bfa2b317ee9eceea0bb39bbc"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 38,
+      "name": "ft_layers.2.norm2.bias",
+      "parent_code_parameter_index": 202,
+      "parent_state_id": 202,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a78b11b369810b0ec497703dccbc969d0300a3bc094690b4eb7f835fa1286db7"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "32943528f05b4e1a4c0914513cd87a66868fe40288e4ccb139ac1afdc75cd1f3"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9a354e4dc741ed185063339c7da686e8ec6b578241c41654a8622f938e64a618"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 39,
+      "name": "ft_layers.3.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 203,
+      "parent_state_id": 203,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "49bed93759ac932b16656a8233252a13a274a94e7b6f85e1bd6476ce6605aea6"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "c87416a3c376bfeb6e3fe8989dad18ab11ae393ec3edc0faf7bc5dfd5eb83e68"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "46de66a74a8faca1479970e90867be7d8aa3f27fb241f081a765c79166715ddf"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 40,
+      "name": "ft_layers.3.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 204,
+      "parent_state_id": 204,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "d1b67cc454ba3f387942928a3d4418a31f8edcaf41e09ba9d5d3aa80f69907e5"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "ed7c5a315440eb15eba18adbde1ca7b238355a2076d18bd34bbd9db14a862547"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "ec3603e2714db3105ce629c55c5ff30c2d1d8d215f2be81e78890621ed69dcc6"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 41,
+      "name": "ft_layers.3.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 205,
+      "parent_state_id": 205,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "0f8e9f078b8a5936f51d9aeda8375bd4f400347c6b81794106e891b91b0cae2a"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "133d3049f7401dde66df06c14dac781ad1d1c3d9961bd287a549d88dbd89b167"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "3e7d2ac513770861891ea43580de5908aa3238e80cf04449504d99a2cfe52852"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 42,
+      "name": "ft_layers.3.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 206,
+      "parent_state_id": 206,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "491339dd37f1f7150c7693029554066badecd2fa4a133c61d6535378cb2084cb"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "791dc797ce480272aa4a8f0d50a395650e6c8873b67b97bb75e0e6450998abe2"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "4d07150867f890f856fe7c3eb296491edaae05b680dd6e3ef80eea43b323ba08"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 43,
+      "name": "ft_layers.3.linear1.weight",
+      "parent_code_parameter_index": 207,
+      "parent_state_id": 207,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "13517b9078e4a79db27309666c2f9c41eef90555ee507dafbca42f0b258d8616"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "ee48172da72da5befc8abc9c554c51ee79c7e1ac67d82bd7ff55eff97574def3"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "6c5aabc1c7e129a701aff25341e4ca592f0edd5e6bb663b938d5fe59a9dc93f4"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 44,
+      "name": "ft_layers.3.linear1.bias",
+      "parent_code_parameter_index": 208,
+      "parent_state_id": 208,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "a8c2e47b57dbe88280f3dad4143c9c5cc45e68234ba022c9b6f8890748e50e05"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "0761cde2ab08c708dda3703657bb65162f7a7425c731c9e9a3b98c37d5d036b9"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "633355a54a83bad17b8c7aa9b148d1a5e338c302dd493f79bbd38ce3f132f8a1"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 45,
+      "name": "ft_layers.3.linear2.weight",
+      "parent_code_parameter_index": 209,
+      "parent_state_id": 209,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "0038070d51e2cf4a1a7ee45a960cb99ced4237f46d7708d492e952b2f3c97a78"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "7adaa526fd99d00fbb49fa4f3035ad5147be4149e7c042d9cbd2546bd26fe99a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "6f0f895b56af39a719486387240aaa5838da2b78b00dff8f2d120663ff98f76c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 46,
+      "name": "ft_layers.3.linear2.bias",
+      "parent_code_parameter_index": 210,
+      "parent_state_id": 210,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b0925ab5d52a7387ddcb36f3b8478c02fcd71b7c65dadc02a54ce5397d20e25b"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "813317eb7ed3cec5a6c4cdd141aefcfcbf96539f307a938ddae9cecbe4a4496c"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "43c06baee89ef0518637e19a59c4a8788bab41097c470bd916fab57f055b28cc"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 47,
+      "name": "ft_layers.3.norm1.weight",
+      "parent_code_parameter_index": 211,
+      "parent_state_id": 211,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "d970160ae5e3c926c671dec16186fb493d562286c654cba39d7f51d174078baf"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "80ea2267c2a856bf9781fc8a56b020efc85a4f16c02692c807edb193349b110d"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1b7b17496e0a712593119fb737141298c1f97c250f425c9f2e50af50b22d68f1"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 48,
+      "name": "ft_layers.3.norm1.bias",
+      "parent_code_parameter_index": 212,
+      "parent_state_id": 212,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a9a6c6cbb7f7272182fb529b8c18806915346ae49b54ee1416f45b23c7bd8b75"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "f424de953153ca69abd487c8eec98b53149ec69d42d9ce22eb7be84c93ac409f"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "335b2f230c0755d94d6f9dd2ec540cde56fac5d953d1f423dfe2281a57dedc2c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 49,
+      "name": "ft_layers.3.norm2.weight",
+      "parent_code_parameter_index": 213,
+      "parent_state_id": 213,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "aa57dec2c5904e99d5a023c9f51be15937fbb8bc1e98556422521847dde8b87d"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b44486d29c61e9f274a795632f24abd8a998406c626ec9a9d70f4e96ecd1cca9"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "0a9cf6fe9a98e7538b6789085d33e9f13f154b589b7146eb78792c87347d6805"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 50,
+      "name": "ft_layers.3.norm2.bias",
+      "parent_code_parameter_index": 214,
+      "parent_state_id": 214,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6d8c7e0324c9f803e6a6b04c4ab6e25a8c2944e70524def1c4d84abebbcb8e3b"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5f875144b35f0edf90bd6b135363d16bac9cf518b2c191f329ab50b894a4e302"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "f563ec72c319fb7f6d3e4545edfdbeb0e709a29f8fcd5d289803d5bb1d9993b6"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 51,
+      "name": "ft_layers.4.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 215,
+      "parent_state_id": 215,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "b706b67830ac136043d6e0eb8c783e7256fd7f81dd506c26559345257fe56ba0"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "1035d67ce3140bf54efc924a9d85eb15311393678e0f75a080d55d8bde9f3621"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "01c2516cbbcccdce0425659bac4f651bac0ab0f919776318d98edc3e72c97b81"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 52,
+      "name": "ft_layers.4.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 216,
+      "parent_state_id": 216,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "a219d2e62ee52aa08f74607f24179112c91f4b12c2556508d67ad0820119da00"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "97ee352f8b505894034c3897a0467cde84a0b08b30d10e81ca26390ec59409a7"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "4505706dc2d6d37568da9809f5d194ec37be02684ee86dbb39e4876663156891"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 53,
+      "name": "ft_layers.4.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 217,
+      "parent_state_id": 217,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "5511009035dd3bfe168c0953ff2ac511bb222505e05d2954ae19bc4e509e5042"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "af6f0effa40ed29a14a95a6c19b6b964ab3c43c4497906b31250c1400d33a4ee"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "6fb1352a8b048b384933ea4ae68e3ffc5375f02a8146bbe0d2aff79484d8d91c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 54,
+      "name": "ft_layers.4.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 218,
+      "parent_state_id": 218,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b1c7c1cdc3dde9cd96ccdc313ff54080e14ad9db951b331f6d6cc23eb52b129a"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "eed04ba33de4cb0db49b06bca65c45c8c6085a7215f59b02b5fd2b33c6a0764f"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "7e0015e249670c7b6d22875221cdc647b441a85dd24939509109d370108507ee"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 55,
+      "name": "ft_layers.4.linear1.weight",
+      "parent_code_parameter_index": 219,
+      "parent_state_id": 219,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "9f22e4f9bfa47ac8ff107bd49dd302ff98303c49c666177cd41b0a9b737599eb"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "36e86046fec36d4335a6a748f3bd45a4c0f501b779aa6ff482aa77168af9634c"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "a45039d8752ea54e63365fecfec55a7b61a29b7028aa90574c6753b2c5320879"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 56,
+      "name": "ft_layers.4.linear1.bias",
+      "parent_code_parameter_index": 220,
+      "parent_state_id": 220,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "d942c5d0f94f39da222d092670b9091d246c6a105f753ce28c80b3f31d500942"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "2e40b009fc504954d4a8500ef3fab5102a49457f31214034a10015cc2eb58eaf"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "8946904abb6af2d25c6d931e99b47a64e8f4d622efa2d706d136c7b598aa9edd"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 57,
+      "name": "ft_layers.4.linear2.weight",
+      "parent_code_parameter_index": 221,
+      "parent_state_id": 221,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "2402be8c30648ccbd88f352c4964210d752483084336d77512afba7f8917b197"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "f7c6dcd9f24bb9f41d887f77acad96dc075e8b246b695f2d448ae8e439eb7dd5"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "4d1fb3cc13dbcbf23ba9faeada6ed979926214aa75f11f2030b61e0679c66139"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 58,
+      "name": "ft_layers.4.linear2.bias",
+      "parent_code_parameter_index": 222,
+      "parent_state_id": 222,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9faa289b29d4017534062d92849617e5c4ba51179f0b5a6b9b449de48e9469e3"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e903aba3796bd23186307ca8a7fecae309631450e04d5a431c79f03e5f555496"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "dfc174c4784c225958cb31f84171501478cce1b8a711f25975e57b6b347ef734"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 59,
+      "name": "ft_layers.4.norm1.weight",
+      "parent_code_parameter_index": 223,
+      "parent_state_id": 223,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b07843b7c9ac5d3220fceb107276a1315c9b1025733f8ce88b8c2956cf3946b9"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5e2d7152e01a85d62033d368fd7fa8619a62b603edabdf4eabfbacc078bfe519"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "34d51e6ce66f1d093796e32d5ddb3bde6c8a346bac5ed928b8108886d628ec2d"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 60,
+      "name": "ft_layers.4.norm1.bias",
+      "parent_code_parameter_index": 224,
+      "parent_state_id": 224,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "81a45a1191ffd6f9fff17b6c2ac6f2b679b836911239905d97ad9b3c0e4290f4"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "f5c22b1f58e378631fb188d0fda7f5de3fd5b507457f8bcee255436b58167646"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5d43af23cf0fb2c9da8a02204ee932a17474c4d2571e90db611d47f0476f4c84"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 61,
+      "name": "ft_layers.4.norm2.weight",
+      "parent_code_parameter_index": 225,
+      "parent_state_id": 225,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "08246971fba811c4e08cc6bdb26ea46f70d51df7fca1f709a1da754a856ada1c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2537d61f3805021b84ed21285de9156d5d6095a60e4a06f905e92fd373bdb4c1"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "dcc5b2fb3040b769940e47b3d2a85cf286c46ff06eae06e9adaad391bd525324"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 62,
+      "name": "ft_layers.4.norm2.bias",
+      "parent_code_parameter_index": 226,
+      "parent_state_id": 226,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "ca1d18a01ec92663631492de200fc9a517a62cd3ce41278527bbb1011705bf00"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "358948f0252e72a77de09be9959020781b455fbde985958d586aeb846138c9d7"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "df7993f597b5773d4c7684272d52fafa530795691165d015a6987237c61e7c3d"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 63,
+      "name": "ft_layers.5.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 227,
+      "parent_state_id": 227,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "b7c000ee0044dc0e384ba2fffe505b8ec373f93efef3f1e9872f392e123e7aa6"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "8fcb71b758cae064228bbb888b0a9f3f712d87db7dc8f6311d677dc4cebd86c2"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "7cc9eeabff26d4355d102a04219a6cd21c1165f102cfa72702f986960dc2bfc2"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 64,
+      "name": "ft_layers.5.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 228,
+      "parent_state_id": 228,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "afc5dbd92a9e93cd47c072e58bb5c9f25598edc7dfdeacf53f9cc2a69cdcf138"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "0b584d9d3b538c435a8d9bfd8c14af854cf4fc4f09f262e7d73905508b79f4fd"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "5d22a1505d23ff384d6288832c0afdd91c45807b074b100b25d21f76b4f0d2ac"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 65,
+      "name": "ft_layers.5.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 229,
+      "parent_state_id": 229,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "a4569ad46c9b802668a5e9f215f033f4ae9679b2e82801a17ce5026bf608a790"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "93010bcc0bcf6d1614dee8adff0772986540a7ff4b4bf04ffb8e881334d82575"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "d9169696ccd4bc11a4c11344d8a2ccbd00e67acf4681182a03caab8459c9b079"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 66,
+      "name": "ft_layers.5.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 230,
+      "parent_state_id": 230,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "c775d28ea3e6951ab59fa2c4f3a725bd0264e0b720e5f7569a337ca4bb942777"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "84124ab58727a9c470aff28f7b24cacf97cd15bb81e7c39213a881f8ebcb62b7"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "4acad039974388a896271f79ebf7801c1ee6926ce5b428be20cd1b81ddbe48cd"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 67,
+      "name": "ft_layers.5.linear1.weight",
+      "parent_code_parameter_index": 231,
+      "parent_state_id": 231,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "06b07f5081805206598fb9d558d50bfb57f755961d750a4173907dedec40c55e"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "ab781d73ca2f7f1d77f2a2c8c39f810fcef34f6253465d5d84fee0e0d589f169"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "4635e6b0d52d4276a866e8f19b1d5bb4bfbe454f6368f61755d679618bc4650c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 68,
+      "name": "ft_layers.5.linear1.bias",
+      "parent_code_parameter_index": 232,
+      "parent_state_id": 232,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "c8036e6d3d00fcfd889e64824185516f668c6e7875d6409deb7a60f951889373"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "c392ca73edd76c7059baec2237582f68f2f78188574af85c8b1b42a0e7f6e5d8"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "f019f5324a573d414dbad725806652fa7aff02db59e52a8af728f0a78d3c57d5"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 69,
+      "name": "ft_layers.5.linear2.weight",
+      "parent_code_parameter_index": 233,
+      "parent_state_id": 233,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "8ac55a8332ffafee4c454f28b1af5c68291f19cf3dd34ab84d59567cbf32ec99"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "b0de4d1014347589c31212c05a6d14b9e4d188ca15ef7003cf8bdea669169f45"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "1450a37da9803bcb8146cb06b56c73edb6d43768a46dc6aff08807a592dadace"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 70,
+      "name": "ft_layers.5.linear2.bias",
+      "parent_code_parameter_index": 234,
+      "parent_state_id": 234,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "07969434f94f010e96e4307792f6629481b666f8ed14d781e73c923285fd005d"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "bf65128f31ff57d28d60c374c36c0d7690e249e394baa2a9995cafee1bdd1b41"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "073edca45adba2b6e88f9cd203302bea3d7897658232adc5443859c9a2ee392c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 71,
+      "name": "ft_layers.5.norm1.weight",
+      "parent_code_parameter_index": 235,
+      "parent_state_id": 235,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "efb63aacdd0db180ccc95da846715cfaede0ef1ea67986a2d1ec06a5b33f05ae"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "7dc9d3a87f112584cd6060e4d7fc742846b365fe8e49c0c32f414149e94b66cc"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "277bcb64a195b4f9e68a24548e507d569eabd01b0ef1b595e59b902175130d22"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 72,
+      "name": "ft_layers.5.norm1.bias",
+      "parent_code_parameter_index": 236,
+      "parent_state_id": 236,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9c85adacf741b1a628b86f868474bdaeed02b0a1dc45987d7ca60205e4471da6"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "69a79be41216a3b66774d329fc79d9f5fe79f3c8115e62912bbd923ccacc2383"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "8b2cb88a84228cb9d5e2f0eb0bb5d642597c02a13475ab8b5b2b4392b4c47edc"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 73,
+      "name": "ft_layers.5.norm2.weight",
+      "parent_code_parameter_index": 237,
+      "parent_state_id": 237,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "c98b8031dce8d582aaa193bf65280250b3c8f8086f4555cbd735dc7722652f10"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "272e8a7db97a0df1073413c0640240463ac26de80b004e1500c6a9af6ee21015"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5a5d8cd221a005a8d220a095eb5e3d12836cbccee4c16d18d75783d83bf05fda"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 74,
+      "name": "ft_layers.5.norm2.bias",
+      "parent_code_parameter_index": 238,
+      "parent_state_id": 238,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1d5ce03ebb967cb207834c3a4c33a5b5e6db3de2cbcf418e94353183e0fe7bb5"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6a359c8f574bcd13b7ee12f9e62da471701a644b0b5e95ca890d292ebf33c8af"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2f3869af5036003a20dc865c5bdbea74a762569e1f51c8d8c1bfc7dd7bd06e7b"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 75,
+      "name": "ft_layers.6.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 239,
+      "parent_state_id": 239,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "461226ac2020c2a0f64884f551f6059adbdf12a78e9b134bf84662aa669d69a3"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "70779fed6f64334988ac4cbf613ce8a9ac0988704bf5af8475782d4e01799d4a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "0bb1e98f32a369e2af6231c16b0ea150076d3ef95ad604f4f8ea46fca3db3429"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 76,
+      "name": "ft_layers.6.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 240,
+      "parent_state_id": 240,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "ab778d31806a7d66e32cfbd8e60c75c07bc22cccc54ce5e8063321c24741f76a"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "c3ca3f41c49e2db9df51ad91df43d27621bff6b29892265de8292e7cd23ca76a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "7986487c5b37db0f02b90e92f1c1d3ca9660da635ff12096adc681a6fc14ee78"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 77,
+      "name": "ft_layers.6.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 241,
+      "parent_state_id": 241,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "9fd3e67c4a9b16a4a03303d9782f8649df7418ed4efa35aac78b2ac7077546af"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "19205e9b6dd442f57c19f94c29f45d0042a998de53829de42909f90466c38062"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "503c1caeb735a7fe20f92b343f404188b0cf8834d9850366a16350c71a7da850"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 78,
+      "name": "ft_layers.6.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 242,
+      "parent_state_id": 242,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "f8aa8a2e00fbc71cc6560e41e61587384d5cb010714bd33d4c441d2b6f8ac6c8"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6a7f9f3a5e7b6f7762e21dd7d339e613aa118fb65c5ae27f17af8cdb80ccb345"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "167e9e383cb65187f6fe81bf33fb7bc488ece343b8dee10739ddcc4fdc35c139"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 79,
+      "name": "ft_layers.6.linear1.weight",
+      "parent_code_parameter_index": 243,
+      "parent_state_id": 243,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "523004f59def9a69a8c4a03f2bfbb268e952b782d7b1b99842823a7be534f47b"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "81df6944ccb80254abe86f0c995dd0e40567a3182a9371ec0de87273ed5dc743"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "b53ec125d6513514ba8e03ec17817387aec1d6dabd83e9cefe22c8e455649b3d"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 80,
+      "name": "ft_layers.6.linear1.bias",
+      "parent_code_parameter_index": 244,
+      "parent_state_id": 244,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "b64e663a086b8fa46d3c7c77a55fe84e4a73210fc7defaad362962285e5c8495"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "43bba361741d4b71b03dafb66bfbbce1457b797e0352a609a2ddd7ccda4f3481"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "f9aa1856d3384f1c4cd544dd195141c38eb777557eea65cfd52da585243b44d0"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 81,
+      "name": "ft_layers.6.linear2.weight",
+      "parent_code_parameter_index": 245,
+      "parent_state_id": 245,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "49e3b869c793dfa6ee6f47586b35097014cb5b2649718f194018c3b46b854921"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "d119fbab70ba48504714e761a714e7183317d0ecc643b551053a8decf81a6b7e"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "c2faa47251de7f5f3454b193f524eab9e5dcddc7e8b56616c0ad2ef3460cec19"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 82,
+      "name": "ft_layers.6.linear2.bias",
+      "parent_code_parameter_index": 246,
+      "parent_state_id": 246,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "61b4c2ff363f7e92c0f86759c6bd4febd3c3bf505c82290acd380ef32a517e68"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6f2e8b800b34ca8f1f88a153fdc2d176af7d3fea1fdf20aa9209b0e71511287a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6dd535f5bbe41ad2cf0d09f7793a2934c173818b5d2f156f305f70d480ff979f"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 83,
+      "name": "ft_layers.6.norm1.weight",
+      "parent_code_parameter_index": 247,
+      "parent_state_id": 247,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "be8fa5d866c3d32fee66de6c32cfc560daf73ce7fe0a64035fae6152e2f765f4"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b61843474acfe5ffc6112d316fdcd12b781b94e58f097323e1d2760780a5737c"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b6693891b2f6fa227c1162b9e3fe5b4fd1ffba90fbac232b9ec0bc6d03cb5ca3"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 84,
+      "name": "ft_layers.6.norm1.bias",
+      "parent_code_parameter_index": 248,
+      "parent_state_id": 248,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "13aa29f0a75a64e1352c6371640009f40587cc317f651d9a8083f01f4389eb3d"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "837b3c27bcc85b4e9a380e58c6b43d974f7476c318664525fffea4eafe99e644"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1a8ed12613f472b685181158f44f42240476073d48468a5b991d182f3b2a8dbe"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 85,
+      "name": "ft_layers.6.norm2.weight",
+      "parent_code_parameter_index": 249,
+      "parent_state_id": 249,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "d54a1dcd93033f3a9f02d73e7047fb8a5d0e54974e9067ceaedcc5b7d6676d16"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "4665572f17b36f7d4837a40c7426fb8f89ec77f0e7547461ef5e774f7379751f"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "f2d858f1767ddac01f03276f54f38501f81c7a8f63279bf9f462e364ce199f0e"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 86,
+      "name": "ft_layers.6.norm2.bias",
+      "parent_code_parameter_index": 250,
+      "parent_state_id": 250,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "453128e499457fa6255952a8736de55c42e58c615f39e20a1134b5624f3f3c62"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "7e4b4d4db4cf726ffed49ef9491e7d456840fbd3c24a5dd219814a50ab6e486f"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "333c3d7b6eb40be3bbdd477747123f01865122a3f39c34959f4f06c519a948d0"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 87,
+      "name": "ft_layers.7.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 251,
+      "parent_state_id": 251,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "4be7f836b25eb868eb0a01d6b521097014612f139fdaba61e6c5d50a071ce0b4"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "31330832c83eb0c772ec580180d897f0282f7c2941136fbfacf7623db5e0313a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "54cdcd023e2f6d110016bcc4ce03bac368f0762e595ecb1f79b18aae941a9165"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 88,
+      "name": "ft_layers.7.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 252,
+      "parent_state_id": 252,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "a3d7c81afb02cf4ccce7211950d33af1f05c7c3e1efd8963d1a87c54a2669e1b"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "62906ede263f97d1baf973021b4ed6456c4883f582e87878ccf13120f631014d"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "c45d70678d551b988ae00eba5a7e819dbeac832c4fc02b811257bf07892e9081"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 89,
+      "name": "ft_layers.7.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 253,
+      "parent_state_id": 253,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "205ca88c37f1394076c3f41026ff8be0cd5a1d8bc1efbc6b9934e424f26c518c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "b659ccd4c77b635dea9492b1094411f8794fb96074fd8cfc9d72f193f42f6a6f"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "e097cf69e1749423649e7544934e64c7e190f415405f65aba39b6be66466a64a"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 90,
+      "name": "ft_layers.7.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 254,
+      "parent_state_id": 254,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2bc601d4de3c48ed05005c3c86a83d558fc8b474a82726f3f3bc7194601d88e7"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "88f9860bb04c316e62ce3d8ae221555c8b70fde37137a7399ac18a169a7852eb"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "c3ef32eff7d515bdc7e49e49e8ab3ec31e5a4d10bba14088977201ff557ce64d"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 91,
+      "name": "ft_layers.7.linear1.weight",
+      "parent_code_parameter_index": 255,
+      "parent_state_id": 255,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "a9992a800bcf1f63dd059c874fd2ba5ebf944277dff871846a133decd563fde6"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "d55d02f78b9ef59c73676fb95c26107c158daa1af4909c92f7af0852a4541406"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "b1e75512f77013f0f0701a09398c804d36ddc57bb40a0ec42c162ff19cf020b5"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 92,
+      "name": "ft_layers.7.linear1.bias",
+      "parent_code_parameter_index": 256,
+      "parent_state_id": 256,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "8d3fa736b6913c29b9efc35979a39accd5c7da73831213f7b8b989dc2d22b723"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "5deb3a4f606d6b096b49f39c4ffdcde018231091cf415f4f8d203ccbab0ab15a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "30e8e9036ab1b16f524673ab5e7671de0802f5fff3fb503ffc2ebbb122d29159"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 93,
+      "name": "ft_layers.7.linear2.weight",
+      "parent_code_parameter_index": 257,
+      "parent_state_id": 257,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "0087e1fe1fa24ad19a0d6325c2406b7384fab2bb5aed6bdc6bdc4a0648b8e35c"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "b7a92faf0300f9aef3920f20eff9e84cec8d5e3c24d19ef390bd583d639ca63e"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "d18ca847e5658a7c4e9efb798e2083cd7574119bd5eeb3181e1054d31858422b"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 94,
+      "name": "ft_layers.7.linear2.bias",
+      "parent_code_parameter_index": 258,
+      "parent_state_id": 258,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e74b6d000b04f2b2f6f8d1229925b2dcf3d3d476086633e83bf7e5e5ce886703"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "84d76f8391d2883923d7fb43180481468203899af8752c62761dc009b6ad7199"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e02e9ade05767fc8705f0d06fe66b8e33c4d348fbf4a790196938bd93679fb6f"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 95,
+      "name": "ft_layers.7.norm1.weight",
+      "parent_code_parameter_index": 259,
+      "parent_state_id": 259,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "87b6434878ae87cffc0d8977bfea7b8cbf098a308545de5eb29ac09f14983005"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b26c79cbc67460cbfa1c0880fac29943412d0e7752217cc8c8a6cf8b50134617"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a0b87aecbae63df6ac406234f3f5675a564d8d35ee6e9b61a69144e2f7616aa1"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 96,
+      "name": "ft_layers.7.norm1.bias",
+      "parent_code_parameter_index": 260,
+      "parent_state_id": 260,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1d925f3e8ac1589bf0bbbc7a765efa8951c9712f98e944174a4db9b99e9f650e"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "0d705e6e795822f76c2b4b392534137d9029effd99b5fdbea99e108f81013293"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "288aeb47d853212055fff26d201afb563175ffc2ce4d667fe92362fe880b661f"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 97,
+      "name": "ft_layers.7.norm2.weight",
+      "parent_code_parameter_index": 261,
+      "parent_state_id": 261,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "1363bdc2fd4e96309f8128e3a1bc5a7221a185cda23caf665efc49547b81845f"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "be647e7bdddd4c71c60cbfccadfe58afc6c833eaecb574d0218abedef92d7d43"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "095bb43e5f51215ff8a1c8ac0003b760ca9806825647af3c65db66a18c4c10f7"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 98,
+      "name": "ft_layers.7.norm2.bias",
+      "parent_code_parameter_index": 262,
+      "parent_state_id": 262,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "801fe271e13c72efcb64ee6d701e1b781e67fd14660efdbbbc9ce89d8c918851"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9b6d234e1e7d840fb8905d5eb58d10f452155f14ed7bd5cb862018a855044e25"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "ab90bd3f8f8c2dfc9c996c3d9eb5dca7ce06e773e920590b0ca47cde2ec777ef"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 99,
+      "name": "ft_layers.8.self_attn.in_proj_weight",
+      "parent_code_parameter_index": 263,
+      "parent_state_id": 263,
+      "R1_parameter": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "d19d75a4a77061f0b7b96d61f060cc0e2b7c4812045ad5d5fc108a48cf66a9da"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "433ba59c437fb1b66d5646848185a28b828edc8a6c6c0b1a3a034505a8c6de36"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 3145728,
+        "sha256": "845800d38db797219fb607dec7e39438bba02934cebcfb03dcdd4de8244cd925"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 100,
+      "name": "ft_layers.8.self_attn.in_proj_bias",
+      "parent_code_parameter_index": 264,
+      "parent_state_id": 264,
+      "R1_parameter": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "4d525c01003e98f804cbd57f2ccbae4cddb50bf466bd66901db1505da2706623"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "45acdbd59ae9c8fb305e16575242ee1cccee69c0ae0f3dc300598dd8428124fe"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1536
+        ],
+        "dtype": "torch.float32",
+        "bytes": 6144,
+        "sha256": "eab93dc3bbc82f27298a82819cf8eafb0a89b0894043f1a66fdd6681fa7e1fee"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 101,
+      "name": "ft_layers.8.self_attn.out_proj.weight",
+      "parent_code_parameter_index": 265,
+      "parent_state_id": 265,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "76bf0353cdf3e084d1a41b680a8cabc29db0b3aa49883f21cc16b910a8d41e2f"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "6b7402b121972c5a0aed71b5eb083a6647c5e857a49bb0ac3db983c144f0dc00"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "45fced1464e6fb955799a35302093c4f6f27e429bb796a469cec484d6d8d5926"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 102,
+      "name": "ft_layers.8.self_attn.out_proj.bias",
+      "parent_code_parameter_index": 266,
+      "parent_state_id": 266,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "9be773b4867e7cbee99d6e649a84286043819e26c1c261f6be890dca2debb463"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "189800bf8232fd5fe1e73175b54151792c370cf4e0918e84f1555de21b543872"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "139e6014623b693c225bc6e37560f87eea56db518880903d98f4e1e4a0c3234a"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 103,
+      "name": "ft_layers.8.linear1.weight",
+      "parent_code_parameter_index": 267,
+      "parent_state_id": 267,
+      "R1_parameter": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "e29896f9a4cfb192f3594571e76091ae545fc2d139395d29a2a882110b9a4a03"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "a746bcc0b7c827544502e2ce63c5e5b3d2804ae93cae81198e800fa912a2ced9"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "b3780f661960827ca4fe2fd54bb306f1ba13d467dc51aa86636d40af779f2e07"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 104,
+      "name": "ft_layers.8.linear1.bias",
+      "parent_code_parameter_index": 268,
+      "parent_state_id": 268,
+      "R1_parameter": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "98ff3a5a4bfafadfad8eef183b69d2b21fff5b605dbf420e7b5a34d2e3f056cb"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "b7e01e5b53e4343e18ad5e343684c95ae5a1f57af0851797fba8a290750ff396"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 4096,
+        "sha256": "73947fed33f0020f801851e29d445b29ece51bd5d83dd09e0935dc878fedf87c"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 105,
+      "name": "ft_layers.8.linear2.weight",
+      "parent_code_parameter_index": 269,
+      "parent_state_id": 269,
+      "R1_parameter": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "e6db48dba508c73eb325754d6e46d5890728817699dfb51404914cb155a94c08"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "1e5c48c061452f556349577b3df9ca3bc00319132ca3bf67753609f0c1a2d76b"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          1024
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2097152,
+        "sha256": "585fea313a7890d82f8c2b3ea1f1dad6c161dec78bf6d25b5e85e0b1c13bf70b"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 106,
+      "name": "ft_layers.8.linear2.bias",
+      "parent_code_parameter_index": 270,
+      "parent_state_id": 270,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "43d94aea00bf361cbc993c53f7f9efbc74eccc76bbc02a7ccba494545e2fa12f"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "ab8468a752ca55714419d1f0bd3c0725aca4f91a83888d1c482a8e77721c69d8"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e913cd89a6b520ec545e6c528cd8273d1ec92fe6cb48b8a995d0a784e177f5c1"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 107,
+      "name": "ft_layers.8.norm1.weight",
+      "parent_code_parameter_index": 271,
+      "parent_state_id": 271,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "13ddd5ee16c45dfa51da360ed93b63c35a230d64401065dd79653cd24f6ffc68"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "b61b106114b83f6dd4b42b6bb480c8f400d467e7ed128d6c142a648f620f45e8"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "349d6938a3c21fcd4ac3bc0c5d729967e4ab070f57a6e85075debf66b482df46"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 108,
+      "name": "ft_layers.8.norm1.bias",
+      "parent_code_parameter_index": 272,
+      "parent_state_id": 272,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "d0f61b4144071d8edbb0f3f154381fd086f0f6d77f40e9ed53ab4f00b8d5c841"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "eaab9a7296d5f76edbdb898d697b73d27c08cd589446f45d5d06aa6a98b6804c"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "5a9c626714588608a86feda78da22d618cf236a9f3f0d7fb7f92105952856e24"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 109,
+      "name": "ft_layers.8.norm2.weight",
+      "parent_code_parameter_index": 273,
+      "parent_state_id": 273,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "2d0532c02027bef8bd1160a95b63ef725a210b597f33bae2921df7e8a9bffc22"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "e3b3017020772e7dd08ca82946fb37358194cb0e17cc292f70a4973d5e73b91a"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "96e8986ef1a5a8ca9fbbb2d30571a4f9741f14e8837995b8be804308235ca717"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 110,
+      "name": "ft_layers.8.norm2.bias",
+      "parent_code_parameter_index": 274,
+      "parent_state_id": 274,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "a121940b32e0c150e7ed6ee9b9956a584fd825f85f5b8174278ce216a90928c2"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6bc5e6815857083d467aa789b6338524b76b29ecc9602a47dcb10a5bda4f1587"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "d502be6817ef0e939493fa457659f7480c512b9da826f20dbf37e9a795f46606"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 111,
+      "name": "idx_pred_layer.0.weight",
+      "parent_code_parameter_index": 275,
+      "parent_state_id": 275,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "6602125567d0e619442242da40aa336a76e74009fc45c8d028dd586be4ed28fe"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "8cecfb2d0bbee42f8438f6ccf5027da3a6354fab880b6729e823ddc90f5af5a2"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "761748bfa784a3dfbd1ada6dede2f0d01cdb5a9b70250a68f9d94c4405e603b3"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 112,
+      "name": "idx_pred_layer.0.bias",
+      "parent_code_parameter_index": 276,
+      "parent_state_id": 276,
+      "R1_parameter": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "714d9b30652f256d14950cd87d7d6bfddac6dbfa7c65edf7215be86b28e7151a"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "cf88490eabe4c63167d50c6ba9aa20391727913c5a2de43d2cc9f0f6775b442b"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 2048,
+        "sha256": "c266d0c80b9d775dff961dfd0ceca1848d39e5870af17a60d4cbf8007ae04ec4"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    },
+    {
+      "new_parameter_id": 113,
+      "name": "idx_pred_layer.1.weight",
+      "parent_code_parameter_index": 277,
+      "parent_state_id": 277,
+      "R1_parameter": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "9261b50cb47e25e139fa3fd8ed9731916b7e491aace2188a2548259142572b55"
+      },
+      "parent_step": {
+        "shape": [],
+        "dtype": "torch.float32",
+        "bytes": 4,
+        "sha256": "825ac1bb838d399fb1ba55a6247e2c8c7a0c3ec25898f3c94dbfb51fa6e73951"
+      },
+      "parent_exp_avg": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "b7afdb9ad1ae6f18417853ae847870bba3748ae3ec71cc691ca6550428756a6c"
+      },
+      "parent_exp_avg_sq": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "bytes": 1048576,
+        "sha256": "aa0cea67962a4390dac64413c261530e335099dde704b5ad57fca2a0e1d5ec10"
+      },
+      "step_before": 32,
+      "proposed_maximum_step_after32updates": 64
+    }
+  ],
+  "mapped_state_tensor_bytes": 155607496,
+  "parameter_tensor_bytes": 77803520,
+  "no_optimizer_object_constructed_or_loaded": true,
+  "fresh_moment_reset_recommended": false,
+  "frozen_encoder_and_fusion_Adam_slots": "Unchanged complete original parent file0a6b remains fingerprinted historical evidence; no fake new steps on those slots.",
+  "actualruntime_load_and_named_order_equality_required_beforeupdate": true
+}

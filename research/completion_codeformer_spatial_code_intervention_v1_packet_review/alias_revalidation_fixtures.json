@@ -1,0 +1,56 @@
+{
+  "format": "completion-spatial-intervention-v1-author-post-tar-alias-revalidation-fixtures-v1",
+  "complete": true,
+  "cases": [
+    {
+      "case": "same_bytes_new_inode",
+      "passed": true,
+      "actual_post_tar_mutation": {
+        "archive_already_streamed_and_hashed": true,
+        "old_inode": 51791395715203535,
+        "new_inode": 26458647811245179,
+        "same_bytes_if_present": true,
+        "source_original_alias_preserved": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spcode_race_v1\\same_bytes_new_inode\\retained_original_alias_fixture.bin"
+      },
+      "error": "ValueError('Failed-state source alias identity/link-count drift during export')",
+      "success_archive_and_receipt_absent": true,
+      "bounded_archive_partial_retained": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spcode_race_v1\\same_bytes_new_inode\\cctv-completion-codeformer-spatial-code-intervention-v1-results.tar.gz.partial",
+        "bytes": 2204,
+        "sha256": "432d2dc807b4c3de022ccda5c20085a76ebca12e5272fa09f0781587ed850f4d"
+      },
+      "source_payload_bytes_preserved": true,
+      "dummy_file_never_deserialized": true
+    },
+    {
+      "case": "alias_path_removed",
+      "passed": true,
+      "actual_post_tar_mutation": {
+        "archive_already_streamed_and_hashed": true,
+        "old_inode": 27584547718088373,
+        "new_inode": null,
+        "same_bytes_if_present": null,
+        "source_original_alias_preserved": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spcode_race_v1\\alias_path_removed\\retained_original_alias_fixture.bin"
+      },
+      "error": "FileNotFoundError(2, 'The system cannot find the file specified')",
+      "success_archive_and_receipt_absent": true,
+      "bounded_archive_partial_retained": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spcode_race_v1\\alias_path_removed\\cctv-completion-codeformer-spatial-code-intervention-v1-results.tar.gz.partial",
+        "bytes": 2203,
+        "sha256": "c80cd9482a9c84a0a289aad6a2ab90f6b1083c4edca3ceb723b5af29bf6c3576"
+      },
+      "source_payload_bytes_preserved": true,
+      "dummy_file_never_deserialized": true
+    }
+  ],
+  "checks": 2,
+  "exporter": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_spatial_code_intervention_v1.py",
+    "bytes": 16848,
+    "sha256": "fd7b7bf5879c3c785d65c9f0ce0884811d11a28c22e16eb084b348f2f96711b5"
+  },
+  "all_pass": true,
+  "real_checkpoint_reads": 0,
+  "neural_calls": 0,
+  "VM_calls": 0
+}

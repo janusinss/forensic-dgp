@@ -1,0 +1,54 @@
+{
+  "format": "independent-predictor-CE-v1-root-geometric-and-PNG-diagnosis-QA",
+  "complete": true,
+  "independent": true,
+  "UTC": "2026-10-26T16:43:09.584222+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_state_review\\audit_root_saved_diagnosis.py",
+    "bytes": 13011,
+    "sha256": "d1bc15e6475d9373e80ac81e22966c69afaf1cf64f50bc856b56fca1e8908d0b"
+  },
+  "root_geometry": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\root_saved_code_geometry_diagnosis.json",
+    "bytes": 554737,
+    "sha256": "647bfa63a9f7aaa62d18cc7e494a5bba5ccf5468d224e3293d5370a469a7fca8"
+  },
+  "root_PNG_closure": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\root_endpoint_and_preservation_closure.json",
+    "bytes": 81141,
+    "sha256": "a8f680bab3455ff2e459f01290caf8c46c948af97df5b855b3951eab561b29a3"
+  },
+  "independent_pixel_audit": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\independent_saved_output_audit.json",
+    "bytes": 816009,
+    "sha256": "d1c93643925154fbcdb6310614ebb507b51ddc66d54d649b3b3c03774d1496e0"
+  },
+  "checks_passed": 6002,
+  "all48cases_4snapshots_192code_observations_recomputed": true,
+  "geometric_cells_independently_counted_with_explicit_pixel_slices": true,
+  "all6regions_exact_per_case": true,
+  "allmacro_and_fourgeometry_aggregates_exact": true,
+  "all192pairedPNG_hole_boundary_and_gray_metrics_independently_replayed": true,
+  "all3snapshot_cohort_gains_equal_independent_pixel_audit": true,
+  "cross_endpoint_disagreement_lists_exact": true,
+  "limitations_correct": true,
+  "factual_count_clarifications": [
+    {
+      "artifact": "root_endpoint_and_preservation_closure.json",
+      "field": "payload_files_rehashed",
+      "value": 835,
+      "precise_meaning": "835 regular files including export_manifest.json; 834 manifest payload files. Count arithmetic is correct, field name is imprecise. Preserve original root artifact; do not report 835 manifest payloads."
+    }
+  ],
+  "no_scientific_or_endpoint_errors_found": true,
+  "no_receptivefield_identity_causal_or_candidate_selection_claim": true,
+  "local_actions": {
+    "Torch_imported": false,
+    "neural_calls": 0,
+    "gradients": 0,
+    "optimizer_steps": 0,
+    "VM_calls": 0,
+    "returned_code_executed": false
+  },
+  "model_qualified": false
+}

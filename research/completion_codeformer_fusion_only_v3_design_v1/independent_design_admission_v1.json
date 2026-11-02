@@ -1,0 +1,161 @@
+{
+  "format": "completion-fusion-only-v3-independent-design-admission-v1",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T10:39:06.305771+00:00",
+  "design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_fusion_only_v3_design_v1\\root_design.json",
+    "bytes": 10694,
+    "sha256": "fd858eaa27a8968f326fccb62b8d710d936b82ee46d275f3697918b1dedcecb6"
+  },
+  "design_document": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_FUSION_ONLY_V3_DESIGN.md",
+    "bytes": 2733,
+    "sha256": "2045313426b56d762dc8bcac65fbbeced6ef495d39ff7ce348c382de16faeb4c"
+  },
+  "checks": [
+    {
+      "check": "Evidence pin prior_route_review",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Evidence pin V2_state_audit",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Evidence pin V2_pixels_audit",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Evidence pin V2_all_visuals",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Evidence pin V2_tradeoff_diagnosis",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Evidence pin optimized_writer_independent",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Data admission pin source_manifest",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Data admission pin independent_data",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Data admission pin root20previewreview",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Fusion-only work bound",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "443 frozen and54 trainable partition",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Exact480 whole/typed decomposition",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Matched case exposure and evaluation count",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Saved224 output and168 bypass accounting",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Hard neural/optimizer caps",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Cumulative parent plusnew counts",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Canonicalparity and48historicalbaseline gate",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Unchanged time,disk,CUDA limits",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Unchanged category/output/export limits",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "ConservativeV2bound still below outputcap",
+      "pass": true,
+      "details": {
+        "recalculated_bytes": 2330980024,
+        "cap_bytes": 2415919104,
+        "unused_teacher_reservation_kept": 25165824
+      }
+    },
+    {
+      "check": "Two maximumoutput/archive caps leave diskfloor",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "Manual-only separate execution",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "No unchanged failedjoint rerun",
+      "pass": true,
+      "details": null
+    },
+    {
+      "check": "No design qualificationclaim",
+      "pass": true,
+      "details": null
+    }
+  ],
+  "admission_scope": "Prospective design only; no runtime/trainer/archive/VM admission.",
+  "material_design_blockers": [],
+  "source_requirements": [
+    "Prove443nonfusion tensors and codeAdam stay exact,54fusion only with namedR1Adam/RNG restore.",
+    "Actual48 freshhistoricalraw/PNG compatibility beforeanyupdate.",
+    "Historicalcontrols schema/derivation, allpayload hashes and sourceboundedtiming/caps mustbe independentlyaudited.",
+    "Retainpre-save phase/callback/sync/commit evidence andfailedpartial.",
+    "Do nottrainoruseFINAL/DEVtargets locally."
+  ],
+  "test_harness_note": "First unpublished arithmetic pass stopped on an overly literal keyword check; controlling design was not changed.",
+  "local_execution": {
+    "Torch_imports": 0,
+    "NN_calls": 0,
+    "gradients": 0,
+    "optimizer_operations": 0,
+    "VM_calls": 0
+  },
+  "model_qualified": false,
+  "goal_complete": false
+}

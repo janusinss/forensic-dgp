@@ -1,0 +1,29 @@
+    failure_state_attempted=False
+    def retain_failed_actual_state(actual):
+        nonlocal failure_state_attempted
+        need(not failure_state_attempted,'Exactly one unexpected-mutation state save attempt');failure_state_attempted=True
+        partial=out/'failed_actual_model_state.pth.partial';committed=out/'failed_actual_model_state.pth';capture_error=None
+        try:
+            budget.guard(terminal=True,emergency=True)
+            values=net.state_dict();raw_bytes=sum(v.numel()*v.element_size() for v in values.values())
+            need(raw_bytes<=CONTRACT['terminal_bytes']-2*1024**2,'Actual state exceeds bounded failure reservation; do not invent recovery')
+            actual_values={name:value.detach().cpu().contiguous().clone() for name,value in values.items()}
+            snapshot={'format':'completion-codeformer-spatial-code-intervention-v1-failed-actual-state-v1','state_dict':actual_values,'actual_state_hash_receipt':actual,'expected_frozen_R1_logical':PARENT_LOGICAL,'original_checkpoint_sha256':ORIGINAL_SHA,'parent_checkpoint_sha256':PARENT_SHA,'protocol_sha256':expected,'counts':dict(counts),'typed_forward_slots':dict(typed),'progress':dict(progress),'actual_path_witness':dict(witness),'torch_CPU_RNG':torch.get_rng_state(),'CUDA_RNG':torch.cuda.get_rng_state_all(),'python_random_state':random.getstate(),'numpy_random_state':{'algorithm':np.random.get_state()[0],'keys':np.random.get_state()[1].tolist(),'position':np.random.get_state()[2],'has_gauss':np.random.get_state()[3],'cached_gaussian':np.random.get_state()[4]},'optimizer_objects':0,'optimizer_updates':0,'failure_evidence_not_qualified':True,'automatic_resume_permitted':False,'model_qualified':False}
+            with budget.open(partial,terminal=True,emergency=True) as stream:torch.save(snapshot,stream)
+            budget.guard(terminal=True,emergency=True)
+            with zipfile.ZipFile(partial) as archive:
+                infos=archive.infolist();need(0<len(infos)<=1024 and len({v.filename for v in infos})==len(infos),'Closed failure ZIP members')
+                need(len([v for v in infos if v.filename.endswith('/data.pkl')])==1,'One failure tensor pickle')
+                for info in infos:
+                    need(not info.is_dir() and not info.flag_bits&1 and info.compress_type in (0,8) and not PurePosixPath(info.filename).is_absolute() and '..' not in PurePosixPath(info.filename).parts and '\\' not in info.filename,'Failure ZIP regular canonical members')
+                    if info.filename.endswith('/data.pkl'):need(info.file_size<=1024**2,'Failure pickle metadata1MiBcap')
+                    with archive.open(info) as source:
+                        for chunk in iter(lambda:source.read(1024**2),b''):budget.guard(terminal=True,emergency=True)
+            digest=sha(partial);need(partial.stat().st_size<=CONTRACT['terminal_bytes'],'Failure state384MiBcap');budget.guard(terminal=True,emergency=True)
+            need(not committed.exists(),'Never overwrite failure state');os.link(partial,committed);need(partial.stat().st_ino==committed.stat().st_ino,'Exclusive same-inode failure commit');partial.unlink();budget.rename(partial,committed)
+            del snapshot,actual_values
+        except BaseException as exc:capture_error=repr(exc)
+        pins=[]
+        for path in (partial,committed):
+            if path.is_file():pins.append({'path':path.name,'bytes':path.stat().st_size,'sha256':sha(path)})
+        record(out/'failure_state_receipt.json',{'save_attempted_once':True,'reason':'Unexpected actual model state/hash/finite/frozen/eval/gradient invariant differs from before','complete_committed_state':capture_error is None and committed.is_file(),'capture_error':capture_error,'actual_state_logical_sha256':actual['logical_sha256'],'payloads':pins,'actual_nonfinite_flags_preserved':True,'partial_retained_not_usable':partial.exists(),'same_inode_commit_alias_may_remain_if_interrupted':True,'no_retry_or_automatic_resume':True,'model_qualified':False},emergency=True)

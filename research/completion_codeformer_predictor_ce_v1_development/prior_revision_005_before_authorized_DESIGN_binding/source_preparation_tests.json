@@ -1,0 +1,14 @@
+{
+  "format": "predictor-ce-v1-author-source-preparation-tests-v1",
+  "complete": true,
+  "tests": 23,
+  "failures": 0,
+  "errors": 0,
+  "local_neural_calls": 0,
+  "model_objects": 0,
+  "optimizer_objects": 0,
+  "backward_calls": 0,
+  "VM_calls": 0,
+  "prepared_source_only_not_runtime_or_packet_admission": true,
+  "UTC": "2026-10-26T15:51:05.731386+00:00"
+}

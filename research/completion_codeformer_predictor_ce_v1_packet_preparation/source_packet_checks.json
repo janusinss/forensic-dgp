@@ -1,0 +1,38 @@
+{
+  "format": "predictor-ce-v1-source-packet-checks-v1",
+  "complete": true,
+  "same_author_not_independent": true,
+  "protocol_sha256": "15aa3e1478a67c120b2fcb6af50ecae58d0558eb4e65cef473d0339572bf084b",
+  "checks": [
+    "all670payload_hashes_and_closed_namespace",
+    "exact_independent_balanced128_cases_and32cycle_schedule",
+    "32FIT8monitor_disjoint_and64train16nevertrained_labels",
+    "paired48_public32_parity4_fixed_R1history48",
+    "only_required_selected_case_target_parity_public_assets_no_unused_unique_aug_inputs_or_weights",
+    "Python3_10_source_installer_and_preparation_import_block",
+    "unreleased_root_receipt_refuses_archive_before_mutation",
+    "stage_overwrite_refused_existing_protocol_preserved"
+  ],
+  "count": 8,
+  "payload_files": 670,
+  "payload_bytes_including_protocol": 79488873,
+  "required_data_asset_files": 440,
+  "unselected_augmented_cases_not_in_optimization": 64,
+  "unneeded_unique_unselected_aug_input_files_not_copied": 32,
+  "shared_assets_can_be_required_by_selected_cases_or80target_sets": true,
+  "builder": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_predictor_ce_v1.py",
+    "bytes": 31885,
+    "sha256": "1f19c245c060d63712e7a93ba051222689d582b7c8a49c3af9360129873e07d5"
+  },
+  "exporter": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_predictor_ce_v1.py",
+    "bytes": 13921,
+    "sha256": "0010276bc3e3501f1660eb8919e498309d05eace8fa4aa04e3b0a298cacb58f9"
+  },
+  "model_checkpoint_reads": 0,
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "optimizer_updates": 0,
+  "archive_prepared": false
+}

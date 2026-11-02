@@ -1,0 +1,19 @@
+{
+  "format": "root-fusion-only-v3-save-negative-semantic-fixtures-v1",
+  "complete": true,
+  "whole_worker_sha256": "3ddc903b3f2f5af6d76150bb26deb677bf68e693f4fe592633f052fc13614365",
+  "exact_save_state_AST_sha256": "83b351f4faebb5703ca94344fe378cc3c1cc9076c0893f6658ee93ccf3c22963",
+  "fixture_environment_source_sha256": "0c83b724f0baf05a222beedee52b9af5965f4c36411fa2cfed096af91aa4a10e",
+  "checks": [
+    "exclusive publication collision preserves both new complete partial and unrelated existing target; no committed ledger flag",
+    "actual torch serialization cap retains bounded failed prefix and pre-save receipt, with no committed state",
+    "fsync failure keeps complete partial without publishing or claiming durable commit"
+  ],
+  "cap_refusal_exception_type": "RuntimeError",
+  "new_negative_cases_independent_of_author_assertions": true,
+  "fixture_environment_reused_from_author": true,
+  "actual_module_or_neural_or_gradient_or_optimizer_objects_or_VM_calls": 0,
+  "toy_CPU_tensors_only": true,
+  "real_checkpoints_read_or_reconstructed": false,
+  "scope": "Save-path failure semantics only; no actual model state, training, runtime preflight or quality admission."
+}

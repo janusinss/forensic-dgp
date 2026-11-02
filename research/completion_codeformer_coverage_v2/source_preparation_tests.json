@@ -1,0 +1,55 @@
+{
+  "format": "completion-coverage-v2-source-preparation-tests-v1",
+  "complete": true,
+  "recorded_UTC": "2026-10-25T15:06:07.875979+00:00",
+  "source_files": [
+    {
+      "path": "scripts/cctv_completion_codeformer_coverage_v2_vm.py",
+      "bytes": 50344,
+      "sha256": "007f9504cd3cf16cc24a5b5f0f3fd1a1e4325f741bbfd374f6c544a3a6bcefda"
+    },
+    {
+      "path": "research/completion_codeformer_coverage_v2/contracts.py",
+      "bytes": 9488,
+      "sha256": "1822d73ebe57b922cd9e79817ba5c961582a93e65935ef442f60ae07576ec442"
+    },
+    {
+      "path": "research/completion_codeformer_coverage_v2/source_tests.py",
+      "bytes": 7576,
+      "sha256": "5248a3c051c8a039d438ebbf0b9feb661860600abb1c1ebfebbf50be0502d679"
+    }
+  ],
+  "tests": {
+    "passed": 14,
+    "seconds": 3.342,
+    "test_command": "python -B research/completion_codeformer_coverage_v2/source_tests.py",
+    "coverage": [
+      "Torchimporttrap onactual--helpCLI",
+      "Python3.10syntax and64/128/512/896/1000 contracts",
+      "nativeNumPyNPZseek/write exactextents+readback",
+      "nativePNGwrite exactextents",
+      "nativeTorch CPUtinytensor serialization andweights_onlyreadback viaCappedWriter callbacks",
+      "no publicfileno",
+      "oversizedTorch andteacherNPZ refusal withretainedpartial duringfixture",
+      "atomicterminalcommit releasespendingreservation andallows1800sreceiptwindow",
+      "pendingterminal disk reservation andoverwrite refusal",
+      "condition/geometry nonworse gates +onepercent",
+      "unchanged twoobjectives andparentCPU/CUDAPythonNumPy restorefields",
+      "no neuralcalls afterterminalcommit"
+    ],
+    "initial_fixed_test_failure": "NumPyfilelikefactory requiresread attribute; addedread methoddelegatingtowrite-onlybuffer, stillno nativefileno bypass"
+  },
+  "local_execution": {
+    "model_instantiations": 0,
+    "neural_calls": 0,
+    "backwards": 0,
+    "optimizer_operations": 0,
+    "tiny_CPU_tensor_serialization_only": true,
+    "network_or_VM": false
+  },
+  "original_R1_worker_unchanged": true,
+  "independent_source_and_packet_admission_pending": true,
+  "transfer_archive_created": false,
+  "training_launched": false,
+  "model_qualified": false
+}

@@ -1,0 +1,94 @@
+{
+  "format": "completion-writer-namespace-scale-benchmark-v1",
+  "complete": true,
+  "recorded_UTC": "2026-10-25T16:11:23.868512+00:00",
+  "immutable_old_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_coverage_v2\\contracts.py",
+    "sha256": "1822d73ebe57b922cd9e79817ba5c961582a93e65935ef442f60ae07576ec442"
+  },
+  "prototype_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\optimized_budget.py",
+    "sha256": "32ff2e9ea4d56325cc0ebbf3f67ff8831b354cd36346862fdea05682f189f5ec"
+  },
+  "actual_return_namespace": {
+    "regular_files": 624,
+    "manifest_payloads": 623,
+    "tracked_output_entries": 620
+  },
+  "pure_actual_namespace_checks": [
+    {
+      "label": "old",
+      "accounting_checks": 3,
+      "actual_output_entries": 620,
+      "complete_return_regular_files": 624,
+      "category_calls": 7443,
+      "Path_resolve_calls": 7446,
+      "seconds": 1.5811572000020533,
+      "seconds_per_writecheck": 0.5270524000006844,
+      "writes_performed": 0,
+      "actual_return_mutated": false
+    },
+    {
+      "label": "new",
+      "accounting_checks": 3,
+      "actual_output_entries": 620,
+      "complete_return_regular_files": 624,
+      "category_calls": 0,
+      "Path_resolve_calls": 0,
+      "seconds": 0.0010249000042676926,
+      "seconds_per_writecheck": 0.0003416333347558975,
+      "writes_performed": 0,
+      "actual_return_mutated": false
+    }
+  ],
+  "bounded8MiB_native_old_new_writes": [
+    {
+      "label": "native",
+      "bytes_written": 8388608,
+      "callbacks": 8,
+      "virtual_namespace_entries_before_open": 619,
+      "seconds": 0.003817299999354873,
+      "MiB_per_second": 2095.7221076027577,
+      "output_sha256": "5440547bf5d6afa98c19bc8e1820380596685cbe99d95b24bf70b201a92b51be",
+      "prototype_check_counts": null
+    },
+    {
+      "label": "old",
+      "bytes_written": 8388608,
+      "callbacks": 8,
+      "virtual_namespace_entries_before_open": 619,
+      "seconds": 6.991854500003683,
+      "MiB_per_second": 1.1441885697129117,
+      "output_sha256": "5440547bf5d6afa98c19bc8e1820380596685cbe99d95b24bf70b201a92b51be",
+      "prototype_check_counts": null
+    },
+    {
+      "label": "new",
+      "bytes_written": 8388608,
+      "callbacks": 8,
+      "virtual_namespace_entries_before_open": 619,
+      "seconds": 0.0058216000034008175,
+      "MiB_per_second": 1374.1926610084206,
+      "output_sha256": "5440547bf5d6afa98c19bc8e1820380596685cbe99d95b24bf70b201a92b51be",
+      "prototype_check_counts": {
+        "canonical_paths": 2,
+        "path_components": 4,
+        "guard_calls": 8,
+        "write_checks": 8,
+        "external_stats": 0
+      }
+    }
+  ],
+  "operational_inference": "Old accounting repeatedly resolves/categories everytracked output on eachserializedchunk; newcachedtotals eliminate namespace rescans in checks. This localmechanism can contribute to failedVMsave latency; exactsoleVMcause notproven.",
+  "limits_unchanged": true,
+  "benchmark_clock_free_are_explicit_fixtures": true,
+  "no_training_packet_change": true,
+  "local_actions": {
+    "model_calls": 0,
+    "gradient_calls": 0,
+    "optimizer_operations": 0,
+    "VM_calls": 0,
+    "read_actual_incomplete_state_bytes": false,
+    "old_return_mutated": false
+  }
+}

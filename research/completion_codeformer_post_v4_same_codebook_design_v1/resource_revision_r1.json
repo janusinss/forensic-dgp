@@ -1,0 +1,12 @@
+{
+  "complete": true,
+  "created_UTC": "2026-10-26T13:34:06.790872+00:00",
+  "initial_exact_snapshot": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_same_codebook_design_v1\\root_design_initial_1GiB_before_capacity_review.json",
+  "initial_sha256": "98ada9f9b56b318dd2aea82931388460ec40fa2bf84631f9ed7c39ffa4061b6a",
+  "revised_design_sha256": "2ca6fafbaf2a3008459dace2d83bfc0cecb6594ae6e33adc7ac4aaef5bd0effb",
+  "readable_design_sha256": "966fd796e7655eb458740970d7633a549f66033ffd6834d97c40a31b814ba849",
+  "only_storage_capacity_and_provenance_changed": true,
+  "scientific_design_and_count_limits_unchanged": true,
+  "historical_executed_limits_modified": false,
+  "independent_final_capacity_admission_required": true
+}

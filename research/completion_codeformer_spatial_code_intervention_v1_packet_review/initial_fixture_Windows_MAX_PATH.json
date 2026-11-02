@@ -1,0 +1,8 @@
+{
+  "complete": true,
+  "event": "The local installer valid toy fixture encountered Windows MAX_PATH when the test home was nested beneath the long research path. Actual target VM is Linux; production installer unmodified.",
+  "error": "FileNotFoundError(2, 'The filename or extension is too long')",
+  "correction": "Keep failed tiny fixture tree; place new toy homes in a short dedicated original Testing/outputs/spcode_v1 directory. No production caps or checks relaxed.",
+  "source_sha256": "f11de3f1877c871b734f541df780a34d8e34957cb7396ce70a2d50769f053b53",
+  "model_VM_calls": 0
+}

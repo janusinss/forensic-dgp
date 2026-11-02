@@ -1,0 +1,44 @@
+{
+  "format": "completion-coverage-v2-actual-pure-CLI-transfer-fixture-v1",
+  "complete": true,
+  "audited_UTC": "2026-10-25T15:08:23.945560+00:00",
+  "packet": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_packet\\draft_003\\cctv_completion_codeformer_coverage_v2_vm",
+  "protocol_sha256": "c838f4472cf87c138b2d518ef4f543bfcec3e8149ea7a5411b863397bf66859d",
+  "source_worker_sha256": "007f9504cd3cf16cc24a5b5f0f3fd1a1e4325f741bbfd374f6c544a3a6bcefda",
+  "source_helper_sha256": "1822d73ebe57b922cd9e79817ba5c961582a93e65935ef442f60ae07576ec442",
+  "actual_verify_transfer_CLI_branch": true,
+  "result": {
+    "complete": true,
+    "files": 637,
+    "fit_cases": 256,
+    "monitor_cases": 32,
+    "challenge_cases": 16,
+    "teacher_target_sets": 80,
+    "optimizer_updates": 0,
+    "neural_calls": 0
+  },
+  "external_fixture_files": [
+    {
+      "fixture_path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_packet\\draft_003\\cctv_completion_codeformer_gradient_v1_vm\\weights\\codeformer_inpainting.pth",
+      "original": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\checkpoints\\codeformer_inpainting.pth",
+      "sha256": "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797",
+      "hardlinked_samefile": true
+    },
+    {
+      "fixture_path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_packet\\draft_003\\cctv_completion_codeformer_finetune_v1_r1_vm\\outputs\\terminal_training_state.pth",
+      "original": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_return\\cctv_completion_codeformer_finetune_v1_r1_results\\outputs\\terminal_training_state.pth",
+      "sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd",
+      "hardlinked_samefile": true
+    }
+  ],
+  "runtime_fixture_home_patched_only": true,
+  "Torch_imports_blocked": true,
+  "neural_calls": 0,
+  "gradients": 0,
+  "optimizer_operations": 0,
+  "VM_calls": 0,
+  "no_archive_created": true,
+  "runtime_python": "3.13.5 (tags/v3.13.5:6cb20a2, Jun 11 2025, 16:15:46) [MSC v.1943 64 bit (AMD64)]",
+  "Python310_syntax_only": true,
+  "seconds": 6.45838470000308
+}

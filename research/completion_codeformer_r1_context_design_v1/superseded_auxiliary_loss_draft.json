@@ -1,0 +1,157 @@
+{
+  "format": "completion-r1-context-continuation-source-design-v1",
+  "status": "design_review_only_not_an_execution_packet",
+  "created_UTC": "2026-10-25T14:04:55.771041+00:00",
+  "starting_model": {
+    "name": "Our trained completion R1",
+    "checkpoint_SHA256": "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0",
+    "logical_SHA256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "comparison_original_preserved": true,
+    "frozen_R1_matched_control": true,
+    "automatic_promotion": false
+  },
+  "source_evidence_sha256": "cdd6a5e8e4f89310f5b3d397508a92a95bc2b3f8df640bff233a0e373370aed3",
+  "fit_sources": 32,
+  "adaptive_TRAIN_monitor_sources": 8,
+  "original_split_preserved": true,
+  "reserved_VAL_FINAL_not_accessed": true,
+  "fit_plan": {
+    "total": 256,
+    "original_clear_anchors": 128,
+    "new_bounded_irregular_cases": 128,
+    "conditions": {
+      "original_clear_anchor": 128,
+      "strict_gray_clear": 32,
+      "RGB_mild_degraded": 32,
+      "low_chroma_mild_degraded": 32,
+      "RGB_clear_irregular": 32
+    },
+    "sampling": "One original plus one augmented case per existing FIT reference/geometry pair; rotate condition=(source_index+geometry_index)%4; seeded order balances anchors and augmented cases prospectively",
+    "new_mask_bounds": {
+      "translation_pixels256": [
+        -8,
+        8
+      ],
+      "scale": [
+        0.85,
+        1.15
+      ],
+      "rotation_degrees": [
+        -10,
+        10
+      ],
+      "support": "Bounded irregular variants; no padding; existing visibility check; pre-reviewed before output generation",
+      "geometry": "Do not alter existing DEV/MONITOR masks or enlarge delivery masks"
+    },
+    "appearance": {
+      "strict_gray_saturation": 0.0,
+      "low_chroma_saturation": 0.05,
+      "RGB_saturation": 1.0,
+      "formula": "A_s(X)=s*X+(1-s)*Y(X),Y=.299R+.587G+.114B, replicated to3channels",
+      "same_A_on_input_and_target": true,
+      "target": "A_s(originalHQ512), with exact A_s retained256 for delivered supervision; original anchors remain byte-identical"
+    },
+    "context_degradation": {
+      "only_on_input256_after_A_before_masking": true,
+      "Gaussian_sigma_pixels256": [
+        0.4,
+        0.8
+      ],
+      "downsample_side": [
+        128,
+        192
+      ],
+      "upsample": "bilinear to256",
+      "Gaussian_noise_std_8bit": [
+        0,
+        2
+      ],
+      "JPEG_quality": [
+        75,
+        90
+      ],
+      "near_gray_noise": "shared scalar noise across RGB to preserve synthetic low-chroma intent; no independent channel color noise",
+      "semantics": "Known synthetic low-quality visible context -> appearance-matched HQ hidden target; source-visible pixels are still copied exactly at delivery; no native CCTV equivalence claimed",
+      "parameters": "Deterministic percase seed; freeze actual transform bytes before VM packet"
+    }
+  },
+  "learning": {
+    "one_learning_arm_plus_frozen_R1_control": true,
+    "routes": "same278 code tensors and54 fusion tensors;165 quantizer/generator tensors frozen",
+    "generator_unfreeze": false,
+    "actual_optimizer_steps_max": 128,
+    "paired_cycles_max": 64,
+    "microbatches_per_route": 4,
+    "batch_size": 1,
+    "backward_calls_max": 512,
+    "Adam": "both fresh equal optimizers LR1e-5 betas(.9,.99) eps1e-8 wd0; retain original R1 Adam/RNG unchanged, explicitly new adaptation phase rather than exact optimizer resume",
+    "gradient_clip_L2": 1.0,
+    "code_loss": "original CE_all256 + latent_MSE, weights1+1",
+    "teacher": "Cache RGB targets for40 sources plus strictgray and lowchroma targets for32FIT only from original frozen inpainting encoder/codebook;104targets=208componentcalls; then load learner R1",
+    "fusion_loss": "L_hole512 + L_innerboundary512 +0.25*L_hole_delivered256 +0.25*I[s<=.1]*L_target_chroma512",
+    "chroma_loss": "mean_M |(P-Y(P))-(T-Y(T))| on predicted/targetRGB512; strictgraytarget haszerochroma; lowchromatarget retains its small known color residual",
+    "delivered_loss": "mask-normalized L1 of actual clamped bilinear256 delivered prediction versus appearance-transformed exact256 target; outside support is not optimized",
+    "weight_note": "Prospective small auxiliary weights, not fitted from public hidden targets or chosen after new outputs. They test a data/loss change as a package; no causal attribution to one term."
+  },
+  "evaluation": {
+    "original32clear_MONITOR": "unchanged inputs/targets/masks and existing raw/PNG hole/boundary macro/pergeometry gates, including1%relative deliveredPNGhole gain vs frozenR1",
+    "new16challenge_MONITOR": "sameeight adaptiveTRAIN monitor sources; two deterministic irregular/grayscale/degraded conditions per source, balanced4pergeometry, prospectively source-only frozen; original32remain separate",
+    "challenge_gates": "raw/PNG hole and boundary macro/pergeometry nonworse versus frozenR1; targeted chroma error nonworse; strict gray and low-chroma summaries separate",
+    "snapshots": [
+      0,
+      16,
+      32,
+      64
+    ],
+    "challenge_snapshots": [
+      0,
+      64
+    ],
+    "public_development": "same32 exposed unpaired cases at0/terminal, original-photo vsdegraded andfamilies separate; not traininglabels or hiddenPSNR/SSIM",
+    "all_outputs": "exact visible raw/PNG, zero-empty forward, allplannedvisualsreview, original/mask/raw/result retained; rawmodel scores separately from optional grayscale/displayprocessing",
+    "catastrophic_stop": "same>10%regression on any existing clear monitor raw/PNG macro/pergeometry hole/boundary endpoint at16/32; resources/nonfinite/parity/preservation stops unchanged",
+    "independent_FINAL": "not used for design, gradientupdates or modelselection; later independent humanreview still required"
+  },
+  "finite_limits": {
+    "whole_model_forwards_planned": 736,
+    "teacher_component_calls_planned": 208,
+    "typed_slots_planned": 944,
+    "typed_slots_cap": 1100,
+    "worker_hard_seconds": 1800,
+    "cooperative_stop_seconds": 1680,
+    "start_free_GiB": 4,
+    "stop_free_GiB": 2,
+    "CUDA_allocated_cap_GiB": 20,
+    "output_cap_MiB": 1536,
+    "export_cap_MiB": 1536,
+    "export_cooperative_seconds": 900,
+    "resource_admission": "Before packet sealing, count actual planned source/mask/NPZ sizes against1536MiB; if incompatible, redesign retention prospectively rather than dropping evidence afterrun. No unbounded repeat/extraepochs.",
+    "terminal_retention": "one complete terminal delta+bothAdam+orderednames+RNG/schedule/counters/partialgradients; no recoverable intermediatecheckpoint rescue"
+  },
+  "preconditions_before_packet": [
+    "Review actual augmented TRAIN/monitor masks and transformed target/source previews withoutmodelinference; verify truegray/lowchroma and readable context",
+    "Recount schedule and typedcalls, targetteacher semantics, exactoutside/empty parity against current R1wrapper",
+    "Independent source/data/terms/overlap admission and storage budget; original states retained",
+    "Root selects this design and user manuallylaunches a distinct finite L4packet; no automatic historical rerun"
+  ],
+  "primary_sources": [
+    {
+      "url": "https://arxiv.org/abs/2206.11253",
+      "use": "Codebook/context-method motivation only; not evidence of ouradaptation quality"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/README.md",
+      "use": "Official inpainting uses white masks on aligned crops; separate restoration/colorization entrypoints"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/basicsr/data/ffhq_blind_dataset.py",
+      "use": "Officialdataset branches corruption separately from gen_inpaint_mask; gray_prob transforms inputonly; ourbothsidesgraychoiceis task-specific"
+    }
+  ],
+  "local_neural_calls": 0,
+  "gradient_calls": 0,
+  "optimizer_updates": 0,
+  "VM_calls": 0,
+  "packet_prepared": false,
+  "model_qualified": false
+}

@@ -1,0 +1,11 @@
+{
+  "format": "unified-r2-v1-source-and-cpu-preparation-tests-v1",
+  "complete": true,
+  "tests": 14,
+  "failures": 0,
+  "errors": 0,
+  "torch_imported_at_module_load": false,
+  "pytorch_cpu_executed": true,
+  "VM_calls": 0,
+  "UTC": "2026-10-29T08:20:20.645380+00:00"
+}
