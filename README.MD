@@ -83,7 +83,9 @@ Switching Picture/Video, reviewing a crop or temporarily leaving Input pauses an
 
 Review whether one face is clear enough, then choose **Auto**, **On** or **Off** restoration and **Bypass** or optional reviewed preparation. Green protects pixels during preparation; blue selects blur, with green taking priority. Review and confirm preparation before restoration. Protection applies to preparation; generated appearance can change.
 
-Optional removal review is available after the result, including when restoration was Off or Auto retained the original. Paint only the covering orange, inspect it, confirm the two statements and generate. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
+Optional removal review uses **Trained CodeFormer Completion R2** after the result, including when restoration was Off or Auto retained the original. Paint only the covering orange, inspect it, confirm the two statements and generate. Pixels outside the reviewed area are copied exactly from the supplied prepared/restored canvas; an empty selection skips completion. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
+
+R2 has its own `codeformer_completion_r2.pth` file. Updating preserves existing R1 files and saved records. Missing or changed R2 weights refuse completion instead of silently using R1. Restoration and the optional covering detector are unchanged; the guided editor continues to use manual covering selection.
 
 ## Launch and troubleshooting
 
@@ -111,7 +113,7 @@ git pull --ff-only origin IMPLEMENTATION
 
 Save local source changes before pulling. The source path keeps its own environment record and checkout-local models/records. `start.bat --source --verify-only` checks that installation without starting a server. Standalone users need a newly downloaded installer once to get this updater; an older batch file cannot update itself automatically.
 
-Python asset verification remains available through `implementation.setup_models --verify-only` and `implementation.completion_install --verify-only` with the installation's Python. Completion assets can be staged from exact verified local files using `--local-r1` and `--local-detector`; consult the module's `--help`.
+Python asset verification remains available through `implementation.setup_models --verify-only` and `implementation.completion_install --verify-only` with the installation's Python. Completion assets can be staged from exact verified local files using `--local-r2` and `--local-detector`; consult the module's `--help`. Keep historical R1 files as R1; renaming another checkpoint does not pass the exact R2 size, file hash and logical-state checks.
 
 ## Model information and licenses
 

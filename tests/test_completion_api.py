@@ -36,6 +36,21 @@ class CompletionAPITests(unittest.TestCase):
         api.admit_restoration(api.canonical(self.response))
         return api.prepare(self.raw, self.raw, api.canonical(self.metadata))['session_id']
 
+    def test_completion_status_reports_r2_even_when_assets_are_missing(self):
+        from fastapi import FastAPI
+        from implementation import completion_assets
+        app = FastAPI()
+        api.register(app)
+        endpoint = next(route.endpoint for route in app.routes
+                        if getattr(route, 'path', '') == '/face/completion/status')
+        with patch.object(completion_assets, 'verify_assets',
+                          side_effect=completion_assets.CompletionAssetError('missing R2')):
+            response = endpoint()
+        self.assertEqual(response['model'], 'completion_r2')
+        self.assertFalse(response['available'])
+        self.assertIn('missing R2', response['error'])
+        self.assertFalse(response['model_qualified'])
+
     def prepared_padding_fixture(self, height=620, width=503):
         from implementation.preparation import build_preview
         yy, xx = np.mgrid[:height, :width]
@@ -201,11 +216,16 @@ class CompletionAPITests(unittest.TestCase):
         with patch.object(api,'run_worker',return_value=(out,result,{'seconds':.01,'active_owned_processes':0})):
             response=api.generate(ident,mask,approved['review_id'],True,True)
         self.assertEqual(response['neural_calls'],0)
+        self.assertEqual(response['metadata']['model_id'], 'completion_r2')
+        self.assertEqual(response['metadata']['weights_sha256'],
+                         'ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c')
         self.assertEqual(response['metadata']['outside_reviewed_support_exact_to'],'restoration-result.png')
         with zipfile.ZipFile(out/'evidence.zip') as archive:
             manifest=json.loads(archive.read('manifest.json'))['sha256']
             for name,digest in manifest.items(): self.assertEqual(api.sha(archive.read(name)),digest)
             self.assertEqual(archive.read('restoration-result.png'),archive.read('completion-result.png'))
+            self.assertIn(b'R2', archive.read('README.txt'))
+            self.assertNotIn(b'R1 changes', archive.read('README.txt'))
         self.assertIsNone(api.SESSIONS[ident]['review'])
 
 

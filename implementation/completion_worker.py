@@ -1,4 +1,4 @@
-"""One bounded reviewed-mask R1 request, supervised by the owning local app.
+"""One bounded reviewed-mask R2 request, supervised by the owning local app.
 
 Run with -m implementation.completion_worker --request request.json --result
 result.json. All trusted server input/output paths must stay within the request
@@ -91,7 +91,7 @@ def run_request(request, *, request_root=None):
     started = time.monotonic()
 
     def status(phase, *, error=None, refused=False):
-        data = {"component": "completion_r1", "phase": phase, "complete": phase == "complete",
+        data = {"component": "completion_r2", "phase": phase, "complete": phase == "complete",
                 "status": "refused" if refused else "error" if error else phase,
                 "seconds": time.monotonic() - started, **counters,
                 "forward_attempts": counters["neural_attempts"], "forward_returns": counters["neural_returns"]}
@@ -115,7 +115,7 @@ def run_request(request, *, request_root=None):
             counters[key] += 1
             if event == "returned":
                 counters["neural_calls"] += 1
-            runtime.need(counters[key] <= 1, "One R1 forward maximum.")
+            runtime.need(counters[key] <= 1, "One R2 forward maximum.")
             status("forward_entered" if event == "entered" else "forward_returned")
 
         result = runtime.complete(rgb, mask, request["prepared_bounds"], forward_event=forward_event)
@@ -147,7 +147,7 @@ def run_request(request, *, request_root=None):
                     "outside_output_rgb_sha256": hashlib.sha256(final[mask == 0].tobytes()).hexdigest(),
                     "outside_mask_changed_bytes": 0, "supplied_canvas_preserved_outside_mask": True,
                     "automatic_detection_used_in_worker": False, "mask_source": "reviewed request mask",
-                    "raw_float_definition": "R1 composed RGB256 float32[0,1] before np.rint PNG quantization.",
+                    "raw_float_definition": "R2 composed RGB256 float32[0,1] before np.rint PNG quantization.",
                     "raw512_definition": "Unclamped generator output NCHW512 float32[-1,1] nominal range; no claim of bounded raw values.",
                     "seconds": time.monotonic() - started}
         _write_json(output / "receipt.json", metadata)

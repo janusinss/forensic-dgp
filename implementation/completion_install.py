@@ -1,4 +1,4 @@
-"""Install the separate R1 completion/proposal assets, never restoration assets.
+"""Install the separate R2 completion/proposal assets, never restoration assets.
 
 Normal installation uses the fixed GitHub release below. The release's existence
 is checked by the actual download; this module does not assert it was published.
@@ -26,8 +26,8 @@ from . import completion_assets as assets
 from .model_store import require_model_directory
 from .offline_payload import load_payload, protect_active_model, CopyProgress
 
-RELEASE_URL = "https://github.com/janusinss/forensic-dgp/releases/tag/completion-r1-models-v1"
-RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/completion-r1-models-v1/"
+RELEASE_URL = "https://github.com/janusinss/forensic-dgp/releases/tag/completion-r2-models-v1"
+RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/completion-r2-models-v1/"
 CHUNK_SIZE = 1024 * 1024
 REQUEST_TIMEOUT_SECONDS = 60
 DOWNLOAD_TOTAL_SECONDS = 1800
@@ -183,16 +183,16 @@ def _download(url, partial, asset, *, opener=None, clock=time.monotonic):
                 raise CompletionInstallError("Completion download failed its complete size/SHA-256 check; partial retained.")
 
 
-def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
+def install_assets(*, local_r2=None, local_detector=None, verify_only=False,
                    model_dir=assets.MODEL_DIR, opener=None, clock=time.monotonic):
-    if verify_only and (local_r1 is not None or local_detector is not None):
+    if verify_only and (local_r2 is not None or local_detector is not None):
         raise CompletionInstallError("Use --verify-only separately from local staging.")
     check_cancel()
     manifest = assets.load_manifest()
     if model_dir == assets.MODEL_DIR:
         require_model_directory(assets.ROOT, 'completion', model_dir, prepare=not verify_only)
     folder = _directory(model_dir)
-    supplied = {"completion_r1": local_r1, "covering_detector": local_detector}
+    supplied = {"completion_r2": local_r2, "covering_detector": local_detector}
     payload = load_payload() if not verify_only else None
     if payload is not None:
         for key,asset in manifest['assets'].items():
@@ -222,7 +222,7 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
         elif supplied[key] is not None:
             source = "verified_local_copy"
         elif offline:
-            raise CompletionInstallError(f"Offline setup also needs --local-{'r1' if key == 'completion_r1' else 'detector'} for missing {destination.name}.")
+            raise CompletionInstallError(f"Offline setup also needs --local-{'r2' if key == 'completion_r2' else 'detector'} for missing {destination.name}.")
         else:
             source = "verified_https_download"
         planned.append((key, asset, destination, source))
@@ -266,7 +266,7 @@ def install_assets(*, local_r1=None, local_detector=None, verify_only=False,
             raise CompletionInstallError(f"Completion asset changed before final verification: {destination.name}")
     for _, asset, _, _ in planned:
         event("download:" + asset["filename"], "complete", asset["filename"], current=asset["size"], total=asset["size"])
-    result = {"schema_version": 1, "component": "completion-r1-distribution-installation",
+    result = {"schema_version": 1, "component": "completion-r2-distribution-installation",
               "complete": True, "verified_only": bool(verify_only), "assets": acquired,
               "restoration_files_modified": False, "inference_calls": 0, "training_calls": 0,
               "model_quality_qualified": False}
@@ -289,7 +289,7 @@ def main(argv=None):
     arguments = list(sys.argv[1:] if argv is None else argv)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify-only", action="store_true")
-    parser.add_argument("--local-r1", type=Path)
+    parser.add_argument("--local-r2", type=Path)
     parser.add_argument("--local-detector", type=Path)
     parser.add_argument("--configured-child", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args(arguments)
@@ -297,7 +297,7 @@ def main(argv=None):
         # This standalone command uses the validated checkout environment for
         # ordinary downloads. Unified setup calls install_assets() independently
         # of dependency installation; asset acquisition is standard-library-only.
-        if not args.verify_only and args.local_r1 is None and args.local_detector is None:
+        if not args.verify_only and args.local_r2 is None and args.local_detector is None:
             from .environment import configured_python, check_python, run_foreground
             configured = configured_python()
             check_python(configured)
@@ -305,7 +305,7 @@ def main(argv=None):
                 return run_foreground([str(configured), "-B", "-m", "implementation.completion_install", *arguments, "--configured-child"])
             if not Path(sys.executable).samefile(configured):
                 raise CompletionInstallError("Completion setup must use the validated checkout environment.")
-        result = install_assets(local_r1=args.local_r1, local_detector=args.local_detector, verify_only=args.verify_only)
+        result = install_assets(local_r2=args.local_r2, local_detector=args.local_detector, verify_only=args.verify_only)
         print(json.dumps(result, allow_nan=False))
         return 0
     except (CompletionInstallError, assets.CompletionAssetError, OSError, RuntimeError) as exc:

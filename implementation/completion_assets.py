@@ -21,8 +21,8 @@ from .model_store import model_directory, require_model_directory
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = model_directory(ROOT, 'completion')
 MANIFEST_PATH = Path(__file__).with_name("completion_assets.json")
-R1_SHA256 = "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0"
-R1_SIZE = 370764381
+R2_SHA256 = "ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c"
+R2_SIZE = 370773572
 DETECTOR_SHA256 = "ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf"
 DETECTOR_SIZE = 2681549
 
@@ -34,13 +34,13 @@ class CompletionAssetError(RuntimeError):
 def load_manifest(path=MANIFEST_PATH):
     try:
         body = json.loads(Path(path).read_text(encoding="utf-8"))
-        if (body.get("schema_version") != 1 or body.get("component") != "reviewed-r1-face-completion"
-                or body.get("default_model") != "completion_r1" or body.get("model_directory") != "models/completion"):
+        if (body.get("schema_version") != 1 or body.get("component") != "reviewed-r2-face-completion"
+                or body.get("default_model") != "completion_r2" or body.get("model_directory") != "models/completion"):
             raise ValueError("unsupported completion manifest")
         assets = body["assets"]
-        if set(assets) != {"completion_r1", "covering_detector"}:
+        if set(assets) != {"completion_r2", "covering_detector"}:
             raise ValueError("unexpected completion asset list")
-        expected = {"completion_r1": ("codeformer_completion_r1.pth", R1_SIZE, R1_SHA256),
+        expected = {"completion_r2": ("codeformer_completion_r2.pth", R2_SIZE, R2_SHA256),
                     "covering_detector": ("covering_detector_segmenter_v1.pth", DETECTOR_SIZE, DETECTOR_SHA256)}
         for key, asset in assets.items():
             if (asset.get("filename"), asset.get("size"), asset.get("sha256")) != expected[key]:
@@ -102,7 +102,7 @@ def asset_path(key, *, model_dir=MODEL_DIR, verify=True):
 
 
 def verify_assets(*, keys=None, model_dir=MODEL_DIR):
-    keys = tuple(keys or ("completion_r1", "covering_detector"))
+    keys = tuple(keys or ("completion_r2", "covering_detector"))
     return {key: asset_path(key, model_dir=model_dir) for key in keys}
 
 
@@ -147,14 +147,14 @@ def stage_local(key, source, *, model_dir=MODEL_DIR):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verify-only", action="store_true")
-    parser.add_argument("--local-r1", type=Path)
+    parser.add_argument("--local-r2", type=Path)
     parser.add_argument("--local-detector", type=Path)
     args = parser.parse_args(argv)
     try:
-        if args.verify_only and (args.local_r1 or args.local_detector):
+        if args.verify_only and (args.local_r2 or args.local_detector):
             raise CompletionAssetError("Use verify-only separately from local staging.")
-        if args.local_r1:
-            stage_local("completion_r1", args.local_r1)
+        if args.local_r2:
+            stage_local("completion_r2", args.local_r2)
         if args.local_detector:
             stage_local("covering_detector", args.local_detector)
         verified = verify_assets()

@@ -42,7 +42,7 @@ class ModelUpdateFlowTests(unittest.TestCase):
         self.manifests = {}
         for family, group, names in (
             ('implementation', 'restoration', {'face': 'face.pth'}),
-            ('completion', 'completion', {'completion_r1': 'completion.pth', 'covering_detector': 'detector.pth'}),
+            ('completion', 'completion', {'completion_r2': 'completion.pth', 'covering_detector': 'detector.pth'}),
         ):
             assets = {}
             for key, filename in names.items():
@@ -88,7 +88,7 @@ class ModelUpdateFlowTests(unittest.TestCase):
     def assert_legacy_and_pointer_unchanged(self):
         self.assertEqual(self.pointer.read_bytes(), self.pointer_before)
         for family, names in (('implementation', {'face': 'face.pth'}),
-                              ('completion', {'completion_r1': 'completion.pth', 'covering_detector': 'detector.pth'})):
+                              ('completion', {'completion_r2': 'completion.pth', 'covering_detector': 'detector.pth'})):
             for key, filename in names.items():
                 self.assertEqual((self.managed / 'data' / 'models' / family / filename).read_bytes(),
                                  ('old active ' + key).encode())
@@ -108,6 +108,9 @@ class ModelUpdateFlowTests(unittest.TestCase):
         with self.completion_context(folder):
             result = completion_install.install_assets(model_dir=folder)
         self.assertTrue(result['complete'])
+        self.assertEqual(result['component'], 'completion-r2-distribution-installation')
+        self.assertEqual({key for group, key, _ in self.payload.calls if group == 'completion'},
+                         {'completion_r2', 'covering_detector'})
         self.assertEqual(model_store.model_directory(self.new, 'completion'), folder)
         for key, asset in self.manifests['completion']['assets'].items():
             self.assertEqual((folder / asset['filename']).read_bytes(), self.sources[('completion', key)].read_bytes())
@@ -155,7 +158,7 @@ class ModelUpdateFlowTests(unittest.TestCase):
 
     def test_guard_refuses_other_namespace_and_tampered_binding(self):
         folder = model_store.prepare_model_directory(self.new, 'completion')
-        asset = self.manifests['completion']['assets']['completion_r1']
+        asset = self.manifests['completion']['assets']['completion_r2']
         other = folder.parent / ('f' * 32); other.mkdir()
         outside = other / asset['filename']; outside.write_bytes(b'unproven other weights')
         with patch.object(offline_payload, '__file__', str(self.new / 'implementation' / 'offline_payload.py')):
@@ -209,9 +212,9 @@ class ModelUpdateFlowTests(unittest.TestCase):
         with self.completion_context(folder):
             marker.unlink()
             with self.assertRaises((completion_assets.CompletionAssetError, model_store.ModelStoreError)):
-                completion_assets.asset_path('completion_r1', model_dir=folder)
+                completion_assets.asset_path('completion_r2', model_dir=folder)
         self.assertFalse(marker.exists())
-        self.assertEqual((folder / 'completion.pth').read_bytes(), self.sources[('completion', 'completion_r1')].read_bytes())
+        self.assertEqual((folder / 'completion.pth').read_bytes(), self.sources[('completion', 'completion_r2')].read_bytes())
         self.assert_legacy_and_pointer_unchanged()
 
     @unittest.skipUnless(os.name == 'nt', 'Windows MAX_PATH model publication regression')
@@ -254,8 +257,8 @@ class ModelUpdateFlowTests(unittest.TestCase):
         for key, asset in self.manifests['completion']['assets'].items():
             (captured / asset['filename']).write_bytes(self.sources[('completion', key)].read_bytes())
         snapshot = {p.name: p.read_bytes() for p in captured.iterdir()}
-        old_asset = self.manifests['completion']['assets']['completion_r1']
-        self.manifests['completion']['assets']['completion_r1'] = dict(old_asset, filename='completion-updated.pth')
+        old_asset = self.manifests['completion']['assets']['completion_r2']
+        self.manifests['completion']['assets']['completion_r2'] = dict(old_asset, filename='completion-updated.pth')
         (self.new / 'implementation' / 'completion_assets.json').write_text(json.dumps(self.manifests['completion']))
         self.assertNotEqual(model_store.model_directory(self.new, 'completion'), captured)
         with self.completion_context(captured):

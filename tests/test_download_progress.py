@@ -76,7 +76,7 @@ class DownloadProgressTests(unittest.TestCase):
 
     def completion_download(self, body=None):
         item = asset('completion.pth', self.body)
-        manifest = {'assets': {'completion_r1': item}}
+        manifest = {'assets': {'completion_r2': item}}
         opener = Opener([self.body if body is None else body])
         with patch.object(completion, 'event', side_effect=self.record), \
              patch.object(completion.assets, 'load_manifest', return_value=manifest), \
