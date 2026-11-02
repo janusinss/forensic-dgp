@@ -1,3 +1,10 @@
+# 2 November 2026 Update: Unified CodeFormer Completion R2 (`v3`) Promoted & Consolidated into `main`
+
+> [!IMPORTANT]
+> As of 2 November 2026, **Trained CodeFormer Completion R2 (`v3`)** (`codeformer_completion_r2.pth`, `370,773,572` bytes, SHA-256 `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c`, `60/60` numeric ratchet gates passed) has superseded `R1` in both `IMPLEMENTATION` (`9fd2d9f` / Windows installer `v0.2.2` / release `completion-r2-models-v1`) and `main` (`integrated_app/`), and 100% of `FACE_MASK_COMPLETION` commits and `17,614` gitignored `outputs/` artifacts have been consolidated into `C:\xampp\htdocs\YEAR 4\Testing` (`main`). See the top entry of [`PROJECT_HANDOFF.md`](PROJECT_HANDOFF.md), [`ORIGINS_FACE_MASK_COMPLETION.md`](ORIGINS_FACE_MASK_COMPLETION.md), and [`COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md`](COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md) for current provenance. The 29 October 2026 snapshot is preserved below for historical continuity.
+
+---
+
 # FACE_MASK_COMPLETION and IMPLEMENTATION continuation handoff
 
 Verified 29 October 2026 (Asia/Manila). This is a source, Git-ref, and artifact-hash audit. No new training, inference, installation, or browser verification was run for this update.
