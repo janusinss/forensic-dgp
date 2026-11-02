@@ -2,7 +2,11 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Current installer: 0.2.1 path hotfix
+## Current installer: 0.2.2 Completion R2
+
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). The full app includes Completion R2, private Python and pinned packages in the chosen folder. The verified update retains saved records and prior model files. See [R2_VERIFICATION.md](packaging/R2_VERIFICATION.md) for the exact artifact, native update and installed inference checks.
+
+## Historical 0.2.1 path hotfix
 
 Download [0.2.1](https://forensic-dgp.pages.dev/) for the Windows short-path
 payload verification fix. Valid payloads no longer fail because Windows expands

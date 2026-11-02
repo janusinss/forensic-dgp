@@ -1,6 +1,22 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.1 path hotfix
+## Current 0.2.2 Completion R2 release
+
+Published 2026-11-02, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
+Deployment: https://ff9edb57.forensic-dgp.pages.dev/.
+Installer: https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.2/ForensicDGP_Setup-0.2.2.exe.
+Build source: 453d563bdd6c1c36b92107b869dcc6e6f70e4a8e.
+Bytes: 1,045,576,043. SHA-256:
+bc9952a5e54a3955a06a7e3b636d008f8dee2f227ef470224ee927463d733a25.
+
+The full public EXE transfer matched this size and hash in 130.93 seconds without
+storing another EXE. Native update, R2 inference and preservation evidence are in
+[R2_VERIFICATION.md](../packaging/R2_VERIFICATION.md). The existing personal
+Cloudflare login was reused; legacy Pages downloads and older GitHub releases
+remain available. Pages hosts sanitized release metadata and checksums; the large
+EXE remains a versioned GitHub asset.
+
+## Historical 0.2.1 path hotfix
 
 Published 2026-11-02, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
 Deployment: https://115d2e5f.forensic-dgp.pages.dev/.

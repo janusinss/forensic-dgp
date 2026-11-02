@@ -1,9 +1,8 @@
 # Build Windows installer releases
 
-Current release: **0.2.1 unsigned offline preview**, published through GitHub
-Releases and the Cloudflare Pages landing page after local-PC acceptance.
-The full anonymous browser download and an independent HTTP transfer matched
-the accepted artifact size and checksum. See
+Current release: **0.2.2 unsigned offline preview**, with Completion R2 and
+manifest-bound model-set isolation. See [R2_VERIFICATION.md](R2_VERIFICATION.md)
+for the exact artifact and local-PC acceptance. Earlier release evidence remains in
 [PAYLOAD_PATH_HOTFIX.md](PAYLOAD_PATH_HOTFIX.md) for 0.2.1 results and
 [VERIFICATION.md](VERIFICATION.md) for historical 0.2.0 results.
 
@@ -41,7 +40,7 @@ changes, changed preparer bytes, or payload locks differing from that commit.
 ```powershell
 python -B -m unittest discover -s tests
 node --test tests/*.test.cjs
-python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.2 --offline-payload scratch/offline-payload
+python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.3 --offline-payload scratch/offline-payload
 ```
 
 The command shows the next unpublished version, 0.2.2; do not replace assets
@@ -72,12 +71,11 @@ Preflight checks prerequisites, actual resolved destination, write access and
 payload-based temporary/destination space. Protected roots, links, unsupported
 paths, conflicting ownership and unintended downgrades remain refused.
 
-## Unreleased model-update support
+## Model-update support
 
-The working source adds manifest-bound model-family namespaces for future
-in-place model-changing releases. This support is not in the published 0.2.0
-installer. See [MODEL_UPDATES.md](MODEL_UPDATES.md) for storage, activation,
-legacy compatibility and required new-release acceptance.
+Release 0.2.2 adds manifest-bound model-family namespaces for in-place model
+updates. Published 0.2.0 and 0.2.1 remain unchanged. See
+[MODEL_UPDATES.md](MODEL_UPDATES.md) for storage, activation and legacy compatibility.
 
 ## Existing installations
 

@@ -132,7 +132,7 @@ exit 0
         extra.write_bytes(b'not in the pinned payload inventory')
         result=self.run_setup()
         self.assertNotEqual(result.returncode,0)
-        self.assertIn('Unexpected offline payload file',result.stderr)
+        self.assertIn('Unexpected offline payload file',' '.join(result.stderr.split()))
         self.assertIn('python/unlisted-extra.bin',result.stderr)
         self.assertEqual(extra.read_bytes(),b'not in the pinned payload inventory')
         self.assertFalse(self.target.exists())
@@ -141,7 +141,7 @@ exit 0
         payload.write_bytes(b'changed payload')
         result=self.run_setup()
         self.assertNotEqual(result.returncode,0)
-        self.assertIn('Offline payload file differs: python/python-3.13.9-amd64.zip',result.stderr)
+        self.assertIn('Offline payload file differs: python/python-3.13.9-amd64.zip',' '.join(result.stderr.split()))
         self.assertFalse(self.target.exists())
     def test_missing_payload_file_is_rejected_before_destination_creation(self):
         (self.stage/'payload/python/python-3.13.9-amd64.zip').unlink()
@@ -160,7 +160,7 @@ exit 0
         self.assertEqual(created.returncode,0,created.stdout+created.stderr)
         result=self.run_setup()
         self.assertNotEqual(result.returncode,0)
-        self.assertIn('Offline payload paths cannot contain links',result.stderr)
+        self.assertIn('Offline payload paths cannot contain links',' '.join(result.stderr.split()))
         self.assertEqual(sentinel.read_bytes(),b'outside payload')
         self.assertFalse(self.target.exists())
     def test_changed_embedded_payload_fails_before_destination_is_created(self):

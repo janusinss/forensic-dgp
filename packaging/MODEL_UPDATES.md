@@ -1,8 +1,10 @@
-# In-place model updates (unreleased)
+# In-place model updates
 
-This source change prepares safe model-changing installer releases. It is not
-included in the published 0.2.0 EXE. No replacement trained weights, model
-qualification, automatic updater, installer rebuild, or deployment is included.
+Model-set isolation ships with the Completion R2 installer 0.2.2. The exact native
+0.2.1-to-0.2.2 update preserved prior models and saved records; see
+[R2_VERIFICATION.md](R2_VERIFICATION.md). Published 0.2.0 and 0.2.1 installers
+remain historical releases without this support. No automatic background updater
+or model-quality qualification is implied.
 
 ## Storage and activation
 
@@ -48,7 +50,7 @@ relocation verification remain unchanged.
 Keep published 0.2.0 assets immutable. See [BUILD.md](BUILD.md) and
 [VERIFICATION.md](VERIFICATION.md) for the delivered release and its boundaries.
 
-## Local verification
+## Historical source-only verification, 1 November 2026
 
 The new tests use tiny synthetic weight files and managed temporary directories,
 not actual trained-model updates or the registered installation. They cover
@@ -58,8 +60,10 @@ logical/physical source directory identity. Three two-release tests exercise the
 a failed install from a legacy release, failed final verification from a
 namespaced release, and successful activation after verification with unchanged
 family reuse. Prior source receipts, records, weights, and old-loader resolution
-are retained in the failure cases. Native EXE acceptance remains a future-release
-check; these tests do not qualify model quality or antivirus behavior.
+are retained in the failure cases. At that snapshot native EXE acceptance remained
+a future-release check. The later real R2 update is recorded in
+[R2_VERIFICATION.md](R2_VERIFICATION.md); neither check qualifies model quality
+or antivirus behavior.
 
 
 Verification on 2026-11-01: the full Python suite ran 376 tests in 211.091 seconds,
