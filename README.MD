@@ -2,7 +2,14 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Offline desktop installer: 0.2.0
+## Current installer: 0.2.1 path hotfix
+
+Download [0.2.1](https://forensic-dgp.pages.dev/) for the Windows short-path
+payload verification fix. Valid payloads no longer fail because Windows expands
+an 8.3 temporary-folder alias. Existing-file safeguards remain enabled.
+See [hotfix verification](packaging/PAYLOAD_PATH_HOTFIX.md).
+
+## Previous offline desktop installer: 0.2.0
 
 Version **0.2.0 is published as an unsigned research prerelease**. Download it
 from the [landing page](https://forensic-dgp.pages.dev/) or

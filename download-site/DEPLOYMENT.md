@@ -1,6 +1,23 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.0 offline preview
+## Current 0.2.1 path hotfix
+
+Published 2026-11-02, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
+Deployment: https://115d2e5f.forensic-dgp.pages.dev/.
+Installer: https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.1/ForensicDGP_Setup-0.2.1.exe.
+Build source: 6f7cf0b59b7391d154da9ec9be573d6a74f77b90.
+Bytes: 1,045,722,009. SHA-256:
+431fd74e2f643ccfc7b31407deaabeebaf12e6240e53f7ef8f2b6f35da78a884.
+
+The release fixes Windows short-path payload verification without changing
+models or existing-installation safeguards. The canonical page, download link,
+checksum and 375/768/1280 layouts passed via installed Edge. The complete anonymous transfer matched the exact bytes/SHA-256 in 234.11
+seconds; see ../packaging/PAYLOAD_PATH_HOTFIX.md. Legacy Pages EXEs
+0.1.0/0.1.1 were preserved; published GitHub 0.2.0 assets were not changed.
+The authorized personal-account login was reused from its existing isolated
+configuration; no organization login or account settings changed.
+
+## Historical 0.2.0 offline preview
 
 Published 2026-11-01, Asia/Manila.
 

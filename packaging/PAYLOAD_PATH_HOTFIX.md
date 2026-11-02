@@ -39,5 +39,31 @@ installer/offline-runtime tests ran: 67 passed and one unchanged native-copy
 fixture skipped because this isolated checkout has no local compiler copy. All
 11 PowerShell wrapper cases passed, including 8.3, spaced Unicode, mixed case,
 trailing separators, tampering, missing/unlisted files and an actual junction
-refusal. The release EXE and its public download are pending. The affected PC's retest is separate from local proof.
+refusal. The exact release EXE passed a native update using a genuine 8.3 temporary
+folder in 222.49 seconds. All 6 checked record hashes were unchanged, the
+verified environment was reused, Windows registration reports 0.2.1, and the
+installed launcher passed health and scoped server-shutdown checks.
+
+The immutable GitHub prerelease and Pages deployment
+`https://115d2e5f.forensic-dgp.pages.dev/` are published. The canonical page
+returns 0.2.1 metadata and the exact GitHub link/checksum. Installed Microsoft
+Edge, through the bundled Playwright runner, passed 375/768/1280 layout checks
+without overflow or page/console errors. The previous 0.1.1 download retained
+its exact bytes and SHA-256. The complete anonymous public transfer passed: 1,045,722,009 bytes and the
+exact release SHA-256 matched after 234.11 seconds. The streamed public file
+was verified without saving another EXE or executing that downloaded copy. The affected PC's retest is separate from local proof.
 No antivirus settings, Windows path policies, or system Python are changed.
+
+
+## Exact release identity
+
+- Build source: `6f7cf0b59b7391d154da9ec9be573d6a74f77b90`.
+- EXE bytes: 1,045,722,009.
+- SHA-256: `431fd74e2f643ccfc7b31407deaabeebaf12e6240e53f7ef8f2b6f35da78a884`.
+- Public release: https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.1.
+
+Evidence stays in ignored scratch: hotfix-focused-tests.log,
+native-short-path-update-outcome.json, native-v021-launch-report.json and
+public-v021-transfer.json. The main workspace holds hotfix-v021-site-report.json
+and screenshots. Temporary copied payload staging was removed after retaining
+build-input records; the upload handoff is a hard link to the retained EXE.

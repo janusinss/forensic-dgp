@@ -1,10 +1,11 @@
 # Build Windows installer releases
 
-Current release: **0.2.0 unsigned offline preview**, published through GitHub
+Current release: **0.2.1 unsigned offline preview**, published through GitHub
 Releases and the Cloudflare Pages landing page after local-PC acceptance.
 The full anonymous browser download and an independent HTTP transfer matched
 the accepted artifact size and checksum. See
-[VERIFICATION.md](VERIFICATION.md) for exact candidate identities and results.
+[PAYLOAD_PATH_HOTFIX.md](PAYLOAD_PATH_HOTFIX.md) for 0.2.1 results and
+[VERIFICATION.md](VERIFICATION.md) for historical 0.2.0 results.
 
 The offline release targets Windows x64 and contains private CPython, CPU-only
 application packages, an isolated capture environment, and all six admitted
@@ -40,8 +41,11 @@ changes, changed preparer bytes, or payload locks differing from that commit.
 ```powershell
 python -B -m unittest discover -s tests
 node --test tests/*.test.cjs
-python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.0 --offline-payload scratch/offline-payload
+python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.2 --offline-payload scratch/offline-payload
 ```
+
+The command shows the next unpublished version, 0.2.2; do not replace assets
+for the already-published 0.2.0 or 0.2.1 releases.
 
 Output: scratch/dist/ForensicDGP_Setup.exe and release.json. The release records
 source ancestry, setup-input hashes, the offline manifest fingerprint, exact
