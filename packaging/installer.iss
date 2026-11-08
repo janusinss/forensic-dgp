@@ -69,6 +69,14 @@ Name: "{userdesktop}\Forensic DGP"; Filename: "{app}\ForensicDGP.exe"; WorkingDi
 [Run]
 Filename: "{app}\ForensicDGP.exe"; Description: "Open Forensic DGP"; Flags: nowait postinstall skipifsilent
 
+[Messages]
+ConfirmUninstall=Uninstall %1 and permanently delete its models, saved records and other data in the installation folder?
+
+[UninstallDelete]
+Type: files; Name: "{app}\install-location.json"
+Type: files; Name: "{app}\shell-owner.json"
+Type: dirifempty; Name: "{app}"
+
 [Code]
 var
   Preparing, CancelRequested, BackendReady: Boolean;
@@ -422,7 +430,7 @@ begin
   DetailsMemo.Visible := False;
   WizardForm.SelectDirLabel.Caption := 'Choose a folder for the full app, Python, models and saved records.';
   WizardForm.FinishedLabel.Caption := 'Forensic DGP is ready. Open it from the Start Menu or your Desktop shortcut.' + #13#10#13#10 +
-    'Your application data stays in the folder you selected. Uninstalling the Windows launcher keeps that data.';
+    'Uninstalling removes the app, models and saved records from the folder you selected.';
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -561,11 +569,12 @@ begin
 end;
 
 var
-  CheckOutput: String;
+  CheckOutput, CheckFailure: String;
 
 procedure UninstallLog(const S: String; const Error, FirstLine: Boolean);
 begin
   Log(S);
+  if Error then CheckFailure := S;
   if not Error and (Pos('"mutex_name"', S) > 0) then CheckOutput := S;
 end;
 
@@ -586,13 +595,16 @@ begin
     Exit;
   end;
   CheckOutput := '';
+  CheckFailure := '';
   if not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
       Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Check -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -ManagedRoot ' +
       Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_SHOWNORMAL,
       ewWaitUntilTerminated, Code, @UninstallLog) or (Code <> 0) then begin
-    MsgBox('Close Forensic DGP or its installer before uninstalling. Shared files were preserved.', mbError, MB_OK);
+    if CheckFailure = '' then CheckFailure := 'The installation could not be verified.';
+    SuppressibleMsgBox(CheckFailure + ' Files were preserved.', mbError, MB_OK, IDOK);
     Exit;
   end;
+  if JsonField(CheckOutput, 'policy') <> 'remove_owned_runtime' then Exit;
   Name := JsonField(CheckOutput, 'mutex_name');
   if (Name = '') or (Pos('Local\DGP-app-', Name) <> 1) then Exit;
   UninstallMutex := CreateMutex(0, False, Name);
@@ -634,9 +646,102 @@ begin
   end;
 end;
 
+function MatchesUninstallRecord(Path, ExpectedHash: String): Boolean;
+var
+  Attr: LongWord;
+begin
+  Attr := GetFileAttributes(Path);
+  Result := (Length(ExpectedHash) = 64) and (Attr <> $FFFFFFFF) and ((Attr and $410) = 0);
+  if Result then Result := GetSHA256OfFile(Path) = ExpectedHash;
+end;
+
+procedure RemoveOwnedRuntime;
+var
+  Root, Owner, OwnerHash, Child: String;
+  OwnerText: AnsiString;
+  Attr: LongWord;
+  Entry: TFindRec;
+  Entries: TStringList;
+  I: Integer;
+begin
+  Root := ExpandConstant('{app}\runtime');
+  Owner := AddBackslash(Root) + 'owner.json';
+  OwnerHash := JsonField(CheckOutput, 'runtime_owner_sha256');
+  Attr := GetFileAttributes(Root);
+  if (Attr = $FFFFFFFF) and (OwnerHash = '') then Exit;
+  if (Attr = $FFFFFFFF) or ((Attr and $410) <> $10) then
+    RaiseException('The application runtime path changed. Uninstall stopped.');
+  if OwnerHash = '' then begin
+    if not RemoveDir(Root) then RaiseException('The runtime folder is no longer empty or cannot be removed.');
+    Exit;
+  end;
+  if not MatchesUninstallRecord(Owner, OwnerHash) or not LoadStringFromFile(Owner, OwnerText) then
+    RaiseException('The runtime ownership record changed. Uninstall stopped.');
+  Entries := TStringList.Create;
+  try
+    if not FindFirst(AddBackslash(Root) + '*', Entry) then
+      RaiseException('The runtime contents could not be read.');
+    try
+      repeat
+        if (Entry.Name <> '.') and (Entry.Name <> '..') and (CompareText(Entry.Name, 'owner.json') <> 0) then
+          Entries.Add(Entry.Name);
+      until not FindNext(Entry);
+    finally
+      FindClose(Entry);
+    end;
+    for I := 0 to Entries.Count - 1 do begin
+      if not OrdinaryShellPath or ((GetFileAttributes(Root) and $410) <> $10) then
+        RaiseException('The application runtime path changed. Uninstall stopped.');
+      Child := AddBackslash(Root) + Entries[I];
+      Attr := GetFileAttributes(Child);
+      { Inno removes directory links without traversing their targets. }
+      if (Attr <> $FFFFFFFF) and not DelTree(Child, (Attr and $10) <> 0, True, True) then
+        RaiseException('Could not remove ' + Child + '. Close programs using that folder and retry uninstall.');
+    end;
+    if not MatchesUninstallRecord(Owner, OwnerHash) or not DeleteFile(Owner) then
+      RaiseException('Could not remove the runtime ownership record. Retry uninstall.');
+    if not RemoveDir(Root) then begin
+      if OrdinaryShellPath and ((GetFileAttributes(Root) and $410) = $10) and
+          (GetFileAttributes(Owner) = $FFFFFFFF) then
+        SaveStringToFile(Owner, OwnerText, False);
+      RaiseException('Could not remove the runtime folder. Close programs using that folder and retry uninstall.');
+    end;
+  finally
+    Entries.Free;
+  end;
+end;
+
+procedure RemoveLocationBackups;
+var
+  Backups, RecordParts: TArrayOfString;
+  I: Integer;
+  Name, Path: String;
+begin
+  if not OrdinaryShellPath then RaiseException('The installation folder changed before cleanup.');
+  Backups := StringSplit(JsonField(CheckOutput, 'location_backups'), ['|'], stExcludeEmpty);
+  for I := 0 to GetArrayLength(Backups) - 1 do begin
+    RecordParts := StringSplit(Backups[I], [':'], stExcludeEmpty);
+    if GetArrayLength(RecordParts) <> 2 then Continue;
+    Name := RecordParts[0];
+    if (Name <> ExtractFileName(Name)) or (Pos('install-location.json.previous.', Name) <> 1) or
+        (Length(Name) <> Length('install-location.json.previous.') + 32) then Continue;
+    Path := AddBackslash(ExpandConstant('{app}')) + Name;
+    if MatchesUninstallRecord(Path, RecordParts[1]) and not DeleteFile(Path) then
+      RaiseException('Could not remove ' + Path + '. Close programs using that file and retry uninstall.');
+  end;
+end;
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
-  if (CurUninstallStep = usDone) and not UninstallSilent then
-    MsgBox('Windows launcher removed. Shared application files, models and saved records remain in ' +
-      ExpandConstant('{app}\runtime') + '.', mbInformation, MB_OK);
+  if CurUninstallStep = usUninstall then begin
+    if (UninstallMutex = 0) or not OrdinaryShellPath or
+        ((RegisteredInstallRoot <> '') and (CompareText(RegisteredInstallRoot, RemoveBackslashUnlessRoot(ExpandConstant('{app}'))) <> 0)) or
+        not MatchesUninstallRecord(ExpandConstant('{app}\shell-owner.json'), JsonField(CheckOutput, 'shell_owner_sha256')) or
+        not MatchesUninstallRecord(ExpandConstant('{app}\install-location.json'), JsonField(CheckOutput, 'location_sha256')) then
+      RaiseException('The installation changed before removal. Uninstall stopped.');
+    RemoveOwnedRuntime;
+    RemoveLocationBackups;
+  end;
+  if (CurUninstallStep = usPostUninstall) and OrdinaryShellPath then
+    RemoveDir(ExpandConstant('{app}'));
 end;

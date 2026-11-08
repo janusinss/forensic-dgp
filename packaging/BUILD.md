@@ -103,9 +103,13 @@ Unknown or changed files remain. Older installations may retain unproven Python
 or cache files; setup reports this instead of presenting cleanup as total removal.
 The old uninstaller is never used against the newly registered location.
 
-Normal uninstall retains runtime and saved records. Reinstalling into an exact
-owned retained folder can reuse verified resources. Unrecognized nonempty folders
-are preserved. Legacy batch-managed DGP/app roots are not implicitly migrated.
+Starting with 0.2.4, Windows uninstall removes the verified desktop runtime,
+including models, private Python, caches and saved records. The confirmation
+describes permanent removal. Setup-created location records and Windows
+shortcuts are removed, along with the selected folder once it is empty.
+Unrelated files at the top level and legacy batch-managed DGP/app roots are
+preserved. If a runtime file is locked, close the program using it and retry
+uninstall from Windows Settings.
 
 ## Release verification and distribution
 

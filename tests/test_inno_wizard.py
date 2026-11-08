@@ -32,7 +32,7 @@ class WizardSafetyContracts(unittest.TestCase):
         return self.code.split(start, 1)[1].split(end, 1)[0]
 
     def test_setup_waits_for_actual_exit_code_without_assumed_pid(self):
-        prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
+        prepare = self.section('function PrepareToInstall', 'procedure UninstallLog')
         self.assertIn('ExecAndLogOutput(PS, Params', prepare)
         self.assertIn('ewWaitUntilTerminated, ResultCode, @SetupOutput)', prepare)
         self.assertNotIn('ewNoWait', prepare)
@@ -42,7 +42,7 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertIn('SaveStringToFile(SetupLog, S + #13#10, True)', callback)
 
     def test_zero_exit_is_authoritative_over_late_cancel_request(self):
-        prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
+        prepare = self.section('function PrepareToInstall', 'procedure UninstallLog')
         tail = prepare.split("UpdateProgress('');", 1)[1]
         self.assertRegex(tail, r'if ResultCode = 0 then BackendReady := True\s+else Result :=')
         self.assertNotIn('if CancelRequested', tail)
@@ -63,7 +63,7 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertIn('(Attr and $400)', ordinary)  # FILE_ATTRIBUTE_REPARSE_POINT
         self.assertIn('(Attr and $10)', ordinary)   # FILE_ATTRIBUTE_DIRECTORY
         self.assertIn('Parent := ExtractFileDir(Path)', ordinary)
-        prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
+        prepare = self.section('function PrepareToInstall', 'procedure UninstallLog')
         self.assertLess(prepare.index('if not OrdinaryShellPath'), prepare.index('ExtractTemporaryFile'))
         uninstall = self.section('function InitializeUninstall', 'procedure CurStepChanged')
         self.assertLess(uninstall.index('if not OrdinaryShellPath'), uninstall.index('ExecAndLogOutput'))
@@ -75,7 +75,7 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertIn('PrivilegesRequired=lowest', self.code)
         self.assertIn('DisableDirPage=no', self.code)
         self.assertIn('UsePreviousAppDir=yes', self.code)
-        prepare = self.section('function PrepareToInstall', '\nvar\n  CheckOutput:')
+        prepare = self.section('function PrepareToInstall', 'procedure UninstallLog')
         self.assertIn("' -InstallRoot ' + Q(ExpandConstant('{app}'))", prepare)
         self.assertIn('PrepareStateFiles;', prepare)
         helpers = self.section('procedure PrepareStateFiles', 'function RunState')
@@ -90,6 +90,11 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertLess(uninstall.index('GetSHA256OfFile'), uninstall.index('ExecAndLogOutput'))
         self.assertIn("'{#UninstallSHA256}'", uninstall)
         self.assertIn('WaitForSingleObject(UninstallMutex, 0)', uninstall)
+        self.assertNotIn('RemoveOwnedRuntime', uninstall)
+        cleanup = self.code.split('procedure CurUninstallStepChanged', 1)[1]
+        self.assertIn('if CurUninstallStep = usUninstall then begin', cleanup)
+        self.assertIn('RemoveOwnedRuntime;', cleanup)
+        self.assertIn('ConfirmUninstall=Uninstall %1 and permanently delete', self.code)
 
 
 @unittest.skipUnless(PS.is_file(), 'Windows PowerShell is required')

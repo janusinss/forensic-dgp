@@ -34,6 +34,23 @@ class InstallLocationTests(unittest.TestCase):
         self.shell.mkdir(parents=True)
         (self.shell / 'shell-owner.json').write_text(json.dumps(SHELL_MARKER), encoding='utf8')
 
+    def invoke_uninstall(self, action, root):
+        return subprocess.run([str(PS), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File',
+                               str(UNINSTALL), '-Action', action, '-ManagedRoot', str(root), '-InstallRoot',
+                               str(self.shell)], capture_output=True, text=True, encoding='utf8',
+                              env=self.env, timeout=15)
+
+    def custom_runtime(self):
+        self.mark_shell()
+        root = self.shell / 'runtime'
+        root.mkdir()
+        marker = {'schema_version': 2, 'repository': 'janusinss/forensic-dgp',
+                  'layout': 'desktop-runtime-v1', 'install_root': str(self.shell)}
+        (root / 'owner.json').write_text(json.dumps(marker, ensure_ascii=False), encoding='utf8')
+        config = {'schema': 1, 'install_root': str(self.shell), 'managed_root': str(root)}
+        (self.shell / 'install-location.json').write_text(json.dumps(config, ensure_ascii=False), encoding='utf8')
+        return root
+
     def test_validate_is_read_only_and_returns_bound_runtime(self):
         result = self.invoke()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -183,33 +200,123 @@ class InstallLocationTests(unittest.TestCase):
         finally:
             junction.rmdir()
 
-    def test_custom_uninstall_retains_every_backend_file(self):
-        self.mark_shell()
-        root = self.shell / 'runtime'; root.mkdir()
-        marker = {'schema_version': 2, 'repository': 'janusinss/forensic-dgp',
-                  'layout': 'desktop-runtime-v1', 'install_root': str(self.shell)}
-        (root / 'owner.json').write_text(json.dumps(marker), encoding='utf8')
-        saved = root / 'data/scratch/capture_requests/original.png'
-        saved.parent.mkdir(parents=True); saved.write_bytes(b'original evidence')
-        result = subprocess.run([str(PS), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File',
-                                 str(UNINSTALL), '-Action', 'Uninstall', '-ManagedRoot', str(root), '-InstallRoot', str(self.shell)],
-                                capture_output=True, text=True, encoding='utf8', env=self.env, timeout=15)
+    def test_custom_uninstall_check_returns_verified_cleanup_binding_without_changes(self):
+        root = self.custom_runtime()
+        sentinel_files = (root / 'data/records/saved.json', root / 'data/models/completion/r2.pth',
+                          root / 'python/private/python.exe', self.shell / 'personal.txt',
+                          Path(self.env['LOCALAPPDATA']) / 'DGP/app/data/models/shared.pth')
+        for path in sentinel_files:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b'sentinel')
+
+        before = {path: path.read_bytes() for path in self.local.rglob('*') if path.is_file()}
+        result = self.invoke_uninstall('Check', root)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(Path(json.loads(result.stdout)['managed_root']), root)
-        self.assertEqual(saved.read_bytes(), b'original evidence')
-        self.assertEqual(json.loads((root / 'owner.json').read_text()), marker)
+        body = json.loads(result.stdout)
+        self.assertEqual(body['policy'], 'remove_owned_runtime')
+        self.assertEqual(Path(body['managed_root']), root)
+        for key, marker in (('runtime_owner_sha256', root / 'owner.json'),
+                            ('location_sha256', self.shell / 'install-location.json'),
+                            ('shell_owner_sha256', self.shell / 'shell-owner.json')):
+            self.assertEqual(body[key].lower(), hashlib.sha256(before[marker]).hexdigest())
+        self.assertEqual({path: path.read_bytes() for path in self.local.rglob('*') if path.is_file()}, before)
+
+    def test_custom_uninstall_check_accepts_an_empty_or_already_removed_runtime(self):
+        root = self.custom_runtime()
+        (root / 'owner.json').unlink()
+        for exists in (True, False):
+            with self.subTest(runtime_exists=exists):
+                if not exists:
+                    root.rmdir()
+                result = self.invoke_uninstall('Check', root)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                body = json.loads(result.stdout)
+                self.assertEqual(body['policy'], 'remove_owned_runtime')
+                self.assertEqual(body['runtime_owner_sha256'], '')
+                self.assertEqual(body['managed_exists'], exists)
+                self.assertEqual(root.exists(), exists)
+
+    def test_custom_uninstall_refuses_nonempty_runtime_without_an_owner(self):
+        root = self.custom_runtime()
+        (root / 'owner.json').unlink()
+        sentinel = root / 'unowned.txt'
+        sentinel.write_bytes(b'preserve unowned files')
+        result = self.invoke_uninstall('Check', root)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(sentinel.read_bytes(), b'preserve unowned files')
 
     def test_custom_uninstall_refuses_unbound_backend_marker(self):
-        self.mark_shell()
-        root = self.shell / 'runtime'; root.mkdir()
+        root = self.custom_runtime()
         marker = {'schema_version': 2, 'repository': 'janusinss/forensic-dgp',
                   'layout': 'desktop-runtime-v1', 'install_root': str(self.local / 'other')}
         (root / 'owner.json').write_text(json.dumps(marker), encoding='utf8')
-        result = subprocess.run([str(PS), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File',
-                                 str(UNINSTALL), '-Action', 'Check', '-ManagedRoot', str(root), '-InstallRoot', str(self.shell)],
-                                capture_output=True, text=True, encoding='utf8', env=self.env, timeout=15)
+        result = self.invoke_uninstall('Check', root)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(json.loads((root / 'owner.json').read_text()), marker)
+
+    def test_custom_uninstall_refuses_a_missing_or_unbound_install_location(self):
+        root = self.custom_runtime()
+        config_path = self.shell / 'install-location.json'
+        config = json.loads(config_path.read_text(encoding='utf8'))
+        config_path.unlink()
+        missing = self.invoke_uninstall('Check', root)
+        self.assertNotEqual(missing.returncode, 0)
+        config['managed_root'] = str(self.local / 'outside')
+        config_path.write_text(json.dumps(config), encoding='utf8')
+        unbound = self.invoke_uninstall('Check', root)
+        self.assertNotEqual(unbound.returncode, 0)
+        self.assertEqual(json.loads(config_path.read_text(encoding='utf8')), config)
+        self.assertTrue((root / 'owner.json').is_file())
+
+    def test_custom_uninstall_check_reports_only_exact_bound_location_backups(self):
+        root = self.custom_runtime()
+        config = json.loads((self.shell / 'install-location.json').read_text(encoding='utf8'))
+        prefix = 'install-location.json.previous.'
+        valid = self.shell / (prefix + 'a' * 32)
+        unbound = self.shell / (prefix + 'b' * 32)
+        unrelated = self.shell / (prefix + 'personal')
+        backups = {valid: config, unbound: dict(config, managed_root=str(self.local / 'unrelated')),
+                   unrelated: config}
+        for path, binding in backups.items():
+            path.write_text(json.dumps(binding, ensure_ascii=False), encoding='utf8')
+
+        result = self.invoke_uninstall('Check', root)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        digest = hashlib.sha256(valid.read_bytes()).hexdigest()
+        self.assertEqual(json.loads(result.stdout)['location_backups'], f'{valid.name}:{digest}')
+        for path, binding in backups.items():
+            self.assertEqual(json.loads(path.read_text(encoding='utf8')), binding)
+
+    def test_custom_uninstall_refuses_a_different_runtime_root(self):
+        root = self.custom_runtime()
+        unrelated = self.shell.parent / 'other-runtime'
+        unrelated.mkdir()
+        sentinel = unrelated / 'keep.txt'
+        sentinel.write_bytes(b'outside runtime')
+        result = self.invoke_uninstall('Check', unrelated)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue((root / 'owner.json').is_file())
+        self.assertEqual(sentinel.read_bytes(), b'outside runtime')
+
+    def test_custom_uninstall_refuses_a_junction_at_the_runtime_root(self):
+        root = self.custom_runtime()
+        outside = self.local / 'outside'
+        root.rename(outside)
+        sentinel = outside / 'keep.txt'
+        sentinel.write_bytes(b'outside runtime')
+        created = subprocess.run([str(PS), '-NoProfile', '-NonInteractive', '-Command',
+                                 "New-Item -ItemType Junction -Path $env:DGP_TEST_LINK -Target $env:DGP_TEST_TARGET | Out-Null"],
+                                capture_output=True, text=True,
+                                env=dict(self.env, DGP_TEST_LINK=str(root), DGP_TEST_TARGET=str(outside)))
+        if created.returncode or not root.is_junction():
+            self.skipTest('Junction fixture unavailable')
+        try:
+            result = self.invoke_uninstall('Check', root)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(sentinel.read_bytes(), b'outside runtime')
+            self.assertTrue((outside / 'owner.json').is_file())
+        finally:
+            root.rmdir()
 
 
 @unittest.skipUnless(CSC.is_file(), 'Windows C# compiler is required')

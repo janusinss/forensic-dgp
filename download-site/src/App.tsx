@@ -97,9 +97,12 @@ export default function App() {
             <p className="setup-note">{release.offline
               ? 'Includes Python, application libraries and models. After downloading, setup works offline. Microsoft Edge is required; setup checks available disk space. Existing installations can be updated, repaired or moved.'
               : 'First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.'}</p>
+            {release.version === '0.2.4' && (
+              <p className="setup-note">Uninstalling permanently removes the app, models and saved records from the installation folder.</p>
+            )}
           </section>
 
-          {release.version === '0.2.3' && (
+          {(release.version === '0.2.3' || release.version === '0.2.4') && (
             <section className="setup-section" aria-labelledby="release-highlights-title">
               <div className="setup-heading">
                 <h2 id="release-highlights-title">What’s new in 0.2.3</h2>
