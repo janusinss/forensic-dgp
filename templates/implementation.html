@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=24">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=25">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
   <link rel="stylesheet" href="/static/capture.css?v=8">
   <link rel="stylesheet" href="/static/capture-modern.css?v=2">
@@ -46,12 +46,16 @@
           <div class="capture-transport"><button id="capture-freeze" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="4"/></svg><span>Freeze frame</span></button><button id="capture-resume" class="hidden" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m8 5 11 7-11 7Z"/></svg><span>Resume video</span></button><button id="capture-stop" type="button" disabled><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="5" y="5" width="14" height="14" rx="1"/></svg><span>Stop</span></button></div>
           <section class="capture-inspector" aria-labelledby="capture-selection-heading">
             <h2 id="capture-selection-heading">Choose a face</h2>
+            <p id="capture-detected-count" class="work-note hidden"></p>
+            <button id="capture-queue-all" type="button" class="hidden" aria-describedby="capture-detected-count" disabled>Add detected faces to queue</button>
+            <button id="capture-queue" type="button" class="text-btn hidden" disabled>Add selected face to queue</button>
             <div id="capture-selection" class="capture-selection hidden"><div id="capture-faces" class="capture-faces" aria-label="Detected faces"></div><div class="capture-edit-actions"><button id="capture-full-frame" type="button" title="Show the full frame for crop adjustment. The selected crop stays unchanged." aria-pressed="true"><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M8 21H3v-5"/></svg><span>Full frame crop</span></button></div></div>
             <div id="capture-crop-controls" class="hidden"><p id="capture-crop-size">Select an area.</p><button id="capture-precise" type="button" data-dialog="capture-precise-dialog">Adjust crop precisely</button><button id="capture-use" type="button" disabled><span>Use this face</span><svg class="capture-icon " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></button></div>
           </section>
           <div class="capture-feedback"><p id="capture-status" role="status" aria-live="polite">Choose a video file. It opens automatically.</p><p id="capture-error" class="capture-error hidden" role="alert"></p></div>
         </section>
         <div id="picture-upload-field" class="field"><label for="brush-file">Choose a PNG or JPEG image (up to 10 MB)</label><input id="brush-file" type="file" accept="image/png,image/jpeg"></div>
+        <div class="compact-actions"><button id="queue-add-picture" class="text-btn" type="button" disabled>Queue loaded picture</button><button class="text-btn" type="button" data-open-queue>Face queue</button><button class="text-btn" type="button" data-dialog="benchmark-dialog">Benchmark</button></div>
         <div id="brush-standby" class="hidden"></div>
         <figure id="input-picture" class="input-picture hidden"><img id="upload-preview" class="hidden" width="160" height="160" alt="Current Picture input"><figcaption id="input-picture-label">Uploaded picture</figcaption></figure>
         <div class="review-input-actions"><button id="capture-restore-upload" class="text-btn hidden" type="button">Use uploaded picture</button></div>
@@ -134,10 +138,12 @@
     <div class="work-controls">
       <div class="work-heading"><span class="work-kicker">RESTORATION / REVIEW</span><h1 id="restoration-results-heading">Review the result</h1><p>Compare the original, the picture used, and the result.</p></div>
       <p id="brush-result-summary" class="work-note hidden"></p>
+      <p id="brush-diagnostics" class="work-note"></p>
+      <p class="field-hint">Image diagnostics describe changes in appearance. A paired benchmark requires a clean reference.</p>
       <div id="brush-result-downloads" class="hidden"><a id="brush-result-bundle" class="tool-btn" download="restoration-review-files.zip">Download review files (ZIP)</a></div>
       <p class="field-hint">Results are experimental. A clearer face does not prove identity.</p>
       <div class="feedback-slot"></div>
-      <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Change input settings</button><button id="completion-start" class="execute-btn" type="button" disabled>Start removal review</button></div>
+      <div class="work-actions"><button class="tool-btn" type="button" data-nav="options">Change input settings</button><button class="text-btn" type="button" data-open-queue>Face queue</button><button id="completion-start" class="execute-btn" type="button" disabled>Start removal review</button></div>
     </div>
     <div class="work-visual gallery-visual"><div id="brush-results" class="visual-gallery three-up hidden" aria-label="Original, selected input and one restoration result">
       <figure><img id="brush-result-input" width="256" height="256" alt="Original picture, resized"><figcaption>Original (resized)</figcaption><a id="brush-download-input" class="tool-btn" download="original-256.png">Download PNG</a><button class="zoom-btn" type="button" data-wizard-nav data-zoom="brush-result-input" aria-label="Enlarge Original picture, resized">Enlarge</button></figure>
@@ -197,12 +203,30 @@
 <dialog id="about-dialog" class="work-dialog" aria-labelledby="about-heading"><h2 id="about-heading">About this workflow</h2><p>This app tries to improve a face picture. Its results are experimental and are still being reviewed. Removing a covering is an optional extra step.</p><p>Use a clearer or less-covered picture if the face is hard to see. A sharper face is not proof of identity.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips it, and Auto may skip it if it keeps the original. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
-<script src="/static/implementation.js?v=14"></script>
+<dialog id="restoration-queue-dialog" aria-labelledby="queue-title">
+  <h2 id="queue-title">Face queue</h2>
+  <p>Review or skip each crop before starting. The queue is cleared when you reload or close the app.</p>
+  <p id="queue-empty">No crops queued.</p><ol id="queue-items"></ol>
+  <p id="queue-status" role="status" aria-live="polite"></p>
+  <div class="compact-actions"><button id="queue-run" type="button" disabled>Run approved crops</button><button id="queue-close" type="button" data-close-dialog>Close</button></div>
+</dialog>
+<dialog id="benchmark-dialog" aria-labelledby="benchmark-title">
+  <h2 id="benchmark-title">Controlled benchmark</h2>
+  <p>Keep a clean face as the reference. The app applies a fixed blur, restores the blurred version, and compares both with the reference.</p>
+  <label for="benchmark-file">Optional clean, square face crop (PNG or JPEG)</label><input id="benchmark-file" type="file" accept="image/png,image/jpeg">
+  <div class="compact-actions"><button id="benchmark-demo" type="button">Use illustrated demo</button><button id="benchmark-run" type="button" disabled>Run benchmark</button><button id="benchmark-close" type="button" data-close-dialog>Close</button></div>
+  <p id="benchmark-status" role="status" aria-live="polite"></p>
+  <label class="context-confirm"><input id="benchmark-confirm" type="checkbox" disabled>I reviewed the clean reference and the blurred input.</label>
+  <div id="benchmark-images" class="visual-gallery three-up hidden"><figure><img id="benchmark-clean" width="256" height="256" alt="Clean reference"><figcaption>Clean reference</figcaption></figure><figure><img id="benchmark-degraded" width="256" height="256" alt="Blurred reference"><figcaption>Controlled blur</figcaption></figure><figure><img id="benchmark-restored" width="256" height="256" alt="Restoration result"><figcaption>Restoration result</figcaption></figure></div>
+</dialog>
+<script src="/static/restoration_queue.js?v=2"></script>
+<script src="/static/implementation.js?v=16"></script>
 <script src="/static/completion.js?v=12"></script>
-<script src="/static/viewport-workbench.js?v=15"></script>
+<script src="/static/viewport-workbench.js?v=16"></script>
 <script src="/static/capture_geometry.js?v=1"></script>
 <script src="/static/capture_playback.js?v=3"></script>
-<script src="/static/capture.js?v=10"></script>
+<script src="/static/capture.js?v=13"></script>
+<script src="/static/restoration_benchmark.js?v=1"></script>
 <script src="/static/shader-background.js?v=16"></script>
 </body>
 </html>

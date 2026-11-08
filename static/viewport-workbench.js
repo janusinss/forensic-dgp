@@ -234,5 +234,6 @@
   observe('brush-preview-section', () => { if (pendingPreview) { pendingPreview = false; show('brush-preview'); } });
   observe('completion-result-section', () => { if (pendingEstimate) { pendingEstimate = false; show('completion-result', true, true); } });
   window.addEventListener('restoration:completed', () => show('result', true, true));
+  window.addEventListener('queue:review', () => show('inspect'));
   show('inspect', false);
 })();

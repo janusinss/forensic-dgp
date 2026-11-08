@@ -3,6 +3,9 @@
 (() => {
     'use strict';
     const api = '/face/restoration', byId = id => document.getElementById(id);
+    const queue = window.createRestorationQueue();
+    const queueDialog = byId('restoration-queue-dialog');
+    let reviewItem;
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
     const protectColor = [45, 185, 90], applyColor = [55, 125, 220];
     let sourceFile, captureId, originalPixels, width = 0, height = 0, planes, undo = [];
@@ -30,10 +33,13 @@
         const confirmed = Boolean(previewId && masks && byId('brush-confirm').checked);
         byId('brush-preview').disabled = busy || !available || !planes || !readable || !manual();
         byId('brush-run').disabled = busy || !available || !sourceFile || !planes || !readable || (manual() && !off() && !confirmed);
+        byId('brush-run').textContent = reviewItem ? 'Approve crop for queue' : 'Restore selected input';
+        byId('queue-add-picture').disabled = busy || !sourceFile || Boolean(reviewItem);
         byId('brush-undo').disabled = busy || !undo.length;
         byId('brush-confirm').disabled = busy || !previewId || !manual();
         byId('brush-edit-section').classList.toggle('hidden', !planes || !manual());
         canvas.setAttribute('aria-disabled', String(busy));
+        if (queueDialog.open) renderQueue();
         window.dispatchEvent(new CustomEvent('restoration:busy', {detail:{busy}}));
     };
     const invalidate = () => {
@@ -234,6 +240,7 @@
     };
     const usePicture = async (file, options = {}) => {
         if (busy) { error('Wait for the current task to finish, then choose the picture again.'); return false; }
+        if (!options.queueReview) reviewItem = undefined;
         resetInput(); error('');
         if (!file) return;
         if (file.size === 0 || file.size > 10 * 1024 ** 2 || !['image/png', 'image/jpeg'].includes(file.type)) { error('Choose a PNG or JPEG face picture smaller than 10 MB.'); return; }
@@ -263,7 +270,7 @@
         finally { finish(token); }
     };
     window.restorationInput = {use:usePicture, get busy() {return busy;}};
-    byId('brush-file').addEventListener('change', () => usePicture(byId('brush-file').files[0]));
+    byId('brush-file').addEventListener('change', () => { reviewItem = undefined; usePicture(byId('brush-file').files[0]); });
     byId('brush-preview').addEventListener('click', async () => {
         if (busy || !planes || !sourceFile || !manual() || byId('brush-review').value !== 'usable') return;
         const radius = byId('brush-radius').value;
@@ -298,6 +305,42 @@
         } catch (problem) { if (current(token, version)) { invalidate(); error(problem.message); progress('Could not prepare the picture. Review the selected areas or choose Bypass.'); } }
         finally { finish(token); }
     });
+    async function restoreRequest(data) {
+        const result = await post('/restore', data);
+        const metadata = result.metadata;
+        if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The app could not verify the result. Check the service before trying again.');
+        await Promise.all([result.original_input, result.prepared_input, result.result].map(async url => {
+            const image = new Image(); image.src = validPNG(url); await image.decode();
+            if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The service returned an invalid result size.');
+        }));
+        if (data.get('include_bundle') === 'true') validZIP(result.bundle);
+        return result;
+    }
+    function displayResult(result, originalFile, fromQueue = false) {
+        const metadata = result.metadata;
+        byId('brush-result-input').src = result.original_input;
+        byId('brush-result-prepared').src = result.prepared_input;
+        byId('brush-result-output').src = result.result;
+        byId('brush-download-input').href = result.original_input;
+        byId('brush-download-prepared').href = result.prepared_input;
+        byId('brush-download-output').href = result.result;
+        byId('brush-selected-heading').textContent = metadata.preparation_applied ? 'PREPARED PICTURE' : 'ORIGINAL PICTURE';
+        byId('brush-output-heading').textContent = metadata.restoration_applied ? 'RESTORED PICTURE' : 'ORIGINAL / RESTORATION OFF';
+        byId('brush-result-downloads').classList.toggle('hidden', !result.bundle);
+        if (result.bundle) byId('brush-result-bundle').href = result.bundle;
+        byId('brush-results').classList.remove('hidden');
+        byId('brush-standby').classList.add('hidden');
+        const seconds = Number.isFinite(metadata.seconds) ? `${metadata.seconds.toFixed(1)} seconds. ` : '';
+        const summary = `${seconds}${metadata.preparation_applied ? 'Your reviewed preparation was used.' : 'No preparation was applied.'}`;
+        byId('brush-result-summary').textContent = summary;
+        byId('brush-result-summary').classList.remove('hidden');
+        progress('Result ready to review.');
+        byId('restoration-results-heading').closest('.work-controls').querySelector('[data-nav="options"]').classList.toggle('hidden', fromQueue);
+        const diagnostics = metadata.output_diagnostics;
+        const value = number => Number.isFinite(number) ? number.toFixed(2) : 'Unavailable';
+        byId('brush-diagnostics').textContent = diagnostics ? `Original → result. Edge variation: ${value(diagnostics.before.blur_variance)} → ${value(diagnostics.after.blur_variance)}. Noise estimate: ${value(diagnostics.before.noise_sigma_255)} → ${value(diagnostics.after.noise_sigma_255)}.` : '';
+        window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile } }));
+    }
     byId('brush-form').addEventListener('submit', async event => {
         event.preventDefault();
         if (busy || !sourceFile || !planes || !available || byId('brush-review').value !== 'usable') return;
@@ -311,34 +354,122 @@
         const includeBundle = byId('brush-include-bundle').checked;
         data.append('include_bundle', includeBundle ? 'true' : 'false');
         if (mode === 'manual') { data.append('preview_id', previewId); data.append('confirmed', 'true'); }
+        if (reviewItem) {
+            queue.approve(reviewItem, data);
+            reviewItem = undefined;
+            resetInput();
+            window.dispatchEvent(new Event('queue:review'));
+            openQueue();
+            return;
+        }
         error(''); clearResults(); const token = begin(), version = revision;
         restorationLoading(true);
         progress(restoration === 'off' ? 'Keeping your original picture and resizing it.' : 'Restoring your picture. Auto may keep the original.');
         try {
-            const result = await post('/restore', data);
+            const result = await restoreRequest(data);
             if (!current(token, version)) return;
-            const metadata = result.metadata;
-            if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The app could not verify the result. Check the service before trying again.');
-            const original = validPNG(result.original_input), prepared = validPNG(result.prepared_input), output = validPNG(result.result);
-            const bundle = includeBundle ? validZIP(result.bundle) : undefined;
-            byId('brush-result-input').src = original; byId('brush-result-prepared').src = prepared; byId('brush-result-output').src = output;
-            await Promise.all(['brush-result-input', 'brush-result-prepared', 'brush-result-output'].map(id => byId(id).decode()));
-            if (!current(token, version)) return;
-            byId('brush-download-input').href = original; byId('brush-download-prepared').href = prepared; byId('brush-download-output').href = output;
-            byId('brush-download-output').download = 'restoration-result.png';
-            byId('brush-result-bundle').download = 'restoration-evidence.zip';
-            byId('brush-result-output').alt = 'Restored picture, or resized original when restoration is off';
-            byId('brush-selected-heading').textContent = metadata.preparation_applied ? 'PREPARED PICTURE' : 'ORIGINAL PICTURE';
-            byId('brush-output-heading').textContent = metadata.restoration_applied ? 'RESTORED PICTURE' : 'ORIGINAL / RESTORATION OFF';
-            if (bundle) { byId('brush-result-bundle').href = bundle; byId('brush-result-downloads').classList.remove('hidden'); }
-            byId('brush-results').classList.remove('hidden'); byId('brush-standby').classList.add('hidden');
-            const seconds = Number.isFinite(metadata.seconds) ? `${metadata.seconds.toFixed(1)} seconds. ` : '';
-            const bypass = metadata.preparation_applied ? 'Your reviewed preparation was used.' : metadata.preparation_bypass_reason === 'Auto_did_not_suggest_restoration' ? 'Auto kept the resized original.' : 'The original picture was used without preparation.';
-            const summary = `${seconds}${bypass} This result is experimental. Changes can affect appearance and do not confirm identity.`;
-            byId('brush-result-summary').textContent = summary; byId('brush-result-summary').classList.remove('hidden'); progress(summary);
-            window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile: sourceFile } }));
+            displayResult(result, sourceFile);
         } catch (problem) { if (current(token, version)) { restorationLoading(false); clearResults(); error(problem.message); progress('The request stopped. Read the message before trying again.'); } }
         finally { if (token === operation) restorationLoading(false); finish(token); }
+    });
+    function queueButton(label, action) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.disabled = busy || queue.running;
+        button.addEventListener('click', action);
+        return button;
+    }
+    function renderQueue() {
+        const items = queue.items;
+        byId('queue-items').replaceChildren(...items.map(item => {
+            const row = document.createElement('li');
+            row.textContent = `${item.id}. ${item.label} · ${item.status} `;
+            if (item.status === 'completed') {
+                row.append(queueButton('View result', () => {
+                    queueDialog.close();
+                    displayResult(item.result, item.file, true);
+                }));
+            } else {
+                row.append(queueButton('Review', async () => {
+                    queue.review(item.id);
+                    reviewItem = item.id;
+                    queueDialog.close();
+                    window.dispatchEvent(new Event('queue:review'));
+                    if (!await usePicture(item.file, { captureId: item.captureId, label: item.label, queueReview: true })) reviewItem = undefined;
+                    update();
+                }), queueButton('Skip', () => { queue.skip(item.id); clearQueueReview(item.id); renderQueue(); }));
+            }
+            row.append(queueButton('Remove', () => {
+                queue.remove(item.id);
+                clearQueueReview(item.id);
+                renderQueue();
+                window.dispatchEvent(new Event('queue:changed'));
+            }));
+            return row;
+        }));
+        byId('queue-empty').classList.toggle('hidden', Boolean(items.length));
+        byId('queue-run').disabled = busy || queue.running || !available || !items.some(item => item.status === 'approved') || items.some(item => ['pending', 'failed'].includes(item.status));
+        byId('queue-close').disabled = queue.running;
+    }
+    function clearQueueReview(id) {
+        if (reviewItem !== id) return;
+        reviewItem = undefined;
+        resetInput();
+        window.dispatchEvent(new Event('queue:review'));
+    }
+    function openQueue() {
+        renderQueue();
+        if (!queueDialog.open) queueDialog.showModal();
+    }
+    window.restorationQueue = {
+        get full() { return queue.full; },
+        get remaining() { return queue.remaining; },
+        get captureIds() { return new Set(queue.items.map(item => item.captureId)); },
+        add(file, captureId) {
+            const id = queue.add({ file, captureId, label: captureId ? 'Captured face' : file.name });
+            byId('queue-status').textContent = `Crop ${id} added.`;
+            window.dispatchEvent(new Event('queue:changed'));
+            return id;
+        },
+        addDetected(crops) {
+            const ids = queue.addMany(crops.map(({ file, captureId, faceNumber }) => ({ file, captureId, label: `Detected face ${faceNumber}` })));
+            byId('queue-status').textContent = `${ids.length} ${ids.length === 1 ? 'face added' : 'faces added'}. Review or skip each crop.`;
+            window.dispatchEvent(new Event('queue:changed'));
+            openQueue();
+        }
+    };
+    window.runRestorationBenchmark = async file => {
+        if (busy || !available) throw new Error('The restoration service is busy or unavailable.');
+        const data = form(file);
+        data.append('input_review', 'usable');
+        data.append('restoration', 'on');
+        data.append('preparation_mode', 'bypass');
+        data.append('model', byId('brush-model').value);
+        data.append('include_bundle', 'false');
+        const token = begin();
+        try { return await restoreRequest(data); }
+        finally { finish(token); }
+    };
+    document.querySelectorAll('[data-open-queue]').forEach(button => button.addEventListener('click', openQueue));
+    byId('queue-add-picture').addEventListener('click', () => {
+        try { window.restorationQueue.add(sourceFile, captureId); openQueue(); }
+        catch (problem) { error(problem.message); }
+    });
+    queueDialog.addEventListener('cancel', event => { if (queue.running) event.preventDefault(); });
+    byId('queue-run').addEventListener('click', async () => {
+        if (busy || queue.running) return;
+        const token = begin();
+        try {
+            await queue.run(async (request, item) => {
+                byId('queue-status').textContent = `Processing crop ${item.id}.`;
+                renderQueue();
+                return restoreRequest(request);
+            });
+            byId('queue-status').textContent = 'Approved crops processed. Choose a result to review or download.';
+        } catch (problem) {
+            byId('queue-status').textContent = `Queue paused. ${problem.message}`;
+        } finally { finish(token); renderQueue(); }
     });
     const checkService = async () => {
         if (busy) return;

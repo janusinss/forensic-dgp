@@ -2,9 +2,9 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.2
+## Windows installer 0.2.3
 
-Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.2](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2).
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.3](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.3).
 
 ## Developer batch installation
 
@@ -32,11 +32,17 @@ Package installation is pinned at the direct-dependency level; transitive depend
 
 Choose **Picture** to upload one PNG/JPEG face image, or **Video** for an uploaded clip, webcam or LAN RTSP camera. A chosen video file opens automatically. Native playback controls support Space play/pause and a separate 0.25×–4× speed selector.
 
-Freeze a frame, select a detected face or drag on the preview to crop it. Press Enter on the frozen preview to create a keyboard-adjustable crop. Arrow keys move the crop; Shift+arrow keys resize it. **Full frame crop** returns the preview to the entire frame while keeping the selected crop. **Use this face** passes the direct rectangular PNG crop into Picture review; no FAN alignment, person tracking, ranking or restoration runs during capture.
+Freeze a frame to scan it locally. The numbered boxes mark the detected faces in the original frame. Selecting a box gives you a slightly wider crop that you can adjust before review. You can also drag on the preview or press Enter to create a manual crop. Arrow keys move it, and Shift+arrow keys resize it. **Full frame crop** returns to the entire frame while keeping the selection. **Use this face** sends the original-pixel rectangular PNG crop to Picture review.
+
+The capture scanner bundles the MIT-licensed YuNet 2023mar model from [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet). It scans the selected frame when frozen. Small, blurred, or obstructed faces can still require a manual crop.
 
 Switching Picture/Video, reviewing a crop or temporarily leaving Input pauses an opened local video while preserving its source, position, speed, crop and zoom. Returning does not autoplay. **Resume video** continues a frozen capture. Explicit Stop, file/source replacement and page unload release it. Live webcam/RTSP sources are released when leaving capture; they are never silently restarted.
 
 Review whether one face is clear enough, then choose **Auto**, **On** or **Off** restoration and **Bypass** or optional reviewed preparation. Green protects pixels during preparation; blue selects blur, with green taking priority. Review and confirm preparation before restoration. Protection applies to preparation; generated appearance can change.
+
+After freezing a frame from a video file, webcam, or RTSP camera, check the detection count. Use **Add all N to queue** to queue the detected faces from that frame and open **Face queue**. Use **Add selected face to queue** for one detected or manually adjusted crop, or **Queue loaded picture** for a still image. The queue holds up to 12 crops per session. If the group will not fit, select individual faces or free slots in the queue. Review or skip each crop. After every crop has a decision, **Run approved crops** processes one crop at a time in queue order. Open each finished result to inspect it or download its records. Reloading or closing the app clears the queue.
+
+Result diagnostics show edge variation and estimated noise before and after restoration. Open **Benchmark** to try an illustrated demo or use a clean square face photo. The benchmark saves the clean reference, applies a fixed blur, restores the blurred copy, and reports MAE and PSNR for both versions against that reference. The scores apply to the controlled test case.
 
 Optional removal review uses **Trained CodeFormer Completion R2** after the result, including when restoration was Off or Auto retained the original. Paint only the covering orange, inspect it, confirm the two statements and generate. Pixels outside the reviewed area are copied exactly from the supplied prepared/restored canvas; an empty selection skips completion. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
 
