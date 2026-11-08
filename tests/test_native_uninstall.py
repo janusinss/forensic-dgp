@@ -131,16 +131,19 @@ class NativeUninstallTests(unittest.TestCase):
         log = path.read_text(encoding='utf-8-sig', errors='replace') if path.exists() else ''
         return result, result.stdout + result.stderr + '\n' + log
 
+    def assert_windows_integration_removed(self, log):
+        with self.assertRaises(FileNotFoundError):
+            self.assert_registered()
+        self.assertFalse(self.shortcut.exists(), log)
+        self.assertEqual(self.sibling.read_bytes(), b'outside the installation')
+
     def assert_removed(self, log):
         for _ in range(20):
             if not self.shell.exists():
                 break
             time.sleep(0.1)
         self.assertFalse(self.shell.exists(), log + '\n' + repr(list(self.shell.glob('*'))))
-        with self.assertRaises(FileNotFoundError):
-            self.assert_registered()
-        self.assertFalse(self.shortcut.exists(), log)
-        self.assertEqual(self.sibling.read_bytes(), b'outside the installation')
+        self.assert_windows_integration_removed(log)
 
     def test_uninstall_removes_installed_folder_without_following_junction(self):
         junction = self.runtime / 'data' / 'linked-outside'
@@ -157,6 +160,19 @@ class NativeUninstallTests(unittest.TestCase):
         finally:
             if junction.is_junction():
                 junction.rmdir()
+
+    def test_uninstall_preserves_an_unrelated_file_in_the_selected_folder(self):
+        personal = self.shell / 'personal-notes.txt'
+        self.write(personal, b'not installed by DGP')
+        result, log = self.run_inno(self.uninstaller, 'uninstall')
+        self.assertEqual(result.returncode, 0, log)
+        for _ in range(20):
+            if list(self.shell.iterdir()) == [personal]:
+                break
+            time.sleep(0.1)
+        self.assertEqual(list(self.shell.iterdir()), [personal], log)
+        self.assertEqual(personal.read_bytes(), b'not installed by DGP')
+        self.assert_windows_integration_removed(log)
 
     def test_locked_record_preserves_the_uninstaller_and_can_be_retried(self):
         kernel = ctypes.WinDLL('kernel32', use_last_error=True)
