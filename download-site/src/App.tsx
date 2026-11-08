@@ -99,6 +99,34 @@ export default function App() {
               : 'First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.'}</p>
           </section>
 
+          {release.version === '0.2.3' && (
+            <section className="setup-section" aria-labelledby="release-highlights-title">
+              <div className="setup-heading">
+                <h2 id="release-highlights-title">What’s new in 0.2.3</h2>
+              </div>
+              <ul className="setup-steps">
+                <li>
+                  <div>
+                    <h3>Detect faces in video</h3>
+                    <p>Freeze a video frame to find faces with the bundled YuNet detector.</p>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <h3>Review the Face queue</h3>
+                    <p>Queue multiple crops, review or skip each one, then process the crops you approve.</p>
+                  </div>
+                </li>
+                <li>
+                  <div>
+                    <h3>Compare restoration results</h3>
+                    <p>See before-and-after image diagnostics. The benchmark compares a blurred input and its restored output with a clean reference.</p>
+                  </div>
+                </li>
+              </ul>
+            </section>
+          )}
+
           <aside className="research-note" aria-label="Experimental use">
             <p>Made for a closer look. Restored details are experimental estimates and cannot verify someone’s identity.</p>
             <a href="/LICENSES.txt">Non-commercial use · CodeFormer terms <span aria-hidden="true">↗</span></a>
