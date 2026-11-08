@@ -1,6 +1,22 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.2 Completion R2 release
+## Current 0.2.3 release
+
+Published 2026-11-08, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
+Deployment: https://7796fe47.forensic-dgp.pages.dev/.
+Installer: https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.3/ForensicDGP_Setup-0.2.3.exe.
+Build source: 8dc6b97a00a3f34792389b749cc02f9547d9d4ca.
+Bytes: 1,045,794,849. SHA-256:
+2e00d62617cab338edfa01f4c2227f410e63596ea251836b21551c86484dc066.
+
+The bundled source and offline setup helper passed an upgrade from 0.2.2 in a
+dedicated Windows test folder. The saved record and all 15 existing model-store
+files kept their hashes. Installed-app checks detected two faces, queued both
+crops, processed an approved crop, verified the PNG and ZIP exports, and ran
+restoration once for the illustrated benchmark. The installed-app layout passed
+at 375, 768 and 1280 pixels. The full anonymous download matched the published size and SHA-256. The installer remains an unsigned research preview.
+
+## Historical 0.2.2 Completion R2 release
 
 Published 2026-11-02, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
 Deployment: https://ff9edb57.forensic-dgp.pages.dev/.
