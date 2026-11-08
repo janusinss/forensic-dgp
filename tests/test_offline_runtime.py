@@ -185,27 +185,58 @@ class CommittedLockHealthTests(unittest.TestCase):
                 self.assertEqual(environment.verify_runtime(Path('fixture.exe'),include_models=False),19)
 
 class CaptureOfflineLockTests(unittest.TestCase):
-    def test_correct_detector_with_obsolete_pip_is_not_reused(self):
+    def test_bad_bundled_detector_stops_setup_before_dependency_work(self):
+        import contextlib
+        import io
+        from implementation import capture_install
+
+        with patch.object(capture_install,'checked_model',create=True,side_effect=RuntimeError('Invalid bundled detector')), \
+             patch.object(capture_install,'verified',return_value=True) as verify, \
+             patch.object(capture_install,'capture_python'), \
+             patch.object(capture_install,'load_payload',return_value=None), \
+             contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(capture_install.main([]),1)
+        verify.assert_not_called()
+        self.assertIn('Invalid bundled detector',error.getvalue())
+
+    def test_reuse_requires_a_working_yunet_detector_and_all_locked_packages(self):
         import importlib.metadata
+        import runpy
         import subprocess
+        import sys
         from types import SimpleNamespace
         from implementation import capture_install
         with tempfile.TemporaryDirectory() as temporary:
             python=Path(temporary)/'python.exe'; python.write_bytes(b'fixture')
             payload=unittest.mock.Mock(); payload.locked_versions.return_value=[('opencv-python-headless','4.13.0.92'),('numpy','2.5.2'),('pip','26.2.2')]
             cv2=SimpleNamespace(CascadeClassifier=lambda value:SimpleNamespace(empty=lambda:False),data=SimpleNamespace(haarcascades='fixture/'))
-            versions={'opencv-python-headless':'4.13.0.92','numpy':'2.5.2','pip':'25.2'}
+            numpy=SimpleNamespace(zeros=lambda shape,dtype: 'blank image',uint8=object())
+            versions=dict(payload.locked_versions.return_value)
+            scan_faces=unittest.mock.Mock(return_value=[])
             def run(command,**kwargs):
+                script=command.index('-c')+1
                 try:
-                    with patch.dict(__import__('sys').modules,{'cv2':cv2,'numpy':SimpleNamespace()}), patch.object(importlib.metadata,'version',side_effect=versions.__getitem__):
-                        exec(command[-1],{})
+                    with patch.dict(sys.modules,{'cv2':cv2,'numpy':numpy}), \
+                         patch.object(sys,'argv',['-c', *command[script+1:]]), \
+                         patch.object(runpy,'run_path',return_value={'scan_faces':scan_faces}), \
+                         patch.object(importlib.metadata,'version',side_effect=versions.__getitem__):
+                        exec(command[script],{})
                     return subprocess.CompletedProcess(command,0)
                 except AssertionError:
                     return subprocess.CompletedProcess(command,1)
-            with patch.object(capture_install,'load_payload',return_value=payload),patch.object(capture_install.subprocess,'run',side_effect=run):
-                self.assertFalse(capture_install.verified(python))
-            with patch.object(capture_install,'load_payload',return_value=None),patch.object(capture_install,'committed_versions',return_value=payload.locked_versions('capture')),patch.object(capture_install.subprocess,'run',side_effect=run):
-                self.assertFalse(capture_install.verified(python))
+            for active_payload in (payload,None):
+                with self.subTest(installing=active_payload is not None), \
+                     patch.object(capture_install,'load_payload',return_value=active_payload), \
+                     patch.object(capture_install,'committed_versions',return_value=payload.locked_versions.return_value), \
+                     patch.object(capture_install.subprocess,'run',side_effect=run):
+                    versions['pip']='26.2.2'
+                    scan_faces.return_value=[]
+                    self.assertTrue(capture_install.verified(python))
+                    versions['pip']='25.2'
+                    self.assertFalse(capture_install.verified(python))
+                    versions['pip']='26.2.2'
+                    scan_faces.return_value=[[0,0,32,32]]
+                    self.assertFalse(capture_install.verified(python))
 
 class CaptureProbeDeadlineTests(unittest.TestCase):
     def test_setup_probe_allows_cold_load_but_reports_timeout_as_failure(self):

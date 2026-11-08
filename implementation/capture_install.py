@@ -8,15 +8,17 @@ import subprocess
 import sys
 import venv
 
+from .capture_worker import checked_model
 from .environment import expected_environment, dependency_identity, _ordinary_runtime
 from .managed_paths import custom_install_root, managed_cache
 from .setup_events import SetupCancelled, check_cancel, event
 from .offline_payload import load_payload, package_environment, committed_versions
 
-PROBE = ("import importlib.metadata as m,cv2,numpy; "
+PROBE = ("import importlib.metadata as m, numpy, runpy, sys; "
          "assert m.version('opencv-python-headless')=='4.13.0.92'; "
          "assert m.version('numpy')=='2.5.2'; "
-         "assert not cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml').empty()")
+         "scan=runpy.run_path(sys.argv[1])['scan_faces']; "
+         "assert scan(numpy.zeros((64,64,3),dtype=numpy.uint8)) == []")
 
 
 def capture_python():
@@ -32,8 +34,9 @@ def verified(python, *, timeout=30):
     if locked is not None:
         probe += '; locked='+repr(locked)+"; assert all(m.version(name)==version for name,version in locked), 'Offline capture package lock differs'"
     check_cancel()
+    worker = Path(__file__).with_name('capture_worker.py')
     try:
-        result=subprocess.run([str(python), '-I', '-B', '-c', probe], stdout=subprocess.DEVNULL,
+        result=subprocess.run([str(python), '-I', '-B', '-c', probe, str(worker)], stdout=subprocess.DEVNULL,
                               stderr=subprocess.DEVNULL, timeout=timeout, check=False)
     except subprocess.TimeoutExpired as problem:
         check_cancel()
@@ -67,6 +70,7 @@ def main(argv=None):
     try:
         check_cancel()
         event('capture-runtime', 'running', 'Verifying the capture runtime')
+        checked_model()
         python=capture_python()
         payload=load_payload()
         deferred=args.defer_verification

@@ -30,6 +30,20 @@ body { margin:0; overflow:hidden; background:#101d1d; }
 .work-actions { margin-top:4px; }
 .work-actions .execute-btn, .work-actions .tool-btn, .compact-actions .tool-btn, .work-controls > .tool-btn { min-height:44px; font-size:16px; line-height:1.2; padding:10px 14px; white-space:normal; text-align:center; }
 .compact-actions .tool-btn { flex:0 1 auto; }
+#restoration-queue-dialog, #benchmark-dialog {
+  width:min(42rem, calc(100vw - 2rem)); max-height:calc(100dvh - 2rem); overflow:auto;
+  padding:clamp(1rem, 4vw, 2rem); border:1px solid #a9bdad; border-radius:14px;
+  background:#f6faf6; color:#193329; overflow-wrap:anywhere;
+}
+#restoration-queue-dialog::backdrop, #benchmark-dialog::backdrop { background:#10251eb0; }
+#restoration-queue-dialog button, #benchmark-dialog button { min-height:44px; padding:6px 12px; }
+#queue-items { padding-inline-start:1.5rem; }
+#queue-items li { margin-block:0.5rem; }
+#queue-items button { margin:2px 4px 2px 0; }
+#benchmark-file { display:block; max-width:100%; margin-block:6px 12px; }
+#benchmark-images { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+#benchmark-images figure { margin:0; }
+#benchmark-images img { display:block; width:100%; height:auto; }
 .execute-btn { width:auto; color:#fff; background:#176c56; border:1px solid #176c56; border-radius:2px; font-family:var(--font-sans); font-weight:700; letter-spacing:0; }
 .execute-btn:disabled { background:#dce4dd; color:#64776c; border-color:#ccd7ce; }
 .tool-btn { color:#234a3c; background:transparent; border-color:#93a69a; }

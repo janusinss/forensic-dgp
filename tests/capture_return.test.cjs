@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
+const { createQueue } = require('../static/restoration_queue.js');
 
 const source = process.env.CAPTURE_SCRIPT || path.join(__dirname, '../static/capture.js');
 
@@ -30,7 +31,7 @@ class Element {
   after() {} focus() {} close() {}
 }
 
-function harness({deferFrame = false, deferCrop = false, deferOpen = false} = {}) {
+function harness({deferFrame = false, deferCrop = false, deferOpen = false, faces = [[20,20,30,30]]} = {}) {
   const elements = new Map();
   const get = id => { if (id === 'capture-draw') return null; if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   const ctx = { clearRect() {}, drawImage() {}, save() {}, translate() {}, strokeRect() {}, fillRect() {}, fillText() {}, restore() {} };
@@ -54,20 +55,39 @@ function harness({deferFrame = false, deferCrop = false, deferOpen = false} = {}
   let accepted = true, useCalls = 0;
   const track = { stopCount:0, stop() { this.stopCount++; }, addEventListener() {} };
   const stream = { getTracks:() => [track], getVideoTracks:() => [track] };
+  const queue = createQueue();
   const win = { captureGeometry: { makeView: (width, height) => ({x:0,y:0,width,height}), pointerToSource: (x,y) => ({x,y,scale:1}) },
+    restorationQueue: {
+      get remaining() { return queue.remaining; },
+      get captureIds() { return new Set(queue.items.map(item => item.captureId)); },
+      addDetected(crops) { queue.addMany(crops); }
+    },
     restorationInput: { busy:false, use:async () => {useCalls++; return accepted;} }, addEventListener(name,fn) { windowEvents.push([name,fn]); } };
   const reply = data => ({ ok:true, status:200, json:async () => data });
-  let requestedCrop, finishFrame, frameStarted, finishCrop, cropStarted;
+  let requestedCrop, finishFrame, frameStarted, finishCrop, cropStarted, cropRequests = 0;
   const started = new Promise(resolve => {frameStarted=resolve;});
   const cropRequestStarted = new Promise(resolve => {cropStarted=resolve;});
-  const fetch = async (url,options) => { if(url === '/capture/status')return reply({token:'token'}); if(url === '/capture/frames') { if(deferFrame) {frameStarted(); return await new Promise(resolve => {finishFrame=() => resolve(reply({frame_id:'frame',faces:[[20,20,30,30]]}));});} return reply({frame_id:'frame', faces:[[20,20,30,30]]}); } requestedCrop=JSON.parse(options.body); if(deferCrop) {cropStarted(); return await new Promise(resolve => {finishCrop=() => resolve(reply({capture_id:'crop',image:'data:image/png;base64,YQ=='}));});} return reply({capture_id:'crop', image:'data:image/png;base64,YQ=='}); };
+  const fetch = async (url, options) => {
+    if (url === '/capture/status') return reply({ token: 'token' });
+    if (url === '/capture/frames') {
+      const frame = reply({ frame_id: 'frame', faces });
+      if (!deferFrame) return frame;
+      frameStarted();
+      return new Promise(resolve => { finishFrame = () => resolve(frame); });
+    }
+    requestedCrop = JSON.parse(options.body);
+    const crop = reply({ capture_id: `crop-${++cropRequests}`, image: 'data:image/png;base64,YQ==' });
+    if (!deferCrop) return crop;
+    cropStarted();
+    return new Promise(resolve => { finishCrop = () => resolve(crop); });
+  };
   class CustomEvent { constructor(type, init) { this.type=type; this.detail=init?.detail; } }
   const sandbox = { document:doc, window:win, navigator:{mediaDevices:{getUserMedia:async () => stream}}, fetch, Blob, File, FormData, Uint8Array, atob,
     CustomEvent, MutationObserver:class { constructor(fn){this.fn=fn;} observe(target){observers.push({target,fn:this.fn});} }, matchMedia:() => ({matches:false,addEventListener(){}}),
     URL:{createObjectURL:() => 'blob:video',revokeObjectURL:url => revoked.push(url)},
     setTimeout, clearTimeout, queueMicrotask };
   vm.runInNewContext(fs.readFileSync(path.resolve(source), 'utf8'), sandbox, {filename:source});
-  return { get, video, revoked, track, doc, screen, frameStarted:started, finishFrame:() => finishFrame(), cropStarted:cropRequestStarted, finishCrop:() => finishCrop(),
+  return { get, video, revoked, track, doc, screen, queue, frameStarted:started, finishFrame:() => finishFrame(), cropStarted:cropRequestStarted, finishCrop:() => finishCrop(),
     docEvent:name => (docEvents[name]||[]).forEach(fn=>fn()), windowEvent:name => windowEvents.filter(([key])=>key===name).forEach(([,fn])=>fn()),
     mutate:target => observers.filter(item=>item.target===target).forEach(item=>item.fn()), requestedCrop:() => requestedCrop, useCalls:() => useCalls, setAccepted:value => { accepted=value; } };
 }
@@ -85,6 +105,18 @@ async function chooseFace(h) {
   assert.equal(h.get('capture-faces').children.length, 1);
   await h.get('capture-faces').children[0].fire('click');
 }
+
+test('bulk capture requests each distinct rectangle once and keeps entries pending', async () => {
+  const h = harness({ faces: [[20,20,30,30], [20,20,30,30], [60,20,30,30]] });
+  await openFile(h);
+  await h.get('capture-freeze').fire('click');
+  assert.equal(h.get('capture-detected-count').textContent, '3 faces detected.');
+  await h.get('capture-queue-all').fire('click');
+  assert.deepEqual(Array.from(h.queue.items, item => [item.captureId, item.status]), [
+    ['crop-1', 'pending'], ['crop-2', 'pending']
+  ]);
+  assert.equal(h.get('capture-queue-all').disabled, true);
+});
 
 test('return from face review preserves video until explicit Stop', async () => {
   const h = harness(), {get,video,revoked} = h;
@@ -292,6 +324,14 @@ test('face selection and full-frame view retain the selected crop', async () => 
   assert.deepEqual(['x','y','width','height'].map(key => h.get('capture-'+key).value), before);
   await h.get('capture-use').fire('click');
   assert.deepEqual(Object.values(h.requestedCrop()), before);
+});
+
+test('padding at the frame edge does not shift the opposite crop edge', async () => {
+  const h = harness({ faces: [[1,2,30,40]] });
+  await openFile(h);
+  await chooseFace(h);
+  await h.get('capture-use').fire('click');
+  assert.deepEqual(h.requestedCrop(), { x: 0, y: 0, width: 37, height: 48 });
 });
 
 test('dragging a blank frame area creates a manual crop without a Draw crop button', async () => {
