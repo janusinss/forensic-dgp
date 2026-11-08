@@ -128,7 +128,17 @@ class NativeUninstallTests(unittest.TestCase):
         path = self.area / (action + '.log')
         result = subprocess.run([str(executable), *SILENT_ARGS, '/LOG=' + str(path), *args],
                                 cwd=self.area, capture_output=True, text=True, timeout=60)
-        log = path.read_text(encoding='utf-8-sig', errors='replace') if path.exists() else ''
+        # Inno can return from its launcher while the temporary uninstall process
+        # still owns the log and is finishing cleanup.
+        log = ''
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            if path.exists():
+                log = path.read_text(encoding='utf-8-sig', errors='replace')
+                if 'Log closed.' in log:
+                    break
+            time.sleep(0.1)
+        self.assertIn('Log closed.', log, result.stdout + result.stderr)
         return result, result.stdout + result.stderr + '\n' + log
 
     def assert_windows_integration_removed(self, log):

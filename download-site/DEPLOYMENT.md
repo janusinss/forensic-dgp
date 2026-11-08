@@ -1,6 +1,23 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.3 release
+## Current 0.2.4 release
+
+Published on November 8, 2026 in Asia/Manila. The download is live on the
+[Forensic DGP page](https://forensic-dgp.pages.dev/). This release uses
+[Pages deployment 4f620787](https://4f620787.forensic-dgp.pages.dev/).
+
+[ForensicDGP_Setup-0.2.4.exe](https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.4/ForensicDGP_Setup-0.2.4.exe)
+is 1,045,804,246 bytes. SHA-256
+`af2b4ad8be7ca85858e697a43f2ec3db728685fabe5d89050e98da5d9464f01d`.
+The build source is `f1de97eaec5351243a6191e7e7d76b3c0d6cf468`.
+
+Three isolated Windows registrations exercised the compiled uninstall flow.
+They covered removing the full installation, preserving an unrelated file and a
+junction target, and retrying a removal blocked by a locked saved record. The
+uninstaller runs after confirmation. The full public download matched its
+size and SHA-256. The installer remains an unsigned preview.
+
+## Historical 0.2.3 release
 
 Published 2026-11-08, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
 Deployment: https://7796fe47.forensic-dgp.pages.dev/.

@@ -1,10 +1,10 @@
 # Build Windows installer releases
 
-Current release: **0.2.3 unsigned offline preview**, with YuNet video face capture,
-the Face queue and restoration benchmarks. Release and artifact details are in
-[0.2.3 deployment](../download-site/DEPLOYMENT.md). Earlier verification remains in
-[R2_VERIFICATION.md](R2_VERIFICATION.md), [PAYLOAD_PATH_HOTFIX.md](PAYLOAD_PATH_HOTFIX.md)
-and [VERIFICATION.md](VERIFICATION.md).
+Version **0.2.4** is the unsigned offline preview with complete removal of the
+verified desktop runtime on Windows uninstall. Release and artifact details are
+in [0.2.4 deployment](../download-site/DEPLOYMENT.md). Earlier verification
+remains in [R2_VERIFICATION.md](R2_VERIFICATION.md),
+[PAYLOAD_PATH_HOTFIX.md](PAYLOAD_PATH_HOTFIX.md) and [VERIFICATION.md](VERIFICATION.md).
 
 The offline release targets Windows x64 and contains private CPython, CPU-only
 application packages, an isolated capture environment, and all six admitted
@@ -40,10 +40,10 @@ changes, changed preparer bytes, or payload locks differing from that commit.
 ```powershell
 python -B -m unittest discover -s tests
 node --test tests/*.test.cjs tests/test_restoration_queue.cjs
-python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.4 --offline-payload scratch/offline-payload
+python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.5 --offline-payload scratch/offline-payload
 ```
 
-The command uses the next release version, 0.2.4. Published versioned assets are immutable.
+The command uses the next release version, 0.2.5. Published versioned assets are immutable.
 
 Output: scratch/dist/ForensicDGP_Setup.exe and release.json. The release records
 source ancestry, setup-input hashes, the offline manifest fingerprint, exact

@@ -2,7 +2,16 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Current installer: 0.2.3
+## Windows installer 0.2.4
+
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). Starting
+with 0.2.4, confirming Windows uninstall permanently removes the installed app,
+private Python, models, caches and saved records. The selected folder is removed
+when empty. Upgrade an older installation to 0.2.4 first to get this uninstaller.
+See the [0.2.4 release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.4)
+for the installer and checksum.
+
+## Historical 0.2.3
 
 Download the [offline Windows installer](https://forensic-dgp.pages.dev/). Version
 0.2.3 adds YuNet face detection for frozen video frames, the Face queue, restoration
