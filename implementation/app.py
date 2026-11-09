@@ -18,7 +18,7 @@ from typing import Annotated
 import numpy as np
 from PIL import Image
 import psutil
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
@@ -244,13 +244,24 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                   protect_mask: UploadFile | None = File(None), apply_mask: UploadFile | None = File(None),
                   radius: float = Form(1), preview_id: str = Form(''), confirmed: bool = Form(False),
                   include_bundle: bool = Form(True), model: str = Form(DEFAULT_MODEL),
-                  capture_id: Annotated[str, Form()] = ''):
+                  capture_id: Annotated[str, Form()] = '', request: Request = None):
+    video_selection = input_review == 'video_capture'
+    owner = None
+    if video_selection:
+        from .capture_api import _guard
+        if request is None:
+            raise HTTPException(403, 'Capture session token required.')
+        owner = _guard(request)
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     protect = await protect_mask.read(MAX_MASK_BYTES + 1) if protect_mask else None
     apply = await apply_mask.read(MAX_MASK_BYTES + 1) if apply_mask else None
     def execute():
         started = time.monotonic()
-        review_input(input_review)
+        if video_selection:
+            need(bool(capture_id) and preparation_mode == 'bypass' and restoration in ('on', 'off'),
+                 'Video restoration requires a saved capture and the shared On or Off setting.')
+        else:
+            review_input(input_review)
         need(model in ARMS and restoration in ('auto', 'on', 'off'), 'Choose a valid model and Auto, On or Off.')
         need(preparation_mode in ('manual', 'bypass'), 'Choose bypass or reviewed manual preparation.')
         native = decode_original(contents)
@@ -265,7 +276,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     'original-256.png': png(original)}
         if capture_id:
             from .capture_api import evidence_for_crop
-            payloads.update(evidence_for_crop(contents, capture_id))
+            payloads.update(evidence_for_crop(contents, capture_id, owner=owner))
         selected, prepared, preparation = contents, original, None
         if preparation_mode == 'bypass':
             need(protect is None and apply is None and not preview_id and not confirmed,
@@ -285,6 +296,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         diagnostics = {stage: {name: values[name] for name in ('blur_variance', 'noise_sigma_255')}
                        for stage, values in (('before', signals), ('after', output_signals))}
         metadata = {'selection': ARMS[model], 'model': model, 'restoration_requested': restoration,
+                    'input_review': input_review,
                     'restoration_applied': bool(applied), 'preparation_applied': preparation is not None,
                     'preparation': preparation, 'preparation_requested': preparation_mode,
                     'preparation_bypass_reason': ('restoration_off' if restoration == 'off' else

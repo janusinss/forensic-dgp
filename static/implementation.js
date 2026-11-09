@@ -3,9 +3,8 @@
 (() => {
     'use strict';
     const api = '/face/restoration', byId = id => document.getElementById(id);
-    const queue = window.createRestorationQueue();
-    const queueDialog = byId('restoration-queue-dialog');
-    let reviewItem;
+    let videoBatch, videoRunMode, videoToken, pictureMode;
+    let videoRetryBlocked = false;
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
     const protectColor = [45, 185, 90], applyColor = [55, 125, 220];
     let sourceFile, captureId, originalPixels, width = 0, height = 0, planes, undo = [];
@@ -21,6 +20,7 @@
     const off = () => byId('brush-restoration').value === 'off';
     const clearResults = () => {
         byId('brush-results').classList.add('hidden');
+        byId('picture-result-metrics').replaceChildren();
         byId('brush-result-summary').classList.add('hidden');
         byId('brush-result-downloads').classList.add('hidden');
         byId('brush-standby').classList.remove('hidden');
@@ -28,18 +28,18 @@
         for (const id of ['brush-result-input', 'brush-result-prepared', 'brush-result-output']) byId(id).removeAttribute('src');
     };
     const update = () => {
-        document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => { if (!item.closest('[data-capture-controls], .capture-visual')) item.disabled = busy; });
+        document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => {
+            if (!item.closest('[data-capture-controls], .capture-visual, #video-face-selector') && !item.matches('.video-comparison [data-zoom]')) item.disabled = busy;
+        });
         const readable = byId('brush-review').value === 'usable';
         const confirmed = Boolean(previewId && masks && byId('brush-confirm').checked);
         byId('brush-preview').disabled = busy || !available || !planes || !readable || !manual();
-        byId('brush-run').disabled = busy || !available || !sourceFile || !planes || !readable || (manual() && !off() && !confirmed);
-        byId('brush-run').textContent = reviewItem ? 'Approve crop for queue' : 'Restore selected input';
-        byId('queue-add-picture').disabled = busy || !sourceFile || Boolean(reviewItem);
+        byId('brush-run').disabled = busy || !available || (videoBatch ? videoRetryBlocked || !videoBatch.items.some(item => item.status !== 'completed') && videoRunMode === byId('brush-restoration').value
+            : !sourceFile || !planes || !readable || (manual() && !off() && !confirmed));
         byId('brush-undo').disabled = busy || !undo.length;
         byId('brush-confirm').disabled = busy || !previewId || !manual();
         byId('brush-edit-section').classList.toggle('hidden', !planes || !manual());
         canvas.setAttribute('aria-disabled', String(busy));
-        if (queueDialog.open) renderQueue();
         window.dispatchEvent(new CustomEvent('restoration:busy', {detail:{busy}}));
     };
     const invalidate = () => {
@@ -208,15 +208,18 @@
         view.setUint32(0, nativeWidth); view.setUint32(4, nativeHeight); header[8] = 8;
         return new Blob([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', compressed), chunk('IEND', new Uint8Array())], { type: 'image/png' });
     };
-    const post = async (route, data) => {
-        const response = await fetch(api + route, { method: 'POST', body: data });
+    const post = async (route, data, headers) => {
+        const response = await fetch(api + route, { method: 'POST', body: data, headers });
         let answer;
         try { answer = await response.json(); }
         catch { throw new Error('The app could not get a valid response. Select Check service before trying again.'); }
         if (!response.ok) {
             const detail = typeof answer.detail === 'string' ? answer.detail : '';
-            if (/could not be confirmed stopped|do not retry/i.test(detail)) throw new Error('The previous task may still be running. Do not retry. Check the saved request and stop the task before restarting the app.');
-            if (/previous worker stopped unexpectedly/i.test(detail)) throw new Error('The previous task stopped unexpectedly. Review the saved request and restart the app before trying again.');
+            if (/could not be confirmed stopped|do not retry|previous worker stopped unexpectedly/i.test(detail)) {
+                const problem = new Error('Check the saved request and restart the app before restoring another face.');
+                problem.restartRequired = true;
+                throw problem;
+            }
             if (/model|\bv2\b|conditioned_sft/i.test(detail)) throw new Error('The restoration service is not ready. Check service or restart the app.');
             if (/mask/i.test(detail)) throw new Error('The app could not use the marked areas. Review your selections or choose Bypass.');
             throw new Error(detail || 'The request stopped. Check the picture and service status.');
@@ -240,7 +243,7 @@
     };
     const usePicture = async (file, options = {}) => {
         if (busy) { error('Wait for the current task to finish, then choose the picture again.'); return false; }
-        if (!options.queueReview) reviewItem = undefined;
+        clearVideoBatch();
         resetInput(); error('');
         if (!file) return;
         if (file.size === 0 || file.size > 10 * 1024 ** 2 || !['image/png', 'image/jpeg'].includes(file.type)) { error('Choose a PNG or JPEG face picture smaller than 10 MB.'); return; }
@@ -269,8 +272,8 @@
         } catch (problem) { if (current(token, version)) { resetInput(); error(problem.message); progress('The picture could not be checked. Choose a clear face picture.'); } }
         finally { finish(token); }
     };
-    window.restorationInput = {use:usePicture, get busy() {return busy;}};
-    byId('brush-file').addEventListener('change', () => { reviewItem = undefined; usePicture(byId('brush-file').files[0]); });
+    window.restorationInput = {use:usePicture, useVideo, clearVideoBatch, get video() {return Boolean(videoBatch);}, get busy() {return busy;}};
+    byId('brush-file').addEventListener('change', () => usePicture(byId('brush-file').files[0]));
     byId('brush-preview').addEventListener('click', async () => {
         if (busy || !planes || !sourceFile || !manual() || byId('brush-review').value !== 'usable') return;
         const radius = byId('brush-radius').value;
@@ -305,8 +308,8 @@
         } catch (problem) { if (current(token, version)) { invalidate(); error(problem.message); progress('Could not prepare the picture. Review the selected areas or choose Bypass.'); } }
         finally { finish(token); }
     });
-    async function restoreRequest(data) {
-        const result = await post('/restore', data);
+    async function restoreRequest(data, headers) {
+        const result = await post('/restore', data, headers);
         const metadata = result.metadata;
         if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The app could not verify the result. Check the service before trying again.');
         await Promise.all([result.original_input, result.prepared_input, result.result].map(async url => {
@@ -316,7 +319,7 @@
         if (data.get('include_bundle') === 'true') validZIP(result.bundle);
         return result;
     }
-    function displayResult(result, originalFile, fromQueue = false) {
+    function displayResult(result, originalFile) {
         const metadata = result.metadata;
         byId('brush-result-input').src = result.original_input;
         byId('brush-result-prepared').src = result.prepared_input;
@@ -324,8 +327,10 @@
         byId('brush-download-input').href = result.original_input;
         byId('brush-download-prepared').href = result.prepared_input;
         byId('brush-download-output').href = result.result;
-        byId('brush-selected-heading').textContent = metadata.preparation_applied ? 'PREPARED PICTURE' : 'ORIGINAL PICTURE';
-        byId('brush-output-heading').textContent = metadata.restoration_applied ? 'RESTORED PICTURE' : 'ORIGINAL / RESTORATION OFF';
+        const prepared = byId('brush-prepared-details');
+        prepared.open = false;
+        prepared.classList.toggle('hidden', !metadata.preparation_applied);
+        byId('brush-output-heading').textContent = metadata.restoration_applied ? 'After' : 'After (resized original)';
         byId('brush-result-downloads').classList.toggle('hidden', !result.bundle);
         if (result.bundle) byId('brush-result-bundle').href = result.bundle;
         byId('brush-results').classList.remove('hidden');
@@ -335,14 +340,14 @@
         byId('brush-result-summary').textContent = summary;
         byId('brush-result-summary').classList.remove('hidden');
         progress('Result ready to review.');
-        byId('restoration-results-heading').closest('.work-controls').querySelector('[data-nav="options"]').classList.toggle('hidden', fromQueue);
-        const diagnostics = metadata.output_diagnostics;
-        const value = number => Number.isFinite(number) ? number.toFixed(2) : 'Unavailable';
-        byId('brush-diagnostics').textContent = diagnostics ? `Original → result. Edge variation: ${value(diagnostics.before.blur_variance)} → ${value(diagnostics.after.blur_variance)}. Noise estimate: ${value(diagnostics.before.noise_sigma_255)} → ${value(diagnostics.after.noise_sigma_255)}.` : '';
+        const pictureMetrics = byId('picture-result-metrics');
+        pictureMetrics.replaceChildren();
+        appendResultMetrics(pictureMetrics, 'Picture metrics', result);
         window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile } }));
     }
     byId('brush-form').addEventListener('submit', async event => {
         event.preventDefault();
+        if (videoBatch) { await restoreVideo(); return; }
         if (busy || !sourceFile || !planes || !available || byId('brush-review').value !== 'usable') return;
         const restoration = byId('brush-restoration').value;
         const mode = restoration === 'off' ? 'bypass' : byId('brush-preparation').value;
@@ -354,17 +359,9 @@
         const includeBundle = byId('brush-include-bundle').checked;
         data.append('include_bundle', includeBundle ? 'true' : 'false');
         if (mode === 'manual') { data.append('preview_id', previewId); data.append('confirmed', 'true'); }
-        if (reviewItem) {
-            queue.approve(reviewItem, data);
-            reviewItem = undefined;
-            resetInput();
-            window.dispatchEvent(new Event('queue:review'));
-            openQueue();
-            return;
-        }
         error(''); clearResults(); const token = begin(), version = revision;
         restorationLoading(true);
-        progress(restoration === 'off' ? 'Keeping your original picture and resizing it.' : 'Restoring your picture. Auto may keep the original.');
+        progress(restoration === 'off' ? 'Keeping your original picture and resizing it.' : 'Restoring your picture.');
         try {
             const result = await restoreRequest(data);
             if (!current(token, version)) return;
@@ -372,105 +369,258 @@
         } catch (problem) { if (current(token, version)) { restorationLoading(false); clearResults(); error(problem.message); progress('The request stopped. Read the message before trying again.'); } }
         finally { if (token === operation) restorationLoading(false); finish(token); }
     });
-    function queueButton(label, action) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = label;
-        button.disabled = busy || queue.running;
-        button.addEventListener('click', action);
-        return button;
-    }
-    function renderQueue() {
-        const items = queue.items;
-        byId('queue-items').replaceChildren(...items.map(item => {
-            const row = document.createElement('li');
-            row.textContent = `${item.id}. ${item.label} · ${item.status} `;
-            if (item.status === 'completed') {
-                row.append(queueButton('View result', () => {
-                    queueDialog.close();
-                    displayResult(item.result, item.file, true);
-                }));
-            } else {
-                row.append(queueButton('Review', async () => {
-                    queue.review(item.id);
-                    reviewItem = item.id;
-                    queueDialog.close();
-                    window.dispatchEvent(new Event('queue:review'));
-                    if (!await usePicture(item.file, { captureId: item.captureId, label: item.label, queueReview: true })) reviewItem = undefined;
-                    update();
-                }), queueButton('Skip', () => { queue.skip(item.id); clearQueueReview(item.id); renderQueue(); }));
-            }
-            row.append(queueButton('Remove', () => {
-                queue.remove(item.id);
-                clearQueueReview(item.id);
-                renderQueue();
-                window.dispatchEvent(new Event('queue:changed'));
-            }));
-            return row;
-        }));
-        byId('queue-empty').classList.toggle('hidden', Boolean(items.length));
-        byId('queue-run').disabled = busy || queue.running || !available || !items.some(item => item.status === 'approved') || items.some(item => ['pending', 'failed'].includes(item.status));
-        byId('queue-close').disabled = queue.running;
-    }
-    function clearQueueReview(id) {
-        if (reviewItem !== id) return;
-        reviewItem = undefined;
-        resetInput();
-        window.dispatchEvent(new Event('queue:review'));
-    }
-    function openQueue() {
-        renderQueue();
-        if (!queueDialog.open) queueDialog.showModal();
-    }
-    window.restorationQueue = {
-        get full() { return queue.full; },
-        get remaining() { return queue.remaining; },
-        get captureIds() { return new Set(queue.items.map(item => item.captureId)); },
-        add(file, captureId) {
-            const id = queue.add({ file, captureId, label: captureId ? 'Captured face' : file.name });
-            byId('queue-status').textContent = `Crop ${id} added.`;
-            window.dispatchEvent(new Event('queue:changed'));
-            return id;
-        },
-        addDetected(crops) {
-            const ids = queue.addMany(crops.map(({ file, captureId, faceNumber }) => ({ file, captureId, label: `Detected face ${faceNumber}` })));
-            byId('queue-status').textContent = `${ids.length} ${ids.length === 1 ? 'face added' : 'faces added'}. Review or skip each crop.`;
-            window.dispatchEvent(new Event('queue:changed'));
-            openQueue();
+    function videoVisibility(active) {
+        for (const id of ['video-settings-gallery', 'video-restore-gallery']) byId(id).classList.toggle('hidden', !active);
+        for (const id of ['options-preview', 'options-preview-caption', 'restoration-idle', 'picture-restoration-auto', 'picture-preparation', 'picture-preparation-details', 'picture-restore-note']) {
+            byId(id).classList.toggle('hidden', active);
         }
-    };
-    window.runRestorationBenchmark = async file => {
-        if (busy || !available) throw new Error('The restoration service is busy or unavailable.');
-        const data = form(file);
-        data.append('input_review', 'usable');
-        data.append('restoration', 'on');
-        data.append('preparation_mode', 'bypass');
-        data.append('model', byId('brush-model').value);
-        data.append('include_bundle', 'false');
-        const token = begin();
-        try { return await restoreRequest(data); }
-        finally { finish(token); }
-    };
-    document.querySelectorAll('[data-open-queue]').forEach(button => button.addEventListener('click', openQueue));
-    byId('queue-add-picture').addEventListener('click', () => {
-        try { window.restorationQueue.add(sourceFile, captureId); openQueue(); }
-        catch (problem) { error(problem.message); }
-    });
-    queueDialog.addEventListener('cancel', event => { if (queue.running) event.preventDefault(); });
-    byId('queue-run').addEventListener('click', async () => {
-        if (busy || queue.running) return;
-        const token = begin();
-        try {
-            await queue.run(async (request, item) => {
-                byId('queue-status').textContent = `Processing crop ${item.id}.`;
-                renderQueue();
-                return restoreRequest(request);
+        byId('brush-form').classList.toggle('video-batch', active);
+    }
+    function clearVideoBatch() {
+        if (!videoBatch || busy) return;
+        for (const item of videoBatch.items) URL.revokeObjectURL(item.url);
+        videoBatch = videoRunMode = videoToken = undefined;
+        byId('video-settings-gallery').replaceChildren();
+        byId('video-face-selector').replaceChildren();
+        byId('video-face-panels').replaceChildren();
+        byId('brush-run').textContent = 'Restore selected input';
+        byId('brush-restoration').value = pictureMode;
+        byId('brush-restoration').dispatchEvent(new Event('change', { bubbles: true }));
+        videoVisibility(false);
+        update();
+    }
+    function useVideo(crops, options) {
+        if (busy || !options.isCurrent() || !options.token || !crops.length || crops.length > window.restorationQueueLimit) return false;
+        clearVideoBatch();
+        pictureMode = byId('brush-restoration').value;
+        error('');
+        clearResults();
+        videoBatch = window.createRestorationQueue();
+        videoToken = options.token;
+        videoBatch.addMany(crops.map(crop => ({ ...crop, url: URL.createObjectURL(crop.file) })));
+        const items = videoBatch.items;
+        for (const item of items) {
+            byId('video-settings-gallery').append(videoCard(item, false));
+            byId('video-face-panels').append(videoCard(item, true));
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tool-btn';
+            button.textContent = `Face ${item.faceNumber}`;
+            button.setAttribute('aria-controls', `video-face-${item.id}`);
+            button.addEventListener('click', () => selectVideoFace(item.id));
+            byId('video-face-selector').append(button);
+        }
+        selectVideoFace(items[0].id);
+        byId('brush-restoration').value = 'on';
+        byId('brush-restoration').dispatchEvent(new Event('change', { bubbles: true }));
+        videoVisibility(true);
+        byId('brush-run').textContent = crops.length === 1 ? 'Restore face' : 'Restore faces';
+        progress('Choose one restoration setting for the selected faces.');
+        update();
+        return true;
+    }
+    function selectVideoFace(id) {
+        const panel = `video-face-${id}`;
+        for (const button of byId('video-face-selector').children) {
+            button.setAttribute('aria-pressed', String(button.getAttribute('aria-controls') === panel));
+        }
+        for (const card of byId('video-face-panels').children) card.hidden = card.id !== panel;
+    }
+    function videoImage(src, alt) {
+        const image = new Image();
+        image.src = src;
+        image.alt = alt;
+        return image;
+    }
+    function videoCard(item, showResult) {
+        const card = document.createElement('article');
+        card.className = 'video-face-card';
+        const name = `Face ${item.faceNumber}`;
+        const title = document.createElement('h2');
+        title.textContent = name;
+        const images = document.createElement('div');
+        images.className = 'video-face-images';
+        card.append(title, images);
+        if (!showResult) {
+            images.append(videoImage(item.url, `${name} original crop`));
+            return card;
+        }
+        card.id = `video-face-${item.id}`;
+        card.setAttribute('aria-label', `${name} comparison`);
+        images.classList.add('video-comparison');
+        const details = document.createElement('div');
+        details.className = 'video-face-details';
+        card.append(details);
+        showVideoResult(item, card);
+        return card;
+    }
+    function videoComparisonImage(item, stage, source, bundle) {
+        const id = `video-face-${item.id}-${stage.toLowerCase()}`;
+        const name = `Face ${item.faceNumber}`;
+        const figure = document.createElement('figure');
+        const image = videoImage(source, `${name} ${stage.toLowerCase()} restoration`);
+        image.id = id;
+        const caption = document.createElement('figcaption');
+        caption.textContent = stage;
+        figure.append(image, caption);
+        const download = document.createElement('a');
+        download.className = 'tool-btn';
+        download.href = source;
+        download.download = `face-${item.faceNumber}-${stage.toLowerCase()}.png`;
+        download.textContent = 'Download PNG';
+        download.setAttribute('aria-label', `Download PNG for ${name} ${stage.toLowerCase()}`);
+        const enlarge = document.createElement('button');
+        enlarge.type = 'button';
+        enlarge.className = 'tool-btn';
+        enlarge.dataset.zoom = id;
+        enlarge.textContent = 'Enlarge';
+        enlarge.setAttribute('aria-label', `Enlarge ${name} ${stage.toLowerCase()}`);
+        const actions = document.createElement('div');
+        actions.className = 'video-image-actions';
+        actions.append(download, enlarge);
+        if (bundle) {
+            const zip = document.createElement('a');
+            zip.className = 'tool-btn';
+            zip.href = bundle;
+            zip.download = `face-${item.faceNumber}-review-files.zip`;
+            zip.textContent = 'Download ZIP';
+            actions.append(zip);
+        }
+        figure.append(actions);
+        return figure;
+    }
+    function restorationMetrics(caption, diagnostics) {
+        const table = document.createElement('table');
+        table.className = 'video-metrics';
+        table.createCaption().textContent = caption;
+        const header = table.createTHead().insertRow();
+        for (const title of ['Metric', 'Before', 'After']) {
+            const cell = document.createElement('th');
+            cell.scope = 'col';
+            cell.textContent = title;
+            header.append(cell);
+        }
+        const body = table.createTBody();
+        function metric(label, before, after) {
+            const row = body.insertRow();
+            const name = document.createElement('th');
+            name.scope = 'row';
+            name.textContent = label;
+            row.append(name);
+            return [before, after].map(value => {
+                const cell = row.insertCell();
+                cell.textContent = value;
+                return cell;
             });
-            byId('queue-status').textContent = 'Approved crops processed. Choose a result to review or download.';
+        }
+        const value = n => Number.isFinite(n) ? n.toFixed(2) : 'Unavailable';
+        metric('Sharpness (edge variation)', value(diagnostics?.before?.blur_variance), value(diagnostics?.after?.blur_variance));
+        metric('Noise estimate', value(diagnostics?.before?.noise_sigma_255), value(diagnostics?.after?.noise_sigma_255));
+        const mae = metric('MAE (RGB levels)', '—', '—');
+        const psnr = metric('PSNR (dB)', '—', '—');
+        return {
+            table,
+            setReference(scores) {
+                [scores?.before, scores?.after].forEach((score, i) => {
+                    mae[i].textContent = score?.mae ?? '—';
+                    psnr[i].textContent = score?.psnr ?? '—';
+                });
+            }
+        };
+    }
+    function showVideoResult(item, card = byId(`video-face-${item.id}`), failure = '') {
+        const images = card.querySelector('.video-face-images');
+        const details = card.querySelector('.video-face-details');
+        images.replaceChildren(videoComparisonImage(item, 'Before', item.result?.original_input || item.url));
+        details.replaceChildren();
+        const status = document.createElement('p');
+        status.textContent = failure || (item.status === 'running' ? 'Processing…' : 'Waiting to restore.');
+        status.setAttribute('role', 'status');
+        details.append(status);
+        if (!item.result) return;
+        const { result } = item;
+        images.append(videoComparisonImage(item, 'After', result.result, result.bundle));
+        status.textContent = result.metadata.restoration_applied ? 'Original and restored result' : 'Original and resized result';
+        appendResultMetrics(details, `Face ${item.faceNumber} metrics`, result);
+    }
+    function appendResultMetrics(container, caption, result) {
+        const metrics = restorationMetrics(caption, result.metadata.output_diagnostics);
+        const score = document.createElement('p');
+        score.textContent = 'Ground truth unavailable.';
+        score.setAttribute('role', 'status');
+        const reference = document.createElement('input');
+        reference.type = 'file';
+        reference.accept = 'image/png,image/jpeg';
+        const label = document.createElement('label');
+        label.append('Add aligned clean reference (256 × 256)', reference);
+        const hint = document.createElement('p');
+        hint.textContent = 'Use the same face, pose, and crop. Scores measure pixel agreement.';
+        let referenceRevision = 0;
+        reference.addEventListener('change', async () => {
+            const version = ++referenceRevision;
+            const file = reference.files[0];
+            metrics.setReference();
+            score.textContent = file ? 'Comparing reference…' : 'Ground truth unavailable.';
+            if (!file) return;
+            try {
+                const scores = await window.scoreVideoReference(file, result);
+                if (version === referenceRevision) {
+                    metrics.setReference(scores);
+                    score.textContent = 'MAE and PSNR compare both images with your supplied reference. Padding is excluded.';
+                }
+            } catch (problem) {
+                if (version === referenceRevision) score.textContent = `Ground truth unavailable. ${problem.message}`;
+            }
+        });
+        container.append(metrics.table, score, label, hint);
+    }
+    async function restoreVideo() {
+        if (busy || !available || !videoBatch || videoRetryBlocked) return;
+        const mode = byId('brush-restoration').value;
+        const includeBundle = byId('brush-include-bundle').checked;
+        if (videoRunMode && videoRunMode !== mode) {
+            for (const item of videoBatch.items) {
+                videoBatch.review(item.id);
+                showVideoResult({ ...item, status: 'pending', result: undefined });
+            }
+        }
+        videoRunMode = mode;
+        for (const item of videoBatch.items) {
+            if (item.status === 'completed') continue;
+            const data = form(item.file);
+            data.append('capture_id', item.captureId);
+            data.append('input_review', 'video_capture');
+            data.append('restoration', mode);
+            data.append('preparation_mode', 'bypass');
+            data.append('model', byId('brush-model').value);
+            data.append('include_bundle', String(includeBundle));
+            videoBatch.approve(item.id, data);
+            showVideoResult({ ...item, status: 'pending' });
+        }
+        const token = begin();
+        let activeId;
+        error('');
+        progress('Processing the selected faces one at a time.');
+        try {
+            await videoBatch.run(async (request, item) => {
+                activeId = item.id;
+                showVideoResult(item);
+                const result = await restoreRequest(request, { 'X-Capture-Token': videoToken });
+                showVideoResult({ ...item, result });
+                return result;
+            });
+            progress('All selected faces are ready to inspect.');
         } catch (problem) {
-            byId('queue-status').textContent = `Queue paused. ${problem.message}`;
-        } finally { finish(token); renderQueue(); }
-    });
+            videoRetryBlocked = Boolean(problem.restartRequired);
+            const failed = videoBatch.items.find(item => item.id === activeId);
+            if (failed) showVideoResult(failed, undefined, `Processing stopped. ${problem.message}`);
+            error(videoRetryBlocked ? problem.message : 'The queue paused. Select Retry remaining faces to continue.');
+        } finally {
+            byId('brush-run').textContent = videoRetryBlocked ? 'Restart required' : videoBatch.items.some(item => item.status === 'failed') ? 'Retry remaining faces'
+                : videoBatch.items.length === 1 ? 'Restore face' : 'Restore faces';
+            finish(token);
+        }
+    }
     const checkService = async () => {
         if (busy) return;
         const token = begin(), version = revision;

@@ -189,6 +189,11 @@
     return true;
   }
   function go(name) {
+    if (window.restorationInput.video) {
+      if (name === 'inspect') window.restorationInput.clearVideoBatch();
+      if (name === 'options-next') return show('run');
+      if (name === 'run-back') return show('options');
+    }
     if (name === 'options') {
       if (byId('upload-preview').classList.contains('hidden')) return showNotice('Choose a picture before continuing.');
       const review = byId('brush-review').value;
@@ -234,6 +239,6 @@
   observe('brush-preview-section', () => { if (pendingPreview) { pendingPreview = false; show('brush-preview'); } });
   observe('completion-result-section', () => { if (pendingEstimate) { pendingEstimate = false; show('completion-result', true, true); } });
   window.addEventListener('restoration:completed', () => show('result', true, true));
-  window.addEventListener('queue:review', () => show('inspect'));
+  window.addEventListener('video:settings', () => show('options'));
   show('inspect', false);
 })();

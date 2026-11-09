@@ -1,6 +1,7 @@
 (function (root) {
     'use strict';
-    function createQueue(limit = 12) {
+    const defaultLimit = 12;
+    function createQueue(limit = defaultLimit) {
         const items = [];
         let nextId = 0;
         let running = false;
@@ -70,5 +71,8 @@
         };
     }
     if (typeof module !== 'undefined' && module.exports) module.exports = { createQueue };
-    else root.createRestorationQueue = createQueue;
+    else {
+        root.createRestorationQueue = createQueue;
+        root.restorationQueueLimit = defaultLimit;
+    }
 })(globalThis);

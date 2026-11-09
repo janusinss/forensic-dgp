@@ -19,8 +19,10 @@ from PIL import Image
 from fastapi import HTTPException, UploadFile
 
 from implementation import app as controller
+from implementation import capture_api
 from implementation.preparation import build_preview, png
 from implementation.runtime import prepare_crop
+from tests.test_capture_api import asgi_request
 
 
 class ControllerTests(unittest.TestCase):
@@ -56,6 +58,69 @@ class ControllerTests(unittest.TestCase):
                       preview_id='', confirmed=False, include_bundle=True, model='v2')
         values.update(overrides)
         return asyncio.run(controller.restore(**values))
+
+    def make_video_crop(self):
+        self.capture_owner = 'capture-owner'
+        self.other_owner = 'other-capture-owner'
+        for key, value in {'STORE': self.root / 'capture', 'FRAMES': {}, 'CROPS': {},
+                           'TOKENS': {self.capture_owner, self.other_owner}, 'detect_faces': lambda image: []}.items():
+            setting = patch.object(capture_api, key, value)
+            setting.start()
+            self.addCleanup(setting.stop)
+        frame = capture_api._freeze(self.contents, 'video', 1.25, self.capture_owner)
+        rectangle = capture_api.Rectangle(x=4, y=5, width=40, height=32)
+        crop = capture_api._crop(frame['frame_id'], rectangle, self.capture_owner)
+        self.capture_id = crop['capture_id']
+        self.capture_contents = base64.b64decode(crop['image'].split(',', 1)[1])
+
+    def video_restore(self, token, *, contents=None, **overrides):
+        fields = dict(input_review='video_capture', restoration='off', preparation_mode='bypass',
+                      capture_id=self.capture_id, model='v2', include_bundle='true')
+        fields.update(overrides)
+        boundary = b'controller-test-boundary'
+        body = b''.join(b'--' + boundary + f'\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode()
+                        for name, value in fields.items())
+        body += b'--' + boundary + b'\r\nContent-Disposition: form-data; name="file"; filename="crop.png"\r\nContent-Type: image/png\r\n\r\n'
+        body += self.capture_contents if contents is None else contents
+        body += b'\r\n--' + boundary + b'--\r\n'
+        headers = {'host': '127.0.0.1', 'content-type': f'multipart/form-data; boundary={boundary.decode()}'}
+        if token is not None:
+            headers['x-capture-token'] = token
+        status, response = asyncio.run(asgi_request(controller.app, 'POST', '/face/restoration/restore', body, headers))
+        return status, json.loads(response)
+
+    def test_video_capture_restoration_delivers_bound_frame_and_crop(self):
+        self.make_video_crop()
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            status, response = self.video_restore(self.capture_owner)
+        self.assertEqual(status, 200, response.get('detail'))
+        self.assertEqual(response['metadata']['input_review'], 'video_capture')
+        self.assertEqual(response['metadata']['capture_id'], self.capture_id)
+        self.assertFalse(response['metadata']['restoration_applied'])
+        self.assertEqual(response['original_input'], response['result'])
+        bundle_bytes = base64.b64decode(response['bundle'].split(',', 1)[1])
+        with zipfile.ZipFile(io.BytesIO(bundle_bytes)) as archive:
+            self.assertEqual(archive.read('capture/frame.png'), self.contents)
+            self.assertEqual(archive.read('capture/crop.png'), self.capture_contents)
+            capture_metadata = json.loads(archive.read('capture/metadata.json'))
+            self.assertEqual(capture_metadata['rectangle'], [4, 5, 40, 32])
+            self.assertEqual(capture_metadata['source_time'], 1.25)
+
+    def test_video_capture_restoration_requires_matching_crop_and_owner_before_inference(self):
+        self.make_video_crop()
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            for token, overrides, expected in (
+                (None, {}, 403),
+                (self.other_owner, {}, 404),
+                (self.capture_owner, {'capture_id': ''}, 422),
+                (self.capture_owner, {'contents': self.contents}, 422),
+                (self.capture_owner, {'preparation_mode': 'manual'}, 422),
+                (self.capture_owner, {'restoration': 'auto'}, 422),
+            ):
+                with self.subTest(token=token, overrides=tuple(overrides)):
+                    status, response = self.video_restore(token, **{'restoration': 'on', **overrides})
+                    self.assertEqual(status, expected, response.get('detail'))
+        self.assertEqual(controller.STATE['neural_forward_attempts'], 0)
 
     def test_inspect_and_off_do_not_call_a_worker(self):
         with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
