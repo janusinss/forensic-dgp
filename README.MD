@@ -1,7 +1,7 @@
 # Forensic Deep Generative Prior (DGP) & CodeFormer Reconstruction System for Degraded CCTV Video
 
 [![Website: forensic-dgp.pages.dev](https://img.shields.io/badge/Download_Installer-forensic--dgp.pages.dev-0A66C2?style=flat&logo=windows&logoColor=white)](https://forensic-dgp.pages.dev/)
-[![Release: v0.2.2 Offline Installer](https://img.shields.io/badge/Windows_Installer-v0.2.2_Offline-2ea44f?style=flat&logo=github)](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2)
+[![Release: v0.2.6 Offline Installer](https://img.shields.io/badge/Windows_Installer-v0.2.6_Offline-2ea44f?style=flat&logo=github)](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.6)
 [![PyTorch](https://img.shields.io/badge/PyTorch-%23EE4C2C.svg?style=flat&logo=PyTorch&logoColor=white)](https://pytorch.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=flat&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![License: Academic Research](https://img.shields.io/badge/License-Academic%20Research-blue.svg)](https://opensource.org/licenses)
@@ -36,17 +36,17 @@ You can install and run the system in three ways depending on your use case:
 
 ### Option A (Recommended for End Users): Official Windows Offline Installer Website
 **Website**: [**https://forensic-dgp.pages.dev/**](https://forensic-dgp.pages.dev/)  
-**Direct Release**: [**`ForensicDGP_Setup-0.2.2.exe` (`v0.2.2`)**](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2)
+**Direct Release**: [**`ForensicDGP_Setup-0.2.6.exe` (`v0.2.6`)**](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.6)
 
-The standalone Windows desktop installer bundles a private 64-bit Python runtime, all locked CPU wheels, and all verified restoration (**Conditioned SFT V2 `p2_u0224`**) and completion (**CodeFormer Completion R2 `v3`**) model weights (`1,045,576,043` bytes; **zero internet connection or system Python required during setup or inference**):
+The standalone Windows desktop installer bundles a private 64-bit Python runtime, all locked CPU wheels, and all verified restoration (**Conditioned SFT V2 `p2_u0224`**) and completion (**CodeFormer Completion R2 `v3`**) model weights (`1,045,830,949` bytes; **zero internet connection or system Python required during setup or inference**):
 
-1. Visit [**https://forensic-dgp.pages.dev/**](https://forensic-dgp.pages.dev/) and click **Download for Windows (64-bit)** to download `ForensicDGP_Setup-0.2.2.exe`.
+1. Visit [**https://forensic-dgp.pages.dev/**](https://forensic-dgp.pages.dev/) and click **Download for Windows (64-bit)** to download `ForensicDGP_Setup-0.2.6.exe`.
 2. *(Optional)* Verify the installer checksum in PowerShell:
    ```powershell
-   Get-FileHash .\ForensicDGP_Setup-0.2.2.exe -Algorithm SHA256
-   # Expected SHA-256: bc9952a5e54a3955a06a7e3b636d008f8dee2f227ef470224ee927463d733a25
+   Get-FileHash .\ForensicDGP_Setup-0.2.6.exe -Algorithm SHA256
+   # Expected SHA-256: d35eeabbe27c43d86cb52e5322c5778c82fd6eb2cbcc76444708bdb91baf0ad9
    ```
-3. Run **`ForensicDGP_Setup-0.2.2.exe`**, choose your install folder (supports fresh install, in-place upgrade from `0.2.0`/`0.2.1`, source/package repair, and receipt-bound folder relocation), and launch **Forensic DGP** from the Start Menu or Desktop shortcut.
+3. Run **`ForensicDGP_Setup-0.2.6.exe`**, choose your install folder, and launch **Forensic DGP** from the Start Menu or Desktop shortcut.
 
 ---
 
@@ -112,7 +112,7 @@ Open **`http://127.0.0.1:8000`** in your browser and test with images from [`tes
 
 | Stage / Subsystem | Ratified Checkpoint / Artifact | Size (Bytes) | SHA-256 Fingerprint | Verification Benchmark |
 | :--- | :--- | :--- | :--- | :--- |
-| **Windows Offline Installer (`v0.2.2`)** | [`ForensicDGP_Setup-0.2.2.exe`](https://forensic-dgp.pages.dev/) | `1,045,576,043` | `bc9952a5e54a3955a06a7e3b636d008f8dee2f227ef470224ee927463d733a25` | `391` installer tests, `132` app tests, `34` JS tests, native `0.2.1 -> 0.2.2` upgrade |
+| **Windows Offline Installer (`v0.2.6`)** | [`ForensicDGP_Setup-0.2.6.exe`](https://forensic-dgp.pages.dev/) | `1,045,830,949` | `d35eeabbe27c43d86cb52e5322c5778c82fd6eb2cbcc76444708bdb91baf0ad9` | Setup backend activation and installed-app output checks |
 | **Stage 1 Restoration (`Conditioned SFT V2`)** | `v2_p2_u0224_heads.npz` + `codeformer_dgp_sft_u64_s42_best.pth` | `12,188` + `376,619,866` | `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f` | `56/56` forensic retention gates, `-37.4%` degraded `MAE`, `+22.1%–47.1%` CCTV sharpness |
 | **Stage 2 Completion (`Unified R2 v3`)** | `codeformer_completion_r2.pth` | `370,773,572` | `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c` | `60/60` numeric ratchet gates (`-1.05%` clear hole $L_1$, `-2.69%` challenge hole $L_1$, `-10.32%` gray chroma) |
 | **Stage 2 Proposal Segmenter (`v1`)** | `covering_detector_segmenter_v1.pth` | `2,681,549` | `ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf` | `0` false-positive pixels on uncovered control (`08_uncovered_degraded`); proposal-only |
@@ -131,7 +131,7 @@ Open **`http://127.0.0.1:8000`** in your browser and test with images from [`tes
 ├── INTEGRATED_APP_ON_MAIN.md        # Guide for running the V2 + R2 integrated application on main
 ├── DESIGN.md / PRODUCT.md           # UI/UX design system and product specifications
 ├── integrated_app/                  # Production V2 Restoration + Reviewed R2 Completion application (mirrors IMPLEMENTATION)
-├── packaging/                       # Windows Inno Setup (v0.2.2) installer scripts, C# launcher, and verification reports
+├── packaging/                       # Windows Inno Setup installer scripts, C# launcher, and verification reports
 ├── download-site/                   # Cloudflare Pages source for https://forensic-dgp.pages.dev/
 ├── docs/                            # Thesis manuscript and categorized historical reports (docs/archive/)
 │   └── archive/                     # 661 archived milestone reports (restoration/, completion/, dgp_legacy/, vm_ops/)

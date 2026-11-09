@@ -1,13 +1,19 @@
-"""Disposable RTSP reader. Configuration arrives only on stdin; stdout is framed PNG."""
+"""Disposable RTSP reader or frozen-frame face detector."""
+import hashlib
 import json
+import math
 import os
+from pathlib import Path
 import struct
 import sys
 import time
 
-os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;tcp|protocol_whitelist;rtsp,rtp,tcp|timeout;5000000'
+YUNET_MODEL = Path(__file__).with_name('assets') / 'face_detection_yunet_2023mar.onnx'
+YUNET_SHA256 = '8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4'
+MAX_SCAN_SIDE = 1600
 
 def main():
+    os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;tcp|protocol_whitelist;rtsp,rtp,tcp|timeout;5000000'
     import cv2
     cfg = json.loads(sys.stdin.buffer.readline(8192))
     cap = cv2.VideoCapture(cfg['url'], cv2.CAP_FFMPEG, [cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 5000, cv2.CAP_PROP_READ_TIMEOUT_MSEC, 5000])
@@ -33,6 +39,54 @@ def main():
         cap.release()
     return 0
 
+def native_face_boxes(rows, original_size, detector_size):
+    if rows is None:
+        return []
+    width, height = original_size
+    detector_width, detector_height = detector_size
+    scale_x, scale_y = width / detector_width, height / detector_height
+    boxes = []
+    for row in rows:
+        x, y, box_width, box_height = map(float, row[:4])
+        right, bottom = x + box_width, y + box_height
+        if not all(map(math.isfinite, (x, y, right, bottom))) or min(box_width, box_height) <= 0:
+            continue
+        left = max(0, math.floor(x * scale_x))
+        top = max(0, math.floor(y * scale_y))
+        right = min(width, math.ceil(right * scale_x))
+        bottom = min(height, math.ceil(bottom * scale_y))
+        if min(right - left, bottom - top) < 16:
+            continue
+        boxes.append([left, top, right - left, bottom - top])
+        if len(boxes) == 100:
+            break
+    return boxes
+
+
+def checked_model():
+    with YUNET_MODEL.open('rb') as source:
+        model = source.read(232590)
+    if hashlib.sha256(model).hexdigest() != YUNET_SHA256:
+        raise RuntimeError('The YuNet face detector file does not match the bundled model.')
+    return model
+
+
+def scan_faces(image):
+    import cv2
+
+    height, width = image.shape[:2]
+    if max(width, height) > MAX_SCAN_SIDE:
+        scale = MAX_SCAN_SIDE / max(width, height)
+        size = (max(1, round(width * scale)), max(1, round(height * scale)))
+        image = cv2.resize(image, size, interpolation=cv2.INTER_AREA)
+    scan_height, scan_width = image.shape[:2]
+    size = (scan_width, scan_height)
+    cv2.setNumThreads(2)
+    detector = cv2.FaceDetectorYN.create('onnx', checked_model(), b'', size, 0.75, 0.3)
+    _, faces = detector.detect(image)
+    return native_face_boxes(faces, (width, height), size)
+
+
 def detect():
     import cv2
     import numpy as np
@@ -43,19 +97,7 @@ def detect():
     h, w = image.shape[:2]
     if max(w, h) > 4096 or w * h > 8388608:
         return 1
-    scale = min(1., 1280 / max(w, h))
-    if scale < 1:
-        image = cv2.resize(image, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
-    detector = cv2.CascadeClassifier(os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml'))
-    if detector.empty():
-        return 1
-    boxes = detector.detectMultiScale(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), scaleFactor=1.1, minNeighbors=5, minSize=(20, 20))
-    result = []
-    for x, y, bw, bh in boxes[:100]:
-        left, top = int(x / scale), int(y / scale)
-        right, bottom = min(w, int((x + bw) / scale)), min(h, int((y + bh) / scale))
-        result.append([left, top, right - left, bottom - top])
-    sys.stdout.write(json.dumps(result))
+    sys.stdout.write(json.dumps(scan_faces(image)))
     return 0
 
 if __name__ == '__main__':

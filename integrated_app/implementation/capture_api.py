@@ -205,12 +205,12 @@ def _crop(ident, rect, owner):
     return {'capture_id': capture_id, 'image': 'data:image/png;base64,' + base64.b64encode(crop).decode('ascii'), 'metadata': metadata}
 
 
-def evidence_for_crop(contents, capture_id):
+def evidence_for_crop(contents, capture_id, *, owner=None):
     with LOCK:
         record = CROPS.get(capture_id)
         if not record:
             raise ValueError('Capture evidence is unavailable in this app session.')
-        _, frame = _frame(record['frame'])
+        _, frame = _frame(record['frame'], owner)
         crop = (record['path'] / 'crop.png').read_bytes()
         meta = (record['path'] / 'metadata.json').read_bytes()
         if _sha(crop) != record['metadata']['crop_sha256'] or _sha(contents) != _sha(crop) or json.loads(meta) != record['metadata']:

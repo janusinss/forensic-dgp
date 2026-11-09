@@ -12,10 +12,10 @@ The executable stays in build output; it is never committed to Git.
     npm run build
     npm run preview
 
-The build verifies ../scratch/dist/ForensicDGP_Setup.exe against the generated
-installer release manifest before copying it into public/downloads. A mismatch
-stops the build. Public release metadata includes only version, size, SHA-256,
-signing/preview status and download paths.
+The build verifies `../scratch/dist/ForensicDGP_Setup.exe` against its
+`release.json`. A mismatch stops the build. The preparation step writes public
+release metadata and a checksum. For offline releases, the download URL points
+to the versioned GitHub release asset.
 
 ## Cloudflare
 
@@ -36,22 +36,18 @@ was retired after the Pages download passed verification.
 
 Confirm the personal account before deployment. Do not use a temporary Cloudflare
 account or change the configured account to bypass an authorization failure.
-No custom domain or paid storage is configured. Both page and installer are
-static assets in one Pages project.
+Pages hosts the landing page, release metadata, checksums and historical small
+installers. GitHub hosts the current offline installer.
 
 ## Updating the installer
 
-Build and verify a new setup artifact first. Update any version-specific
-noscript download link in index.html and content-type rule in public/_headers.
-Run the build and tests again, then deploy. Download assets revalidate rather
-than use immutable caching.
+Build and verify a new setup artifact first. Update the fallback download in
+`index.html` to match the generated URL. Run the build and tests, then publish
+the GitHub prerelease and verify its installer size and SHA-256 before deploying
+the page. Preserve historical downloads and checksums.
 
 ## Verification
 
-The page was checked at 375, 768 and 1280 CSS pixels with no horizontal overflow
-or browser exceptions. The primary link downloads the exact 6,304,374-byte EXE
-whose SHA-256 is:
-280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2
-
-Sixteen site checks cover Pages/account isolation and release tampering, size/version validation,
-ordinary-path boundaries and retention of unrelated files. Public deployment and header verification passed; see DEPLOYMENT.md.
+Check the page at 375, 768 and 1280 CSS pixels. The website tests cover Pages
+account isolation, release integrity, ordinary paths and retention of unrelated
+files. See [deployment history](DEPLOYMENT.md) for release verification.

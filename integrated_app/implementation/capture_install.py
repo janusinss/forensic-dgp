@@ -6,11 +6,13 @@ import sys
 import venv
 
 from .environment import expected_environment
+from .capture_worker import checked_model
 
-PROBE = ("import importlib.metadata as m,cv2,numpy; "
+PROBE = ("import importlib.metadata as m, numpy, runpy, sys; "
          "assert m.version('opencv-python-headless')=='4.13.0.92'; "
          "assert m.version('numpy')=='2.5.2'; "
-         "assert not cv2.CascadeClassifier(cv2.data.haarcascades+'haarcascade_frontalface_default.xml').empty()")
+         "scan=runpy.run_path(sys.argv[1])['scan_faces']; "
+         "assert scan(numpy.zeros((64,64,3),dtype=numpy.uint8)) == []")
 
 
 def capture_python():
@@ -20,7 +22,8 @@ def capture_python():
 def verified(python):
     if not python.is_file():
         return False
-    return subprocess.run([str(python), '-I', '-B', '-c', PROBE], stdout=subprocess.DEVNULL,
+    worker = Path(__file__).with_name('capture_worker.py')
+    return subprocess.run([str(python), '-I', '-B', '-c', PROBE, str(worker)], stdout=subprocess.DEVNULL,
                           stderr=subprocess.DEVNULL, timeout=30, check=False).returncode == 0
 
 
@@ -29,6 +32,7 @@ def main(argv=None):
     parser.add_argument('--verify-only',action='store_true')
     args=parser.parse_args(argv)
     try:
+        checked_model()
         python=capture_python()
         if verified(python):
             print('Capture detector runtime already verified; no package download needed.')

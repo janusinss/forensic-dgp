@@ -14,6 +14,7 @@ type Release = {
 
 const release = releaseData as Release
 const size = release.bytes >= 1_000_000_000 ? `${(release.bytes / 1_000_000_000).toFixed(2)} GB` : `${(release.bytes / 1_000_000).toFixed(1)} MB`
+const currentWorkflow = release.version === '0.2.6'
 
 function DownloadIcon() {
   return (
@@ -43,7 +44,9 @@ export default function App() {
           <section className="hero" aria-labelledby="hero-title">
             <div className="hero-copy">
               <h1 id="hero-title">A closer look.<br />On your own PC.</h1>
-              <p className="hero-description">Capture a face from video, review your picture, and explore restoration locally.</p>
+              <p className="hero-description">{currentWorkflow
+                ? 'Restore a face from a picture or select several faces from a frozen video frame. Everything runs on your PC.'
+                : 'Capture a face from video, review your picture, and explore restoration locally.'}</p>
               <div className="download-group">
                 <a className="download-button" href={release.downloadUrl} download={release.filename}>
                   <DownloadIcon />
@@ -97,7 +100,43 @@ export default function App() {
             <p className="setup-note">{release.offline
               ? 'Includes Python, application libraries and models. After downloading, setup works offline. Microsoft Edge is required; setup checks available disk space. Existing installations can be updated, repaired or moved.'
               : 'First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.'}</p>
+            {(release.version === '0.2.4' || currentWorkflow) && (
+              <p className="setup-note">Uninstalling permanently removes the app, models and saved records from the installation folder.</p>
+            )}
           </section>
+
+          {currentWorkflow && (
+            <section className="setup-section" aria-labelledby="workflow-title">
+              <div className="setup-heading">
+                <h2 id="workflow-title">Restore and compare</h2>
+                <p>Workflow in version {release.version}</p>
+              </div>
+              <ol className="setup-steps">
+                <li>
+                  <span className="step-number" aria-hidden="true">01</span>
+                  <div>
+                    <h3>Choose the faces</h3>
+                    <p>Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.</p>
+                  </div>
+                </li>
+                <li>
+                  <span className="step-number" aria-hidden="true">02</span>
+                  <div>
+                    <h3>Restore with Auto</h3>
+                    <p>Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.</p>
+                  </div>
+                </li>
+                <li>
+                  <span className="step-number" aria-hidden="true">03</span>
+                  <div>
+                    <h3>Compare and download</h3>
+                    <p>Switch between faces to see Before and After, image diagnostics and PNG downloads. Add an aligned clean reference to see MAE and PSNR.</p>
+                  </div>
+                </li>
+              </ol>
+              <p className="setup-note">Manual lets you mark areas to protect or blur in pictures. Off keeps the resized original.</p>
+            </section>
+          )}
 
           <aside className="research-note" aria-label="Experimental use">
             <p>Made for a closer look. Restored details are experimental estimates and cannot verify someone’s identity.</p>
