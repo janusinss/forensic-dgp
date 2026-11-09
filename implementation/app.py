@@ -247,7 +247,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                   capture_id: Annotated[str, Form()] = '', request: Request = None):
     video_selection = input_review == 'video_capture'
     owner = None
-    if video_selection:
+    if video_selection or capture_id:
         from .capture_api import _guard
         if request is None:
             raise HTTPException(403, 'Capture session token required.')

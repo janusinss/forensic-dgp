@@ -112,6 +112,8 @@ class ControllerTests(unittest.TestCase):
             for token, overrides, expected in (
                 (None, {}, 403),
                 (self.other_owner, {}, 404),
+                (None, {'input_review': 'usable'}, 403),
+                (self.other_owner, {'input_review': 'usable'}, 404),
                 (self.capture_owner, {'capture_id': ''}, 422),
                 (self.capture_owner, {'contents': self.contents}, 422),
                 (self.capture_owner, {'preparation_mode': 'manual'}, 422),
