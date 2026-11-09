@@ -159,7 +159,7 @@
       setPreviewSource(byId('options-preview'), original);
     }
     if (name === 'run') {
-      const manual = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off';
+      const manual = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value === 'on';
       const image = byId(manual ? 'brush-derived' : 'upload-preview');
       const source = image.getAttribute('src');
       setPreviewSource(byId('restoration-idle'), source);
@@ -196,17 +196,15 @@
     }
     if (name === 'options') {
       if (byId('upload-preview').classList.contains('hidden')) return showNotice('Choose a picture before continuing.');
-      const review = byId('brush-review').value;
-      if (review !== 'usable') return showNotice(review ? 'Use a clearer close-up of one face before continuing.' : 'Choose how clearly you can see the face before continuing.');
     }
     if (name === 'options-next') {
-      name = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off' ? 'brush-paint' : 'run';
+      name = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value === 'on' ? 'brush-paint' : 'run';
     }
     if (name === 'run-back') {
-      name = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off' ? 'brush-preview' : 'options';
+      name = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value === 'on' ? 'brush-preview' : 'options';
     }
-    if (name === 'run' && byId('brush-preparation').value === 'manual' && byId('brush-restoration').value !== 'off') {
-      if (byId('brush-preview-section').classList.contains('hidden') || !byId('brush-confirm').checked) return showNotice('Check and confirm the prepared picture before continuing.');
+    if (name === 'run' && byId('brush-preparation').value === 'manual' && byId('brush-restoration').value === 'on') {
+      if (current !== 'brush-preview' || !window.restorationInput.confirmPreparation()) return showNotice('Review the marked areas before continuing.');
     }
     show(name);
   }

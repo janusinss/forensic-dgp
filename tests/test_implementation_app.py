@@ -15,11 +15,11 @@ from unittest.mock import patch
 import zipfile
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 from fastapi import HTTPException, UploadFile
 
 from implementation import app as controller
-from implementation import capture_api
+from implementation import blur_match, capture_api
 from implementation.preparation import build_preview, png
 from implementation.runtime import prepare_crop
 from tests.test_capture_api import asgi_request
@@ -127,10 +127,12 @@ class ControllerTests(unittest.TestCase):
     def test_inspect_and_off_do_not_call_a_worker(self):
         with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
             inspection = asyncio.run(controller.inspect(self.upload(self.contents)))
-            response = self.restore(restoration='off', model='v2')
+            response = self.restore(restoration='off', model='v2', input_review='picture_upload')
         self.assertEqual(inspection['neural_calls'], 0)
+        self.assertFalse(inspection['input_review_required'])
         self.assertEqual((inspection['width'], inspection['height']), (128, 96))
         self.assertEqual(response['metadata']['model'], 'v2')
+        self.assertEqual(response['metadata']['input_review'], 'picture_upload')
         self.assertEqual(response['metadata']['neural_forward_attempts'], 0)
         self.assertEqual(response['metadata']['neural_forward_returns'], 0)
         self.assertEqual(response['original_input'], response['result'])
@@ -151,6 +153,47 @@ class ControllerTests(unittest.TestCase):
             finally:
                 controller.LOCK.release()
         self.assertEqual(controller.STATE['neural_forward_attempts'], 0)
+
+    def test_picture_face_scan_and_crop_preserve_the_original_upload(self):
+        with patch.object(capture_api, 'detect_faces', return_value=[[42, 24, 30, 40]]):
+            inspection = asyncio.run(controller.inspect(self.upload(self.contents), scan_faces=True))
+        rectangle = [34, 16, 46, 56]
+        self.assertEqual(inspection['face_crops'], [rectangle])
+        self.assertEqual(inspection['neural_calls'], 0)
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            result = self.restore(restoration='off', input_review='picture_upload', picture_crop=json.dumps(rectangle))
+        self.assertEqual(result['metadata']['picture_crop'], rectangle)
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('uploaded-original.bin'), self.contents)
+            self.assertEqual(archive.read('original-native.png'), png(self.rgb[16:72, 34:80]))
+
+    def test_picture_crop_validation_and_detector_fallback(self):
+        with patch.object(capture_api, 'detect_faces', side_effect=RuntimeError):
+            inspection = asyncio.run(controller.inspect(self.upload(self.contents), scan_faces=True))
+        self.assertEqual(inspection['face_crops'], [])
+        self.assertTrue(inspection['face_scan_unavailable'])
+        for invalid in ('[0,0,2,2]', '[0,0,129,96]', '[0,0,40,40.0]', 'bad'):
+            with self.subTest(invalid=invalid), self.assertRaises(HTTPException) as error:
+                self.restore(restoration='off', input_review='picture_upload', picture_crop=invalid)
+            self.assertEqual(error.exception.status_code, 422)
+
+    def test_picture_crop_preparation_keeps_masks_and_preview_bound_to_selection(self):
+        rectangle = [38, 20, 38, 48]
+        mask = png(np.zeros((48, 38), np.uint8))
+        response = asyncio.run(controller.make_preview(
+            self.upload(self.contents), self.upload(mask), self.upload(mask), radius=1,
+            input_review='picture_upload', picture_crop=json.dumps(rectangle)))
+        self.assertEqual((response['width'], response['height']), (38, 48))
+        self.assertEqual(response['metadata']['original_upload_sha256'], controller.digest(self.contents))
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(response['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('uploaded-original.bin'), self.contents)
+            self.assertEqual(controller.digest(archive.read('crop-input.png')), response['metadata']['crop_input_sha256'])
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            with self.assertRaises(HTTPException) as error:
+                self.restore(input_review='picture_upload', picture_crop='[39,20,38,48]', preparation_mode='manual',
+                             protect_mask=self.upload(mask), apply_mask=self.upload(mask),
+                             preview_id=response['preview_id'], confirmed=True)
+        self.assertEqual(error.exception.status_code, 422)
 
     def test_manual_unconfirmed_or_stale_preview_rejects_before_worker(self):
         protect = np.zeros(self.rgb.shape[:2], np.uint8)
@@ -281,10 +324,302 @@ class ControllerTests(unittest.TestCase):
             derived = np.asarray(image)
         self.assertTrue(np.array_equal(derived[protect > 0], self.rgb[protect > 0]))
         self.assertTrue(np.array_equal(derived[apply == 0], self.rgb[apply == 0]))
+        alpha = np.load(io.BytesIO(payloads['alpha-float32.npy']))
+        transition = (alpha > 0) & (alpha < 1)
+        self.assertTrue(transition.any())
+        with Image.open(io.BytesIO(payloads['protection-overlay.png'])) as image:
+            expected_blue = np.rint(self.rgb[transition] * .60 + np.array([55, 125, 220]) * .40)
+            np.testing.assert_array_equal(np.asarray(image)[transition], expected_blue)
         self.assertEqual(preview['metadata']['preprocessing_neural_optimizer_training_VM_calls'], 0)
         rebuilt, again = build_preview(self.contents, png(protect), png(apply), nominal_radius=3)
         self.assertEqual(preview['preview_id'], rebuilt['preview_id'])
         self.assertEqual(payloads['derived-native.png'], again['derived-native.png'])
+
+    def test_picture_preparation_uses_exact_painted_pixels(self):
+        protect = np.zeros(self.rgb.shape[:2], np.uint8)
+        apply = np.zeros_like(protect)
+        protect[25:40, 0:12] = 255
+        apply[24:41, 0:13] = 255
+
+        def prepare(blue, radius=6):
+            return asyncio.run(controller.make_preview(
+                self.upload(self.contents), self.upload(png(protect)), self.upload(png(blue)),
+                radius=radius, input_review='picture_upload'))
+
+        response = prepare(apply)
+        effective = (apply != 0) & (protect == 0)
+        blurred = np.asarray(Image.fromarray(self.rgb).filter(ImageFilter.GaussianBlur(radius=3)))
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(response['bundle'].split(',', 1)[1]))) as archive:
+            alpha = np.load(io.BytesIO(archive.read('alpha-float32.npy')))
+            np.testing.assert_array_equal(alpha, effective.astype(np.float32))
+            prepared_bytes = archive.read('derived-native.png')
+            with Image.open(io.BytesIO(prepared_bytes)) as image:
+                derived = np.asarray(image)
+                np.testing.assert_array_equal(derived[~effective], self.rgb[~effective])
+                np.testing.assert_array_equal(derived[effective], blurred[effective])
+
+        empty = np.zeros_like(apply)
+        surroundings = prepare(empty)
+        self.assertEqual(surroundings['metadata']['Apply_selection_mode'], 'automatic_surroundings')
+        self.assertEqual(surroundings['metadata']['algorithm']['nominal_Gaussian_radius_at256'], 6)
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(surroundings['bundle'].split(',', 1)[1]))) as archive:
+            with Image.open(io.BytesIO(archive.read('derived-native.png'))) as image:
+                derived = np.asarray(image)
+                np.testing.assert_array_equal(derived[protect != 0], self.rgb[protect != 0])
+                np.testing.assert_array_equal(derived[protect == 0], blurred[protect == 0])
+        self.assertTrue(prepare(empty, radius=0)['metadata']['no_effect'])
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            with self.assertRaises(HTTPException) as error:
+                self.restore(input_review='usable', preparation_mode='manual', radius=6,
+                             protect_mask=self.upload(png(protect)), apply_mask=self.upload(png(apply)),
+                             preview_id=response['preview_id'], confirmed=True)
+        self.assertEqual(error.exception.status_code, 422)
+        with patch.object(controller, 'one_forward', return_value=(None, png(np.zeros((256, 256, 3), np.uint8)), {})) as worker:
+            self.restore(input_review='picture_upload', preparation_mode='manual', radius=6,
+                         protect_mask=self.upload(png(protect)), apply_mask=self.upload(png(apply)),
+                         preview_id=response['preview_id'], confirmed=True)
+        worker.assert_called_once_with(prepared_bytes, 'v2')
+
+    def test_auto_blur_uses_full_upload_and_preserves_the_already_blurry_region(self):
+        stripes = np.tile(np.array([30] * 32 + [220] * 32, np.uint8), 6)
+        sharp = Image.fromarray(np.tile(stripes, (384, 1))).convert('RGB')
+        original = np.asarray(sharp).copy()
+        original[256:] = np.asarray(sharp.filter(ImageFilter.GaussianBlur(5)))[256:]
+
+        def preview(source, protect, rectangle='', blue=None):
+            if blue is None:
+                blue = np.zeros_like(protect)
+            return asyncio.run(controller.make_preview(
+                self.upload(png(source)), self.upload(png(protect)), self.upload(png(blue)), radius=1,
+                input_review='picture_upload', picture_crop=rectangle, match_blur=True))
+
+        protect = np.zeros((384, 384), np.uint8)
+        protect[10:70, 30:100] = 255
+        protect[300:350, 30:100] = 255
+        full = preview(original, protect)
+        matching = full['metadata']['algorithm']['blur_matching']
+        self.assertEqual(matching['scope'], 'full_upload_including_protect')
+        self.assertGreater(matching['target_radius_at256'], 2)
+        with Image.open(io.BytesIO(base64.b64decode(full['prepared_input'].split(',', 1)[1]))) as image:
+            derived = np.asarray(image)
+            np.testing.assert_array_equal(derived[protect != 0], original[protect != 0])
+            np.testing.assert_array_equal(derived[300:], original[300:])
+            self.assertTrue(np.any(derived[80:160] != original[80:160]))
+
+        crop = '[0,0,384,256]'
+        cropped = preview(original, protect[:256], crop)
+        alternate = preview(np.asarray(sharp), protect[:256], crop)
+        cropped_matching = cropped['metadata']['algorithm']['blur_matching']
+        for key in ('scope', 'analysis_size', 'reliable_tiles', 'target_radius_at256'):
+            self.assertEqual(cropped_matching[key], matching[key])
+        self.assertNotEqual(cropped['preview_id'], alternate['preview_id'])
+        self.assertTrue(alternate['metadata']['no_effect'])
+        with patch.object(controller, 'one_forward', return_value=(None, png(np.zeros((256, 256, 3), np.uint8)), {})) as worker:
+            self.restore(file=self.upload(png(original)), input_review='picture_upload', picture_crop=crop,
+                         preparation_mode='manual', match_blur=True, radius=1, confirmed=True,
+                         protect_mask=self.upload(png(protect[:256])), apply_mask=self.upload(png(np.zeros_like(protect[:256]))),
+                         preview_id=cropped['preview_id'])
+        worker.assert_called_once_with(base64.b64decode(cropped['prepared_input'].split(',', 1)[1]), 'v2')
+
+        flat = preview(np.zeros_like(original), protect)
+        self.assertEqual(flat['metadata']['algorithm']['blur_matching']['status'], 'insufficient_edges')
+        self.assertTrue(flat['metadata']['no_effect'])
+        manual = preview(original, protect, blue=np.full_like(protect, 255))
+        self.assertFalse(manual['metadata']['automatic_detection_or_adaptive_matching'])
+        self.assertEqual(manual['metadata']['algorithm']['nominal_Gaussian_radius_at256'], 1)
+
+    def test_auto_blur_interpolates_a_gap_without_reblurring_matched_tiles(self):
+        rgb = np.tile(np.repeat(self.rgb, 2, axis=0), (1, 2, 1))
+        effective = np.ones(rgb.shape[:2], bool)
+        effective[70:120, 110:145] = False
+        tiles = np.array([[1, np.nan, 1], [1, np.nan, 1], [5, 5, 5]], np.float32)
+        with patch.object(blur_match, 'estimate_tiles', return_value=tiles):
+            prepared, applied, summary = blur_match.match_surroundings(rgb, rgb, None, effective)
+        self.assertEqual(summary['inferred_tiles'], 2)
+        self.assertEqual(summary['reliable_tiles'], 7)
+        self.assertEqual(summary['target_radius_at256'], 5)
+        self.assertTrue(applied[50, 128])
+        self.assertTrue(np.any(prepared[40:60, 120:136] != rgb[40:60, 120:136]))
+        np.testing.assert_array_equal(prepared[~effective], rgb[~effective])
+        np.testing.assert_array_equal(prepared[128:], rgb[128:])
+
+    def test_auto_setting_restores_directly_when_detection_is_uncertain(self):
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with patch.object(capture_api, 'detect_faces', return_value=[]), patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        worker.assert_called_once_with(self.contents, 'v2')
+        self.assertFalse(result['metadata']['preparation_applied'])
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'direct')
+        self.assertEqual(result['metadata']['neural_forward_returns'], 1)
+
+    def test_auto_setting_retains_original_and_uses_generated_protection(self):
+        from implementation import automatic_preparation
+        face = [40, 20, 40, 50]
+        decision = {'route': 'protect_auto', 'reason': 'face_blur_exceeds_surroundings'}
+        self.rgb[14:64, 40:80] = np.asarray(Image.fromarray(self.rgb[14:64, 40:80]).filter(ImageFilter.GaussianBlur(6)))
+        self.contents = png(self.rgb)
+        derived = self.rgb.copy()
+        derived[:10] = 0
+        observed_masks = []
+        def fake_matching(rgb, source, rectangle, effective):
+            np.testing.assert_array_equal(source, self.rgb)
+            self.assertIsNone(rectangle)
+            # Face center stays protected, but neck and rectangular lower
+            # corners must be eligible for automatic surrounding blur.
+            self.assertFalse(effective[40, 60])
+            self.assertTrue(effective[68, 60])
+            self.assertTrue(effective[68, 42])
+            self.assertTrue(effective[-1].all())
+            observed_masks.append(effective.copy())
+            return derived, effective, {'status': 'estimated', 'target_radius_at256': 3}
+        with patch.object(automatic_preparation, 'picture_pixelation', return_value=(None, None, {})), patch.object(capture_api, 'detect_faces', return_value=[face]), patch.object(automatic_preparation, 'decide', return_value=decision), patch('implementation.preparation.match_surroundings', side_effect=fake_matching), patch.object(controller, 'one_forward', return_value=(None, png(np.zeros((256, 256, 3), np.uint8)), {})) as worker:
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        worker.assert_called_once_with(png(derived), 'v2')
+        self.assertTrue(result['metadata']['preparation_applied'])
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'protect_auto')
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('uploaded-original.bin'), self.contents)
+            self.assertEqual(archive.read('derived-native.png'), png(derived))
+            mask = np.asarray(Image.open(io.BytesIO(archive.read('Protect-native.png')))) != 0
+            np.testing.assert_array_equal(mask, ~observed_masks[0])
+            self.assertEqual(result['metadata']['automatic_preparation']['protection_shape'], 'blur-supported-component-v1')
+
+    def test_auto_protection_is_consistent_after_cropping_and_blurs_below_face(self):
+        from implementation import automatic_preparation
+        source = np.random.default_rng(7).integers(0, 256, (523, 455, 3), dtype=np.uint8)
+        source[62:458, 76:370] = np.asarray(Image.fromarray(source[62:458, 76:370]).filter(ImageFilter.GaussianBlur(12)))
+        source[200:230, 180:210] = np.random.default_rng(8).integers(0, 256, (30, 30, 3), dtype=np.uint8)
+        face, rectangle = [76, 99, 294, 408], [35, 58, 376, 465]
+        x, y, width, height = rectangle
+        native = source[y:y + height, x:x + width]
+        def matching(rgb, full, crop, effective):
+            return np.where(effective[..., None], 255 - rgb, rgb), effective, {'status': 'estimated'}
+        decision = {'route': 'protect_auto', 'reason': 'face_blur_exceeds_surroundings'}
+        with patch.object(automatic_preparation, 'decide', return_value=decision), patch('implementation.preparation.match_surroundings', side_effect=matching):
+            _, _, full_evidence, _ = automatic_preparation.prepare(source, source, face, None)
+            _, metadata, evidence, _ = automatic_preparation.prepare(native, source, face, rectangle)
+        decode = lambda name: np.asarray(Image.open(io.BytesIO(evidence[name])))
+        mask = decode('Protect-native.png') != 0
+        self.assertTrue(mask[180, 180])
+        self.assertFalse(mask[0, 180])  # Sharp hair above the blur patch.
+        self.assertFalse(mask[157, 160])  # Clear detail inside the face is excluded.
+        full_mask = np.asarray(Image.open(io.BytesIO(full_evidence['Protect-native.png']))) != 0
+        np.testing.assert_array_equal(mask, full_mask[y:y + height, x:x + width])
+        prepared = decode('derived-native.png')
+        np.testing.assert_array_equal(prepared[mask], native[mask])
+        # The bottom strip was previously partly protected by the detector
+        # rectangle. Its textured neck/clothing must now receive added blur.
+        self.assertFalse(mask[-40:].any())
+        self.assertTrue((decode('effective-Apply-native.png')[-40:] > 0).all())
+        self.assertGreater(np.any(prepared[-40:] != native[-40:], axis=2).mean(), .95)
+        self.assertTrue(metadata['every_protected_native_RGB_exact'])
+
+    def test_video_auto_uses_verified_capture_context(self):
+        from implementation import automatic_preparation
+        self.make_video_crop()
+        with patch.object(automatic_preparation, 'prepare', return_value=(None, None, {}, {'route': 'direct', 'reason': 'insufficient_edges'})) as prepare, patch.object(capture_api, 'detect_faces', return_value=[[8, 8, 24, 20]]), patch.object(controller, 'one_forward', return_value=(None, png(np.zeros((256, 256, 3), np.uint8)), {})):
+            status, result = self.video_restore(self.capture_owner, restoration='auto', preparation_mode='automatic')
+        self.assertEqual(status, 200, result)
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'direct')
+        source = prepare.call_args.args[1]
+        np.testing.assert_array_equal(source, self.rgb)
+        self.assertEqual(prepare.call_args.args[3], [4, 5, 40, 32])
+
+    def test_video_scanline_cleanup_uses_full_frame_before_extracting_crop(self):
+        from implementation.automatic_preparation import prepare_source
+
+        y, x = np.indices(self.rgb.shape[:2])
+        values = 125 + 20 * np.sin(x / 18) + 26 * np.cos(2 * np.pi * y / 5)
+        source = np.repeat(np.rint(values)[..., None].astype(np.uint8), 3, axis=2)
+        self.contents = png(source)
+        prepared, report, _ = prepare_source(source)
+        self.make_video_crop()
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
+            status, result = self.video_restore(self.capture_owner, restoration='auto', preparation_mode='automatic')
+        self.assertEqual(status, 200)
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'scanline_cleanup')
+        self.assertEqual(result['metadata']['scanline_cleanup']['Gaussian_radius_at256'], 1.5)
+        self.assertEqual(result['metadata']['scanline_cleanup']['full_image_sha256'], report['full_image_sha256'])
+        self.assertEqual(base64.b64decode(result['scanline_cleaned_full_image'].split(',', 1)[1]), png(prepared))
+        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v2')
+
+    def test_video_auto_reuses_verified_frame_scan_for_queued_crops(self):
+        from implementation import automatic_preparation
+
+        self.make_video_crop()
+        frame_id = capture_api.CROPS[self.capture_id]['frame']
+        second_rectangle = capture_api.Rectangle(x=50, y=18, width=30, height=32)
+        second = capture_api._crop(frame_id, second_rectangle, self.capture_owner)
+        second_bytes = base64.b64decode(second['image'].split(',', 1)[1])
+        smoothed = 255 - self.rgb
+        full_png = png(smoothed)
+        mask_png = png(np.full(self.rgb.shape[:2], 255, dtype=np.uint8))
+        report = {'native_size': [128, 96], 'Gaussian_radius_at256': 3.0}
+        evidence = {'full-image-smoothed.png': full_png, 'full-image-pixelation-mask.png': mask_png}
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        controller._frozen_frame_pixelation.cache_clear()
+        self.addCleanup(controller._frozen_frame_pixelation.cache_clear)
+        with patch.object(automatic_preparation, 'picture_pixelation', return_value=(smoothed, report, evidence)) as scan, \
+             patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
+            status, first_result = self.video_restore(self.capture_owner, restoration='auto', preparation_mode='automatic')
+            second_status, second_result = self.video_restore(self.capture_owner, contents=second_bytes,
+                capture_id=second['capture_id'], restoration='auto', preparation_mode='automatic', include_smoothed_frame='false')
+        self.assertEqual((status, second_status), (200, 200))
+        scan.assert_called_once()
+        np.testing.assert_array_equal(scan.call_args.args[0], self.rgb)
+        self.assertEqual([call.args for call in worker.call_args_list],
+                         [(png(smoothed[5:37, 4:44]), 'v2'), (png(smoothed[18:50, 50:80]), 'v2')])
+        self.assertEqual(first_result['metadata']['automatic_preparation']['route'], 'frame_region_gaussian')
+        self.assertEqual(first_result['metadata']['frame_pixelation'], second_result['metadata']['frame_pixelation'])
+        self.assertEqual(base64.b64decode(first_result['smoothed_full_frame'].split(',', 1)[1]), full_png)
+        self.assertNotIn('smoothed_full_frame', second_result)
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(second_result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('capture/frame.png'), self.contents)
+            self.assertEqual(archive.read('capture/frame-pixelation-mask.png'), mask_png)
+
+    def test_auto_detection_copy_never_replaces_the_original_model_input(self):
+        from implementation import automatic_preparation
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with patch.object(automatic_preparation, 'picture_pixelation', return_value=(None, None, {})), patch.object(capture_api, 'detect_faces', side_effect=[[], [], [[20, 10, 80, 70]]]), patch.object(automatic_preparation, 'pixelation_signal', return_value={'suspected': True}), patch.object(automatic_preparation, 'prepare', return_value=(None, None, {}, {'route': 'direct'})) as prepare, patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        np.testing.assert_array_equal(prepare.call_args.args[1], self.rgb)
+        worker.assert_called_once_with(self.contents, 'v2')
+        self.assertEqual(result['metadata']['automatic_preparation']['face_detection'], 'smoothed_detection_copy_with_block_signal')
+
+    def test_picture_auto_exports_full_frame_but_restores_only_selected_crop(self):
+        from implementation import automatic_preparation
+
+        rng = np.random.default_rng(28)
+        source = rng.integers(0, 256, (384, 420, 3), dtype=np.uint8)
+        expected = np.zeros(source.shape[:2], bool)
+        for x, y, width, height in ((42, 50, 143, 128), (249, 196, 145, 150)):
+            samples = rng.integers(0, 256, (10, 12, 3), dtype=np.uint8)
+            mosaic = Image.fromarray(samples).resize((width + 8, height + 12), Image.Resampling.NEAREST)
+            source[y:y + height, x:x + width] = mosaic.resize((width, height), Image.Resampling.BILINEAR)
+            expected[y:y + height, x:x + width] = True
+        self.contents = png(source)
+        crop = [40, 40, 160, 160]
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload',
+                                  picture_crop=json.dumps(crop))
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'picture_region_gaussian')
+        self.assertEqual(result['metadata']['picture_crop'], crop)
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('uploaded-original.bin'), self.contents)
+            full = base64.b64decode(result['smoothed_full_picture'].split(',', 1)[1])
+            self.assertEqual(archive.read('full-image-smoothed.png'), full)
+            prepared = np.asarray(Image.open(io.BytesIO(full)))
+            mask = np.asarray(Image.open(io.BytesIO(archive.read('full-image-pixelation-mask.png')))) > 0
+            self.assertLess(np.count_nonzero(mask & ~expected) / np.count_nonzero(mask), .01)
+            self.assertGreater(np.count_nonzero(mask & expected) / np.count_nonzero(expected), .70)
+            self.assertTrue(mask[50:178, 42:185].any())
+            self.assertTrue(mask[196:346, 249:394].any())
+            np.testing.assert_array_equal(prepared[~mask], source[~mask])
+            worker.assert_called_once_with(png(prepared[40:200, 40:200]), 'v2')
+        self.assertEqual(result['metadata']['picture_pixelation']['Gaussian_radius_at256'],
+                         automatic_preparation.PIXELATION_RADIUS_AT256)
 
     def fake_worker(self, command, **kwargs):
         request_path = Path(command[command.index('--request') + 1])

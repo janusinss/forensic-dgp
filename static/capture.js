@@ -108,7 +108,7 @@
     draw(); update();
   }
   function faceRectangle([x,y,width,height]) {
-    const margin=Math.round(Math.max(width,height)*.10);
+    const margin=Math.round(Math.max(width,height)*.20);
     const left=Math.max(0,x-margin), top=Math.max(0,y-margin);
     const right=Math.min(clean.width,x+width+margin), bottom=Math.min(clean.height,y+height+margin);
     return {x:left,y:top,width:Math.min(1600,right-left),height:Math.min(1600,bottom-top)};

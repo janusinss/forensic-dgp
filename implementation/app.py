@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+from functools import lru_cache
 import hashlib
 import io
 import json
@@ -16,7 +17,7 @@ import zipfile
 from typing import Annotated
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 import psutil
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
@@ -72,11 +73,60 @@ def review_input(value):
         raise ValueError('Facial structure is insufficient. Upload a clearer or less-covered face crop.')
     if value == 'out_of_scope':
         raise ValueError('Upload one already cropped frontal or mildly turned face.')
-    need(value == 'usable', 'Inspect the original and confirm readable visible facial features first.')
+    need(value in ('usable', 'picture_upload'), 'Choose a picture before continuing.')
 
 
-def preview(contents, protect, apply, radius):
-    return build_preview(contents, protect, apply, nominal_radius=radius)
+def picture_native(contents, rectangle=None):
+    image = decode_original(contents)
+    if rectangle is None:
+        return image
+    need(isinstance(rectangle, list) and len(rectangle) == 4 and all(type(n) is int for n in rectangle),
+         'Choose a valid picture crop.')
+    x, y, width, height = rectangle
+    need(x >= 0 and y >= 0 and min(width, height) >= 16 and
+         x + width <= image.shape[1] and y + height <= image.shape[0], 'Picture crop is outside the allowed area.')
+    return image[y:y + height, x:x + width].copy()
+
+
+@lru_cache(maxsize=1)
+def _frozen_frame_pixelation(verified_frame):
+    """Share the most recent verified frame analysis across its queued crops."""
+    from .automatic_preparation import prepare_source
+    from .capture_api import _image
+
+    source = np.asarray(_image(verified_frame))
+    return source, prepare_source(source)
+
+
+def picture_rectangle(value):
+    if not value:
+        return None
+    need(len(value) <= 64, 'Choose a valid picture crop.')
+    rectangle = json.loads(value)
+    need(isinstance(rectangle, list), 'Choose a valid picture crop.')
+    return rectangle
+
+
+def prepared_preview(selected, original, protect, apply, radius, rectangle, *, exact_marks, match_blur):
+    response, payloads = build_preview(selected, protect, apply, nominal_radius=radius, exact_marks=exact_marks,
+                                       match_blur=match_blur, full_picture=original if rectangle is not None else None,
+                                       rectangle=rectangle)
+    if rectangle is not None:
+        crop_preview_id = response['preview_id']
+        original_hash = digest(original)
+        response['preview_id'] = digest(canonical([crop_preview_id, original_hash, rectangle]))
+        payloads['uploaded-original.bin'] = original
+        payloads['picture-crop.json'] = canonical({'rectangle': rectangle, 'uploaded_bytes_sha256': original_hash})
+        payloads['crop-input.png'] = selected
+        metadata = response['metadata']
+        metadata.update(preview_id=response['preview_id'], picture_crop=rectangle,
+                        original_upload_sha256=original_hash, crop_input_sha256=digest(selected),
+                        crop_preview_id=crop_preview_id)
+        for name in ('uploaded-original.bin', 'picture-crop.json', 'crop-input.png'):
+            raw = payloads[name]
+            metadata['payload_pins'][name] = {'bytes': len(raw), 'sha256': digest(raw)}
+        payloads['processing.json'] = canonical(metadata)
+    return response, payloads
 
 
 def invoke(function, *args):
@@ -217,23 +267,50 @@ def status():
 
 
 @app.post('/face/restoration/inspect')
-async def inspect(file: UploadFile = File(...)):
+async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form()] = False):
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     def execute():
         image = decode_original(contents)
-        return {'width': image.shape[1], 'height': image.shape[0], 'source': url(png(image)),
-                'neural_calls': 0, 'input_review_required': True}
+        height, width = image.shape[:2]
+        result = {'width': width, 'height': height, 'source': url(png(image)),
+                  'neural_calls': 0, 'input_review_required': False}
+        if scan_faces:
+            from .capture_api import DETECTION_LOCK, detect_faces
+            faces = []
+            unavailable = False
+            if DETECTION_LOCK.acquire(blocking=False):
+                try:
+                    faces = detect_faces(Image.fromarray(image))
+                except RuntimeError:
+                    unavailable = True
+                finally:
+                    DETECTION_LOCK.release()
+            else:
+                unavailable = True
+            result['face_crops'] = []
+            for x, y, w, h in sorted(faces, key=lambda box: (box[0], box[1])):
+                margin = int(max(w, h) * .20 + .5)
+                left, top = max(0, x - margin), max(0, y - margin)
+                right, bottom = min(width, x + w + margin), min(height, y + h + margin)
+                result['face_crops'].append([left, top, right - left, bottom - top])
+            result['face_scan_unavailable'] = unavailable
+        return result
     return await run_in_threadpool(invoke, execute)
 
 
 @app.post('/face/restoration/preview')
 async def make_preview(file: UploadFile = File(...), protect_mask: UploadFile = File(...),
-                       apply_mask: UploadFile = File(...), radius: float = Form(1), input_review: str = Form('')):
+                       apply_mask: UploadFile = File(...), radius: float = Form(1), input_review: str = Form(''),
+                       picture_crop: Annotated[str, Form()] = '', match_blur: Annotated[bool, Form()] = False):
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     protect, apply = await protect_mask.read(MAX_MASK_BYTES + 1), await apply_mask.read(MAX_MASK_BYTES + 1)
     def execute():
         review_input(input_review)
-        response, payloads = preview(contents, protect, apply, radius)
+        need(not picture_crop or input_review == 'picture_upload', 'A picture crop requires a picture upload.')
+        rectangle = picture_rectangle(picture_crop)
+        selected = png(picture_native(contents, rectangle)) if rectangle is not None else contents
+        response, payloads = prepared_preview(selected, contents, protect, apply, radius, rectangle,
+                                               exact_marks=input_review == 'picture_upload', match_blur=match_blur)
         return {**response, 'bundle': url(bundle(payloads), 'application/zip'), 'neural_calls': 0}
     return await run_in_threadpool(invoke, execute)
 
@@ -244,7 +321,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                   protect_mask: UploadFile | None = File(None), apply_mask: UploadFile | None = File(None),
                   radius: float = Form(1), preview_id: str = Form(''), confirmed: bool = Form(False),
                   include_bundle: bool = Form(True), model: str = Form(DEFAULT_MODEL),
-                  capture_id: Annotated[str, Form()] = '', request: Request = None):
+                  capture_id: Annotated[str, Form()] = '', request: Request = None,
+                  picture_crop: Annotated[str, Form()] = '', match_blur: Annotated[bool, Form()] = False,
+                  include_smoothed_frame: Annotated[bool, Form()] = True):
     video_selection = input_review == 'video_capture'
     owner = None
     if video_selection or capture_id:
@@ -257,34 +336,133 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
     apply = await apply_mask.read(MAX_MASK_BYTES + 1) if apply_mask else None
     def execute():
         started = time.monotonic()
+        automatic = preparation_mode == 'automatic'
+        need(not automatic or (restoration == 'auto' and input_review in ('picture_upload', 'video_capture')),
+             'Automatic preparation requires Auto and a picture or saved video crop.')
         if video_selection:
-            need(bool(capture_id) and preparation_mode == 'bypass' and restoration in ('on', 'off'),
-                 'Video restoration requires a saved capture and the shared On or Off setting.')
+            need(bool(capture_id) and ((preparation_mode == 'bypass' and restoration in ('on', 'off')) or automatic),
+                 'Video restoration requires a saved capture and a supported restoration setting.')
         else:
             review_input(input_review)
         need(model in ARMS and restoration in ('auto', 'on', 'off'), 'Choose a valid model and Auto, On or Off.')
-        need(preparation_mode in ('manual', 'bypass'), 'Choose bypass or reviewed manual preparation.')
-        native = decode_original(contents)
+        need(preparation_mode in ('manual', 'bypass', 'automatic'), 'Choose a valid preparation mode.')
+        need(not picture_crop or (input_review == 'picture_upload' and not capture_id),
+             'A picture crop requires a picture upload.')
+        rectangle = picture_rectangle(picture_crop)
+        native = picture_native(contents, rectangle)
         need(np.ptp(native.reshape(-1, 3).astype(np.int16), axis=0).max() > 0,
              'No usable structure is visible. Upload a clearer face crop.')
         original, observed, _, geometry = prepare_crop(native)
         signals = quality_signals(original, (~observed).astype(np.uint8))
-        if restoration == 'auto' and signals['blur_variance'] is None:
+        if restoration == 'auto' and not automatic and signals['blur_variance'] is None:
             raise ValueError('Too little area for Auto. Choose On or Off, or upload a clearer crop.')
-        applied = restoration == 'on' or (restoration == 'auto' and signals['suggest_restoration'])
+        applied = automatic or restoration == 'on' or (restoration == 'auto' and signals['suggest_restoration'])
         payloads = {'uploaded-original.bin': contents, 'original-native.png': png(native),
                     'original-256.png': png(original)}
         if capture_id:
             from .capture_api import evidence_for_crop
             payloads.update(evidence_for_crop(contents, capture_id, owner=owner))
-        selected, prepared, preparation = contents, original, None
-        if preparation_mode == 'bypass':
+        selected, prepared, preparation = png(native) if rectangle is not None else contents, original, None
+        if rectangle is not None:
+            payloads['picture-crop.json'] = canonical({'rectangle': rectangle, 'uploaded_bytes_sha256': digest(contents)})
+        auto_decision = picture_regions = frame_regions = smoothed_frame_png = None
+        scanline_report = cleaned_full_image = None
+        if automatic:
+            need(protect is None and apply is None and not preview_id and not confirmed,
+                 'Auto selects its own preparation. Remove manual preparation fields.')
+            from .automatic_preparation import prepare as prepare_automatically, prepare_source, pixelation_signal
+            from .capture_api import detect_faces
+            selected_rectangle = rectangle
+            detection_method = 'original_image'
+            if capture_id:
+                source_rgb, (smoothed_image, regional_report, region_evidence) = _frozen_frame_pixelation(payloads['capture/frame.png'])
+                selected_rectangle = json.loads(payloads['capture/metadata.json'])['rectangle']
+                if regional_report is not None:
+                    regional_report = {**regional_report, 'frame_sha256': digest(payloads['capture/frame.png'])}
+            else:
+                source_rgb = decode_original(contents)
+                smoothed_image, regional_report, region_evidence = prepare_source(source_rgb)
+                payloads.update(region_evidence)
+
+            if 'scanline-cleaned.png' in region_evidence:
+                scanline_report = regional_report
+                cleaned_full_image = region_evidence['scanline-cleaned.png']
+            elif regional_report is not None:
+                if capture_id:
+                    frame_regions = regional_report
+                    smoothed_frame_png = region_evidence['full-image-smoothed.png']
+                    payloads['capture/frame-pixelation-mask.png'] = region_evidence['full-image-pixelation-mask.png']
+                else:
+                    picture_regions = regional_report
+
+            region_input = None
+            if smoothed_image is not None:
+                region_input = smoothed_image
+                if selected_rectangle is not None:
+                    x, y, width, height = selected_rectangle
+                    region_input = smoothed_image[y:y + height, x:x + width]
+                if np.array_equal(region_input, native):
+                    region_input = None
+
+            if region_input is not None:
+                selected = png(region_input)
+                prepared, _, _, _ = prepare_crop(region_input)
+                preparation = {**regional_report, 'crop_changed_native_pixels': int(np.any(region_input != native, axis=2).sum()),
+                               'derived_native_sha256': digest(selected)}
+                if scanline_report is not None:
+                    auto_decision = {'route': 'scanline_cleanup', 'reason': 'strong_horizontal_scanline_pattern',
+                                     'spacing_native_pixels': scanline_report['spacing_native_pixels']}
+                else:
+                    auto_decision = {'route': 'frame_region_gaussian' if capture_id else 'picture_region_gaussian',
+                                     'reason': 'suspected_pixelation_in_model_input',
+                                     'Gaussian_radius_at256': regional_report['Gaussian_radius_at256'],
+                                     'strength_basis': regional_report.get('strength_selection', {}).get('basis')}
+                payloads.update({'derived-native.png': selected, 'processing.json': canonical(preparation)})
+            else:
+                def in_selection(boxes):
+                    if selected_rectangle is None:
+                        return boxes
+                    x, y, width, height = selected_rectangle
+                    return [box for box in boxes if x <= box[0] + box[2] / 2 < x + width
+                            and y <= box[1] + box[3] / 2 < y + height]
+
+                scan_image = Image.fromarray(source_rgb)
+                try:
+                    faces = in_selection(detect_faces(scan_image))
+                    if not faces:
+                        # Retry detection on copies. Preparation still requires
+                        # a block-pattern signal on the untouched source pixels.
+                        scale = max(scan_image.size) / 256
+                        for scan_radius in (min(2., max(.5, scale * .9)), min(12., max(2.5, scale * 3.3))):
+                            smoothed = scan_image.filter(ImageFilter.GaussianBlur(scan_radius))
+                            matches = in_selection(detect_faces(smoothed))
+                            if len(matches) > 1:
+                                break
+                            if matches and pixelation_signal(source_rgb, matches[0])['suspected']:
+                                faces = matches
+                                detection_method = 'smoothed_detection_copy_with_block_signal'
+                                break
+                except RuntimeError:
+                    faces = []
+                face = faces[0] if len(faces) == 1 else None
+                if face is None:
+                    auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
+                else:
+                    candidate, preparation, auto_evidence, auto_decision = prepare_automatically(native, source_rgb, face, selected_rectangle)
+                    auto_decision['face_detection'] = detection_method
+                    payloads.update(auto_evidence)
+                    if candidate is not None:
+                        selected = candidate
+                        prepared, _, _, _ = prepare_crop(decode_original(selected))
+            payloads['automatic-decision.json'] = canonical(auto_decision)
+        elif preparation_mode == 'bypass':
             need(protect is None and apply is None and not preview_id and not confirmed,
                  'Bypass uses the original. Remove manual preparation fields.')
         elif applied:
             need(protect is not None and apply is not None and confirmed,
                  'Preview and confirm the selected areas first.')
-            response, prepared_payloads = preview(contents, protect, apply, radius)
+            response, prepared_payloads = prepared_preview(selected, contents, protect, apply, radius, rectangle,
+                                                           exact_marks=input_review == 'picture_upload', match_blur=match_blur)
             need(preview_id == response['preview_id'], 'The preview is stale. Preview and confirm the current areas again.')
             payloads.update(prepared_payloads)
             selected, preparation = prepared_payloads['derived-native.png'], response['metadata']
@@ -310,12 +488,28 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     'geometry': geometry, 'worker_delivery': worker, 'model_qualified': False,
                     'protection_scope': 'Preprocessing input only; generated appearance may change.',
                     'training_optimizer_VM_calls': 0, 'capture_id': capture_id or None}
+        if rectangle is not None:
+            metadata['picture_crop'] = rectangle
+        if auto_decision is not None:
+            metadata['automatic_preparation'] = auto_decision
+        if picture_regions is not None:
+            metadata['picture_pixelation'] = picture_regions
+        if frame_regions is not None:
+            metadata['frame_pixelation'] = frame_regions
+        if scanline_report is not None:
+            metadata['scanline_cleanup'] = scanline_report
         payloads.update({'prepared-256.png': png(prepared), 'result.png': output,
                          'restoration.json': canonical(metadata)})
         if raw_bytes is not None:
             payloads['restoration-raw-float32.npy'] = raw_bytes
         result = {'original_input': url(png(original)), 'prepared_input': url(png(prepared)),
                   'result': url(output), 'metadata': metadata}
+        if picture_regions is not None:
+            result['smoothed_full_picture'] = url(payloads['full-image-smoothed.png'])
+        if smoothed_frame_png is not None and include_smoothed_frame:
+            result['smoothed_full_frame'] = url(smoothed_frame_png)
+        if cleaned_full_image is not None and (not capture_id or include_smoothed_frame):
+            result['scanline_cleaned_full_image'] = url(cleaned_full_image)
         if include_bundle:
             result['bundle'] = url(bundle(payloads), 'application/zip')
         return result

@@ -394,7 +394,7 @@ test('padding at the frame edge does not shift the opposite crop edge', async ()
   await openFile(h);
   await chooseFace(h);
   await h.get('capture-use').fire('click');
-  assert.deepEqual(h.requestedCrop(), { x: 0, y: 0, width: 35, height: 46 });
+  assert.deepEqual(h.requestedCrop(), { x: 0, y: 0, width: 39, height: 50 });
 });
 
 test('dragging a blank frame area creates a manual crop without a Draw crop button', async () => {

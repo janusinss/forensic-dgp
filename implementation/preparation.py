@@ -1,9 +1,9 @@
 """Pure optional Protect/Apply preview; no model, HTTP or training entrypoint.
 
-Protect always wins. With Protect alone, Apply resolves to its surroundings;
-otherwise the submitted Apply selection is used. Exact-pixel guarantees concern
-preprocessing only. Blur reads neighboring original context but never writes
-protected or outside-resolved-Apply RGB.
+Protect always wins. Apply uses the submitted blue marks when present.
+When only Protect is painted, Apply resolves to the surroundings.
+Blur reads neighboring original context but never writes protected or
+outside-resolved-Apply RGB during preprocessing.
 """
 import base64
 import hashlib
@@ -17,12 +17,15 @@ from PIL import Image, ImageFilter, ImageOps, __version__ as PILLOW_VERSION
 import scipy
 from scipy.ndimage import distance_transform_edt
 
+from .blur_match import match_surroundings
+
 ROOT = Path(__file__).resolve().parents[1]
 MAX_UPLOAD_BYTES = 10 * 1024 ** 2
 MAX_MASK_BYTES = 3 * 1024 ** 2
 MAX_SIDE = 1600
 MAX_PIXELS = 2_560_000
 POLICY = 'reviewed-native-Protect-Apply-brush-preview-v2'
+EXACT_POLICY = 'reviewed-native-exact-painted-masks-v2'
 PREPARE_SOURCE = 'implementation/runtime.py'
 # Runtime geometry source is bound into each preview identity below.
 
@@ -118,7 +121,8 @@ def conservative_256(native_unchanged, observed):
     return (resized == 0) & observed
 
 
-def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6, guard=8, feather=16):
+def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6, guard=8, feather=16, *, exact_marks=False,
+                  match_blur=False, full_picture=None, rectangle=None):
     """Return (JSON-safe response, fixed-name byte payloads), without model calls.
 
     All input arrays are decoded anew. Caller must rebuild and compare preview_id
@@ -130,19 +134,27 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
     rgb = decode_original(contents); height, width = rgb.shape[:2]
     protect = decode_mask(protect_png_bytes, (width, height), 'Protect')
     apply = decode_mask(apply_png_bytes, (width, height), 'Apply')
-    # A Protect-only selection means blur the surrounding image. Explicit Apply
-    # strokes always take precedence over that automatic surroundings selection.
     auto_surroundings = bool(protect.any() and not apply.any())
     resolved_apply = ~protect if auto_surroundings else apply
-    guarded, effective, alpha = mask_weights(protect, resolved_apply, guard, feather)
+    if exact_marks:
+        guarded = protect
+        effective = resolved_apply & ~protect
+        alpha = effective.astype(np.float32)
+    else:
+        guarded, effective, alpha = mask_weights(protect, resolved_apply, guard, feather)
     native_radius = radius * max(width, height) / 256.
-    # Filtering is computed from the original once. It can read protected context;
-    # this is not a no-sampling or unknown-kernel-isolation guarantee.
-    blurred = np.asarray(Image.fromarray(rgb).filter(ImageFilter.GaussianBlur(radius=native_radius)))
-    mixed = np.rint(rgb.astype(np.float64) * (1 - alpha[..., None].astype(np.float64))
-                    + blurred.astype(np.float64) * alpha[..., None].astype(np.float64)).clip(0, 255).astype(np.uint8)
+    matching = None
+    if match_blur and exact_marks and auto_surroundings:
+        source_rgb = (full_picture if isinstance(full_picture, np.ndarray) else decode_original(full_picture)) if full_picture is not None else rgb
+        mixed, effective, matching = match_surroundings(rgb, source_rgb, rectangle, effective)
+        alpha = effective.astype(np.float32)
+    else:
+        blurred = np.asarray(Image.fromarray(rgb).filter(ImageFilter.GaussianBlur(radius=native_radius)))
+        mixed = np.rint(rgb.astype(np.float64) * (1 - alpha[..., None].astype(np.float64))
+                        + blurred.astype(np.float64) * alpha[..., None].astype(np.float64)).clip(0, 255).astype(np.uint8)
     unchanged = guarded | ~resolved_apply
-    mixed[unchanged] = rgb[unchanged]
+    if matching is None:
+        mixed[unchanged] = rgb[unchanged]
     need(np.array_equal(mixed[guarded], rgb[guarded]) and np.array_equal(mixed[~resolved_apply], rgb[~resolved_apply]),
          'Every protected and outside-Apply native RGB pixel must stay exact.')
 
@@ -158,7 +170,8 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
     for interior in interiors.values():
         need(np.array_equal(original256[interior], derived256[interior]), 'Conservative prepared256 interior changed.')
 
-    algorithm = {'policy': POLICY, 'nominal_Gaussian_radius_at256': radius, 'native_Gaussian_radius': native_radius,
+    policy = EXACT_POLICY if exact_marks else POLICY
+    algorithm = {'policy': policy, 'nominal_Gaussian_radius_at256': radius, 'native_Gaussian_radius': native_radius,
                  'outward_Protect_guard_native_pixels': guard, 'external_transition_native_pixels': feather,
                  'transition': 'smoothstep(min(distanceOutsideGuard,distanceInsideApply)/feather); alpha0outsideApplyandinsideGuard',
                  'Apply_edge_boundary': 'one-zero-pixel pad before Euclidean distance transform',
@@ -167,8 +180,19 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
                  'quantization': 'float64 blend with float32 alpha; np.rint ties-to-even clipRGB8; exact native unchanged assignment',
                  'kernel': 'Pillow GaussianBlur approximation; original context may be sampled',
                  'Pillow': PILLOW_VERSION, 'NumPy': np.__version__, 'SciPy': scipy.__version__}
+    if exact_marks:
+        algorithm.update(outward_Protect_guard_native_pixels=0, external_transition_native_pixels=0,
+                         transition='alpha1 inside resolved Apply except Protect; alpha0 elsewhere',
+                         Apply_edge_boundary='resolved Apply can include image edges',
+                         empty_Protect_distance='not used')
+    if matching is not None:
+        algorithm.update(nominal_Gaussian_radius_at256=None, native_Gaussian_radius=None, blur_matching=matching,
+                         transition='alpha1 where an additional blur radius is applied; alpha0 elsewhere')
     sources = {'preview_module': {'path': Path(__file__).relative_to(ROOT).as_posix(), 'sha256': sha(Path(__file__).read_bytes())},
                'prepare_helper': {'path': PREPARE_SOURCE, 'sha256': prepare_sha}}
+    if matching is not None:
+        helper = Path(__file__).with_name('blur_match.py')
+        sources['blur_match_helper'] = {'path': helper.relative_to(ROOT).as_posix(), 'sha256': sha(helper.read_bytes())}
     identity = {'original_upload_sha256': sha(contents), 'original_RGB_sha256': sha(rgb.tobytes()),
                 'native_size': [width, height], 'Protect_upload_sha256': sha(protect_png_bytes),
                 'Apply_upload_sha256': sha(apply_png_bytes), 'Protect_binary_sha256': sha(protect.tobytes()),
@@ -177,7 +201,7 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
                 'effective_Apply_sha256': sha(effective.tobytes()), 'alpha_float32_sha256': sha(alpha.tobytes()),
                 'algorithm': algorithm, 'sources': sources}
     preview_id = sha(json_bytes(identity))
-    metadata = {'policy': POLICY, 'preview_id': preview_id, **identity,
+    metadata = {'policy': policy, 'preview_id': preview_id, **identity,
                 'protected_native_pixels': int(guarded.sum()), 'Apply_native_pixels': int(apply.sum()),
                 'resolved_Apply_native_pixels': int(resolved_apply.sum()),
                 'Apply_selection_mode': 'automatic_surroundings' if auto_surroundings else 'manual',
@@ -189,14 +213,14 @@ def build_preview(contents, protect_png_bytes, apply_png_bytes, nominal_radius=6
                 'prepared_boundary_pixels_not_claimed_exact': True,
                 'original_geometry': original_geometry, 'derived_geometry': derived_geometry,
                 'derived_native_RGB_sha256': sha(mixed.tobytes()), 'manual_assisted_masks': True,
-                'automatic_detection_or_adaptive_matching': False, 'blur_matching_is_approximate': True,
+                'automatic_detection_or_adaptive_matching': matching is not None, 'blur_matching_is_approximate': True,
                 'filter_may_read_protected_context': True, 'protection_scope': 'preprocessing input only; generated appearance may change',
                 'original_rebuilt_each_preview': True, 'server_preview_cache': False,
                 'preprocessing_neural_optimizer_training_VM_calls': 0, 'model_qualified': False,
                 'main_app_default_changed': False}
     mask = lambda value: png(value.astype(np.uint8) * 255)
     stream = io.BytesIO(); np.save(stream, alpha, allow_pickle=False)
-    colors = rgb.copy(); colors[resolved_apply] = (55, 125, 220); colors[(alpha > 0) & (alpha < 1)] = (245, 180, 45)
+    colors = rgb.copy(); colors[effective if matching is not None else resolved_apply] = (55, 125, 220)
     colors[guarded] = (45, 185, 90)
     overlay = np.rint(rgb.astype(np.float64) * .60 + colors.astype(np.float64) * .40).astype(np.uint8)
     payloads = {'uploaded-original.bin': contents, 'original-decoded-rgb.png': png(rgb),

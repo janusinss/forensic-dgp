@@ -2,76 +2,11 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.4
+## Windows installer 0.2.2
 
-Download the [offline Windows installer](https://forensic-dgp.pages.dev/). Starting
-with 0.2.4, confirming Windows uninstall permanently removes the installed app,
-private Python, models, caches and saved records. The selected folder is removed
-when empty. Upgrade an older installation to 0.2.4 first to get this uninstaller.
-See the [0.2.4 release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.4)
-for the installer and checksum.
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.2](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2).
 
-## Historical 0.2.3
-
-Download the [offline Windows installer](https://forensic-dgp.pages.dev/). Version
-0.2.3 adds YuNet face detection for frozen video frames, the Face queue, restoration
-diagnostics and a controlled benchmark. It includes the existing restoration and
-Completion R2 models. See the [0.2.3 release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.3)
-for the installer and checksum.
-
-## Historical 0.2.2 Completion R2
-
-The [0.2.2 release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2) introduced Completion R2 and verified that saved records and prior models survived the update. See [R2_VERIFICATION.md](packaging/R2_VERIFICATION.md) for the exact artifact, native update and installed inference checks.
-
-## Historical 0.2.1 path hotfix
-
-Download [0.2.1](https://forensic-dgp.pages.dev/) for the Windows short-path
-payload verification fix. Valid payloads no longer fail because Windows expands
-an 8.3 temporary-folder alias. Existing-file safeguards remain enabled.
-See [hotfix verification](packaging/PAYLOAD_PATH_HOTFIX.md).
-
-## Previous offline desktop installer: 0.2.0
-
-Version **0.2.0 is published as an unsigned research prerelease**. Download it
-from the [landing page](https://forensic-dgp.pages.dev/) or
-[GitHub Releases](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.0).
-It bundles private Python, complete hashed Windows CPU package sets and all six
-admitted models. It adds fresh/update/repair/move discovery, safe environment
-replacement and verified relocation records. See [build instructions](packaging/BUILD.md).
-The public download is one offline EXE containing 1,045,716,354 bytes. The live
-metadata, GitHub asset digest and complete anonymous browser-download hash
-match the accepted build. The previous 0.1.1 download remains available unchanged.
-
-Verification uses the user's own PC and dedicated test folders. An earlier
-0.2.0 candidate completed a fresh installation; the tested candidate passed an
-in-place update while reusing its verified environment and preserving a saved
-record. Source/package repair also passed with restored source bytes, a new
-verified environment generation and preserved records. Capture, real restoration,
-review export and scoped shutdown checks passed. Native relocation stopped safely
-before switching registration because of a source-file counting defect; the helper
-fix has regression coverage and the corrected c8ff04e installer is built.
-Its repeat native relocation passed in 651.33 seconds with records preserved,
-recreated environments and updated Windows integration. The accepted installation
-also passed layout, capture, playback-rate and shutdown checks. GitHub/Pages
-publication and final browser-download verification are complete. The downloaded
-Internet-marked EXE was verified but not executed, so these checks do not establish
-its SmartScreen/antivirus execution outcome. No clean-Windows
-VM or general hardware qualification is claimed. Antivirus stays enabled. Signing remains
-outside the free preview and an unsigned release can still receive Windows warnings.
-
-## Previous public desktop installer: 0.1.1
-
-The Windows setup EXE has a public [download page](https://forensic-dgp.pages.dev).
-The following behavior describes **the historical 0.1.1 online installer**,
-preserved as the previous release rather than the current main download. See [installer verification](packaging/VERIFICATION.md) for its exact artifact identity and test boundaries.
-
-The 0.1.1 setup flow selects a dedicated local fixed-drive folder of at most 120 characters. That folder contains the desktop launcher plus `runtime` for private Python, application/capture dependencies, package caches, verified models and saved records. First setup requires Windows 10/11 x64, Microsoft Edge, internet access and at least 4 GB of free disk space. It does not require administrator access or preinstalled Python. Known-size downloads show measured progress; package setup and verification show activity when a total is unknown.
-
-In 0.1.1, updates verify and reuse valid components in the same location. To
-select another folder in that old version, uninstall the Windows launcher first; the previous runtime, saved evidence and ownership records remain. Setup creates the new installation without automatically migrating or deleting the old data. Uninstall retains `runtime`, `install-location.json` and `shell-owner.json` for safe verification on reinstall.
-
-See [installer build and folder behavior](packaging/BUILD.md) and [verification evidence](packaging/VERIFICATION.md). These desktop changes preserve the existing developer batch workflows below, including their legacy default storage location.
-## Developer batch installation on Windows
+## Developer batch installation
 
 1. Download [install.bat](https://raw.githubusercontent.com/janusinss/forensic-dgp/IMPLEMENTATION/install.bat) into an empty folder. Save the actual file, not the GitHub HTML page.
 2. Run `install.bat`. No Git, existing Python, administrator access, or complete repository download is required.
@@ -81,7 +16,7 @@ The installer resolves the latest **IMPLEMENTATION** commit once and downloads t
 
 Requirements: 64-bit Windows, internet access for setup, at least 2.5 GiB available RAM for processing, and sufficient disk space for Python dependencies, approximately 720 MiB of model files, retained app versions and your saved records. A GPU is not required.
 
-## Developer batch update and installation behavior
+## Update and installation behavior
 
 Close the managed app and rerun `install.bat` to install the current published UI, flow and fixes. `start.bat` starts the last successfully installed version without an online update check. The installer cannot retrieve unpublished local edits.
 
@@ -91,26 +26,31 @@ Close the managed app and rerun `install.bat` to install the current published U
 - Verified model files are shared across app versions rather than downloaded for every update. Mismatched models or edited managed source files are refused and preserved for inspection.
 - A shared managed-app lock prevents concurrent setup or updating a running managed app. Setup does not kill processes or occupied ports. Previous versions and failed staging files are retained; no automatic evidence deletion occurs.
 
-The legacy online batch path pins direct dependencies; it is not the complete
-hash-locked offline package path introduced for the 0.2.0 desktop installer. First setup needs the network. Repeated setup may still need it to check the branch or obtain missing packages; launching an already installed app is local.
+Package installation is pinned at the direct-dependency level; transitive dependencies are not a complete hash-locked supply chain. First setup needs the network. Repeated setup may still need it to check the branch or obtain missing packages; launching an already installed app is local.
 
 ## Input and review
 
 Choose **Picture** to upload one PNG/JPEG face image, or **Video** for an uploaded clip, webcam or LAN RTSP camera. A chosen video file opens automatically. Native playback controls support Space play/pause and a separate 0.25×–4× speed selector.
 
-Freeze a frame to scan it locally. The numbered boxes mark the detected faces in the original frame. Selecting a box gives you a slightly wider crop that you can adjust before review. You can also drag on the preview or press Enter to create a manual crop. Arrow keys move it, and Shift+arrow keys resize it. **Full frame crop** returns to the entire frame while keeping the selection. **Use this face** sends the original-pixel rectangular PNG crop to Picture review.
+Picture scans the upload with YuNet and selects **Face 1** when a crop is available. Faces are numbered from left to right. **Picture crop** lets you preview another detected face or keep the full picture. When no face is detected, you can use the full picture or upload a close-up. Before/After metrics refer to the chosen crop. The review ZIP retains the original upload and crop coordinates.
+
+Freeze a frame to scan it locally. The numbered boxes mark the detected faces in the original frame. Selecting a box gives you a slightly wider crop that you can adjust before review. You can also drag on the preview or press Enter to create a manual crop. Arrow keys move it, and Shift+arrow keys resize it. **Full frame crop** returns to the entire frame while keeping the selection. **Use this face** sends the selected rectangular crop directly to Settings.
 
 The capture scanner bundles the MIT-licensed YuNet 2023mar model from [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet). It scans the selected frame when frozen. Small, blurred, or obstructed faces can still require a manual crop.
 
 Switching Picture/Video or leaving Capture pauses an opened local video while preserving its source, position, speed, and crop selection. **Resume video** continues from the frozen frame. Explicit Stop, file/source replacement, and page unload release it. Leaving capture releases live webcam and RTSP sources.
 
-Review whether one face is clear enough, then choose **Auto**, **On** or **Off** restoration and **Bypass** or optional reviewed preparation. Green protects pixels during preparation; blue selects blur, with green taking priority. Review and confirm preparation before restoration. Protection applies to preparation; generated appearance can change.
+After uploading a picture, select **Continue**. Settings lists **Auto**, **Manual**, and **Off** in that order. **Auto** is selected by default. It checks the full picture or frozen frame for strong horizontal scanlines, then for pixelation. For scanlines, Auto suppresses the repeating frequency and applies 1.5 px of Gaussian smoothing at the 256-pixel scale. For pixelation, it maps the block regions, fills narrow gaps supported by repeated edges, and compares 2.5, 3.0, and 3.5 px of smoothing using remaining block edges and retained detail. It uses 3.0 px when there is too little evidence to choose another strength. Where the full-source check does not modify the selected crop, Auto can check the face for block patterns or use Protect + Auto-match when the face is measurably blurrier than its surroundings. Otherwise it restores the crop directly.
 
-After freezing a video, webcam, or RTSP frame, select one face or click **Add all** for up to 12 faces. **Use this face** or **Use these faces** opens Settings directly. Settings shows the selected crops and one shared **On** or **Off** choice, with **On** selected by default. Video capture skips manual preparation. In Restore, the app processes the selected faces in order, one at a time.
+Auto runs the restoration model once per crop. The result shows the preparation used. Full-source scanline cleanup or pixelation smoothing also offers a separate full-size prepared PNG. These experimental routes improve the appearance of some inputs. Detection, region boundaries, and the chosen strength are estimates. **Manual** lets Picture users bypass preparation or mark regions. **Off** returns the resized original.
+
+In reviewed preparation, green-only **Auto-match surrounding blur** measures reliable edges across the full upload, including protected areas, and adds blur to sharper areas outside green. With this matching option off or blue marks present, **Manual blur strength** sets the radius. Green takes priority. Select **Continue** on the preparation preview to use it for restoration. Generated appearance can change.
+
+After freezing a video, webcam, or RTSP frame, select one face or click **Add all** for up to 12 faces. **Use this face** or **Use these faces** opens Settings directly. Settings shows the selected crops and one shared **Auto**, **Manual**, or **Off** choice, with **Auto** selected by default. Video **Auto** reuses preparation of the verified frozen frame across the selected crops and offers one shared full-frame PNG when full-frame preparation is applied. Video capture skips manual preparation. In Restore, the app processes the selected faces in order, one at a time.
 
 In Restore, choose a numbered face button to see that face’s **Before** and **After** images. Each image has **Download PNG** and **Enlarge** controls. When review files are requested, **Download ZIP** appears beside the After image. Edge variation and estimated noise appear below the pair. Add a clean 256 × 256 PNG or JPEG for that face if it matches the pose and crop. The app compares the resized original and result to the supplied reference using MAE and PSNR over the observed crop area. Without a reference, the panel displays **Ground truth unavailable**. Switching faces keeps each reference and its scores with the corresponding result.
 
-Optional removal review uses **Trained CodeFormer Completion R2** after the result, including when restoration was Off or Auto retained the original. Paint only the covering orange, inspect it, confirm the two statements and generate. Pixels outside the reviewed area are copied exactly from the supplied prepared/restored canvas; an empty selection skips completion. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
+Optional removal review uses **Trained CodeFormer Completion R2** after the picture result, including when restoration was Off. Paint only the covering orange, inspect it, confirm the two statements and generate. Pixels outside the reviewed area are copied exactly from the supplied prepared/restored canvas; an empty selection skips completion. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
 
 R2 has its own `codeformer_completion_r2.pth` file. Updating preserves existing R1 files and saved records. Missing or changed R2 weights refuse completion instead of silently using R1. Restoration and the optional covering detector are unchanged; the guided editor continues to use manual covering selection.
 
