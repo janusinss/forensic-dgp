@@ -1,4 +1,4 @@
-/* A frozen, clean frame becomes a reviewed Picture. No FAN or person tracking. */
+/* Select restoration crops from a frozen frame. */
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -8,7 +8,7 @@
   const clean = document.createElement('canvas'), cleanCtx = clean.getContext('2d');
   let tokenPromise, media, fileUrl, streamId, streamTimer, streamImage, latestBlob, frameId, rect, faces = [], detectionWarning;
   const frameCrops = new Map();
-  let revision = 0, frozen = false, pending = false, drawing = false, gesture, queuingDetected = false;
+  let revision = 0, frozen = false, pending = false, drawing = false, gesture, allSelected = false, selectedFace = 1;
   let savedUpload, fileReady=false;
   const status = text => { $('capture-status').textContent = text; };
   const error = text => { $('capture-error').textContent = text; $('capture-error').classList.toggle('hidden', !text); };
@@ -16,13 +16,12 @@
   const sourceReady = () => media || fileUrl || streamId;
   const validRect = () => rect && [rect.x, rect.y, rect.width, rect.height].every(Number.isInteger) && rect.x >= 0 && rect.y >= 0 && rect.width >= 16 && rect.height >= 16 && rect.width <= 1600 && rect.height <= 1600 && rect.x + rect.width <= clean.width && rect.y + rect.height <= clean.height;
   const cropKey = ({x,y,width,height}) => `${x},${y},${width},${height}`;
-  function remainingDetected() {
-    const queued = window.restorationQueue.captureIds;
+  function detectedCrops() {
     const seen = new Set();
     return faces.map((box, index) => ({ rectangle: faceRectangle(box), faceNumber: index + 1 }))
       .filter(({ rectangle }) => {
         const key = cropKey(rectangle);
-        if (seen.has(key) || queued.has(frameCrops.get(key)?.captureId)) return false;
+        if (seen.has(key)) return false;
         seen.add(key);
         return true;
       });
@@ -32,23 +31,19 @@
     count.classList.toggle('hidden', !frameId || Boolean(detectionWarning));
     button.classList.toggle('hidden', !frameId || faces.length < 2);
     if (!frameId) return;
-    const remaining = remainingDetected().length;
-    const slots = window.restorationQueue.remaining;
+    const countToUse = detectedCrops().length;
     count.textContent = `${faces.length} ${faces.length === 1 ? 'face' : 'faces'} detected.`;
-    if (faces.length > 1 && remaining > slots) count.textContent += slots
-      ? ` ${slots} queue ${slots === 1 ? 'slot' : 'slots'} available. Select faces individually or remove crops from the queue.`
-      : ' The queue is full. Remove crops to free slots.';
-    button.disabled = pending || window.restorationInput.busy || !remaining || remaining > slots;
-    button.textContent = remaining === faces.length ? `Add all ${remaining} to queue`
-      : remaining ? `Add ${remaining} to queue` : 'All detected faces queued';
+    if (countToUse > 12) count.textContent += ' Add all is available for up to 12 faces. Select one face or choose another frame.';
+    button.disabled = pending || window.restorationInput.busy || countToUse < 2 || countToUse > 12;
+    button.setAttribute('aria-pressed', String(allSelected));
+    $('capture-use-label').textContent = allSelected ? 'Use these faces' : 'Use this face';
   }
   const update = () => {
     $('capture-freeze').disabled = pending || frozen || !sourceReady() || (kind()==='video'&&(video.seeking||video.readyState<2));
     $('capture-resume').disabled = pending || !frozen || !sourceReady();
     $('capture-stop').disabled = !sourceReady() && !pending;
-    $('capture-use').disabled = pending || window.restorationInput?.busy || !frameId || !validRect();
-    $('capture-queue').disabled = $('capture-use').disabled;
-    $('capture-queue').classList.toggle('hidden', !frameId);
+    $('capture-use').disabled = pending || window.restorationInput?.busy || !frameId || (!allSelected && !validRect());
+    $('capture-use').classList.toggle('hidden', !frameId || (!allSelected && !validRect()));
     updateDetected();
     $('capture-start').disabled = pending;
     $('capture-source').disabled = pending;
@@ -97,7 +92,7 @@
     ctx.drawImage(clean,view.x,view.y,view.width,view.height,0,0,view.width,view.height);
     ctx.save();ctx.translate(-view.x,-view.y);
     const line = Math.max(1, view.width / 300); ctx.lineWidth = line;
-    faces.forEach((box,index) => { ctx.strokeStyle='#b8d9e5'; ctx.strokeRect(...box); ctx.font = `${Math.max(10,view.width/45)}px sans-serif`; ctx.fillStyle='#101d1d'; ctx.fillRect(box[0],box[1],line*16,line*10); ctx.fillStyle='#eaf2ea'; ctx.fillText(String(index+1),box[0]+line*2,box[1]+line*8); });
+    faces.forEach((box,index) => { ctx.strokeStyle=allSelected?'#dbec87':'#b8d9e5'; ctx.strokeRect(...box); ctx.font = `${Math.max(10,view.width/45)}px sans-serif`; ctx.fillStyle='#101d1d'; ctx.fillRect(box[0],box[1],line*16,line*10); ctx.fillStyle='#eaf2ea'; ctx.fillText(String(index+1),box[0]+line*2,box[1]+line*8); });
     if (rect) { ctx.strokeStyle='#dbec87'; ctx.lineWidth=line*1.5; ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); ctx.fillStyle='#dbec87'; const handle=line*5;ctx.fillRect(rect.x+rect.width-handle,rect.y+rect.height-handle,handle,handle); }
     ctx.restore();
   }
@@ -105,6 +100,7 @@
     if(!clean.width)return;view=makeView(clean.width,clean.height);$('capture-full-frame').setAttribute('aria-pressed','true');$('capture-view-label').textContent='Full frame';draw();
   }
   function setRect(next) {
+    allSelected = false;
     rect=next;
     if(!drawing)$('capture-crop-controls').classList.remove('hidden');
     for (const key of ['x','y','width','height']) $('capture-'+key).value=rect[key];
@@ -112,13 +108,14 @@
     draw(); update();
   }
   function faceRectangle([x,y,width,height]) {
-    const margin=Math.round(Math.max(width,height)*.15);
+    const margin=Math.round(Math.max(width,height)*.20);
     const left=Math.max(0,x-margin), top=Math.max(0,y-margin);
     const right=Math.min(clean.width,x+width+margin), bottom=Math.min(clean.height,y+height+margin);
     return {x:left,y:top,width:Math.min(1600,right-left),height:Math.min(1600,bottom-top)};
   }
   function selectFace(index) {
     if(pending)return;
+    selectedFace = index + 1;
     const selected=faceRectangle(faces[index]);
     view=makeView(clean.width,clean.height,selected);
     $('capture-full-frame').setAttribute('aria-pressed','false');$('capture-view-label').textContent=`Face ${index+1} selected. Preview zoomed for crop adjustment.`;
@@ -127,7 +124,6 @@
     if($('capture-face-select'))$('capture-face-select').value=String(index);
   }
   async function stop() {
-    cancelDetectedQueue();
     revision++;cancelDecode?.();cancelDecode=undefined;pending=false;fileReady=false; clearTimeout(streamTimer); streamTimer=undefined;
     media?.getTracks().forEach(track=>track.stop()); media=undefined;
     video.pause(); video.srcObject=null; video.removeAttribute('src'); video.load();
@@ -142,11 +138,11 @@
   // Temporary navigation preserves opened files; live/incomplete sources still stop.
   function suspendSource() {
     if(kind()!=='video'||!fileUrl||!fileReady){stop();return;}
-    cancelDetectedQueue();
     revision++;pending=false;video.pause();update();
   }
   function clearFrame() {
     frameCrops.clear();
+    allSelected = false; selectedFace = 1;
     drawing=false;gesture=undefined;frozen=false;view=undefined;frameId=undefined;rect=undefined;faces=[];detectionWarning=undefined;clean.width=clean.height=0;canvas.width=canvas.height=0;
     $('capture-canvas').classList.add('hidden');$('capture-crop-controls').classList.add('hidden');$('capture-faces').replaceChildren();
   }
@@ -287,59 +283,54 @@
     frameCrops.set(key, crop);
     return crop;
   }
-  async function queueDetected() {
+  function toggleDetected() {
     if ($('capture-queue-all').disabled) return;
-    const detected = remainingDetected();
+    allSelected = !allSelected;
+    if (allSelected) {
+      rect = undefined;
+      $('capture-crop-controls').classList.add('hidden');
+      $('capture-faces').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', 'false'));
+      if ($('capture-face-select')) $('capture-face-select').value = '';
+      fullFrame();
+      status(`${detectedCrops().length} faces selected. Choose Use these faces to continue.`);
+    } else {
+      draw();
+      status('Select a face or draw a crop.');
+    }
+    update();
+  }
+  async function saveCrop() {
+    if ($('capture-use').disabled) return;
+    const selection = allSelected ? detectedCrops() : [{ rectangle: rect, faceNumber: selectedFace }];
     const version = revision;
-    queuingDetected = pending = true; error(''); update();
-    status(`Preparing ${detected.length} detected ${detected.length === 1 ? 'face' : 'faces'} for the queue.`);
+    pending = true; update(); error('');
     try {
       const crops = [];
-      for (const { rectangle, faceNumber } of detected) {
+      for (const { rectangle, faceNumber } of selection) {
         const crop = await captureCrop(rectangle, version).catch(problem => {
-          throw new Error(`Face ${faceNumber} could not be queued. ${problem.message}`);
+          throw new Error(`Face ${faceNumber} could not be loaded. ${problem.message}`);
         });
         if (version !== revision) return;
         crops.push({ ...crop, faceNumber });
       }
-      window.restorationQueue.addDetected(crops);
-      status('Detected faces are ready for individual review in Face queue.');
-    } catch (problem) {
-      if (version === revision) {
-        error(problem.message);
-        status('No faces from this selection were added. Try again or select faces individually.');
+      const accepted = await window.restorationInput.useVideo(crops, {
+        token: await tokenPromise, isCurrent: () => version === revision
+      });
+      if (version !== revision) return;
+      if (!accepted) {
+        error($('brush-error').textContent || 'The selected faces could not be loaded. Try again.');
+        return;
       }
+      suspendSource();
+      window.dispatchEvent(new CustomEvent('video:settings'));
+    } catch (problem) {
+      if (version === revision) error(problem.message);
     } finally {
-      if (version === revision) { queuingDetected = pending = false; update(); }
+      if (version === revision) { pending = false; update(); }
     }
   }
-  function cancelDetectedQueue() {
-    if (!queuingDetected) return;
-    queuingDetected = false;
-    status('Adding detected faces stopped. Use the frozen frame to try again.');
-  }
-  async function saveCrop(toQueue){
-    if(toQueue && window.restorationQueue.full){error('The queue holds up to 12 crops. Remove one before adding another.');return;}
-    if(!frameId||!validRect()||pending)return;pending=true;update();error('');const version=revision;
-    try{
-      const crop = await captureCrop(rect, version);
-      if(version!==revision)return;
-      const { file, captureId } = crop;
-      if(toQueue){const id=window.restorationQueue.add(file,captureId);status(`Crop ${id} added. Select another face or open the queue.`);return;}
-      const accepted=await window.restorationInput.use(file,{captureId,label:'Captured face',isCurrent:()=>version===revision});
-      if(accepted&&version===revision){
-        $('capture-restore-upload').classList.toggle('hidden',!savedUpload);
-        suspendSource();
-        phase='review';renderPhase();$('brush-upload-heading').focus({preventScroll:true});
-      }
-      else if(version===revision)error($('brush-error').textContent||'The captured Picture could not be checked. Adjust the crop and try again.');
-    }catch(problem){if(version===revision)error(problem.message);}finally{if(version===revision){pending=false;update();}}
-  }
-  $('capture-use').addEventListener('click',()=>saveCrop(false));
-  $('capture-queue').addEventListener('click',()=>saveCrop(true));
-  $('capture-queue-all').addEventListener('click',queueDetected);
-  window.addEventListener('queue:changed',updateDetected);
-  window.addEventListener('queue:review',()=>{$('input-mode-picture').click();});
+  $('capture-use').addEventListener('click',saveCrop);
+  $('capture-queue-all').addEventListener('click',toggleDetected);
   $('capture-restore-upload').addEventListener('click',async()=>{if(savedUpload){const accepted=await window.restorationInput.use(savedUpload);if(accepted)$('capture-restore-upload').classList.add('hidden');}});
   window.addEventListener('picture:changed',event=>{if(!event.detail.captured){savedUpload=event.detail.file;$('capture-restore-upload').classList.add('hidden');}});
   $('capture-back').addEventListener('click',()=>{phase='capture';renderPhase();});

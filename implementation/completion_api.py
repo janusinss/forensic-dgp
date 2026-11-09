@@ -239,7 +239,7 @@ def prepare(original, image, metadata_raw):
     need(isinstance(bounds, list) and len(bounds) == 4 and all(type(v) is int for v in bounds), 'Invalid observed support.')
     left, top, right, bottom = bounds
     need(0 <= left < right <= 256 and 0 <= top < bottom <= 256, 'Invalid observed support.')
-    native = restoration.decode_original(original)
+    native = restoration.picture_native(original, metadata.get('picture_crop'))
     original256, observed, _, geometry = restoration.prepare_crop(native)
     need(bounds == geometry['observed_bounds_256'] and
          np.array_equal(read_png((admitted['path']/'original-256.png').read_bytes(), 'RGB'), original256),

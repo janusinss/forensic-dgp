@@ -31,7 +31,7 @@ class Element {
   after() {} focus() {} close() {}
 }
 
-function harness({deferFrame = false, deferCrop = false, deferOpen = false, faces = [[20,20,30,30]]} = {}) {
+function harness({deferFrame = false, deferCrop = false, deferOpen = false, deferUse = false, faces = [[20,20,30,30]]} = {}) {
   const elements = new Map();
   const get = id => { if (id === 'capture-draw') return null; if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); };
   const ctx = { clearRect() {}, drawImage() {}, save() {}, translate() {}, strokeRect() {}, fillRect() {}, fillText() {}, restore() {} };
@@ -53,6 +53,9 @@ function harness({deferFrame = false, deferCrop = false, deferOpen = false, face
     addEventListener(name,fn) { (docEvents[name] ||= []).push(fn); } };
   const revoked = [];
   let accepted = true, useCalls = 0;
+  let finishUse, useStarted;
+  const videoUseStarted = new Promise(resolve => { useStarted = resolve; });
+  const videoUses = [];
   const track = { stopCount:0, stop() { this.stopCount++; }, addEventListener() {} };
   const stream = { getTracks:() => [track], getVideoTracks:() => [track] };
   const queue = createQueue();
@@ -62,7 +65,17 @@ function harness({deferFrame = false, deferCrop = false, deferOpen = false, face
       get captureIds() { return new Set(queue.items.map(item => item.captureId)); },
       addDetected(crops) { queue.addMany(crops); }
     },
-    restorationInput: { busy:false, use:async () => {useCalls++; return accepted;} }, addEventListener(name,fn) { windowEvents.push([name,fn]); } };
+    restorationInput: {
+      busy: false,
+      use: async () => { useCalls++; return accepted; },
+      async useVideo(crops, options) {
+        useCalls++;
+        videoUses.push({ crops, options });
+        useStarted();
+        if (deferUse) await new Promise(resolve => { finishUse = resolve; });
+        return accepted && options.isCurrent();
+      }
+    }, addEventListener(name,fn) { windowEvents.push([name,fn]); } };
   const reply = data => ({ ok:true, status:200, json:async () => data });
   let requestedCrop, finishFrame, frameStarted, finishCrop, cropStarted, cropRequests = 0;
   const started = new Promise(resolve => {frameStarted=resolve;});
@@ -88,6 +101,7 @@ function harness({deferFrame = false, deferCrop = false, deferOpen = false, face
     setTimeout, clearTimeout, queueMicrotask };
   vm.runInNewContext(fs.readFileSync(path.resolve(source), 'utf8'), sandbox, {filename:source});
   return { get, video, revoked, track, doc, screen, queue, frameStarted:started, finishFrame:() => finishFrame(), cropStarted:cropRequestStarted, finishCrop:() => finishCrop(),
+    videoUses, videoUseStarted, finishUse: () => finishUse(), cropRequests: () => cropRequests,
     docEvent:name => (docEvents[name]||[]).forEach(fn=>fn()), windowEvent:name => windowEvents.filter(([key])=>key===name).forEach(([,fn])=>fn()),
     mutate:target => observers.filter(item=>item.target===target).forEach(item=>item.fn()), requestedCrop:() => requestedCrop, useCalls:() => useCalls, setAccepted:value => { accepted=value; } };
 }
@@ -106,16 +120,47 @@ async function chooseFace(h) {
   await h.get('capture-faces').children[0].fire('click');
 }
 
-test('bulk capture requests each distinct rectangle once and keeps entries pending', async () => {
+test('selecting all four detections sends an ordered group only when Use is clicked', async () => {
+  const h = harness({ faces: [[5,5,24,24], [60,5,24,24], [5,45,24,24], [60,45,24,24]] });
+  await openFile(h);
+  await h.get('capture-freeze').fire('click');
+  assert.equal(h.get('capture-detected-count').textContent, '4 faces detected.');
+  await h.get('capture-queue-all').fire('click');
+  assert.equal(h.cropRequests(), 0);
+  assert.equal(h.useCalls(), 0);
+  assert.equal(h.get('capture-use').disabled, false);
+
+  await h.get('capture-use').fire('click');
+
+  assert.equal(h.useCalls(), 1);
+  assert.equal(h.videoUses.length, 1);
+  assert.deepEqual(Array.from(h.videoUses[0].crops, item => [item.captureId, item.faceNumber]), [
+    ['crop-1', 1], ['crop-2', 2], ['crop-3', 3], ['crop-4', 4]
+  ]);
+  assert.ok(h.videoUses[0].crops.every(item => item.file instanceof File));
+  assert.equal(h.queue.items.length, 0);
+});
+
+test('selecting all can be toggled off without requesting crops', async () => {
+  const h = harness({ faces: [[20,20,30,30], [60,20,30,30]] });
+  await openFile(h);
+  await h.get('capture-freeze').fire('click');
+  await h.get('capture-queue-all').fire('click');
+  await h.get('capture-queue-all').fire('click');
+  assert.equal(h.get('capture-use').disabled, true);
+  assert.equal(h.cropRequests(), 0);
+  assert.equal(h.useCalls(), 0);
+});
+
+test('using all detections requests each distinct rectangle once', async () => {
   const h = harness({ faces: [[20,20,30,30], [20,20,30,30], [60,20,30,30]] });
   await openFile(h);
   await h.get('capture-freeze').fire('click');
   assert.equal(h.get('capture-detected-count').textContent, '3 faces detected.');
   await h.get('capture-queue-all').fire('click');
-  assert.deepEqual(Array.from(h.queue.items, item => [item.captureId, item.status]), [
-    ['crop-1', 'pending'], ['crop-2', 'pending']
-  ]);
-  assert.equal(h.get('capture-queue-all').disabled, true);
+  await h.get('capture-use').fire('click');
+  assert.equal(h.cropRequests(), 2);
+  assert.deepEqual(Array.from(h.videoUses[0].crops, item => item.captureId), ['crop-1', 'crop-2']);
 });
 
 test('return from face review preserves video until explicit Stop', async () => {
@@ -154,6 +199,8 @@ test('rejected picture keeps frozen frame and video resumable', async () => {
   await chooseFace(h);
   h.setAccepted(false);
   await get('capture-use').fire('click');
+  assert.equal(h.videoUses.length, 1);
+  assert.deepEqual(Array.from(h.videoUses[0].crops, item => [item.captureId, item.faceNumber]), [['crop-1', 1]]);
   assert.equal(video.src, 'blob:video');
   assert.equal(video.currentTime, 4.5);
   assert.equal(get('capture-resume').disabled, false);
@@ -304,6 +351,22 @@ test('late crop completion after mode switch is not adopted', async () => {
   assert.equal(get('capture-resume').disabled,false);
 });
 
+test('video adoption can check that its capture is still current after a mode switch', async () => {
+  const h = harness({ deferUse: true });
+  await openFile(h);
+  await chooseFace(h);
+  const using = h.get('capture-use').fire('click');
+  await Promise.race([h.videoUseStarted, using]);
+  assert.equal(h.videoUses.length, 1);
+  const { isCurrent } = h.videoUses[0].options;
+  assert.equal(isCurrent(), true);
+  await h.get('input-mode-picture').fire('click');
+  assert.equal(isCurrent(), false);
+  h.finishUse();
+  await using;
+  assert.equal(h.screen.dataset.inputMode, 'picture');
+});
+
 test('accepting a webcam face still releases its track', async () => {
   const h = harness(), {get,track} = h;
   await get('input-mode-video').fire('click');
@@ -331,7 +394,7 @@ test('padding at the frame edge does not shift the opposite crop edge', async ()
   await openFile(h);
   await chooseFace(h);
   await h.get('capture-use').fire('click');
-  assert.deepEqual(h.requestedCrop(), { x: 0, y: 0, width: 37, height: 48 });
+  assert.deepEqual(h.requestedCrop(), { x: 0, y: 0, width: 39, height: 50 });
 });
 
 test('dragging a blank frame area creates a manual crop without a Draw crop button', async () => {
