@@ -628,6 +628,7 @@ begin
   end;
 #endif
   ExtractTemporaryFile('gui_setup.ps1');
+  ExtractTemporaryFile('check_update.ps1');
   ExtractTemporaryFile('distribution.ps1');
   ExtractTemporaryFile('app-source.zip');
   ExtractTemporaryFile('app-source.json');

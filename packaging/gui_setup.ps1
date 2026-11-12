@@ -69,17 +69,18 @@ try {
   if ($ExpectedManifestHash -cnotmatch '^[0-9a-f]{64}$' -or (Hash-File $manifestPath) -cne $ExpectedManifestHash) { throw 'Embedded release manifest differs.' }
   $release=Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
   if ($release.schema -ne 1 -or $release.commit -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid embedded release identity.' }
-  $allowed=@('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1','offline-payload-manifest.json')
+  $required=@('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1','check_update.ps1')
+  $allowed=$required+@('offline-payload-manifest.json')
   foreach ($item in $release.files.psobject.Properties) {
     if ($item.Name -notin $allowed -or $item.Value -cnotmatch '^[0-9a-f]{64}$') { throw 'Unexpected release input.' }
     $relative=$(if ($item.Name -eq 'offline-payload-manifest.json') {'payload\manifest.json'} else {$item.Name})
     if ((Hash-File (Join-Path $Stage $relative)) -cne $item.Value) { throw "Embedded release input differs: $($item.Name)" }
   }
-  foreach ($name in @('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1')) {
+  foreach ($name in $required) {
     if (!$release.files.psobject.Properties[$name]) { throw 'Incomplete release inputs.' }
   }
   $offline=[bool]($release.psobject.Properties['payload'] -and $release.payload -eq 'offline-bundled')
-  $inputCount=$(if ($offline) {9} else {8})
+  $inputCount=$required.Count+[int]$offline
   if (@($release.files.psobject.Properties).Count -ne $inputCount) { throw 'Release input inventory differs.' }
   if ($offline -and !$release.files.psobject.Properties['offline-payload-manifest.json']) { throw 'Offline release inputs are incomplete.' }
   if ($offline) { Verify-Payload (Join-Path $Stage 'payload') $release.files.'offline-payload-manifest.json' }
