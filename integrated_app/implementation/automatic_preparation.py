@@ -1,12 +1,18 @@
 """Conservative optional Protect + Auto-match routing before restoration."""
 
+import io
+
 import numpy as np
 from PIL import Image, ImageFilter
-from scipy.ndimage import binary_closing, find_objects, gaussian_filter, label, uniform_filter, uniform_filter1d
+from scipy.ndimage import binary_closing, binary_dilation, find_objects, gaussian_filter, label, uniform_filter, uniform_filter1d
 
 from .blur_match import estimate_tiles
+from .irregular_mosaic import irregular_mosaic_mask
+from .perspective_mosaic import perspective_mosaic_mask
 from .preparation import build_preview, json_bytes, png, sha
-from .scanline_cleanup import prepare_scanlines
+from .scanline_cleanup import detect_scanlines, prepare_scanlines
+from .softened_grid import softened_mask
+from .tiny_grid import tiny_grid_mask
 
 PIXELATION_RADIUS_AT256 = 3.0
 PIXELATION_CANDIDATES_AT256 = (2.5, 3.0, 3.5)
@@ -272,10 +278,23 @@ def picture_pixelation(source):
     mask |= gaps
     if analysis is not source:
         mask = np.asarray(Image.fromarray(mask).resize(image.size, Image.Resampling.NEAREST))
-    strength = choose_pixelation_radius(image, mask)
+    return apply_pixelation_mask(source, mask, analysis.shape[:2][::-1], int(gaps.sum()))
+
+
+def apply_pixelation_mask(source, mask, analysis_size, recovered_gaps, angle=None, tiny_period=None,
+                          geometric_pattern=None):
+    image = Image.fromarray(source)
+    if geometric_pattern or angle is not None or tiny_period is not None:
+        basis = geometric_pattern or ('rotated_mosaic_pilot' if angle is not None else 'tiny_mosaic_pilot')
+        strength = {'basis': basis, 'selected_radius_at256': PIXELATION_RADIUS_AT256}
+    else:
+        strength = choose_pixelation_radius(image, mask)
     radius_at256 = strength['selected_radius_at256']
     radius = radius_at256 * max(image.size) / 256
-    filtered = np.asarray(image.filter(ImageFilter.GaussianBlur(radius)))
+    if geometric_pattern:
+        filtered = gaussian_filter(source.astype(np.float32), sigma=(radius, radius, 0)).round().astype(np.uint8)
+    else:
+        filtered = np.asarray(image.filter(ImageFilter.GaussianBlur(radius)))
     prepared = source.copy()
     prepared[mask] = filtered[mask]
     changed = np.any(prepared != source, axis=2)
@@ -288,20 +307,212 @@ def picture_pixelation(source):
     full_png = png(prepared)
     mask_png = png(mask.astype(np.uint8) * 255)
     report = {'policy': 'multiscale-picture-block-regions-v3', 'classification_is_approximate': True,
-              'native_size': list(image.size), 'analysis_size': list(analysis.shape[:2][::-1]), 'region_bounds': bounds,
+              'native_size': list(image.size), 'analysis_size': list(analysis_size), 'region_bounds': bounds,
               'Gaussian_radius_at256': radius_at256, 'native_Gaussian_radius': radius,
               'strength_selection': strength,
-              'recovered_gap_analysis_pixels': int(gaps.sum()),
+              'recovered_gap_analysis_pixels': recovered_gaps,
               'masked_native_pixels': int(mask.sum()), 'changed_native_pixels': int(changed.sum()),
               'full_image_sha256': sha(full_png), 'mask_sha256': sha(mask_png)}
+    if angle is not None:
+        report['rotation_correction_degrees'] = angle
+    if tiny_period is not None:
+        report['tiny_grid_period_native'] = tiny_period
+    if geometric_pattern:
+        report['geometric_mosaic_pattern'] = geometric_pattern
     return prepared, report, {'full-image-smoothed.png': full_png, 'full-image-pixelation-mask.png': mask_png}
+
+
+def tiny_crop_pixelation(source):
+    height, width = source.shape[:2]
+    if min(height, width) < 32 or max(height, width) >= 48:
+        return None, None, {}
+    gray = np.asarray(Image.fromarray(source).convert('L'), dtype=np.float32)
+    mask, periods = tiny_grid_mask(gray)
+    if mask is None:
+        return None, None, {}
+    return apply_pixelation_mask(source, mask, (width, height), 0, tiny_period=periods)
+
+
+def rotated_pixelation(source):
+    """Rank angle corrections by grid evidence and map a supported mask back."""
+    image = Image.fromarray(source)
+    if min(image.size) < 128:
+        return None, None, {}
+    scale = min(1., 256 / max(image.size))
+    size = tuple(round(side * scale) for side in image.size)
+    if min(size) < 96:
+        return None, None, {}
+    analysis = image.resize(size, Image.Resampling.BOX) if scale < 1 else image
+    # Only inspect the central region to exclude interpolated corners.
+    left, top = (round(side * .15625) for side in size)
+    core = (left, top, size[0] - left, size[1] - top)
+    old_angles = (-15, 15, -30, 30)
+    ranked = []
+    valid_image = Image.new('L', size, 255)
+
+    def probe(angle):
+        valid = valid_image.rotate(angle, resample=Image.Resampling.NEAREST).crop(core)
+        if valid.getextrema()[0] == 0:
+            return
+        window = analysis.rotate(angle, resample=Image.Resampling.BICUBIC).crop(core)
+        signal = pixelation_signal(np.asarray(window), (0, 0, *window.size))
+        ranked.append((signal['suspected'], signal['score'], angle, window))
+
+    for angle in range(-33, 34, 3):
+        if angle:
+            probe(angle)
+    promising = sorted(ranked, key=lambda item: item[1], reverse=True)[:2]
+    for _, score, angle, _ in promising:
+        if 1.65 <= score < 2.6:
+            for finer in (angle - 1, angle + 1):
+                if abs(finer) <= 33:
+                    probe(finer)
+    # Stable tie-breaking keeps the strongest aligned grid first.
+    ranked.sort(key=lambda item: (item[0], item[1], -abs(item[2])), reverse=True)
+    preferred = [item for item in ranked if item[0]][:3]
+    tried = {item[2] for item in preferred}
+    fallback = [item for item in ranked if item[2] in old_angles and item[2] not in tried]
+    for _, _, angle, window in preferred + fallback:
+        _, report, evidence = picture_pixelation(np.asarray(window))
+        if report is None or report['masked_native_pixels'] < max(256, .04 * window.width * window.height):
+            continue
+        with Image.open(io.BytesIO(evidence['full-image-pixelation-mask.png'])) as detected:
+            mask_image = Image.new('L', size)
+            mask_image.paste(detected, (left, top))
+        mask_image = mask_image.rotate(-angle, resample=Image.Resampling.NEAREST)
+        mask = np.asarray(mask_image.resize(image.size, Image.Resampling.NEAREST)) > 0
+        return apply_pixelation_mask(source, mask, size, 0, angle)
+    return None, None, {}
+
+
+def prepare_mosaics(source):
+    """Select geometric masks and coordinate spatially distinct treatments."""
+    regular = picture_pixelation(source)
+    if regular[0] is None:
+        regular = rotated_pixelation(source)
+    height, width = source.shape[:2]
+    existing_area = regular[1].get('masked_native_pixels', width * height) if regular[0] is not None else 0
+    size = tuple(round(side * min(1., 256 / max(width, height))) for side in (width, height))
+    if min(width, height) < 128 or min(size) < 96:
+        return regular
+    analysis = np.asarray(Image.fromarray(source).resize(size, Image.Resampling.BOX))
+    irregular = irregular_mosaic_mask(analysis)
+    fallback = regular
+    if existing_area < .08 * width * height:
+        candidates = (('perspective', perspective_mosaic_mask(analysis)), ('irregular', irregular))
+        pattern, mask = max(candidates, key=lambda item: item[1].sum())
+        coverage = float(mask.mean())
+        if coverage >= .04 and coverage * width * height > 2 * existing_area:
+            native_mask = np.asarray(Image.fromarray(mask).resize((width, height), Image.Resampling.NEAREST))
+            fallback = apply_pixelation_mask(source, native_mask, size, 0, geometric_pattern=pattern)
+    if regular[0] is None or irregular.mean() < .04 or 'full-image-pixelation-mask.png' not in regular[2]:
+        return fallback
+    with Image.open(io.BytesIO(regular[2]['full-image-pixelation-mask.png'])) as base_image:
+        base = np.asarray(base_image) > 0
+        boundary = np.asarray(base_image.resize(size, Image.Resampling.NEAREST)) > 0
+    boundary = binary_dilation(boundary, iterations=2)
+    components, count = label(irregular)
+    areas = np.bincount(components.ravel(), minlength=count + 1)
+    overlaps = np.bincount(components[boundary], minlength=count + 1)
+    accepted = (areas >= .04 * irregular.size) & (overlaps <= .30 * areas)
+    accepted[0] = False
+    extra = accepted[components] & ~boundary
+    if extra.mean() < .03:
+        return fallback
+    extra = np.asarray(Image.fromarray(extra).resize((width, height), Image.Resampling.NEAREST)) & ~base
+    prepared_extra, extra_report, extra_evidence = apply_pixelation_mask(source, extra, size, 0,
+                                                                        geometric_pattern='irregular')
+    if prepared_extra is None:
+        return fallback
+    prepared = regular[0].copy()
+    prepared[extra] = prepared_extra[extra]
+    mask = base | extra
+    image_png = png(prepared)
+    mask_png = png(mask.astype(np.uint8) * 255)
+    report = {**regular[1], 'policy': 'coordinated-mosaic-regions-v1', 'coordinated_mosaic_regions': True,
+              'region_bounds': regular[1]['region_bounds'] + extra_report['region_bounds'],
+              'irregular_mask_sha256': extra_report['mask_sha256'], 'masked_native_pixels': int(mask.sum()),
+              'changed_native_pixels': int(np.any(prepared != source, axis=2).sum()),
+              'full_image_sha256': sha(image_png), 'mask_sha256': sha(mask_png)}
+    return prepared, report, {'full-image-smoothed.png': image_png, 'full-image-pixelation-mask.png': mask_png,
+                              'irregular-region-mask.png': extra_evidence['full-image-pixelation-mask.png']}
+
+
+def prepare_scanline_mosaic(source, notched):
+    """Remove a coherent row offset before testing for an independent mosaic."""
+    height, width = source.shape[:2]
+    if min(height, width) < 96 or max(height, width) > 640:
+        return None
+    residual = source.astype(np.float32) - notched
+    row_offset = np.median(residual, axis=1, keepdims=True)
+    removed_energy = float(np.mean(residual ** 2))
+    if removed_energy < 4:
+        return None
+    explained = 1 - float(np.mean((residual - row_offset) ** 2)) / removed_energy
+    if explained < .72:
+        return None
+    corrected = np.clip(np.rint(source - row_offset), 0, 255).astype(np.uint8)
+    if detect_scanlines(corrected) is not None:
+        return None
+
+    _, mosaic, artifacts = picture_pixelation(corrected)
+    if mosaic is None:
+        return None
+    mask_png = artifacts['full-image-pixelation-mask.png']
+    with Image.open(io.BytesIO(mask_png)) as image:
+        mask = np.asarray(image) > 0
+    if not .04 <= mask.mean() <= .65:
+        return None
+    y, x = np.nonzero(mask)
+    rectangle = (int(x.min()), int(y.min()), int(x.max() - x.min() + 1), int(y.max() - y.min() + 1))
+    if min(rectangle[2:]) < 48 or mask.sum() < .40 * rectangle[2] * rectangle[3]:
+        return None
+    detected = pixelation_signal(corrected, rectangle)
+    if not detected['suspected'] or detected['score'] < 2.4:
+        return None
+    scale = max(width, height) / 256
+    corrected_image = Image.fromarray(corrected)
+    floor = np.asarray(corrected_image.filter(ImageFilter.GaussianBlur(.6 * scale)))
+    baseline_signal = pixelation_signal(floor, rectangle)
+    if not baseline_signal['suspected']:
+        return None
+
+    def detail(rgb):
+        gray = np.asarray(Image.fromarray(rgb).convert('L'), dtype=np.float32)
+        dx = gaussian_filter(gray, 2.5 * scale, order=(0, 1))
+        dy = gaussian_filter(gray, 2.5 * scale, order=(1, 0))
+        return float(np.hypot(dx, dy)[mask].mean())
+
+    baseline_detail = detail(floor)
+    if baseline_detail < .5:
+        return None
+    for radius in (2., 2.5, 3.):
+        filtered = np.asarray(corrected_image.filter(ImageFilter.GaussianBlur(radius * scale)))
+        combined = floor.copy()
+        combined[mask] = filtered[mask]
+        remaining = pixelation_signal(combined, rectangle)['score']
+        retained = detail(combined) / baseline_detail
+        if remaining <= .80 * baseline_signal['score'] and retained >= .85:
+            return combined, mask_png, {'radius_at256': radius, 'masked_native_pixels': int(mask.sum()),
+                                        'grid_score_before': baseline_signal['score'], 'grid_score_after': remaining,
+                                        'detail_retention': round(retained, 4), 'row_energy_fraction': round(explained, 4),
+                                        'background_radius_at256': .6, 'mask_sha256': sha(mask_png)}
+    return None
 
 
 def prepare_source(source):
     """Choose full-source preparation before falling back to face analysis."""
     cleaned, report = prepare_scanlines(source)
     if cleaned is None:
-        return picture_pixelation(source)
+        mosaics = prepare_mosaics(source)
+        return mosaics if mosaics[0] is not None else softened_pixelation_evidence(source)
+    joint = prepare_scanline_mosaic(source, cleaned)
+    if joint is not None:
+        combined, mask_png, mosaic = joint
+        contents = png(combined)
+        report.update(policy='coordinated-scanline-mosaic-v1', mosaic=mosaic, Gaussian_radius_at256=.6,
+                      changed_native_pixels=int(np.any(combined != source, axis=2).sum()), full_image_sha256=sha(contents))
+        return combined, report, {'scanline-cleaned.png': contents, 'scanline-mosaic-mask.png': mask_png}
     # A light finishing pass helps V2 with the residual comb edges that a
     # narrow notch leaves behind, as observed in the wild2 comparison.
     image = Image.fromarray(cleaned)
@@ -311,6 +522,27 @@ def prepare_source(source):
     report['changed_native_pixels'] = int(np.any(cleaned != source, axis=2).sum())
     report['full_image_sha256'] = sha(contents)
     return cleaned, report, {'scanline-cleaned.png': contents}
+
+
+def softened_pixelation_evidence(source):
+    """Record a suspected softened grid for review without changing the input."""
+    image = Image.fromarray(source)
+    scale = min(1., 384 / max(image.size))
+    size = tuple(round(side * scale) for side in image.size)
+    if min(size) < 112:
+        return None, None, {}
+    analysis = image.convert('L')
+    if scale < 1:
+        analysis = analysis.resize(size, Image.Resampling.BOX)
+    mask = softened_mask(np.asarray(analysis, dtype=np.float32))
+    if not mask.any():
+        return None, None, {}
+    mask_image = Image.fromarray(mask).resize(image.size, Image.Resampling.NEAREST)
+    contents = png(np.asarray(mask_image, dtype=np.uint8) * 255)
+    report = {'policy': 'softened-mosaic-spectrum-v1', 'classification_is_approximate': True,
+              'native_size': list(image.size), 'analysis_size': list(size),
+              'masked_native_pixels': int(np.count_nonzero(mask_image)), 'mask_sha256': sha(contents)}
+    return None, report, {'softened-mosaic-mask.png': contents}
 
 
 def decide(source, face):

@@ -14,7 +14,10 @@ type Release = {
 
 const release = releaseData as Release
 const size = release.bytes >= 1_000_000_000 ? `${(release.bytes / 1_000_000_000).toFixed(2)} GB` : `${(release.bytes / 1_000_000).toFixed(1)} MB`
-const currentWorkflow = release.version === '0.2.6'
+const [major, minor, patch] = release.version.split('.').map(Number)
+const newerMinor = major > 0 || minor > 2
+const currentWorkflow = newerMinor || (minor === 2 && patch >= 6)
+const updateCheck = newerMinor || (minor === 2 && patch >= 7)
 
 function DownloadIcon() {
   return (
@@ -100,6 +103,9 @@ export default function App() {
             <p className="setup-note">{release.offline
               ? 'Includes Python, application libraries and models. After downloading, setup works offline. Microsoft Edge is required; setup checks available disk space. Existing installations can be updated, repaired or moved.'
               : 'First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.'}</p>
+            {updateCheck && (
+              <p className="setup-note">Use Check for updates on the installer’s Before you install page. To upgrade, run the newer installer in your existing folder to keep your saved records. This release also fixes startup when Windows uses different spellings of the same temporary folder.</p>
+            )}
             {(release.version === '0.2.4' || currentWorkflow) && (
               <p className="setup-note">Uninstalling permanently removes the app, models and saved records from the installation folder.</p>
             )}
@@ -123,7 +129,9 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">02</span>
                   <div>
                     <h3>Restore with Auto</h3>
-                    <p>Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.</p>
+                    <p>{updateCheck
+                      ? 'Auto handles regular, tilted and irregular mosaics, scanlines, JPEG blocking and localized blur. When it finds separate evidence for overlapping artifacts, it can combine treatments before restoring each face.'
+                      : 'Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.'}</p>
                   </div>
                 </li>
                 <li>

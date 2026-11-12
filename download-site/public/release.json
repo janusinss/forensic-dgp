@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "version": "0.2.6",
-  "filename": "ForensicDGP_Setup-0.2.6.exe",
-  "bytes": 1045830949,
-  "sha256": "d35eeabbe27c43d86cb52e5322c5778c82fd6eb2cbcc76444708bdb91baf0ad9",
+  "version": "0.2.7",
+  "filename": "ForensicDGP_Setup-0.2.7.exe",
+  "bytes": 1313980755,
+  "sha256": "246c8c90f7d223f5afdd695efbf6c18a48d718c1fd0559d227c7cfe513dc7c23",
   "signed": false,
   "preview": true,
-  "downloadUrl": "https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.6/ForensicDGP_Setup-0.2.6.exe",
-  "checksumUrl": "/downloads/ForensicDGP_Setup-0.2.6.exe.sha256",
+  "downloadUrl": "https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.7/ForensicDGP_Setup-0.2.7.exe",
+  "checksumUrl": "/downloads/ForensicDGP_Setup-0.2.7.exe.sha256",
   "offline": true
 }

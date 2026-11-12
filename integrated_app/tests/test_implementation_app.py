@@ -544,6 +544,26 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(base64.b64decode(result['scanline_cleaned_full_image'].split(',', 1)[1]), png(prepared))
         worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v2')
 
+    def test_video_auto_keeps_scanline_mosaic_mask_with_frozen_crop(self):
+        from implementation import automatic_preparation
+
+        self.make_video_crop()
+        prepared = self.rgb // 2
+        mask = png(np.full(self.rgb.shape[:2], 255, np.uint8))
+        report = {'spacing_native_pixels': 5., 'mosaic': {'radius_at256': 2.}}
+        evidence = {'scanline-cleaned.png': png(prepared), 'scanline-mosaic-mask.png': mask}
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(prepared, report, evidence)),
+            patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker,
+        ):
+            status, result = self.video_restore(self.capture_owner, restoration='auto', preparation_mode='automatic')
+        self.assertEqual(status, 200)
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'scanline_mosaic_coordinated')
+        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v2')
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('capture/frame-scanline-mosaic-mask.png'), mask)
+
     def test_video_auto_reuses_verified_frame_scan_for_queued_crops(self):
         from implementation import automatic_preparation
 
@@ -586,6 +606,72 @@ class ControllerTests(unittest.TestCase):
         np.testing.assert_array_equal(prepare.call_args.args[1], self.rgb)
         worker.assert_called_once_with(self.contents, 'v2')
         self.assertEqual(result['metadata']['automatic_preparation']['face_detection'], 'smoothed_detection_copy_with_block_signal')
+
+    def test_picture_auto_delivers_jpeg_preparation_and_runs_v2_once(self):
+        from implementation import automatic_preparation, jpeg_deblocking
+
+        deblocked = self.rgb.copy()
+        deblocked[:, :, 0] = 90
+        report = {'preparation_model': 'FBCNN RGB', 'preparation_forward_returns': 1}
+        regional = {'native_size': [128, 96], 'Gaussian_radius_at256': 3.0}
+        full = png(self.rgb // 2)
+        artifacts = {'full-image-smoothed.png': full}
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(self.rgb // 2, regional, artifacts)),
+            patch.object(jpeg_deblocking, 'prepare_jpeg', return_value=(deblocked, report)),
+            patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker,
+        ):
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        worker.assert_called_once_with(png(deblocked), 'v2')
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'jpeg_deblocking')
+        self.assertEqual(result['metadata']['jpeg_deblocking'], report)
+        self.assertEqual(result['metadata']['neural_forward_returns'], 1)
+        self.assertEqual(base64.b64decode(result['smoothed_full_picture'].split(',', 1)[1]), full)
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('uploaded-original.bin'), self.contents)
+            self.assertEqual(archive.read('derived-native.png'), png(deblocked))
+
+    def test_picture_auto_uses_hybrid_bytes_and_skips_separate_jpeg_pass(self):
+        from implementation import automatic_preparation, jpeg_deblocking, mixed_jpeg
+
+        combined = self.rgb // 3
+        combined_png = png(combined)
+        report = {'mixed_jpeg_mosaic': True, 'mosaic_grid_period_native': 4, 'outside_deblock_fraction': .35}
+        evidence = {'full-image-smoothed.png': combined_png}
+        restored = png(np.zeros((256, 256, 3), np.uint8))
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+            patch.object(mixed_jpeg, 'prepare_mixed_jpeg', return_value=(combined, report, evidence)),
+            patch.object(jpeg_deblocking, 'prepare_jpeg') as standalone,
+            patch.object(controller, 'one_forward', return_value=(None, restored, {})) as worker,
+        ):
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        standalone.assert_not_called()
+        worker.assert_called_once_with(combined_png, 'v2')
+        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'jpeg_mosaic_coordinated')
+        self.assertEqual(base64.b64decode(result['smoothed_full_picture'].split(',', 1)[1]), combined_png)
+
+    def test_softened_mosaic_uses_direct_v2_and_retains_the_diagnostic_mask(self):
+        from implementation import automatic_preparation
+
+        mask = png(np.full(self.rgb.shape[:2], 255, np.uint8))
+        report = {'policy': 'softened-mosaic-spectrum-v1', 'native_size': [128, 96]}
+        output = png(np.zeros((256, 256, 3), np.uint8))
+        with (
+            patch.object(automatic_preparation, 'prepare_source',
+                         return_value=(None, report, {'softened-mosaic-mask.png': mask})),
+            patch.object(capture_api, 'detect_faces', side_effect=AssertionError('Skip face preparation')),
+            patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker,
+        ):
+            result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        worker.assert_called_once_with(self.contents, 'v2')
+        self.assertFalse(result['metadata']['preparation_applied'])
+        self.assertEqual(result['metadata']['automatic_preparation'],
+                         {'route': 'direct', 'reason': 'suspected_softened_mosaic'})
+        self.assertTrue(result['metadata']['softened_mosaic_detection']['crop_intersects'])
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
+            self.assertEqual(archive.read('softened-mosaic-mask.png'), mask)
 
     def test_picture_auto_exports_full_frame_but_restores_only_selected_crop(self):
         from implementation import automatic_preparation
