@@ -44,6 +44,24 @@ After uploading a picture, select **Continue**. Settings lists **Auto**, **Manua
 
 Auto runs the restoration model once per crop. The result shows the preparation used. Full-source scanline cleanup or pixelation smoothing also offers a separate full-size prepared PNG. These experimental routes improve the appearance of some inputs. Detection, region boundaries, and the chosen strength are estimates. **Manual** lets Picture users bypass preparation or mark regions. **Off** returns the resized original.
 
+If the regional scan finds no supported grid, Auto tests rotation corrections from −33° to +33° in 3° steps. It can refine promising angles by 1°. It maps a supported mask back to the original image and applies 3.0 px smoothing within that mask. This experimental fallback covers some tilted mosaics in pictures and frozen frames.
+
+For pictures and frozen frames where the existing grid mask covers less than 8% of the source, Auto can test for a perspective-warped mosaic. It requires agreement across overlapping windows on two nonorthogonal seam directions, flat cell interiors, and sufficient colour variation. Auto uses the perspective mask when it covers at least 4% of the source and more than doubles the existing coverage. The mask and smoothing stay in source coordinates.
+
+Auto also looks for a concentration of small, bounded, nearly flat cells with a diverse palette. This irregular mosaic route uses the same coverage checks and can locate some nonrectangular pixelation patterns. Where both tests qualify, Auto uses the larger supported mask.
+
+When a rectangular or tilted grid and a separate irregular region both qualify, Auto preserves the first preparation and adds smoothing only inside the supported irregular region outside it. The review archive contains the combined mask and the added irregular-region mask.
+
+When horizontal scanlines and a supported rectangular mosaic coexist, Auto checks whether the scanline pattern can be explained by a shared row offset. If correction removes the scanline signal, Auto reassesses the mosaic and chooses the lightest local smoothing that reduces its grid score while retaining at least 85% of the measured detail signal. Scanline-only inputs continue through the existing scanline preparation.
+
+If neither grid scan finds a region, Auto can flag repeating softened seams. When that mask overlaps the selected crop and no other preparation applies, Auto runs direct restoration. The evidence ZIP includes the suspected mask. This avoids additional Gaussian smoothing when the grid edges are already soft.
+
+For a native crop between 32 and 47 px on both axes, Auto can smooth a strong grid when overlapping windows agree on the block spacing. The evidence ZIP retains the crop mask. This route uses the same 3.0 px reference-scale strength as the rotation fallback and scales it to the native crop.
+
+For a heavily quantized JPEG with strong native 8 px seams on both axes, Auto can use the RGB FBCNN deblocker before V2. The prepared image is available in the result. This route uses native crops from 96 to 384 px and requires the pinned `fbcnn_color.pth` in the implementation model directory. The worker verifies the checkpoint and the result must reduce the seam signal on both axes. Inputs outside those conditions use the other Auto routes. The [authors' release](https://github.com/jiaxi-jiang/FBCNN/releases/tag/v1.0) provides the checkpoint.
+
+On Picture uploads with a strongly supported 4 px mosaic and independent 8 px JPEG seams outside it, Auto can use 1 px smoothing in the mosaic and a 35% FBCNN blend elsewhere. It applies FBCNN at the full JPEG's native origin before extracting the selected crop. Auto uses the combined result when the exterior seam signal falls by at least 20% on both axes and the mean non-seam edge signal retains at least 90% of its original value. Other cases continue through the existing preparation routes. V2 runs once for the selected crop.
+
 In reviewed preparation, green-only **Auto-match surrounding blur** measures reliable edges across the full upload, including protected areas, and adds blur to sharper areas outside green. With this matching option off or blue marks present, **Manual blur strength** sets the radius. Green takes priority. Select **Continue** on the preparation preview to use it for restoration. Generated appearance can change.
 
 After freezing a video, webcam, or RTSP frame, select one face or click **Add all** for up to 12 faces. **Use this face** or **Use these faces** opens Settings directly. Settings shows the selected crops and one shared **Auto**, **Manual**, or **Off** choice, with **Auto** selected by default. Video **Auto** reuses preparation of the verified frozen frame across the selected crops and offers one shared full-frame PNG when full-frame preparation is applied. Video capture skips manual preparation. In Restore, the app processes the selected faces in order, one at a time.

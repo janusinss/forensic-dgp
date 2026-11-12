@@ -3,6 +3,12 @@
   "default_model": "v2",
   "release": "https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1",
   "assets": {
+    "fbcnn_color": {
+      "filename": "fbcnn_color.pth",
+      "size": 287755111,
+      "sha256": "8b0e4ef23d59cf7ac934a342cb31a17619e4fa4a0b3374a9d78c5174312387e8",
+      "url": "https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth"
+    },
     "codeformer_r2": {
       "filename": "codeformer_r2.pth",
       "size": 376609465,

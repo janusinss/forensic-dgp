@@ -367,10 +367,13 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             payloads['picture-crop.json'] = canonical({'rectangle': rectangle, 'uploaded_bytes_sha256': digest(contents)})
         auto_decision = picture_regions = frame_regions = smoothed_frame_png = None
         scanline_report = cleaned_full_image = None
+        deblocked = jpeg_report = None
+        softened_detection = None
+        tiny_report = None
         if automatic:
             need(protect is None and apply is None and not preview_id and not confirmed,
                  'Auto selects its own preparation. Remove manual preparation fields.')
-            from .automatic_preparation import prepare as prepare_automatically, prepare_source, pixelation_signal
+            from .automatic_preparation import prepare as prepare_automatically, prepare_source, pixelation_signal, tiny_crop_pixelation
             from .capture_api import detect_faces
             selected_rectangle = rectangle
             detection_method = 'original_image'
@@ -382,42 +385,92 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             else:
                 source_rgb = decode_original(contents)
                 smoothed_image, regional_report, region_evidence = prepare_source(source_rgb)
+                if 'scanline-cleaned.png' not in region_evidence:
+                    from .jpeg_deblocking import prepare_jpeg
+                    from .mixed_jpeg import prepare_mixed_jpeg
+                    mixed = prepare_mixed_jpeg(contents, source_rgb, rectangle)
+                    if mixed is not None:
+                        smoothed_image, regional_report, region_evidence = mixed
+                    else:
+                        deblocked, jpeg_report = prepare_jpeg(contents, native, rectangle)
                 payloads.update(region_evidence)
 
             if 'scanline-cleaned.png' in region_evidence:
                 scanline_report = regional_report
                 cleaned_full_image = region_evidence['scanline-cleaned.png']
+                if capture_id and 'scanline-mosaic-mask.png' in region_evidence:
+                    payloads['capture/frame-scanline-mosaic-mask.png'] = region_evidence['scanline-mosaic-mask.png']
+            elif 'softened-mosaic-mask.png' in region_evidence:
+                mask_contents = region_evidence['softened-mosaic-mask.png']
+                with Image.open(io.BytesIO(mask_contents)) as mask_image:
+                    if selected_rectangle is not None:
+                        x, y, width, height = selected_rectangle
+                        mask_image = mask_image.crop((x, y, x + width, y + height))
+                    intersects = mask_image.getbbox() is not None
+                softened_detection = {**regional_report, 'crop_intersects': intersects}
+                if capture_id:
+                    payloads['capture/frame-softened-mosaic-mask.png'] = mask_contents
             elif regional_report is not None:
                 if capture_id:
                     frame_regions = regional_report
                     smoothed_frame_png = region_evidence['full-image-smoothed.png']
                     payloads['capture/frame-pixelation-mask.png'] = region_evidence['full-image-pixelation-mask.png']
+                    if 'irregular-region-mask.png' in region_evidence:
+                        payloads['capture/frame-irregular-region-mask.png'] = region_evidence['irregular-region-mask.png']
                 else:
                     picture_regions = regional_report
 
-            region_input = None
-            if smoothed_image is not None:
+            region_input = deblocked
+            if region_input is None and smoothed_image is not None:
                 region_input = smoothed_image
                 if selected_rectangle is not None:
                     x, y, width, height = selected_rectangle
                     region_input = smoothed_image[y:y + height, x:x + width]
                 if np.array_equal(region_input, native):
                     region_input = None
+            if region_input is None and scanline_report is None:
+                region_input, tiny_report, tiny_evidence = tiny_crop_pixelation(native)
+                if tiny_report is not None:
+                    payloads['tiny-crop-pixelation-mask.png'] = tiny_evidence['full-image-pixelation-mask.png']
 
             if region_input is not None:
                 selected = png(region_input)
                 prepared, _, _, _ = prepare_crop(region_input)
-                preparation = {**regional_report, 'crop_changed_native_pixels': int(np.any(region_input != native, axis=2).sum()),
+                preparation = {**(jpeg_report or tiny_report or regional_report),
+                               'crop_changed_native_pixels': int(np.any(region_input != native, axis=2).sum()),
                                'derived_native_sha256': digest(selected)}
-                if scanline_report is not None:
-                    auto_decision = {'route': 'scanline_cleanup', 'reason': 'strong_horizontal_scanline_pattern',
+                if jpeg_report is not None:
+                    auto_decision = {'route': 'jpeg_deblocking', 'reason': 'strong_native_jpeg_grid',
+                                     'preparation_model': jpeg_report['preparation_model']}
+                elif scanline_report is not None:
+                    auto_decision = {'route': 'scanline_mosaic_coordinated' if 'mosaic' in scanline_report else 'scanline_cleanup',
+                                     'reason': 'strong_horizontal_scanline_pattern',
                                      'spacing_native_pixels': scanline_report['spacing_native_pixels']}
+                elif tiny_report is not None:
+                    auto_decision = {'route': 'tiny_mosaic_gaussian', 'reason': 'strong_grid_in_tiny_crop',
+                                     'tiny_grid_period_native': tiny_report['tiny_grid_period_native'],
+                                     'Gaussian_radius_at256': tiny_report['Gaussian_radius_at256']}
+                elif regional_report.get('mixed_jpeg_mosaic'):
+                    auto_decision = {'route': 'jpeg_mosaic_coordinated', 'reason': 'independent_mosaic_and_jpeg_evidence',
+                                     'mosaic_grid_period_native': regional_report['mosaic_grid_period_native'],
+                                     'outside_deblock_fraction': regional_report['outside_deblock_fraction']}
+                elif regional_report.get('coordinated_mosaic_regions'):
+                    auto_decision = {'route': 'mosaic_regions_coordinated', 'reason': 'spatially_distinct_mosaic_regions'}
+                elif pattern := regional_report.get('geometric_mosaic_pattern'):
+                    auto_decision = {'route': f'{pattern}_mosaic_gaussian', 'reason': f'suspected_{pattern}_mosaic',
+                                     'Gaussian_radius_at256': regional_report['Gaussian_radius_at256']}
+                elif 'rotation_correction_degrees' in regional_report:
+                    auto_decision = {'route': 'rotated_mosaic_gaussian', 'reason': 'suspected_rotated_mosaic',
+                                     'rotation_correction_degrees': regional_report['rotation_correction_degrees'],
+                                     'Gaussian_radius_at256': regional_report['Gaussian_radius_at256']}
                 else:
                     auto_decision = {'route': 'frame_region_gaussian' if capture_id else 'picture_region_gaussian',
                                      'reason': 'suspected_pixelation_in_model_input',
                                      'Gaussian_radius_at256': regional_report['Gaussian_radius_at256'],
                                      'strength_basis': regional_report.get('strength_selection', {}).get('basis')}
                 payloads.update({'derived-native.png': selected, 'processing.json': canonical(preparation)})
+            elif softened_detection is not None and softened_detection['crop_intersects']:
+                auto_decision = {'route': 'direct', 'reason': 'suspected_softened_mosaic'}
             else:
                 def in_selection(boxes):
                     if selected_rectangle is None:
@@ -498,6 +551,10 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             metadata['frame_pixelation'] = frame_regions
         if scanline_report is not None:
             metadata['scanline_cleanup'] = scanline_report
+        if jpeg_report is not None:
+            metadata['jpeg_deblocking'] = jpeg_report
+        if softened_detection is not None:
+            metadata['softened_mosaic_detection'] = softened_detection
         payloads.update({'prepared-256.png': png(prepared), 'result.png': output,
                          'restoration.json': canonical(metadata)})
         if raw_bytes is not None:
