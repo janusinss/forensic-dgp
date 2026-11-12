@@ -62,6 +62,16 @@ class DesktopContractTests(unittest.TestCase):
             with self.assertRaisesRegex(DesktopError, 'does not match the host session'):
                 self.session(env)
 
+    def test_alternate_temp_spelling_uses_verified_filesystem_identity(self):
+        with tempfile.TemporaryDirectory() as alternate_temp:
+            alternate_folder = Path(alternate_temp) / self.folder.name
+            alternate_folder.mkdir()
+            with (mock.patch('implementation.desktop.tempfile.gettempdir', return_value=alternate_temp),
+                  mock.patch.object(Path, 'samefile', autospec=True, return_value=True) as same_file):
+                session = self.session()
+            same_file.assert_called_once_with(self.folder, alternate_folder)
+            self.assertEqual(session.ready, self.ready)
+
     @unittest.skipUnless(os.name == 'nt', 'Windows temporary directory alias')
     def test_short_and_long_temp_aliases_refer_to_the_same_session(self):
         import ctypes

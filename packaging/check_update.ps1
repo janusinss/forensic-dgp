@@ -41,7 +41,7 @@ function Read-ReleaseManifest {
 function Get-NewerRelease([string]$Json, [string]$Current) {
     $pattern = '\A(?:0|[1-9][0-9]{0,3})\.(?:0|[1-9][0-9]{0,3})\.(?:0|[1-9][0-9]{0,3})\z'
     $release = ConvertFrom-Json -InputObject $Json
-    if ($Current -cnotmatch $pattern -or $release.schema -isnot [int] -or $release.schema -ne 1 -or
+    if ($Current -cnotmatch $pattern -or ($release.schema -isnot [int] -and $release.schema -isnot [long]) -or $release.schema -ne 1 -or
         $release.version -isnot [string] -or $release.version -cnotmatch $pattern) {
         throw 'Invalid release version.'
     }
