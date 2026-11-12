@@ -74,3 +74,51 @@ class AutomaticPreparationTests(unittest.TestCase):
                 self.assertEqual(signal.get('pattern'), 'coarse_or_resized_grid')
                 self.assertAlmostEqual(signal['block_width_native'], expected[0], delta=2)
                 self.assertAlmostEqual(signal['block_height_native'], expected[1], delta=2)
+
+    def test_rotation_fallback_preserves_pixels_outside_its_remapped_mask(self):
+        rng = np.random.default_rng(82)
+        source = Image.new('RGB', (256, 256), (115, 112, 109))
+        tiles = Image.fromarray(rng.integers(20, 230, (20, 18, 3), dtype=np.uint8))
+        source.paste(tiles.resize((144, 160), Image.Resampling.NEAREST), (56, 48))
+        for angle in (9, 15):
+            with self.subTest(angle=angle):
+                rotated = np.asarray(source.rotate(angle, resample=Image.Resampling.BICUBIC,
+                                                   fillcolor=(115, 112, 109)))
+                prepared, report, evidence = automatic.rotated_pixelation(rotated)
+                self.assertEqual(report['rotation_correction_degrees'], -angle)
+                self.assertEqual(report['Gaussian_radius_at256'], 3.0)
+                mask = np.asarray(Image.open(io.BytesIO(evidence['full-image-pixelation-mask.png']))) > 0
+                self.assertGreater(np.count_nonzero(mask), 10000)
+                np.testing.assert_array_equal(prepared[~mask], rotated[~mask])
+
+    def test_spectral_mosaic_is_diagnostic_and_rejects_sharp_blocks(self):
+        rng = np.random.default_rng(84)
+        tiles = Image.fromarray(rng.integers(30, 220, (20, 18), dtype=np.uint8))
+        sharp = tiles.resize((144, 160), Image.Resampling.NEAREST)
+        image = Image.new('L', (256, 256), 115)
+        image.paste(sharp, (56, 48))
+        self.assertEqual(automatic.softened_pixelation_evidence(np.asarray(image.convert('RGB'))),
+                         (None, None, {}))
+        image.paste(sharp.filter(ImageFilter.GaussianBlur(2.1)), (56, 48))
+        prepared, report, evidence = automatic.softened_pixelation_evidence(np.asarray(image.convert('RGB')))
+        self.assertIsNone(prepared)
+        self.assertGreater(report['masked_native_pixels'], 10000)
+        self.assertEqual(report['mask_sha256'], automatic.sha(evidence['softened-mosaic-mask.png']))
+
+    def test_tiny_crop_needs_repeating_native_seams_in_both_axes(self):
+        rng = np.random.default_rng(35)
+        canvas = Image.new('RGB', (40, 40), (125, 128, 130))
+        tiles = Image.fromarray(rng.integers(20, 220, (9, 9, 3), dtype=np.uint8))
+        canvas.paste(tiles.resize((30, 30), Image.Resampling.NEAREST), (5, 5))
+        source = np.asarray(canvas)
+        prepared, report, evidence = automatic.tiny_crop_pixelation(source)
+        self.assertAlmostEqual(report['tiny_grid_period_native'][0], 3.33, delta=.3)
+        mask = np.asarray(Image.open(io.BytesIO(evidence['full-image-pixelation-mask.png']))) > 0
+        self.assertGreater(np.count_nonzero(mask), 144)
+        np.testing.assert_array_equal(prepared[~mask], source[~mask])
+        stripes = np.repeat(source[:1], 40, axis=0)
+        self.assertEqual(automatic.tiny_crop_pixelation(stripes), (None, None, {}))
+        y, x = np.indices((40, 40))
+        checker = (120 + 45 * ((x // 4 + y // 4) % 2)).astype(np.uint8)
+        checker_rgb = np.repeat(checker[:, :, None], 3, axis=2)
+        self.assertEqual(automatic.tiny_crop_pixelation(checker_rgb), (None, None, {}))

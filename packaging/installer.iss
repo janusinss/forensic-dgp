@@ -58,6 +58,7 @@ Source: "{#StageDir}\app-source.zip"; Flags: dontcopy
 Source: "{#StageDir}\app-source.json"; Flags: dontcopy
 Source: "{#StageDir}\install_location.ps1"; Flags: dontcopy
 Source: "{#StageDir}\install_state.ps1"; Flags: dontcopy
+Source: "{#StageDir}\check_update.ps1"; Flags: dontcopy
 #ifdef OfflinePayload
 Source: "{#StageDir}\payload\*"; DestDir: "{tmp}\payload"; Flags: dontcopy recursesubdirs createallsubdirs
 #endif
@@ -84,6 +85,9 @@ var
   EventsFile, CancelFile, SetupLog, LastStage, ActiveDownloadStage: String;
   UninstallMutex: THandle;
   RequirementsPage: TOutputMsgWizardPage;
+  CheckUpdateButton, DownloadUpdateButton: TNewButton;
+  UpdateStatus: TNewStaticText;
+  UpdateOutput, AvailableVersion: String;
   StepLabel, TransferLabel: TNewStaticText;
   DetailsButton: TNewButton;
   DetailsMemo: TNewMemo;
@@ -166,6 +170,92 @@ procedure StateLog(const S: String; const Error, FirstLine: Boolean);
 begin
   Log(S);
   if (not Error) and (Pos('"mode"', S) > 0) then StateOutput := S;
+end;
+
+function IsReleaseVersion(const Version: String): Boolean;
+var
+  I, Digits, Parts: Integer;
+begin
+  Result := False;
+  Digits := 0;
+  Parts := 0;
+  for I := 1 to Length(Version) do begin
+    if Version[I] = '.' then begin
+      if Digits = 0 then Exit;
+      Parts := Parts + 1;
+      Digits := 0;
+    end else begin
+      if (Version[I] < '0') or (Version[I] > '9') then Exit;
+      Digits := Digits + 1;
+      if Digits > 4 then Exit;
+    end;
+  end;
+  Result := (Parts = 2) and (Digits > 0);
+end;
+
+procedure UpdateCheckLog(const S: String; const Error, FirstLine: Boolean);
+begin
+  if not Error then UpdateOutput := Trim(S);
+end;
+
+procedure CheckForUpdate(Sender: TObject);
+var
+  ReleaseText: AnsiString;
+  CheckPath, RegisteredVersion, LocalVersion: String;
+  Code: Integer;
+begin
+  AvailableVersion := '';
+  DownloadUpdateButton.Visible := False;
+  CheckUpdateButton.Enabled := False;
+  UpdateStatus.Caption := 'Checking for a newer installer...';
+  UpdateStatus.Update;
+  try
+    try
+      ExtractTemporaryFile('release.json');
+      ExtractTemporaryFile('check_update.ps1');
+      CheckPath := ExpandConstant('{tmp}\check_update.ps1');
+      if (GetSHA256OfFile(ExpandConstant('{tmp}\release.json')) <> '{#ReleaseManifestSHA256}') or
+         (not LoadStringFromFile(ExpandConstant('{tmp}\release.json'), ReleaseText)) or
+         (GetSHA256OfFile(CheckPath) <> JsonField(String(ReleaseText), 'check_update.ps1')) then
+        RaiseException('The embedded update helper could not be verified.');
+      LocalVersion := '{#ReleaseVersion}';
+      RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{FEE649E9-195D-4576-8F30-DAE06A5099C8}_is1', 'DisplayVersion', RegisteredVersion);
+      if not IsReleaseVersion(RegisteredVersion) then RegisteredVersion := LocalVersion;
+      UpdateOutput := '';
+      if (not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
+         Q(CheckPath) + ' -LocalVersion ' + Q(LocalVersion) + ' -InstalledVersion ' + Q(RegisteredVersion),
+         ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, Code, @UpdateCheckLog)) or (Code <> 0) then
+        RaiseException('The update check could not run.');
+      if UpdateOutput = 'DGP_CURRENT' then
+        UpdateStatus.Caption := 'No newer published installer found.'
+      else begin
+        if Pos('DGP_UPDATE ', UpdateOutput) <> 1 then RaiseException('The release could not be checked.');
+        AvailableVersion := Copy(UpdateOutput, 12, Length(UpdateOutput));
+        if not IsReleaseVersion(AvailableVersion) then RaiseException('The available version could not be verified.');
+        UpdateStatus.Caption := 'Forensic DGP ' + AvailableVersion + ' is available.';
+        DownloadUpdateButton.Visible := True;
+      end;
+    except
+      UpdateStatus.Caption := 'Unable to check for updates. You can continue with this installer.';
+      Log(GetExceptionMessage);
+    end;
+  finally
+    CheckUpdateButton.Enabled := True;
+  end;
+end;
+
+procedure DownloadUpdate(Sender: TObject);
+var
+  Code: Integer;
+  Url: String;
+begin
+  if not IsReleaseVersion(AvailableVersion) then Exit;
+  Url := 'https://github.com/janusinss/forensic-dgp-downloads/releases/download/v' + AvailableVersion +
+         '/ForensicDGP_Setup-' + AvailableVersion + '.exe';
+  if ShellExec('open', Url, '', '', SW_SHOWNORMAL, ewNoWait, Code) then
+    UpdateStatus.Caption := 'After downloading, close this setup and run the newer installer.'
+  else
+    UpdateStatus.Caption := 'Unable to open the update download.';
 end;
 
 procedure PrepareStateFiles;
@@ -387,6 +477,23 @@ begin
 #endif
     'The folder you choose contains the full application, downloaded components and saved records. No administrator access is required.' + #13#10#13#10 +
     'This is an unsigned research preview. Generated facial details are estimates and cannot verify identity.');
+  RequirementsPage.MsgLabel.Height := ScaleY(155);
+  CheckUpdateButton := TNewButton.Create(WizardForm);
+  CheckUpdateButton.Parent := RequirementsPage.Surface;
+  CheckUpdateButton.SetBounds(0, ScaleY(161), ScaleX(145), ScaleY(28));
+  CheckUpdateButton.Caption := 'Check for updates';
+  CheckUpdateButton.OnClick := @CheckForUpdate;
+  DownloadUpdateButton := TNewButton.Create(WizardForm);
+  DownloadUpdateButton.Parent := RequirementsPage.Surface;
+  DownloadUpdateButton.SetBounds(ScaleX(153), ScaleY(161), ScaleX(135), ScaleY(28));
+  DownloadUpdateButton.Caption := 'Download update';
+  DownloadUpdateButton.OnClick := @DownloadUpdate;
+  DownloadUpdateButton.Visible := False;
+  UpdateStatus := TNewStaticText.Create(WizardForm);
+  UpdateStatus.Parent := RequirementsPage.Surface;
+  UpdateStatus.AutoSize := False;
+  UpdateStatus.WordWrap := True;
+  UpdateStatus.SetBounds(0, ScaleY(194), RequirementsPage.SurfaceWidth, ScaleY(34));
   ModePage := CreateOutputMsgPage(wpSelectDir, 'Installation options', 'Keep your existing work', '');
   ModePage.MsgLabel.Height := ScaleY(125);
   OpenExistingButton := TNewButton.Create(WizardForm);

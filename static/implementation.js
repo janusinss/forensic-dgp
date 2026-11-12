@@ -19,6 +19,17 @@
     const progress = message => { byId('brush-progress').textContent = message; };
     const preparationSummary = metadata => {
         const decision = metadata.automatic_preparation;
+        if (decision?.route === 'jpeg_mosaic_coordinated') return 'Auto lightly smoothed the detected mosaic and reduced JPEG seams in the surrounding image before face restoration.';
+        if (decision?.route === 'mosaic_regions_coordinated') return 'Auto applied separate preparation to distinct mosaic regions before face restoration.';
+        if (decision?.route === 'scanline_mosaic_coordinated') return 'Auto reduced horizontal scanlines and smoothed a separately detected mosaic before face restoration.';
+        if (decision?.route === 'perspective_mosaic_gaussian') return 'Auto smoothed a suspected perspective-warped mosaic before face restoration.';
+        if (decision?.route === 'irregular_mosaic_gaussian') return 'Auto smoothed a suspected irregular mosaic before face restoration.';
+        if (decision?.route === 'jpeg_deblocking') return 'Auto reduced strong JPEG block seams with FBCNN before face restoration.';
+        if (decision?.route === 'rotated_mosaic_gaussian') return 'Auto found a tilted mosaic and smoothed the detected region before restoration.';
+        if (decision?.route === 'tiny_mosaic_gaussian') return 'Auto smoothed a strong block grid in this small crop before face restoration.';
+        if (decision?.route === 'direct' && metadata.softened_mosaic_detection?.crop_intersects) {
+            return 'Auto flagged a possible softened mosaic and used direct restoration.';
+        }
         if (decision?.route === 'scanline_cleanup') return 'Auto reduced repeating horizontal scanlines and lightly smoothed the image before restoration.';
         if (['picture_region_gaussian', 'frame_region_gaussian', 'face_gaussian'].includes(decision?.route)) {
             const area = decision.route === 'face_gaussian' ? 'the detected face' : 'flagged regions';

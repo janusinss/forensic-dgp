@@ -79,11 +79,18 @@ class DesktopSession:
         token = match.group(1)
         expected = Path(tempfile.gettempdir()) / ('ForensicDGP-' + token) / 'ready.json'
         path = Path(ready)
-        if not path.is_absolute() or os.path.normcase(str(path)) != os.path.normcase(str(expected)):
+        if (not path.is_absolute() or '..' in path.parts
+                or os.path.normcase(path.name) != os.path.normcase(expected.name)
+                or os.path.normcase(path.parent.name) != os.path.normcase(expected.parent.name)):
             raise DesktopError('Desktop readiness path does not match the host session.')
         try:
-            for parent in (expected.parent, *expected.parent.parents):
+            for parent in dict.fromkeys((path.parent, *path.parent.parents, expected.parent, *expected.parent.parents)):
                 _ordinary(parent, True)
+            # Windows can expose the same temporary directory with either an
+            # 8.3 alias or its long name. Compare filesystem identity after
+            # checking both paths for links and reparse points.
+            if path.parent != expected.parent and not path.parent.samefile(expected.parent):
+                raise DesktopError('Desktop readiness path does not match the host session.')
             if path.exists() or path.is_symlink():
                 raise DesktopError('Existing desktop readiness record was preserved.')
             handle = open_event(event)

@@ -54,6 +54,35 @@ class DesktopContractTests(unittest.TestCase):
         record = json.loads(self.ready.read_text(encoding='utf8'))
         self.assertEqual(record, {'schema':1, 'url':'http://127.0.0.1:53719', 'pid':1234, 'token':self.token})
 
+    def test_matching_session_name_in_a_different_directory_is_refused(self):
+        with tempfile.TemporaryDirectory() as other:
+            other_folder = Path(other) / self.folder.name
+            other_folder.mkdir()
+            env = dict(self.env, DGP_DESKTOP_READY_FILE=str(other_folder / self.ready.name))
+            with self.assertRaisesRegex(DesktopError, 'does not match the host session'):
+                self.session(env)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows temporary directory alias')
+    def test_short_and_long_temp_aliases_refer_to_the_same_session(self):
+        import ctypes
+        from ctypes import wintypes
+        kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+        kernel.GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        kernel.GetShortPathNameW.restype = wintypes.DWORD
+        with tempfile.TemporaryDirectory(prefix='Forensic DGP spaced profile ') as long_temp:
+            buffer = ctypes.create_unicode_buffer(32768)
+            length = kernel.GetShortPathNameW(long_temp, buffer, len(buffer))
+            if not length or length >= len(buffer) or Path(long_temp) == Path(buffer.value):
+                self.skipTest('8.3 aliases are disabled for this Windows temp directory')
+            long_folder = Path(long_temp) / self.folder.name
+            long_folder.mkdir()
+            long_ready = long_folder / self.ready.name
+            env = dict(self.env, DGP_DESKTOP_READY_FILE=str(long_ready))
+            with mock.patch('implementation.desktop.tempfile.gettempdir', return_value=buffer.value):
+                session = self.session(env)
+            session.publish('http://127.0.0.1:53719', 1234)
+            self.assertTrue(long_ready.is_file())
+
     def test_non_loopback_or_invalid_port_refused(self):
         for url in ('http://evil.test:8000', 'http://127.0.0.1:0', 'http://127.0.0.1:8000/path', 'https://127.0.0.1:8000'):
             with self.subTest(url=url), self.assertRaises(DesktopError):

@@ -131,6 +131,7 @@ def main() -> int:
         "gui_setup.ps1": "packaging/gui_setup.ps1",
         "install_location.ps1": "packaging/install_location.ps1",
         "install_state.ps1": "packaging/install_state.ps1",
+        "check_update.ps1": "packaging/check_update.ps1",
         "installer.iss": "packaging/installer.iss",
         "Program.cs": "packaging/launcher/Program.cs",
         "LICENSE.txt": "packaging/LICENSE.txt",
@@ -157,7 +158,7 @@ def main() -> int:
                  inno_installer_sha256=INNO_INSTALLER_SHA256, signed=False,
                  payload="offline-bundled" if args.offline_payload else "online-source-bundled", files={})
     for name in ["app-source.zip", "app-source.json", "distribution.ps1", "uninstall.ps1",
-                 "gui_setup.ps1", "ForensicDGP.exe", "install_location.ps1", "install_state.ps1"]:
+                 "gui_setup.ps1", "ForensicDGP.exe", "install_location.ps1", "install_state.ps1", "check_update.ps1"]:
         build["files"][name] = hashlib.sha256((stage / name).read_bytes()).hexdigest()
     if args.offline_payload:
         verified = stage_offline_payload(args.offline_payload, stage, commit)

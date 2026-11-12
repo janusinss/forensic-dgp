@@ -29,6 +29,7 @@ MANIFEST_PATH = Path(__file__).with_name("models.json")
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/"
 CHUNK_SIZE = 1024 * 1024
 COMPONENT_LABELS = {
+    "fbcnn_color.pth": "JPEG Deblocking",
     "codeformer_r2.pth": "Base Model",
     "codeformer_u96_adapter.pth": "U96 Adaptation",
     "terminal_u0064_heads.npz": "Spatial Head",
@@ -53,10 +54,11 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
             "codeformer_u96_adapter",
             "terminal_u0064_heads",
             "v2_p2_u0224_heads",
+            "fbcnn_color",
         }:
             raise ValueError("unexpected asset list")
         filenames = set()
-        for asset in assets.values():
+        for key, asset in assets.items():
             name = asset["filename"]
             if not isinstance(name, str) or Path(name).name != name or "/" in name or "\\" in name:
                 raise ValueError("asset filename must be a plain filename")
@@ -67,7 +69,12 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
                 raise ValueError("asset size must be a positive integer")
             if not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
                 raise ValueError("asset sha256 must contain 64 lowercase hexadecimal characters")
-            if asset["url"] != RELEASE_BASE + urllib.parse.quote(name):
+            if key == 'fbcnn_color':
+                if (name != 'fbcnn_color.pth' or asset['size'] != 287755111
+                        or asset['sha256'] != '8b0e4ef23d59cf7ac934a342cb31a17619e4fa4a0b3374a9d78c5174312387e8'
+                        or asset['url'] != 'https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth'):
+                    raise ValueError('unexpected FBCNN model metadata')
+            elif asset["url"] != RELEASE_BASE + urllib.parse.quote(name):
                 raise ValueError("asset URL must use the published GitHub release")
         return manifest
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
