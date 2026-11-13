@@ -9,6 +9,7 @@ import sys
 
 import numpy as np
 from PIL import Image
+from scipy.ndimage import distance_transform_edt
 
 from .managed_paths import data_path
 from .preparation import decode_original, png
@@ -100,6 +101,180 @@ def prepare_jpeg(contents, crop, rectangle):
 
 def checkpoint_path():
     return data_path(ROOT, 'models', 'implementation') / CHECKPOINT
+
+
+def _axis_8px_metrics(gray, axis, offset, mask_bool=None):
+    """Measure 8-px seam excess, 4-px midpoint excess, and non-seam interior gradient on one axis."""
+    diffs = np.abs(np.diff(gray, axis=axis))
+    positions = (np.arange(diffs.shape[axis]) + 1 + offset) % 8
+    if mask_bool is None:
+        profile = diffs.mean(axis=1 - axis)
+        boundary = float(profile[positions == 0].mean())
+        interior = float(profile[positions != 0].mean())
+        midpoint = float(profile[positions == 4].mean())
+        return boundary - interior, midpoint - interior, interior
+    allowed = mask_bool[:-1, :] & mask_bool[1:, :] if axis == 0 else mask_bool[:, :-1] & mask_bool[:, 1:]
+    phase_view = positions[:, None] if axis == 0 else positions[None, :]
+    b_mask = allowed & (phase_view == 0)
+    i_mask = allowed & (phase_view != 0)
+    m_mask = allowed & (phase_view == 4)
+    if int(b_mask.sum()) < 16 or int(i_mask.sum()) < 64 or int(m_mask.sum()) < 16:
+        return None
+    boundary = float(diffs[b_mask].mean())
+    interior = float(diffs[i_mask].mean())
+    midpoint = float(diffs[m_mask].mean())
+    return boundary - interior, midpoint - interior, interior
+
+
+def _feather_regional_mask(regional_mask, shape):
+    """Return (mask_bool, alpha_float32, is_regional) keeping outside pixels strictly zero."""
+    arr = np.asarray(regional_mask)
+    if arr.shape != shape:
+        return None, None, False
+    if arr.dtype == bool:
+        mask_bool = arr
+        pre_feathered = False
+    elif np.issubdtype(arr.dtype, np.integer):
+        mask_bool = arr > 0
+        pre_feathered = bool(np.any((arr > 1) & (arr < 254))) if arr.max() > 1 else False
+    else:
+        mask_bool = arr > 0.1
+        pre_feathered = bool(np.any((arr > 0.01) & (arr < 0.99)))
+    if not np.any(mask_bool):
+        return None, None, False
+    if bool(np.all(mask_bool)):
+        return None, None, False
+    if pre_feathered:
+        scale = 255.0 if np.issubdtype(arr.dtype, np.integer) else 1.0
+        alpha = np.clip(arr.astype(np.float32) / scale, 0.0, 1.0)
+        alpha[~mask_bool] = 0.0
+        return mask_bool, alpha, True
+    dist = distance_transform_edt(mask_bool)
+    max_dist = float(dist.max())
+    feather = max(1.5, min(6.0, max_dist * 0.5))
+    t = np.clip((dist - 0.5) / feather, 0.0, 1.0)
+    alpha = (t * t * (3.0 - 2.0 * t)).astype(np.float32)
+    alpha[~mask_bool] = 0.0
+    return mask_bool, alpha, True
+
+
+def prepare_fbcnn_deblocking(rgb, origin=(0, 0), regional_mask=None, dc=None, require_seams=True):
+    """Deblock any 96..384 uint8 RGB crop (PNG, EXIF-rotated JPEG, Video frame) via FBCNN."""
+    if not isinstance(rgb, np.ndarray) or rgb.ndim != 3 or rgb.shape[2] != 3 or rgb.dtype != np.uint8:
+        return None, None
+    height, width = rgb.shape[:2]
+    if min(width, height) < 96 or max(width, height) > MAX_SIDE:
+        return None, None
+    ox0, oy0 = (int(origin[0]) % 8, int(origin[1]) % 8) if origin is not None else (0, 0)
+
+    mask_bool = alpha = None
+    is_regional = False
+    if regional_mask is not None:
+        mask_bool, alpha, is_regional = _feather_regional_mask(regional_mask, (height, width))
+        if mask_bool is None and is_regional is False:
+            arr = np.asarray(regional_mask)
+            if arr.shape != (height, width) or not np.any(arr > (0.1 if np.issubdtype(arr.dtype, np.floating) else 0)):
+                return None, None
+
+    gray_before = np.asarray(Image.fromarray(rgb).convert('L'), dtype=np.float32)
+    chosen_offsets = []
+    before = []
+    for axis, orig_off in ((0, oy0), (1, ox0)):
+        orig_metrics = _axis_8px_metrics(gray_before, axis, orig_off, mask_bool)
+        if orig_metrics is None:
+            return None, None
+        seam0, mid0, int0 = orig_metrics
+        if seam0 >= max(0.75, 0.28 * int0) and mid0 <= 0.60 * seam0:
+            chosen_offsets.append(orig_off)
+            before.append(orig_metrics)
+            continue
+        candidates = []
+        for off in range(8):
+            metrics = orig_metrics if off == orig_off else _axis_8px_metrics(gray_before, axis, off, mask_bool)
+            if metrics is not None:
+                candidates.append((off, metrics))
+        if not candidates:
+            return None, None
+        valid = [c for c in candidates if c[1][0] > 0 and c[1][1] <= 0.60 * c[1][0]]
+        best_off, best_metrics = max(valid if valid else candidates, key=lambda item: item[1][0])
+        chosen_offsets.append(best_off)
+        before.append(best_metrics)
+
+    oy, ox = chosen_offsets[0], chosen_offsets[1]
+    if require_seams:
+        if any(seam < max(0.75, 0.28 * interior) or midpoint > 0.60 * seam
+               for seam, midpoint, interior in before):
+            return None, None
+    elif max(item[0] for item in before) <= 0.0:
+        return None, None
+
+    cleaned = run_deblock(rgb)
+    if cleaned is None:
+        return None, None
+
+    if is_regional:
+        w3 = alpha[..., None].astype(np.float32)
+        blended = np.clip(
+            np.rint(rgb.astype(np.float32) * (1.0 - w3) + cleaned.astype(np.float32) * w3),
+            0, 255,
+        ).astype(np.uint8)
+        blended[~mask_bool] = rgb[~mask_bool]
+        cleaned = blended
+
+    if np.array_equal(cleaned, rgb):
+        return None, None
+
+    gray_after = np.asarray(Image.fromarray(cleaned).convert('L'), dtype=np.float32)
+    after = [
+        _axis_8px_metrics(gray_after, 0, oy, mask_bool),
+        _axis_8px_metrics(gray_after, 1, ox, mask_bool),
+    ]
+    if any(item is None for item in after):
+        return None, None
+
+    if require_seams:
+        if any(abs(curr[0]) > 0.80 * orig[0] for orig, curr in zip(before, after)):
+            return None, None
+    else:
+        active_axes = [(orig, curr) for orig, curr in zip(before, after) if orig[0] > 0.25]
+        if not active_axes or any(abs(curr[0]) > 0.80 * orig[0] for orig, curr in active_axes):
+            return None, None
+
+    retentions = []
+    for orig, curr in zip(before, after):
+        if orig[2] >= 0.50:
+            ratio = curr[2] / orig[2]
+            if ratio < 0.85:
+                return None, None
+            retentions.append(ratio)
+    sum_before = before[0][2] + before[1][2]
+    sum_after = after[0][2] + after[1][2]
+    if sum_before >= 0.50 and (sum_after / sum_before) < 0.85:
+        return None, None
+    min_retention = min(retentions) if retentions else (sum_after / sum_before if sum_before >= 0.50 else 1.0)
+
+    drops = [
+        (orig[0] - abs(curr[0])) / orig[0] if orig[0] > 0 else 0.0
+        for orig, curr in zip(before, after)
+    ]
+    report = {
+        'policy': 'guarded-fbcnn-macroblock-v1',
+        'native_size': [int(width), int(height)],
+        'jpeg_luma_dc_quantization': int(dc) if dc is not None else None,
+        'grid_origin': [int(ox), int(oy)],
+        'input_origin': [int(ox0), int(oy0)],
+        'regional': bool(is_regional),
+        'seam_excess_before': [round(float(item[0]), 4) for item in before],
+        'seam_excess_after': [round(float(item[0]), 4) for item in after],
+        'seam_drop_fraction': [round(float(d), 4) for d in drops],
+        'interior_gradient_before': [round(float(item[2]), 4) for item in before],
+        'interior_gradient_after': [round(float(item[2]), 4) for item in after],
+        'interior_gradient_retention': round(float(min_retention), 4),
+        'preparation_model': 'FBCNN RGB',
+        'preparation_model_sha256': CHECKPOINT_SHA256,
+        'preparation_forward_returns': 1,
+    }
+    return cleaned, report
 
 
 def main():

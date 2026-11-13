@@ -4,10 +4,25 @@ import io
 
 import numpy as np
 from PIL import Image, ImageFilter
-from scipy.ndimage import binary_closing, binary_dilation, find_objects, gaussian_filter, label, uniform_filter, uniform_filter1d
+from scipy.ndimage import (
+    binary_closing,
+    binary_dilation,
+    binary_fill_holes,
+    distance_transform_edt,
+    find_objects,
+    gaussian_filter,
+    label,
+    uniform_filter,
+    uniform_filter1d,
+)
 
-from .blur_match import estimate_tiles
+from .antialiasing import prepare_antialiasing
+from .blur_match import estimate_tiles, estimate_tiles_normalized
+from .color_bleeding import prepare_color_bleeding
+from .debanding import prepare_debanding
+from .deringing import prepare_deringing
 from .irregular_mosaic import irregular_mosaic_mask
+from .macroblock_deblocking import detect_macroblocking, prepare_macroblock_deblocking
 from .perspective_mosaic import perspective_mosaic_mask
 from .preparation import build_preview, json_bytes, png, sha
 from .scanline_cleanup import detect_scanlines, prepare_scanlines
@@ -17,6 +32,12 @@ from .tiny_grid import tiny_grid_mask
 PIXELATION_RADIUS_AT256 = 3.0
 PIXELATION_CANDIDATES_AT256 = (2.5, 3.0, 3.5)
 SCANLINE_RADIUS_AT256 = 1.5
+COMPOSABLE_STAGE_ORDER = (
+    'edge_deringing',
+    'gradient_debanding',
+    'tangent_antialiasing',
+    'chroma_debleeding',
+)
 
 
 def coarse_grid(profile):
@@ -242,7 +263,136 @@ def choose_pixelation_radius(image, mask):
     return report
 
 
-def picture_pixelation(source):
+def _padded_box_for_macroblock(shape, y0, y1, x0, x1):
+    """Expand a crop bounds tuple minimally to >=32x32 inside image bounds."""
+    height, width = shape[:2]
+    y0, y1 = max(0, int(y0)), min(height, int(y1))
+    x0, x1 = max(0, int(x0)), min(width, int(x1))
+    if y1 - y0 < 32:
+        pad = 32 - (y1 - y0)
+        y0 = max(0, y0 - pad // 2)
+        y1 = min(height, y0 + 32)
+        y0 = max(0, y1 - 32)
+    if x1 - x0 < 32:
+        pad = 32 - (x1 - x0)
+        x0 = max(0, x0 - pad // 2)
+        x1 = min(width, x0 + 32)
+        x0 = max(0, x1 - 32)
+    return y0, y1, x0, x1
+
+
+def _det_passes_macroblock_gate(source, det, origin=(0, 0)):
+    """Verify non-flat, non-tiny-fragment DCT detection actually deblocks cleanly."""
+    if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
+        return False
+    if det.get('regional') and float(det.get('mask_fraction', 0.0)) < 0.25:
+        return False
+    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, allow_fbcnn=True)
+    return cleaned is not None
+
+
+def _is_genuine_dct_macroblocking(source, origin=(0, 0)):
+    """Return True when source shows non-flat 8x8/16x16 DCT macroblocking."""
+    if min(source.shape[:2]) < 32:
+        return False
+    det = detect_macroblocking(source, origin=origin)
+    if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
+        return False
+    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, allow_fbcnn=True)
+    return cleaned is not None
+
+
+def _strip_dct_macroblocking_components(source, mask):
+    """Remove genuine DCT macroblocking regions from a privacy-mosaic mask."""
+    if min(source.shape[:2]) < 32 or not mask.any():
+        return mask
+    comps, num = label(mask)
+    if num == 0:
+        return mask
+    det_full = detect_macroblocking(source)
+    full_mask = None
+    full_checked = False
+    cleaned_mask = mask.copy()
+    for cid, sl in enumerate(find_objects(comps), start=1):
+        if sl is None:
+            continue
+        y0, y1, x0, x1 = _padded_box_for_macroblock(
+            source.shape, sl[0].start, sl[0].stop, sl[1].start, sl[1].stop
+        )
+        crop = source[y0:y1, x0:x1]
+        sub_det = detect_macroblocking(crop, origin=(x0, y0))
+        if sub_det is not None:
+            if _det_passes_macroblock_gate(crop, sub_det, origin=(x0, y0)):
+                cleaned_mask[comps == cid] = False
+        else:
+            if not full_checked:
+                full_checked = True
+                if _det_passes_macroblock_gate(source, det_full):
+                    full_mask = det_full.get('mask')
+            if full_mask is not None and float(full_mask[comps == cid].mean()) >= 0.5:
+                cleaned_mask[comps == cid] = False
+    return cleaned_mask
+
+
+def _bracket_cluster_spans(sub):
+    """Mark pixels strictly between first and last True entries per row/column in a cluster."""
+    row_any = np.any(sub, axis=1)
+    h_span = np.zeros_like(sub)
+    if row_any.any():
+        left = np.argmax(sub[row_any], axis=1)
+        right = sub.shape[1] - 1 - np.argmax(sub[row_any, ::-1], axis=1)
+        xs = np.arange(sub.shape[1])[None, :]
+        h_span[row_any] = (xs >= left[:, None]) & (xs <= right[:, None])
+    col_any = np.any(sub, axis=0)
+    v_span = np.zeros_like(sub)
+    if col_any.any():
+        top = np.argmax(sub[:, col_any], axis=0)
+        bottom = sub.shape[0] - 1 - np.argmax(sub[::-1, col_any], axis=0)
+        ys = np.arange(sub.shape[0])[:, None]
+        v_span[:, col_any] = (ys >= top[None, :]) & (ys <= bottom[None, :])
+    return h_span | v_span
+
+
+def _recover_mosaic_mask_holes(mask, votes, row_votes, column_votes):
+    """Close seam-supported pockets and bracketed 1D seam tears inside dilated support."""
+    r_close = max(6, min(18, round(max(mask.shape) * .028)))
+    yy, xx = np.ogrid[-r_close:r_close + 1, -r_close:r_close + 1]
+    disk = (xx * xx + yy * yy) <= (r_close * r_close)
+    seam_support = (column_votes >= 1) | (row_votes >= 1) | (votes >= 1)
+    merged = mask | (binary_closing(mask, structure=disk) & seam_support)
+    dilated = binary_dilation(merged, structure=disk)
+    strong_1d = (row_votes >= 2) | (column_votes >= 2) | (votes >= 1)
+    dil_labels, _ = label(dilated)
+    for cid, sl in enumerate(find_objects(dil_labels), start=1):
+        if sl is None:
+            continue
+        cluster = dil_labels[sl] == cid
+        spans = _bracket_cluster_spans(merged[sl] & cluster)
+        merged[sl] |= spans & cluster & strong_1d[sl]
+    return binary_fill_holes(merged)
+
+
+def _blur_stats_from_tiles(tiles, image_size, face):
+    """Measure median face vs outside blur radii and decision clarity from tile grid."""
+    x, y, width, height = face
+    img_width, img_height = image_size
+    rows, columns = tiles.shape
+    yy, xx = np.meshgrid((np.arange(rows) + .5) * img_height / rows,
+                         (np.arange(columns) + .5) * img_width / columns, indexing='ij')
+    inside = ((xx >= x + width * .15) & (xx < x + width * .85) &
+              (yy >= y + height * .15) & (yy < y + height * .85))
+    outside = ~((xx >= x) & (xx < x + width) & (yy >= y) & (yy < y + height))
+    face_samples = tiles[inside & np.isfinite(tiles)]
+    outside_samples = tiles[outside & np.isfinite(tiles)]
+    if min(face_samples.size, outside_samples.size) < 3:
+        return int(face_samples.size), int(outside_samples.size), None, None, False
+    face_blur = float(np.median(face_samples))
+    background_blur = float(np.median(outside_samples))
+    clear = face_blur >= max(background_blur * 1.5, background_blur + .75)
+    return int(face_samples.size), int(outside_samples.size), face_blur, background_blur, clear
+
+
+def picture_pixelation(source, check_macroblocking=True):
     """Localize supported block patterns without depending on face boxes."""
     image = Image.fromarray(source)
     analysis = source
@@ -269,6 +419,7 @@ def picture_pixelation(source):
     mask = keep[components]
     if not mask.any():
         return None, None, {}
+    initial_mask = mask.copy()
     # Recover narrow gaps bracketed by the mask only when at least four
     # overlapping scan windows still support block seams in that direction.
     span = 2 * min(24, round(max(mask.shape) * .035)) + 1
@@ -276,9 +427,26 @@ def picture_pixelation(source):
     vertical_gaps = binary_closing(mask, structure=np.ones((span, 1), bool)) & (row_votes >= 4)
     gaps = (horizontal_gaps | vertical_gaps) & ~mask
     mask |= gaps
+    mask = _recover_mosaic_mask_holes(mask, votes, row_votes, column_votes)
+    # Require multi-window two-axis seam corroboration per component so isolated
+    # staircase aliasing cannot trigger a false regional blur mask.
+    mask_comps, _ = label(mask)
+    for cid, sl in enumerate(find_objects(mask_comps), start=1):
+        if sl is None:
+            continue
+        comp_slice = mask_comps[sl] == cid
+        if int(votes[sl][comp_slice].max()) < 4:
+            mask[sl][comp_slice] = False
+    if not mask.any():
+        return None, None, {}
+    recovered_gaps = int((mask & ~initial_mask).sum())
     if analysis is not source:
         mask = np.asarray(Image.fromarray(mask).resize(image.size, Image.Resampling.NEAREST))
-    return apply_pixelation_mask(source, mask, analysis.shape[:2][::-1], int(gaps.sum()))
+    if check_macroblocking:
+        mask = _strip_dct_macroblocking_components(source, mask)
+        if not mask.any():
+            return None, None, {}
+    return apply_pixelation_mask(source, mask, analysis.shape[:2][::-1], recovered_gaps)
 
 
 def apply_pixelation_mask(source, mask, analysis_size, recovered_gaps, angle=None, tiny_period=None,
@@ -296,7 +464,17 @@ def apply_pixelation_mask(source, mask, analysis_size, recovered_gaps, angle=Non
     else:
         filtered = np.asarray(image.filter(ImageFilter.GaussianBlur(radius)))
     prepared = source.copy()
-    prepared[mask] = filtered[mask]
+    dist_in = distance_transform_edt(mask)
+    max_dist = float(dist_in.max())
+    if tiny_period is not None or max_dist < 2.:
+        prepared[mask] = filtered[mask]
+    else:
+        # Strictly inward smoothstep feathering preserves ~mask 100% bit-exact.
+        feather_px = min(max(1., 3.5 * max(image.size) / 256), max(1., max_dist * .5))
+        alpha = np.clip(dist_in[mask] / feather_px, 0., 1.).astype(np.float32)
+        alpha = alpha * alpha * (3. - 2. * alpha)
+        blended = source[mask].astype(np.float32) * (1. - alpha[:, None]) + filtered[mask].astype(np.float32) * alpha[:, None]
+        prepared[mask] = np.clip(np.rint(blended), 0, 255).astype(np.uint8)
     changed = np.any(prepared != source, axis=2)
     if not changed.any():
         return None, None, {}
@@ -329,6 +507,8 @@ def tiny_crop_pixelation(source):
     gray = np.asarray(Image.fromarray(source).convert('L'), dtype=np.float32)
     mask, periods = tiny_grid_mask(gray)
     if mask is None:
+        return None, None, {}
+    if all(3.65 <= period <= 4.35 for period in periods) and _is_genuine_dct_macroblocking(source):
         return None, None, {}
     return apply_pixelation_mask(source, mask, (width, height), 0, tiny_period=periods)
 
@@ -373,7 +553,7 @@ def rotated_pixelation(source):
     tried = {item[2] for item in preferred}
     fallback = [item for item in ranked if item[2] in old_angles and item[2] not in tried]
     for _, _, angle, window in preferred + fallback:
-        _, report, evidence = picture_pixelation(np.asarray(window))
+        _, report, evidence = picture_pixelation(np.asarray(window), check_macroblocking=False)
         if report is None or report['masked_native_pixels'] < max(256, .04 * window.width * window.height):
             continue
         with Image.open(io.BytesIO(evidence['full-image-pixelation-mask.png'])) as detected:
@@ -388,7 +568,7 @@ def rotated_pixelation(source):
 def prepare_mosaics(source):
     """Select geometric masks and coordinate spatially distinct treatments."""
     regular = picture_pixelation(source)
-    if regular[0] is None:
+    if regular[0] is None and not _is_genuine_dct_macroblocking(source):
         regular = rotated_pixelation(source)
     height, width = source.shape[:2]
     existing_area = regular[1].get('masked_native_pixels', width * height) if regular[0] is not None else 0
@@ -505,7 +685,11 @@ def prepare_source(source):
     cleaned, report = prepare_scanlines(source)
     if cleaned is None:
         mosaics = prepare_mosaics(source)
-        return mosaics if mosaics[0] is not None else softened_pixelation_evidence(source)
+        if mosaics[0] is not None:
+            return mosaics
+        if _is_genuine_dct_macroblocking(source):
+            return None, None, {}
+        return softened_pixelation_evidence(source)
     joint = prepare_scanline_mosaic(source, cleaned)
     if joint is not None:
         combined, mask_png, mosaic = joint
@@ -548,31 +732,36 @@ def softened_pixelation_evidence(source):
 def decide(source, face):
     block = pixelation_signal(source, face)
     if block['suspected']:
-        return {'policy': 'face-versus-surroundings-v1', 'route': 'face_gaussian',
-                'reason': 'suspected_pixelation', 'degradation': block}
-    x, y, width, height = face
+        x, y, width, height = face
+        if min(source.shape[:2]) >= 32:
+            y0, y1, x0, x1 = _padded_box_for_macroblock(source.shape, y, y + height, x, x + width)
+            is_dct = _is_genuine_dct_macroblocking(source[y0:y1, x0:x1], origin=(x0, y0))
+        else:
+            is_dct = False
+        if not is_dct:
+            return {'policy': 'face-versus-surroundings-v1', 'route': 'face_gaussian',
+                    'reason': 'suspected_pixelation', 'degradation': block}
     image = Image.fromarray(source)
     longest = max(image.size)
     scale = min(1., 512 / longest)
     size = tuple(max(1, round(side * scale)) for side in image.size)
     luma = np.asarray(image.convert('L').resize(size, Image.Resampling.LANCZOS), dtype=np.float32)
     tiles = estimate_tiles(luma) / (scale * longest / 256)
-    rows, columns = tiles.shape
-    yy, xx = np.meshgrid((np.arange(rows) + .5) * image.height / rows,
-                         (np.arange(columns) + .5) * image.width / columns, indexing='ij')
-    inside = ((xx >= x + width * .15) & (xx < x + width * .85) &
-              (yy >= y + height * .15) & (yy < y + height * .85))
-    outside = ~((xx >= x) & (xx < x + width) & (yy >= y) & (yy < y + height))
-    face_samples = tiles[inside & np.isfinite(tiles)]
-    outside_samples = tiles[outside & np.isfinite(tiles)]
+    in_n, out_n, face_blur, background_blur, clear = _blur_stats_from_tiles(tiles, image.size, face)
+    if longest > 256 and (in_n < 8 or not clear):
+        tiles_256, _ = estimate_tiles_normalized(image, max_longest=256)
+        in_256, out_256, face_256, bg_256, clear_256 = _blur_stats_from_tiles(tiles_256, image.size, face)
+        if clear_256:
+            in_n, out_n, face_blur, background_blur, clear = in_256, out_256, face_256, bg_256, True
+        elif not clear and in_256 >= 3 and out_256 >= 3 and in_n < 3:
+            in_n, out_n, face_blur, background_blur = in_256, out_256, face_256, bg_256
     report = {'policy': 'face-versus-surroundings-v1', 'route': 'direct',
-              'reason': 'insufficient_edges', 'face_tiles': int(face_samples.size),
-              'outside_tiles': int(outside_samples.size), 'degradation': block}
-    if min(face_samples.size, outside_samples.size) < 3:
+              'reason': 'insufficient_edges', 'face_tiles': in_n,
+              'outside_tiles': out_n, 'degradation': block}
+    if face_blur is None or background_blur is None:
         return report
-    face_blur, background_blur = float(np.median(face_samples)), float(np.median(outside_samples))
     report.update(face_radius_at256=face_blur, outside_radius_at256=background_blur)
-    if face_blur >= max(background_blur * 1.5, background_blur + .75):
+    if clear:
         report.update(route='protect_auto', reason='face_blur_exceeds_surroundings')
     else:
         report['reason'] = 'no_clear_blur_gap'
@@ -656,3 +845,43 @@ def finish(response, evidence, decision, automatic_protection):
     metadata['payload_pins']['automatic-crop-input.png'] = metadata['payload_pins'].pop('uploaded-original.bin')
     evidence['processing.json'] = json_bytes(metadata)
     return evidence['derived-native.png'], metadata, evidence, decision
+
+
+def prepare_macroblocking(source, origin=(0, 0), mask=None, allow_fbcnn=True, dc=None):
+    """Run FBCNN or HEVC macroblock deblocking and return canonical stage metadata."""
+    cleaned, report, raw_evidence = prepare_macroblock_deblocking(
+        source, origin=origin, mask=mask, allow_fbcnn=allow_fbcnn, dc=dc
+    )
+    if cleaned is None or report is None:
+        return None, None, None, {}
+    method = report.get('method', '')
+    stage = 'macroblock_fbcnn' if method in ('fbcnn_rgb', 'fbcnn_plus_hevc_16x16') else 'macroblock_hevc'
+    mask_png = raw_evidence.get('macroblock-mask.png')
+    if mask_png is None:
+        mask_png = png(np.full(cleaned.shape[:2], 255, dtype=np.uint8))
+    return cleaned, stage, report, {'macroblock-mask.png': mask_png}
+
+
+def prepare_composables(source):
+    """Run quantitatively gated refiners in fixed artifact-safe order."""
+    current = source
+    stages = []
+    stage_reports = {}
+    evidence = {}
+    pipeline = (
+        ('edge_deringing', prepare_deringing),
+        ('gradient_debanding', prepare_debanding),
+        ('tangent_antialiasing', prepare_antialiasing),
+        ('chroma_debleeding', prepare_color_bleeding),
+    )
+    for stage_name, fn in pipeline:
+        output, report, stage_evidence = fn(current)
+        if output is None or report is None:
+            continue
+        current = output
+        stages.append(stage_name)
+        stage_reports[stage_name] = report
+        evidence.update(stage_evidence)
+    if not stages:
+        return None, [], {}, {}
+    return current, stages, stage_reports, evidence

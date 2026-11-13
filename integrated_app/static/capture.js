@@ -6,7 +6,7 @@
   let mode='picture', phase='review', view, cancelDecode;
   const video = $('capture-video'), canvas = $('capture-canvas'), ctx = canvas.getContext('2d');
   const clean = document.createElement('canvas'), cleanCtx = clean.getContext('2d');
-  let tokenPromise, media, fileUrl, streamId, streamTimer, streamImage, latestBlob, frameId, rect, faces = [], detectionWarning;
+  let tokenPromise, media, fileUrl, streamId, streamTimer, streamImage, latestBlob, frameId, rect, faces = [], faceCrops = null, detectionWarning;
   const frameCrops = new Map();
   let revision = 0, frozen = false, pending = false, drawing = false, gesture, allSelected = false, selectedFace = 1;
   let savedUpload, fileReady=false;
@@ -15,10 +15,11 @@
   const kind = () => $('capture-source').value;
   const sourceReady = () => media || fileUrl || streamId;
   const validRect = () => rect && [rect.x, rect.y, rect.width, rect.height].every(Number.isInteger) && rect.x >= 0 && rect.y >= 0 && rect.width >= 16 && rect.height >= 16 && rect.width <= 1600 && rect.height <= 1600 && rect.x + rect.width <= clean.width && rect.y + rect.height <= clean.height;
+  const isCropRect = box => Array.isArray(box) && box.length === 4 && box.every(Number.isInteger) && box[0] >= 0 && box[1] >= 0 && box[2] >= 16 && box[3] >= 16 && box[2] <= 1600 && box[3] <= 1600 && box[0] + box[2] <= clean.width && box[1] + box[3] <= clean.height;
   const cropKey = ({x,y,width,height}) => `${x},${y},${width},${height}`;
   function detectedCrops() {
     const seen = new Set();
-    return faces.map((box, index) => ({ rectangle: faceRectangle(box), faceNumber: index + 1 }))
+    return faces.map((box, index) => ({ rectangle: faceRectangle(box, index), faceNumber: index + 1 }))
       .filter(({ rectangle }) => {
         const key = cropKey(rectangle);
         if (seen.has(key)) return false;
@@ -107,7 +108,11 @@
     $('capture-crop-size').textContent = validRect() ? `${rect.width} x ${rect.height} pixels. Drag to move or resize.` : 'Keep the crop inside the frame, 16-1600 pixels per side.';
     draw(); update();
   }
-  function faceRectangle([x,y,width,height]) {
+  function faceRectangle([x,y,width,height], index) {
+    const precomputed = Number.isInteger(index) ? faceCrops?.[index] : null;
+    if (isCropRect(precomputed)) {
+      return {x: precomputed[0], y: precomputed[1], width: precomputed[2], height: precomputed[3]};
+    }
     const margin=Math.round(Math.max(width,height)*.20);
     const left=Math.max(0,x-margin), top=Math.max(0,y-margin);
     const right=Math.min(clean.width,x+width+margin), bottom=Math.min(clean.height,y+height+margin);
@@ -116,7 +121,7 @@
   function selectFace(index) {
     if(pending)return;
     selectedFace = index + 1;
-    const selected=faceRectangle(faces[index]);
+    const selected=faceRectangle(faces[index], index);
     view=makeView(clean.width,clean.height,selected);
     $('capture-full-frame').setAttribute('aria-pressed','false');$('capture-view-label').textContent=`Face ${index+1} selected. Preview zoomed for crop adjustment.`;
     setRect(selected);
@@ -143,7 +148,7 @@
   function clearFrame() {
     frameCrops.clear();
     allSelected = false; selectedFace = 1;
-    drawing=false;gesture=undefined;frozen=false;view=undefined;frameId=undefined;rect=undefined;faces=[];detectionWarning=undefined;clean.width=clean.height=0;canvas.width=canvas.height=0;
+    drawing=false;gesture=undefined;frozen=false;view=undefined;frameId=undefined;rect=undefined;faces=[];faceCrops=null;detectionWarning=undefined;clean.width=clean.height=0;canvas.width=canvas.height=0;
     $('capture-canvas').classList.add('hidden');$('capture-crop-controls').classList.add('hidden');$('capture-faces').replaceChildren();
   }
   async function pollStream(version) {
@@ -224,7 +229,13 @@
       if(!blob||blob.size>24*1024**2)throw new Error('The frozen frame exceeds 24 MB. Choose a smaller source.');
       const data=new FormData();data.append('file',blob,'frozen-frame.png');data.append('source_kind',sourceKind);if(sourceKind==='video')data.append('source_time',String(sourceTime));
       const result=await(await request('/frames',{method:'POST',body:data})).json();if(version!==revision)return;
-      frameId=result.frame_id;faces=result.faces.slice().sort((a,b)=>b[2]*b[3]-a[2]*a[3]);frozen=true;view=makeView(clean.width,clean.height);$('capture-full-frame').setAttribute('aria-pressed','true');$('capture-view-label').textContent='Full frame';
+      frameId=result.frame_id;
+      const rawFaces=Array.isArray(result.faces)?result.faces:[];
+      const rawCrops=Array.isArray(result.face_crops)?result.face_crops:null;
+      const pairedFaces=rawFaces.map((box,index)=>({box,crop:rawCrops?.[index]??null})).sort((a,b)=>b.box[2]*b.box[3]-a.box[2]*a.box[3]);
+      faces=pairedFaces.map(entry=>entry.box);
+      faceCrops=rawCrops?pairedFaces.map(entry=>entry.crop):null;
+      frozen=true;view=makeView(clean.width,clean.height);$('capture-full-frame').setAttribute('aria-pressed','true');$('capture-view-label').textContent='Full frame';
       detectionWarning=result.detection_warning;
       $('capture-video').classList.add('hidden');$('capture-stream').classList.add('hidden');$('capture-canvas').classList.remove('hidden');
       $('capture-faces').replaceChildren();
@@ -382,8 +393,8 @@
   $('input-mode-picture').addEventListener('click',()=>setMode('picture'));$('input-mode-video').addEventListener('click',()=>setMode('video'));
   function syncPicturePreview() {
     const src=$('upload-preview').getAttribute('src');
-    if(src)$('picture-main-preview').src=src;else $('picture-main-preview').removeAttribute('src');
-    $('picture-main-preview').classList.toggle('hidden',!src);$('picture-empty').classList.toggle('hidden',!!src);
+    if(src){if($('picture-main-preview').getAttribute('src')!==src)$('picture-main-preview').src=src;}else $('picture-main-preview').removeAttribute('src');
+    $('picture-main-preview').classList.toggle('hidden',!src);$('picture-empty').classList.toggle('hidden',Boolean(src));
   }
   new MutationObserver(syncPicturePreview).observe($('upload-preview'),{attributes:true,attributeFilter:['src']});
   syncPicturePreview();

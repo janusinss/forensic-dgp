@@ -31,6 +31,31 @@
             return 'Auto flagged a possible softened mosaic and used direct restoration.';
         }
         if (decision?.route === 'scanline_cleanup') return 'Auto reduced repeating horizontal scanlines and lightly smoothed the image before restoration.';
+        const stageLabels = {
+            scanline_cleanup: 'scanline cleanup',
+            jpeg_deblocking: 'JPEG deblocking',
+            macroblock_fbcnn: 'FBCNN macroblock deblocking',
+            macroblock_hevc: 'adaptive macroblock deblocking',
+            edge_deringing: 'edge deringing',
+            gradient_debanding: 'gradient debanding',
+            tangent_antialiasing: 'tangent anti-aliasing',
+            chroma_debleeding: 'chroma debleeding',
+        };
+        if (decision?.route === 'compound_artifact_preparation') {
+            const stages = Array.isArray(decision.stages) && decision.stages.length
+                ? decision.stages
+                : (Array.isArray(decision.applied_stages) ? decision.applied_stages : []);
+            const names = stages.map(stage => stageLabels[stage] || String(stage).replaceAll('_', ' '));
+            return names.length
+                ? `Auto applied ${names.join(', ')} before face restoration.`
+                : 'Auto applied multi-stage artifact preparation before face restoration.';
+        }
+        if (decision?.route === 'macroblock_fbcnn') return 'Auto reduced compression macroblocking with FBCNN before face restoration.';
+        if (decision?.route === 'macroblock_hevc') return 'Auto smoothed DCT macroblock boundaries with adaptive boundary deblocking before face restoration.';
+        if (decision?.route === 'edge_deringing') return 'Auto suppressed ringing halos near sharp edges before face restoration.';
+        if (decision?.route === 'gradient_debanding') return 'Auto smoothed quantized gradient banding with subtle dither before face restoration.';
+        if (decision?.route === 'tangent_antialiasing') return 'Auto smoothed jagged diagonal contours along the edge tangent before face restoration.';
+        if (decision?.route === 'chroma_debleeding') return 'Auto reduced chromatic bleeding across luma boundaries before face restoration.';
         if (['picture_region_gaussian', 'frame_region_gaussian', 'face_gaussian'].includes(decision?.route)) {
             const area = decision.route === 'face_gaussian' ? 'the detected face' : 'flagged regions';
             const radius = decision.Gaussian_radius_at256.toFixed(1);
@@ -283,14 +308,19 @@
         if (renderFrame) cancelAnimationFrame(renderFrame);
         renderFrame = 0; overlayPixels = undefined; dirty = undefined; protectCount = 0; applyCount = 0;
         sourceFile = undefined; captureId = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
-        pictureImage = pictureCrop = undefined;
-        pictureCrops = [];
+        pictureImage = pictureCrop = undefined; pictureCrops = [];
         byId('picture-face').replaceChildren();
         byId('picture-face-field').classList.add('hidden');
         byId('picture-face-status').classList.add('hidden');
         canvas.width = 0; canvas.height = 0;
         byId('input-picture').classList.add('hidden');
         byId('upload-preview').removeAttribute('src'); byId('upload-preview').classList.add('hidden');
+        const mainPreview = byId('picture-main-preview');
+        if (mainPreview) {
+            mainPreview.removeAttribute('src');
+            mainPreview.classList.add('hidden');
+        }
+        byId('picture-empty')?.classList.remove('hidden');
         invalidate();
     };
     function selectPictureCrop(rectangle, label) {
@@ -309,14 +339,29 @@
         byId('input-picture-label').textContent = byId('upload-preview').alt = label;
         byId('upload-preview').src = preview;
         byId('upload-preview').classList.remove('hidden');
+        const mainPreview = byId('picture-main-preview');
+        if (mainPreview) {
+            mainPreview.alt = label;
+            mainPreview.width = w;
+            mainPreview.height = h;
+            mainPreview.src = preview;
+            mainPreview.classList.remove('hidden');
+        }
+        byId('picture-empty')?.classList.add('hidden');
         byId('brush-dimensions').textContent = `Picture size: ${w} × ${h} pixels. No areas are marked yet.`;
         invalidate(); render();
     }
     byId('picture-face').addEventListener('change', event => {
-        if (busy || !pictureImage) return;
+        if (busy || !pictureImage || captureId) return;
         const index = Number(event.target.value);
-        selectPictureCrop(pictureCrops[index], index < 0 ? pictureLabel : `Face ${index + 1} crop`);
-        byId('picture-face-status').textContent = index < 0 ? 'Using the full picture.' : `Using the crop for Face ${index + 1}.`;
+        const selected = Number.isInteger(index) && index >= 0 ? pictureCrops[index] : undefined;
+        if (!selected) {
+            selectPictureCrop(undefined, pictureLabel);
+            byId('picture-face-status').textContent = 'Using the full picture.';
+            return;
+        }
+        selectPictureCrop(selected, `Face ${index + 1} crop`);
+        byId('picture-face-status').textContent = `Using the crop for Face ${index + 1}.`;
     });
     const usePicture = async (file, options = {}) => {
         if (busy) { error('Wait for the current task to finish, then choose the picture again.'); return false; }
@@ -337,13 +382,14 @@
             if (image.naturalWidth !== result.width || image.naturalHeight !== result.height) throw new Error('The picture could not be prepared correctly. Please choose it again.');
             sourceFile = file; captureId = options.captureId; pictureImage = image;
             pictureLabel = options.label || 'Full uploaded picture';
-            pictureCrops = result.face_crops || [];
+            pictureCrops = Array.isArray(result.face_crops) ? result.face_crops : [];
             const first = pictureCrops[0];
             selectPictureCrop(first, first ? 'Face 1 crop' : pictureLabel);
             if (!captureId) {
                 const choices = byId('picture-face');
-                choices.add(new Option('Full picture', '-1'));
+                choices.replaceChildren();
                 pictureCrops.forEach((_, index) => choices.add(new Option(`Face ${index + 1}`, String(index))));
+                choices.add(new Option('Full picture', '-1'));
                 choices.value = first ? '0' : '-1';
                 byId('picture-face-field').classList.toggle('hidden', !pictureCrops.length);
                 const status = byId('picture-face-status');

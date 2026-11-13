@@ -39,6 +39,16 @@ def estimate_tiles(luma):
     return tiles
 
 
+def estimate_tiles_normalized(source, max_longest=256):
+    """Return tile blur estimates normalized to longest-side=256 pixel units."""
+    image = source if isinstance(source, Image.Image) else Image.fromarray(source)
+    longest = max(image.size)
+    scale = min(1., max_longest / longest)
+    size = tuple(max(1, round(side * scale)) for side in image.size)
+    luma = np.asarray(image.convert('L').resize(size, Image.Resampling.LANCZOS), dtype=np.float32)
+    return estimate_tiles(luma) / (scale * longest / 256), size
+
+
 def match_surroundings(rgb, source, rectangle, effective):
     """Estimate from the full upload and blend local blur across its surroundings."""
     original = Image.fromarray(source)
@@ -60,7 +70,20 @@ def match_surroundings(rgb, source, rectangle, effective):
     supporting = ordered[1:] - ordered[:-1] <= .5 + .15 * ordered[:-1]
     if not supporting.any():
         return rgb, np.zeros(effective.shape, bool), summary
-    target = min(12., float(ordered[1:][supporting][-1]))
+    base_target = min(12., float(ordered[1:][supporting][-1]))
+    target = base_target
+    if longest > 256 and (~reliable).any():
+        # Heavy blur drops edges past the 512-px ridge gate; check 256-scale safely.
+        tiles_256, _ = estimate_tiles_normalized(original, max_longest=256)
+        reliable_256 = np.isfinite(tiles_256)
+        if reliable_256.sum() >= 2:
+            ordered_256 = np.sort(tiles_256[reliable_256])
+            supp_256 = ordered_256[1:] - ordered_256[:-1] <= .5 + .15 * ordered_256[:-1]
+            if supp_256.any():
+                target_256 = min(12., float(ordered_256[1:][supp_256][-1]))
+                if target_256 > target + .45:
+                    scale_gap = max(0., min(1., factor * longest / 256 - 1.))
+                    target = min(12., target_256, target * (1. + .32 * scale_gap))
     summary.update(status='estimated', target_radius_at256=round(target, 2))
     local = tiles / (factor * longest / 256)
     # Missing edges do not imply a matched region. Fill those tiles from nearby
@@ -71,7 +94,7 @@ def match_surroundings(rgb, source, rectangle, effective):
     filled = np.divide(nearby, weights, out=local[tuple(nearest)], where=weights > 0)
     local = np.where(reliable, local, filled)
     smooth = np.asarray(Image.fromarray(local).resize(original.size, Image.Resampling.BILINEAR))
-    matched_tiles = reliable & (local >= target - .35)
+    matched_tiles = reliable & (local >= base_target - .35)
     if matched_tiles.any():
         holdout = np.asarray(Image.fromarray(matched_tiles).resize(original.size, Image.Resampling.NEAREST))
         taper = np.clip(distance_transform_edt(~holdout) / max(1, 8 * longest / 256), 0, 1)

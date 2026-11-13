@@ -159,6 +159,7 @@ class ControllerTests(unittest.TestCase):
             inspection = asyncio.run(controller.inspect(self.upload(self.contents), scan_faces=True))
         rectangle = [34, 16, 46, 56]
         self.assertEqual(inspection['face_crops'], [rectangle])
+        self.assertEqual(inspection['face_boxes'], [[42, 24, 30, 40]])
         self.assertEqual(inspection['neural_calls'], 0)
         with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
             result = self.restore(restoration='off', input_review='picture_upload', picture_crop=json.dumps(rectangle))
@@ -171,11 +172,48 @@ class ControllerTests(unittest.TestCase):
         with patch.object(capture_api, 'detect_faces', side_effect=RuntimeError):
             inspection = asyncio.run(controller.inspect(self.upload(self.contents), scan_faces=True))
         self.assertEqual(inspection['face_crops'], [])
+        self.assertEqual(inspection['face_boxes'], [])
         self.assertTrue(inspection['face_scan_unavailable'])
         for invalid in ('[0,0,2,2]', '[0,0,129,96]', '[0,0,40,40.0]', 'bad'):
             with self.subTest(invalid=invalid), self.assertRaises(HTTPException) as error:
                 self.restore(restoration='off', input_review='picture_upload', picture_crop=invalid)
             self.assertEqual(error.exception.status_code, 422)
+
+    def test_inspect_uses_detect_face_details_and_sorts_by_position(self):
+        details = [
+            {'box': [60, 20, 30, 36], 'crop': [50, 10, 50, 50], 'score': 0.90},
+            {'box': [12, 16, 28, 34], 'crop': [4, 8, 44, 44], 'score': 0.88},
+        ]
+        with patch.object(capture_api, 'detect_face_details', return_value=details) as detail_call:
+            inspection = asyncio.run(controller.inspect(self.upload(self.contents), scan_faces=True))
+        detail_call.assert_called_once()
+        self.assertEqual(inspection['face_boxes'], [[12, 16, 28, 34], [60, 20, 30, 36]])
+        self.assertEqual(inspection['face_crops'], [[4, 8, 44, 44], [50, 10, 50, 50]])
+        self.assertFalse(inspection['face_scan_unavailable'])
+
+    @unittest.skipUnless(
+        all((Path(__file__).resolve().parents[2] / 'test_images' / name).exists() for name in ('wild3.png', 'wild4.png')),
+        'wild3/wild4 fixtures missing',
+    )
+    def test_inspect_real_wild3_and_wild4_produce_previous_twenty_percent_crop_zoom(self):
+        test_dir = Path(__file__).resolve().parents[2] / 'test_images'
+        for name in ('wild3.png', 'wild4.png'):
+            with self.subTest(image=name):
+                raw = (test_dir / name).read_bytes()
+                inspection = asyncio.run(controller.inspect(self.upload(raw, filename=name), scan_faces=True))
+                self.assertFalse(inspection['face_scan_unavailable'])
+                self.assertEqual(len(inspection['face_boxes']), 1)
+                self.assertEqual(len(inspection['face_crops']), 1)
+                cx, cy, cw, ch = inspection['face_crops'][0]
+                bx, by, bw, bh = inspection['face_boxes'][0]
+                margin = int(max(bw, bh) * .20 + .5)
+                expected_left, expected_top = max(0, bx - margin), max(0, by - margin)
+                self.assertGreaterEqual(bw, 200)
+                self.assertEqual([cx, cy, cw, ch], [
+                    expected_left, expected_top,
+                    min(inspection['width'], bx + bw + margin) - expected_left,
+                    min(inspection['height'], by + bh + margin) - expected_top,
+                ])
 
     def test_picture_crop_preparation_keeps_masks_and_preview_bound_to_selection(self):
         rectangle = [38, 20, 38, 48]

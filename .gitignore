@@ -2,7 +2,6 @@
 .DS_Store
 error_log
 .agent/
-.agents/
 .codex
 skills/
 AGENTS.MD
@@ -183,3 +182,10 @@ verify_cookie*.txt
 /.codex/*
 !/.codex/rules/
 !/.codex/agents/
+
+# Local AGY skills and workflow artifacts
+/.agents/*
+!/.agents/rules/
+!/.agents/agents/
+/.harness/
+/.agent_worktrees/
