@@ -105,11 +105,19 @@ def match_surroundings(rgb, source, rectangle, effective):
         smooth = smooth[y:y + h, x:x + w]
         if matched_tiles.any():
             taper = taper[y:y + h, x:x + w]
+    if (~effective).any():
+        # Outward smoothstep taper from protected pixels eliminates boundary step seams.
+        d_out = distance_transform_edt(effective)
+        t_px = max(6.0, 10.0 * longest / 256.0)
+        u = np.clip(d_out / t_px, 0.0, 1.0).astype(np.float32)
+        protect_taper = u * u * (3.0 - 2.0 * u)
+    else:
+        protect_taper = 1.0
     difference = target - smooth
     radius = np.sqrt(np.maximum(0, target ** 2 - smooth ** 2))
     # Taper small residual differences near the target rather than cutting off
     # at a tile boundary. Blend between adjacent half-pixel filters.
-    steps = np.where(effective, radius * np.clip(difference / .35, 0, 1) * taper * 2, 0).astype(np.float32)
+    steps = np.where(effective, radius * np.clip(difference / .35, 0, 1) * taper * protect_taper * 2, 0).astype(np.float32)
     maximum_step = float(steps.max())
     summary['maximum_added_radius_at256'] = round(maximum_step / 2, 2)
     summary['inferred_tiles'] = int((~reliable).sum())

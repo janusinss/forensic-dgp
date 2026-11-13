@@ -30,9 +30,12 @@ from implementation.automatic_preparation import (
     picture_pixelation,
     prepare_composables,
     prepare_macroblocking,
+    prepare_noise,
+    prepare_photometric,
     prepare_source,
 )
 from implementation.blur_match import estimate_tiles_normalized
+from implementation.cast_dehaze import POLICY as CAST_DEHAZE_POLICY, detect_cast_dehaze, prepare_cast_dehaze
 from implementation.color_bleeding import POLICY as BLEED_POLICY, detect_color_bleeding, prepare_color_bleeding
 from implementation.conditioning_v2 import compute_v2_conditioning_numpy
 from implementation.debanding import detect_banding, prepare_debanding
@@ -42,11 +45,14 @@ from implementation.jpeg_deblocking import CHECKPOINT, CHECKPOINT_SHA256
 from implementation.macroblock_deblocking import (
     _seam_and_detail_metrics,
     detect_macroblocking,
+    is_dct_macroblocking_patch,
     prepare_macroblock_deblocking,
 )
+from implementation.noise_denoise import POLICY as NOISE_POLICY, detect_noise, prepare_noise_denoise
 from implementation.preparation import png
 from implementation.quality import quality_signals
 from implementation.runtime import MODEL_DIR, prepare_crop
+from implementation.scanline_cleanup import clean_residual_scanline_comb, detect_and_clean_spatial_comb
 
 
 APP_ROOT = Path(__file__).resolve().parents[1]
@@ -1167,6 +1173,93 @@ class DegradationRoutesE2ETests(_E2ERouteTestBase):
         self.assertTrue(np.array_equal(derived_native[protect_mask], orig_native[protect_mask]))
         self.assertGreater(prep['changed_native_pixels'], 0)
 
+    def test_e2e_noise_denoise_cast_dehaze_spatial_comb_and_negative_controls(self):
+        """Verify Step 5 noise_denoise, cast/dehaze, spatial_comb routes, evidence masks, precedence, and negative controls."""
+        clean = _make_clean_portrait(160, 160, seed=314)
+
+        # 1) Negative control: clean portrait must route direct without false triggers
+        self.assertIsNone(detect_noise(clean))
+        self.assertIsNone(detect_cast_dehaze(clean))
+        self.assertEqual(detect_and_clean_spatial_comb(clean), (None, None, {}))
+        res_clean = self._restore_picture(png(clean), filename='clean_portrait.png')
+        self.assertEqual(res_clean['metadata']['automatic_preparation']['route'], 'direct')
+        self.assertFalse(res_clean['metadata']['preparation_applied'])
+
+        # 2) Noise-only -> noise_denoise + noise-denoise-mask.png + native Immerkaer signal
+        rng = np.random.default_rng(77)
+        noisy = np.clip(clean.astype(np.float32) + rng.normal(0.0, 9.5, clean.shape), 0, 255).astype(np.uint8)
+        n_det = detect_noise(noisy)
+        self.assertIsNotNone(n_det)
+        self.assertEqual(n_det['policy'], NOISE_POLICY)
+        res_noise = self._restore_picture(png(noisy), filename='noisy.png')
+        meta_noise = res_noise['metadata']
+        self.assertEqual(meta_noise['automatic_preparation']['route'], 'noise_denoise')
+        self.assertTrue(meta_noise['quality_signals']['noise_gate_triggered'])
+        self.assertGreater(meta_noise['quality_signals']['noise_sigma_native'], 4.0)
+        zip_noise = _decode_zip_from_data_url(res_noise['bundle'])
+        self.assertIn('noise-denoise-mask.png', zip_noise)
+        self.assertIn('noise-cleaned.png', zip_noise)
+
+        # 3) Strong color cast -> color_cast_balance + cast-dehaze-mask.png
+        warm = clean.astype(np.float32)
+        warm[..., 0] = warm[..., 0] * 1.45 + 15.0
+        warm[..., 1] *= 0.90
+        warm[..., 2] *= 0.45
+        warm_u8 = np.clip(np.rint(warm), 0, 255).astype(np.uint8)
+        res_cast = self._restore_picture(png(warm_u8), filename='cast.png')
+        self.assertEqual(res_cast['metadata']['automatic_preparation']['route'], 'color_cast_balance')
+        zip_cast = _decode_zip_from_data_url(res_cast['bundle'])
+        self.assertIn('cast-dehaze-mask.png', zip_cast)
+
+        # 4) Atmospheric haze -> haze_dehaze + cast-dehaze-mask.png
+        hazy_u8 = np.clip(np.rint(clean.astype(np.float32) * 0.42 + 235.0 * 0.58), 0, 255).astype(np.uint8)
+        res_haze = self._restore_picture(png(hazy_u8), filename='haze.png')
+        self.assertEqual(res_haze['metadata']['automatic_preparation']['route'], 'haze_dehaze')
+        zip_haze = _decode_zip_from_data_url(res_haze['bundle'])
+        self.assertIn('cast-dehaze-mask.png', zip_haze)
+
+        # 5) Combined cast + haze -> cast_dehaze (both gates active)
+        forced_out, forced_mask, forced_route, forced_report = prepare_cast_dehaze(hazy_u8, force_mode='both')
+        self.assertEqual(forced_route, 'cast_dehaze')
+        with patch('implementation.automatic_preparation.prepare_cast_dehaze', return_value=(forced_out, forced_mask, forced_route, forced_report)):
+            res_both = self._restore_picture(png(hazy_u8), filename='cast_haze.png')
+        self.assertEqual(res_both['metadata']['automatic_preparation']['route'], 'cast_dehaze')
+        zip_both = _decode_zip_from_data_url(res_both['bundle'])
+        self.assertIn('cast-dehaze-mask.png', zip_both)
+
+        # 6a) Full-frame scanline_cleanup suppresses redundant spatial_comb in composables
+        full_comb = clean.astype(np.int16)
+        full_comb[::2, :, :] += 14
+        full_comb[1::2, :, :] -= 14
+        res_full_comb = self._restore_picture(png(np.clip(full_comb, 0, 255).astype(np.uint8)), filename='full_comb.png')
+        self.assertEqual(res_full_comb['metadata']['automatic_preparation']['route'], 'scanline_cleanup')
+        self.assertNotIn('spatial_comb', res_full_comb['metadata']['automatic_preparation']['applied_stages'])
+
+        # 6b) Localized crop spatial comb (missed by full-frame FFT) -> spatial_comb + spatial-comb-cleaned.png
+        big_clean = _make_clean_portrait(640, 640, seed=314)
+        local_comb = big_clean.astype(np.int16)
+        local_comb[240:400:2, 240:400, :] += 14
+        local_comb[241:400:2, 240:400, :] -= 14
+        res_comb = self._restore_picture(
+            png(np.clip(local_comb, 0, 255).astype(np.uint8)),
+            filename='comb_crop.png',
+            picture_crop=[240, 240, 160, 160],
+        )
+        auto_comb = res_comb['metadata']['automatic_preparation']
+        self.assertIn('spatial_comb', auto_comb['applied_stages'])
+        self.assertEqual(res_comb['metadata']['scanline_cleanup']['spacing_native_pixels'], 2.0)
+        zip_comb = _decode_zip_from_data_url(res_comb['bundle'])
+        self.assertIn('spatial-comb-cleaned.png', zip_comb)
+
+        # 7) Precedence: noise_denoise precedes cast_dehaze & composables when combined
+        noisy_cast = np.clip(warm_u8.astype(np.float32) + rng.normal(0.0, 9.5, clean.shape), 0, 255).astype(np.uint8)
+        res_compound_nc = self._restore_picture(png(noisy_cast), filename='noisy_cast.png')
+        stages_nc = res_compound_nc['metadata']['automatic_preparation']['applied_stages']
+        self.assertEqual(stages_nc[0], 'noise_denoise')
+        self.assertGreater(len(stages_nc), 1)
+        self.assertEqual(app_module.status()['maximum_restore_forwards'], 1)
+        self.assertEqual(app_module.status()['maximum_off_forwards'], 0)
+
 
 _REAL_TEST_IMAGES = ('wild1.png', 'wild2.png', 'wild3.png', 'wild4.png', 'wild5.png', 'synthetic_data_6.png')
 _TEST_IMAGES_DIR = APP_ROOT.parent / 'test_images'
@@ -1252,15 +1345,56 @@ class RealTestImagesE2ETests(_E2ERouteTestBase):
         expected = (
             ('wild1.png', 'direct', False),
             ('wild2.png', 'scanline_cleanup', True),
-            ('synthetic_data_6.png', 'direct', False),
+            ('synthetic_data_6.png', 'compound_artifact_preparation', True),
         )
         for filename, expected_route, expected_prep_applied in expected:
             with self.subTest(filename=filename):
                 app_module._frozen_frame_pixelation.cache_clear()
                 body = self._restore_picture(self._read_fixture(filename), filename=filename)
                 meta = body['metadata']
-                self.assertEqual(meta['automatic_preparation']['route'], expected_route)
+                auto = meta['automatic_preparation']
+                self.assertEqual(auto['route'], expected_route)
                 self.assertIs(meta['preparation_applied'], expected_prep_applied)
+                if filename == 'wild2.png':
+                    self.assertNotIn('Gaussian_radius_at256', meta['scanline_cleanup'])
+                    self.assertIn('comb_ela_masked_pixels', meta['scanline_cleanup'])
+                    self.assertIn('chroma_cleanup_pixels', meta['scanline_cleanup'])
+                if filename == 'synthetic_data_6.png':
+                    self.assertEqual(auto['applied_stages'][0], 'noise_denoise')
+
+    def test_synthetic_data_real_routes_step5(self):
+        """Verify Step 5 winners route #2, #7, #9, #10 cleanly without #1/#4 cast false triggers."""
+        checks = (
+            ('synthetic_data_1.png', 'macroblock_fbcnn', None, {'color_cast_balance', 'haze_dehaze', 'cast_dehaze'}),
+            ('synthetic_data_2.png', 'compound_artifact_preparation', ('color_cast_balance', 'macroblock_fbcnn'), set()),
+            ('synthetic_data_4.png', 'macroblock_hevc', None, {'color_cast_balance', 'haze_dehaze', 'cast_dehaze'}),
+            ('synthetic_data_7.png', 'compound_artifact_preparation', ('macroblock_hevc',), {'picture_region_gaussian'}),
+            ('synthetic_data_9.png', 'noise_denoise', ('noise_denoise',), set()),
+            ('synthetic_data_10.png', 'compound_artifact_preparation', ('haze_dehaze', 'macroblock_fbcnn'), set()),
+        )
+        for filename, expected_route, required_stages, forbidden_names in checks:
+            path = _TEST_IMAGES_DIR / filename
+            if not path.exists():
+                continue
+            with self.subTest(filename=filename):
+                app_module._frozen_frame_pixelation.cache_clear()
+                body = self._restore_picture(path.read_bytes(), filename=filename)
+                meta = body['metadata']
+                auto = meta['automatic_preparation']
+                self.assertEqual(auto['route'], expected_route)
+                self.assertNotIn('gaussian', auto['route'])
+                stages = auto.get('applied_stages', [])
+                for stage in (required_stages or ()):
+                    self.assertIn(stage, stages)
+                for forbidden in forbidden_names:
+                    self.assertNotIn(forbidden, stages)
+                    self.assertNotEqual(auto['route'], forbidden)
+                if filename == 'synthetic_data_9.png':
+                    zip_entries = _decode_zip_from_data_url(body['bundle'])
+                    self.assertIn('noise-denoise-mask.png', zip_entries)
+                if filename in ('synthetic_data_2.png', 'synthetic_data_10.png'):
+                    zip_entries = _decode_zip_from_data_url(body['bundle'])
+                    self.assertIn('cast-dehaze-mask.png', zip_entries)
 
 
 class UIAndImplementationHygieneTests(unittest.TestCase):
@@ -1285,6 +1419,11 @@ assert.ok(match, 'preparationSummary definition not found in implementation.js')
 const fn = vm.runInNewContext('(metadata => {' + match[1] + '\n})');
 
 const expectedRoutes = [
+  ['noise_denoise', /additive and chroma noise/i],
+  ['cast_dehaze', /balanced color cast and dehazed/i],
+  ['color_cast_balance', /residual color cast/i],
+  ['haze_dehaze', /atmospheric haze/i],
+  ['spatial_comb', /spatial interlacing comb/i],
   ['macroblock_fbcnn', /FBCNN/i],
   ['macroblock_hevc', /adaptive boundary deblocking/i],
   ['edge_deringing', /ringing halos/i],
@@ -1302,9 +1441,25 @@ for (const [route, pattern] of expectedRoutes) {
 const compStages = fn({
   automatic_preparation: {
     route: 'compound_artifact_preparation',
-    stages: ['macroblock_fbcnn', 'edge_deringing', 'gradient_debanding', 'tangent_antialiasing', 'chroma_debleeding'],
+    stages: [
+      'noise_denoise',
+      'cast_dehaze',
+      'color_cast_balance',
+      'haze_dehaze',
+      'spatial_comb',
+      'macroblock_fbcnn',
+      'edge_deringing',
+      'gradient_debanding',
+      'tangent_antialiasing',
+      'chroma_debleeding',
+    ],
   },
 });
+assert.match(compStages, /noise denoising/);
+assert.match(compStages, /color cast and haze correction/);
+assert.match(compStages, /color cast balancing/);
+assert.match(compStages, /haze dehazing/);
+assert.match(compStages, /spatial comb cleanup/);
 assert.match(compStages, /FBCNN macroblock deblocking/);
 assert.match(compStages, /edge deringing/);
 assert.match(compStages, /gradient debanding/);

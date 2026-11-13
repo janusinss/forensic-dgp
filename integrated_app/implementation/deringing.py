@@ -194,6 +194,23 @@ def _analyze_ringing(source):
     if halo_px < max(36, round(0.6 * min(height, width))):
         return None
 
+    # F2 tightened flank/area gates: genuine ringing sits on calm isolated step edges
+    # (median flank/core gradient <= 0.39) with meaningful spatial halo/core support.
+    ry, rx = np.nonzero(ring_core)
+    if len(ry) == 0:
+        return None
+    _, g_ring_prof, _ = _sample_normal_triplet(
+        grad, ry, rx, nx[ry, rx], ny[ry, rx], tangent_step=0.0
+    )
+    g_ring_core = grad[ry, rx]
+    g_ring_flank = np.maximum(g_ring_prof[:, 0:3].max(axis=1), g_ring_prof[:, 6:9].max(axis=1))
+    flank_ratio_med = float(np.median(g_ring_flank / np.maximum(g_ring_core, 1e-6)))
+    halo_band_fraction = round(float(halo_px) / float(height * width), 4)
+    if not math.isfinite(flank_ratio_med) or flank_ratio_med > 0.39:
+        return None
+    if halo_band_fraction < 0.0023 and ring_core_px < max(48, round(0.00045 * height * width)):
+        return None
+
     kept_idx = ring_core[cy, cx] & ring_flag
     rel_rev = np.maximum(rev_dark[kept_idx], rev_bright[kept_idx]) / np.maximum(jump[kept_idx], 1.0)
     report = {
@@ -203,7 +220,7 @@ def _analyze_ringing(source):
         'primary_core_pixels': int(len(cy)),
         'ringing_core_pixels': ring_core_px,
         'halo_band_pixels': halo_px,
-        'halo_band_fraction': round(float(halo_px) / float(height * width), 4),
+        'halo_band_fraction': halo_band_fraction,
         'median_edge_contrast': round(float(np.median(jump[kept_idx])), 2),
         'median_reversal_ratio': round(float(np.median(rel_rev)), 4),
         'median_tangential_coherence': round(float(np.median(coherence[kept_idx])), 4),

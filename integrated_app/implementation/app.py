@@ -247,6 +247,11 @@ def health():
 
 
 _STAGE_REASONS = {
+    'noise_denoise': 'suspected_additive_or_sensor_noise',
+    'cast_dehaze': 'suspected_color_cast_and_haze',
+    'color_cast_balance': 'suspected_color_cast_imbalance',
+    'haze_dehaze': 'suspected_atmospheric_haze',
+    'spatial_comb': 'suspected_spatial_interlacing_comb',
     'macroblock_fbcnn': 'genuine_8x8_macroblocking_fbcnn',
     'macroblock_hevc': 'genuine_macroblocking_hevc_deblocking',
     'edge_deringing': 'suspected_edge_ringing_halos',
@@ -318,6 +323,8 @@ def _package_artifact_stages(current_rgb, native, applied_stages, stage_reports,
                        'derived_native_sha256': selected_sha}
         auto_decision = {'route': stage, 'reason': _STAGE_REASONS[stage],
                          'applied_stages': list(applied_stages), 'stage_reports': stage_reports}
+        if stage == 'spatial_comb' and 'spacing_native_pixels' in report:
+            auto_decision['spacing_native_pixels'] = report['spacing_native_pixels']
         for key in ('preparation_model', 'preparation_model_sha256', 'preparation_forward_returns'):
             if key in report:
                 auto_decision[key] = report[key]
@@ -330,10 +337,12 @@ def _package_artifact_stages(current_rgb, native, applied_stages, stage_reports,
                          'reason': 'multiple_degradation_stages_applied',
                          'stages': list(applied_stages), 'applied_stages': list(applied_stages),
                          'stage_reports': stage_reports}
-        if 'scanline_cleanup' in stage_reports:
-            spacing = stage_reports['scanline_cleanup']['spacing_native_pixels']
-            preparation['spacing_native_pixels'] = spacing
-            auto_decision['spacing_native_pixels'] = spacing
+        for comb_stage in ('scanline_cleanup', 'spatial_comb'):
+            if comb_stage in stage_reports and 'spacing_native_pixels' in stage_reports[comb_stage]:
+                spacing = stage_reports[comb_stage]['spacing_native_pixels']
+                preparation['spacing_native_pixels'] = spacing
+                auto_decision['spacing_native_pixels'] = spacing
+                break
         for model_stage in ('macroblock_fbcnn', 'jpeg_deblocking'):
             if model_stage in stage_reports:
                 for key in ('preparation_model', 'preparation_model_sha256', 'preparation_forward_returns'):
@@ -466,7 +475,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         need(np.ptp(native.reshape(-1, 3).astype(np.int16), axis=0).max() > 0,
              'No usable structure is visible. Upload a clearer face crop.')
         original, observed, _, geometry = prepare_crop(native)
-        signals = quality_signals(original, (~observed).astype(np.uint8))
+        signals = quality_signals(original, (~observed).astype(np.uint8), native_rgb=native)
         if restoration == 'auto' and not automatic and signals['blur_variance'] is None:
             raise ValueError('Too little area for Auto. Choose On or Off, or upload a clearer crop.')
         applied = automatic or restoration == 'on' or (restoration == 'auto' and signals['suggest_restoration'])
@@ -490,6 +499,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 prepare as prepare_automatically,
                 prepare_composables,
                 prepare_macroblocking,
+                prepare_noise,
+                prepare_photometric,
                 prepare_source,
                 pixelation_signal,
                 tiny_crop_pixelation,
@@ -608,6 +619,20 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     applied_stages.append('scanline_cleanup')
                     stage_reports['scanline_cleanup'] = scanline_report
 
+                noise_out, noise_report, noise_evidence = prepare_noise(current_rgb)
+                if noise_out is not None and noise_report is not None:
+                    current_rgb = noise_out
+                    applied_stages.append('noise_denoise')
+                    stage_reports['noise_denoise'] = noise_report
+                    stage_evidence.update(noise_evidence)
+
+                cd_out, cd_route, cd_report, cd_evidence = prepare_photometric(current_rgb)
+                if cd_out is not None and cd_route is not None and cd_report is not None:
+                    current_rgb = cd_out
+                    applied_stages.append(cd_route)
+                    stage_reports[cd_route] = cd_report
+                    stage_evidence.update(cd_evidence)
+
                 crop_origin = (int(selected_rectangle[0]), int(selected_rectangle[1])) if selected_rectangle is not None else (0, 0)
                 macroblock_dc = None if capture_id else _jpeg_luma_dc(contents)
                 if jpeg_report is None:
@@ -620,12 +645,17 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         stage_reports[mb_stage] = mb_report
                         stage_evidence.update(mb_evidence)
 
-                comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(current_rgb)
+                comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(
+                    current_rgb, allow_spatial_comb=(scanline_report is None)
+                )
                 if comp_out is not None and comp_stages:
                     current_rgb = comp_out
                     applied_stages.extend(comp_stages)
                     stage_reports.update(comp_reports)
                     stage_evidence.update(comp_evidence)
+
+                if scanline_report is None and 'spatial_comb' in stage_reports:
+                    scanline_report = stage_reports['spatial_comb']
 
                 if applied_stages:
                     selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
@@ -672,13 +702,17 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                             applied_stages = [mb_stage]
                             stage_reports = {mb_stage: mb_report}
                             stage_evidence = dict(mb_evidence)
-                            comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(mb_out)
+                            comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(
+                                mb_out, allow_spatial_comb=(scanline_report is None)
+                            )
                             final_rgb = mb_out
                             if comp_out is not None and comp_stages:
                                 final_rgb = comp_out
                                 applied_stages.extend(comp_stages)
                                 stage_reports.update(comp_reports)
                                 stage_evidence.update(comp_evidence)
+                            if scanline_report is None and 'spatial_comb' in stage_reports:
+                                scanline_report = stage_reports['spatial_comb']
                             selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
                                 final_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
                             )

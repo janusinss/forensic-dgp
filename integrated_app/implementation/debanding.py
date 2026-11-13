@@ -202,6 +202,18 @@ def _analyze_banding(source):
     if before_energy <= 1e-6 or before_rate < 0.004:
         return None
 
+    # F2 tightened step gate: reject subtle <=3-LSB studio vignette rounding when >=4-LSB steps are absent.
+    all_eval_diffs = np.concatenate([dh_rgb[eval_h], dv_rgb[eval_v]])
+    steps3 = all_eval_diffs[(all_eval_diffs >= 3) & (all_eval_diffs <= 40)]
+    if steps3.size == 0:
+        return None
+    p90_step3 = float(np.percentile(steps3, 90))
+    step4_frac = float(((all_eval_diffs >= 4) & (all_eval_diffs <= 40)).mean())
+    if not (np.isfinite(p90_step3) and np.isfinite(step4_frac)):
+        return None
+    if p90_step3 < 4.0 and step4_frac < 0.002:
+        return None
+
     report = {
         "suspected": True,
         "method": "quantized-plateau-contour-v1",

@@ -18,7 +18,7 @@ TANGENT_OFFSETS = np.array([-1.5, -0.75, 0.0, 0.75, 1.5], dtype=np.float32)
 TANGENT_WEIGHTS = np.array([0.10, 0.20, 0.40, 0.20, 0.10], dtype=np.float32)
 SAMPLE_STEPS = np.array([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=np.float32)[:, None]
 SAW_STEPS = np.array([-3.0, -2.0, -1.0, 1.0, 2.0, 3.0], dtype=np.float32)[:, None]
-RIM_ALPHA = 0.55
+RIM_ALPHA = 0.25
 
 
 def _as_rgb_uint8(source):

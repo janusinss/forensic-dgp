@@ -741,6 +741,178 @@ def _passes_macroblock_gate(
     return True, before, after, float(min_ret)
 
 
+def _padded_box_for_region(
+    shape: tuple[int, int],
+    mask_bool: np.ndarray,
+    min_side: int = MIN_CROP_SIDE,
+) -> tuple[int, int, int, int]:
+    """Expand a boolean mask bounding box minimally to >= `min_side` within image bounds."""
+    height, width = shape[:2]
+    yy, xx = np.nonzero(mask_bool)
+    y0, y1 = int(yy.min()), int(yy.max()) + 1
+    x0, x1 = int(xx.min()), int(xx.max()) + 1
+    if y1 - y0 < min_side:
+        pad = min_side - (y1 - y0)
+        y0 = max(0, y0 - pad // 2)
+        y1 = min(height, y0 + min_side)
+        y0 = max(0, y1 - min_side)
+    if x1 - x0 < min_side:
+        pad = min_side - (x1 - x0)
+        x0 = max(0, x0 - pad // 2)
+        x1 = min(width, x0 + min_side)
+        x0 = max(0, x1 - min_side)
+    return y0, y1, x0, x1
+
+
+def _wang_bovik_dct_check(
+    crop: np.ndarray,
+    det: dict,
+    eval_mask: np.ndarray | None,
+) -> bool:
+    """Verify Wang-Bovik periodic seam Z-score and non-flat intra-cell texture."""
+    gray = _bt601_luma(crop)
+    ox, oy = int(det['offset_x']), int(det['offset_y'])
+    dy = np.abs(np.diff(gray, axis=0))
+    dx = np.abs(np.diff(gray, axis=1))
+
+    z_scores: list[float] = []
+    for axis, diffs, off, period in (
+        (0, dy, oy, int(det['axis_periods'][0])),
+        (1, dx, ox, int(det['axis_periods'][1])),
+    ):
+        prof = _axis_diff_profile(diffs, axis, eval_mask)
+        if prof is None:
+            continue
+        valid = np.isfinite(prof)
+        pos = (np.arange(prof.size) + 1 + off) % period
+        b = prof[(pos == 0) & valid]
+        i = prof[(pos != 0) & valid]
+        if b.size > 0 and i.size >= 4:
+            mu_i = float(i.mean())
+            sd_i = max(0.35, float(i.std()))
+            z_scores.append((float(b.mean()) - mu_i) / sd_i)
+    if len(z_scores) < 2 or min(z_scores) < 1.5:
+        return False
+
+    cell_p = 8 if 8 in det['periods'] else 16
+    flat_frac, ex_zero, ex_flat, ex_cnt = _flat_cell_metrics(
+        gray, cell_p, ox % cell_p, oy % cell_p, eval_mask
+    )
+    if (flat_frac >= 0.85 and max(det['interior_gradient']) <= 0.35) or (
+        ex_cnt >= 12 and ex_zero >= 0.70 and ex_flat >= 0.72
+    ):
+        return False
+    return True
+
+
+def is_dct_macroblocking_patch(
+    rgb: np.ndarray,
+    region_mask: np.ndarray | None = None,
+    origin: tuple[int, int] = (0, 0),
+) -> bool:
+    """Return True when `rgb` (optionally scoped to `region_mask`) shows genuine DCT macroblocking.
+
+    Distinguishes genuine 8x8/16x16 DCT macroblocking from flat-cell privacy mosaics
+    using Wang-Bovik periodic seam Z-scores, intra-cell flatness metrics, and
+    deblocking gate verification without rejecting small regional DCT patches.
+    """
+    if not isinstance(rgb, np.ndarray) or rgb.ndim != 3 or rgb.shape[2] != 3 or rgb.dtype != np.uint8:
+        return False
+    height, width = rgb.shape[:2]
+    if min(height, width) < MIN_CROP_SIDE:
+        return False
+    ox0, oy0 = (int(origin[0]), int(origin[1])) if origin is not None else (0, 0)
+
+    mask_bool = None
+    if region_mask is not None:
+        try:
+            m_bool, _, m_regional = _normalize_mask(region_mask, (height, width))
+        except ValueError:
+            return False
+        if m_regional and not np.any(m_bool):
+            return False
+        mask_bool = m_bool
+
+    if mask_bool is not None:
+        y0, y1, x0, x1 = _padded_box_for_region((height, width), mask_bool)
+        crop = rgb[y0:y1, x0:x1]
+        sub_origin = (ox0 + x0, oy0 + y0)
+        sub_mask = mask_bool[y0:y1, x0:x1]
+    else:
+        crop = rgb
+        sub_origin = (ox0, oy0)
+        sub_mask = None
+
+    if min(crop.shape[:2]) < MIN_CROP_SIDE:
+        return False
+
+    det = detect_macroblocking(crop, origin=sub_origin)
+    if det is not None and det.get('suspected') and not det.get('is_flat_privacy_mosaic'):
+        eval_mask = det['mask'] if det.get('regional') else sub_mask
+        if det.get('regional') and sub_mask is not None:
+            overlap = det['mask'] & sub_mask
+            if int(overlap.sum()) >= 256:
+                eval_mask = overlap
+        if _wang_bovik_dct_check(crop, det, eval_mask):
+            return True
+        cleaned, _, _ = prepare_macroblock_deblocking(crop, origin=sub_origin, mask=sub_mask, allow_fbcnn=True)
+        if cleaned is not None:
+            return True
+
+    if mask_bool is not None:
+        det_full = detect_macroblocking(rgb, origin=(ox0, oy0))
+        if (
+            det_full is not None
+            and det_full.get('suspected')
+            and not det_full.get('is_flat_privacy_mosaic')
+            and float(det_full['mask'][mask_bool].mean()) >= 0.5
+        ):
+            eval_full = det_full['mask'] if det_full.get('regional') else None
+            if _wang_bovik_dct_check(rgb, det_full, eval_full):
+                return True
+            cleaned_full, _, _ = prepare_macroblock_deblocking(rgb, origin=(ox0, oy0), allow_fbcnn=True)
+            return cleaned_full is not None
+
+    return False
+
+
+def _apply_e2_detail_boost(
+    source: np.ndarray,
+    cleaned: np.ndarray,
+    ox: int,
+    oy: int,
+    period: int,
+    active_mask: np.ndarray | None,
+) -> tuple[np.ndarray, bool, list[tuple[float, float]] | None, list[tuple[float, float]] | None, float]:
+    """Blend FBCNN strongly near 8x8 block seams (+/-2 px) while retaining interior source detail."""
+    height, width = source.shape[:2]
+    ox8, oy8 = int(ox) % 8, int(oy) % 8
+    yy = (np.arange(height) + oy8) % 8
+    xx = (np.arange(width) + ox8) % 8
+    dy_seam = np.minimum(np.minimum(yy, (8 - yy) % 8), np.abs(yy - 7))
+    dx_seam = np.minimum(np.minimum(xx, (8 - xx) % 8), np.abs(xx - 7))
+    seam_w = np.maximum(
+        np.where(dy_seam <= 1, 0.90, np.where(dy_seam == 2, 0.50, 0.25))[:, None],
+        np.where(dx_seam <= 1, 0.90, np.where(dx_seam == 2, 0.50, 0.25))[None, :],
+    ).astype(np.float32)
+    blended = np.clip(
+        np.rint(
+            source.astype(np.float32) * (np.float32(1.0) - seam_w[..., None])
+            + cleaned.astype(np.float32) * seam_w[..., None]
+        ),
+        0,
+        255,
+    ).astype(np.uint8)
+    if active_mask is not None:
+        blended[~active_mask] = source[~active_mask]
+    ok, before, after, min_ret = _passes_macroblock_gate(
+        source, blended, period, ox % period, oy % period, active_mask
+    )
+    if not ok:
+        return cleaned, False, None, None, 0.0
+    return blended, True, before, after, min_ret
+
+
 def prepare_macroblock_deblocking(
     source: np.ndarray,
     origin: tuple[int, int] = (0, 0),
@@ -884,6 +1056,18 @@ def prepare_macroblock_deblocking(
     if cleaned is None:
         return None, None, {}
 
+    detail_boost = False
+    if method in ('fbcnn_rgb', 'fbcnn_plus_hevc_16x16'):
+        boosted, boost_ok, boost_before, boost_after, boost_ret = _apply_e2_detail_boost(
+            source, cleaned, ox, oy, primary_p, active_mask
+        )
+        if boost_ok:
+            cleaned = boosted
+            before = boost_before
+            after = boost_after
+            min_ret = boost_ret
+            detail_boost = True
+
     drops = [
         (b_item[0] - abs(a_item[0])) / b_item[0] if b_item[0] > 0 else 0.0
         for b_item, a_item in zip(before, after)
@@ -900,6 +1084,7 @@ def prepare_macroblock_deblocking(
     report = {
         'policy': 'macroblock-adaptive-deblocking-v1',
         'method': str(method),
+        'detail_boost': bool(detail_boost),
         'native_size': [int(width), int(height)],
         'period': int(primary_p),
         'periods': [int(p) for p in periods],

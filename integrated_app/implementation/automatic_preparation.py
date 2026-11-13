@@ -18,14 +18,25 @@ from scipy.ndimage import (
 
 from .antialiasing import prepare_antialiasing
 from .blur_match import estimate_tiles, estimate_tiles_normalized
+from .cast_dehaze import prepare_cast_dehaze
 from .color_bleeding import prepare_color_bleeding
-from .debanding import prepare_debanding
+from .debanding import detect_banding, prepare_debanding
 from .deringing import prepare_deringing
 from .irregular_mosaic import irregular_mosaic_mask
-from .macroblock_deblocking import detect_macroblocking, prepare_macroblock_deblocking
+from .macroblock_deblocking import (
+    detect_macroblocking,
+    is_dct_macroblocking_patch,
+    prepare_macroblock_deblocking,
+)
+from .noise_denoise import prepare_noise_denoise
 from .perspective_mosaic import perspective_mosaic_mask
 from .preparation import build_preview, json_bytes, png, sha
-from .scanline_cleanup import detect_scanlines, prepare_scanlines
+from .scanline_cleanup import (
+    clean_residual_scanline_comb,
+    detect_and_clean_spatial_comb,
+    detect_scanlines,
+    prepare_scanlines,
+)
 from .softened_grid import softened_mask
 from .tiny_grid import tiny_grid_mask
 
@@ -33,6 +44,7 @@ PIXELATION_RADIUS_AT256 = 3.0
 PIXELATION_CANDIDATES_AT256 = (2.5, 3.0, 3.5)
 SCANLINE_RADIUS_AT256 = 1.5
 COMPOSABLE_STAGE_ORDER = (
+    'spatial_comb',
     'edge_deringing',
     'gradient_debanding',
     'tangent_antialiasing',
@@ -281,13 +293,15 @@ def _padded_box_for_macroblock(shape, y0, y1, x0, x1):
     return y0, y1, x0, x1
 
 
-def _det_passes_macroblock_gate(source, det, origin=(0, 0)):
-    """Verify non-flat, non-tiny-fragment DCT detection actually deblocks cleanly."""
+def _det_passes_macroblock_gate(source, det, origin=(0, 0), region_mask=None):
+    """Verify non-flat DCT detection actually deblocks cleanly, allowing small DCT patches."""
     if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
         return False
+    if is_dct_macroblocking_patch(source, region_mask=region_mask, origin=origin):
+        return True
     if det.get('regional') and float(det.get('mask_fraction', 0.0)) < 0.25:
         return False
-    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, allow_fbcnn=True)
+    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, mask=region_mask, allow_fbcnn=True)
     return cleaned is not None
 
 
@@ -295,6 +309,8 @@ def _is_genuine_dct_macroblocking(source, origin=(0, 0)):
     """Return True when source shows non-flat 8x8/16x16 DCT macroblocking."""
     if min(source.shape[:2]) < 32:
         return False
+    if is_dct_macroblocking_patch(source, origin=origin):
+        return True
     det = detect_macroblocking(source, origin=origin)
     if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
         return False
@@ -316,21 +332,25 @@ def _strip_dct_macroblocking_components(source, mask):
     for cid, sl in enumerate(find_objects(comps), start=1):
         if sl is None:
             continue
+        comp_mask = comps == cid
+        if is_dct_macroblocking_patch(source, region_mask=comp_mask):
+            cleaned_mask[comp_mask] = False
+            continue
         y0, y1, x0, x1 = _padded_box_for_macroblock(
             source.shape, sl[0].start, sl[0].stop, sl[1].start, sl[1].stop
         )
         crop = source[y0:y1, x0:x1]
         sub_det = detect_macroblocking(crop, origin=(x0, y0))
         if sub_det is not None:
-            if _det_passes_macroblock_gate(crop, sub_det, origin=(x0, y0)):
-                cleaned_mask[comps == cid] = False
+            if _det_passes_macroblock_gate(crop, sub_det, origin=(x0, y0), region_mask=comp_mask[y0:y1, x0:x1]):
+                cleaned_mask[comp_mask] = False
         else:
             if not full_checked:
                 full_checked = True
                 if _det_passes_macroblock_gate(source, det_full):
                     full_mask = det_full.get('mask')
-            if full_mask is not None and float(full_mask[comps == cid].mean()) >= 0.5:
-                cleaned_mask[comps == cid] = False
+            if full_mask is not None and float(full_mask[comp_mask].mean()) >= 0.5:
+                cleaned_mask[comp_mask] = False
     return cleaned_mask
 
 
@@ -697,13 +717,13 @@ def prepare_source(source):
         report.update(policy='coordinated-scanline-mosaic-v1', mosaic=mosaic, Gaussian_radius_at256=.6,
                       changed_native_pixels=int(np.any(combined != source, axis=2).sum()), full_image_sha256=sha(contents))
         return combined, report, {'scanline-cleaned.png': contents, 'scanline-mosaic-mask.png': mask_png}
-    # A light finishing pass helps V2 with the residual comb edges that a
-    # narrow notch leaves behind, as observed in the wild2 comparison.
-    image = Image.fromarray(cleaned)
-    cleaned = np.asarray(image.filter(ImageFilter.GaussianBlur(SCANLINE_RADIUS_AT256 * max(image.size) / 256)))
+    # Clean only residual high-frequency comb artifacts and left-edge chroma fringe
+    # instead of blurring crisp texture across the entire frame.
+    cleaned, comb_report = clean_residual_scanline_comb(cleaned, source=source)
     contents = png(cleaned)
-    report['Gaussian_radius_at256'] = SCANLINE_RADIUS_AT256
-    report['changed_native_pixels'] = int(np.any(cleaned != source, axis=2).sum())
+    report['comb_ela_masked_pixels'] = int(comb_report['comb_ela_masked_pixels'])
+    report['chroma_cleanup_pixels'] = int(comb_report['chroma_cleanup_pixels'])
+    report['changed_native_pixels'] = int(comb_report['changed_native_pixels'])
     report['full_image_sha256'] = sha(contents)
     return cleaned, report, {'scanline-cleaned.png': contents}
 
@@ -862,18 +882,49 @@ def prepare_macroblocking(source, origin=(0, 0), mask=None, allow_fbcnn=True, dc
     return cleaned, stage, report, {'macroblock-mask.png': mask_png}
 
 
-def prepare_composables(source):
+def prepare_noise(source):
+    """Run native YCrCb Immerkaer-gated noise denoising before downstream stages."""
+    cleaned, mask, report = prepare_noise_denoise(source)
+    if cleaned is None:
+        return None, None, {}
+    evidence = {'noise-cleaned.png': png(cleaned)}
+    if mask is not None and np.any(mask):
+        evidence['noise-denoise-mask.png'] = png(mask)
+    return cleaned, report, evidence
+
+
+def prepare_photometric(source):
+    """Run tightened photometric color-cast balancing and haze dehazing."""
+    if min(source.shape[:2]) < 48:
+        return None, None, None, {}
+    cleaned, mask, route, report = prepare_cast_dehaze(source)
+    if cleaned is None or route is None:
+        return None, None, None, {}
+    if route == 'haze_dehaze':
+        luma_mean = float((report or {}).get('before', {}).get('luma_mean', 0.0))
+        if luma_mean < 135.0 or detect_banding(source) is not None:
+            return None, None, None, {}
+    evidence = {f'{route.replace("_", "-")}-cleaned.png': png(cleaned)}
+    if mask is not None and np.any(mask):
+        evidence['cast-dehaze-mask.png'] = png(mask)
+    return cleaned, route, report, evidence
+
+
+def prepare_composables(source, allow_spatial_comb=True):
     """Run quantitatively gated refiners in fixed artifact-safe order."""
     current = source
     stages = []
     stage_reports = {}
     evidence = {}
-    pipeline = (
+    pipeline = []
+    if allow_spatial_comb:
+        pipeline.append(('spatial_comb', detect_and_clean_spatial_comb))
+    pipeline.extend((
         ('edge_deringing', prepare_deringing),
         ('gradient_debanding', prepare_debanding),
         ('tangent_antialiasing', prepare_antialiasing),
         ('chroma_debleeding', prepare_color_bleeding),
-    )
+    ))
     for stage_name, fn in pipeline:
         output, report, stage_evidence = fn(current)
         if output is None or report is None:

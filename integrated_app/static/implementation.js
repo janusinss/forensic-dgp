@@ -30,9 +30,14 @@
         if (decision?.route === 'direct' && metadata.softened_mosaic_detection?.crop_intersects) {
             return 'Auto flagged a possible softened mosaic and used direct restoration.';
         }
-        if (decision?.route === 'scanline_cleanup') return 'Auto reduced repeating horizontal scanlines and lightly smoothed the image before restoration.';
+        if (decision?.route === 'scanline_cleanup') return 'Auto reduced repeating horizontal scanlines and cleaned residual comb edges before restoration.';
         const stageLabels = {
             scanline_cleanup: 'scanline cleanup',
+            noise_denoise: 'noise denoising',
+            cast_dehaze: 'color cast and haze correction',
+            color_cast_balance: 'color cast balancing',
+            haze_dehaze: 'haze dehazing',
+            spatial_comb: 'spatial comb cleanup',
             jpeg_deblocking: 'JPEG deblocking',
             macroblock_fbcnn: 'FBCNN macroblock deblocking',
             macroblock_hevc: 'adaptive macroblock deblocking',
@@ -50,6 +55,11 @@
                 ? `Auto applied ${names.join(', ')} before face restoration.`
                 : 'Auto applied multi-stage artifact preparation before face restoration.';
         }
+        if (decision?.route === 'noise_denoise') return 'Auto reduced additive and chroma noise before face restoration.';
+        if (decision?.route === 'cast_dehaze') return 'Auto balanced color cast and dehazed low-contrast regions before face restoration.';
+        if (decision?.route === 'color_cast_balance') return 'Auto balanced residual color cast before face restoration.';
+        if (decision?.route === 'haze_dehaze') return 'Auto reduced atmospheric haze and restored local contrast before face restoration.';
+        if (decision?.route === 'spatial_comb') return 'Auto cleaned residual spatial interlacing comb artifacts before face restoration.';
         if (decision?.route === 'macroblock_fbcnn') return 'Auto reduced compression macroblocking with FBCNN before face restoration.';
         if (decision?.route === 'macroblock_hevc') return 'Auto smoothed DCT macroblock boundaries with adaptive boundary deblocking before face restoration.';
         if (decision?.route === 'edge_deringing') return 'Auto suppressed ringing halos near sharp edges before face restoration.';

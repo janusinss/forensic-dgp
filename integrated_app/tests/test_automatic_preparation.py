@@ -122,3 +122,48 @@ class AutomaticPreparationTests(unittest.TestCase):
         checker = (120 + 45 * ((x // 4 + y // 4) % 2)).astype(np.uint8)
         checker_rgb = np.repeat(checker[:, :, None], 3, axis=2)
         self.assertEqual(automatic.tiny_crop_pixelation(checker_rgb), (None, None, {}))
+
+    def test_scanline_cleanup_uses_masked_comb_ela_instead_of_full_frame_blur(self):
+        y, x = np.indices((180, 216))
+        clean = 128 + 25 * np.sin(x / 18) + 12 * np.cos(y / 28)
+        scanlines = 24 * np.sin(2 * np.pi * y / 5.1)
+        source = np.repeat(np.rint(clean + scanlines)[..., None].astype(np.uint8), 3, axis=2)
+        prepared, report, evidence = automatic.prepare_source(source)
+        self.assertIsNotNone(prepared)
+        self.assertNotIn('Gaussian_radius_at256', report)
+        self.assertIn('comb_ela_masked_pixels', report)
+        self.assertIn('chroma_cleanup_pixels', report)
+        self.assertIn('scanline-cleaned.png', evidence)
+
+    def test_composable_spatial_comb_respects_allow_flag(self):
+        y, x = np.indices((160, 160))
+        base = 120 + 28 * np.sin(x / 11) + 14 * np.cos(y / 17)
+        combed = np.repeat(np.rint(base)[..., None].astype(np.int16), 3, axis=2)
+        combed[::2, :, :] += 14
+        combed[1::2, :, :] -= 14
+        combed_u8 = np.clip(combed, 0, 255).astype(np.uint8)
+
+        out, stages, reports, evidence = automatic.prepare_composables(combed_u8, allow_spatial_comb=True)
+        self.assertIsNotNone(out)
+        self.assertEqual(stages[0], 'spatial_comb')
+        self.assertIn('spatial_comb', reports)
+        self.assertIn('spatial-comb-cleaned.png', evidence)
+
+        out_disabled, stages_disabled, _, _ = automatic.prepare_composables(combed_u8, allow_spatial_comb=False)
+        self.assertNotIn('spatial_comb', stages_disabled)
+        if out_disabled is not None:
+            self.assertGreater(len(stages_disabled), 0)
+
+    def test_strip_dct_macroblocking_preserves_flat_mosaic_and_strips_dct_patch(self):
+        rng = np.random.default_rng(7)
+        flat_canvas = np.full((192, 192, 3), 120, dtype=np.uint8)
+        tiles = Image.fromarray(rng.integers(25, 230, (8, 8, 3), dtype=np.uint8))
+        flat_canvas[48:144, 48:144] = np.asarray(tiles.resize((96, 96), Image.Resampling.NEAREST))
+        flat_mask = np.zeros((192, 192), dtype=bool)
+        flat_mask[48:144, 48:144] = True
+        kept = automatic._strip_dct_macroblocking_components(flat_canvas, flat_mask)
+        self.assertEqual(int(kept.sum()), int(flat_mask.sum()))
+
+        det = {'suspected': True, 'regional': True, 'mask_fraction': 0.12, 'is_flat_privacy_mosaic': False}
+        with patch.object(automatic, 'is_dct_macroblocking_patch', return_value=True):
+            self.assertTrue(automatic._det_passes_macroblock_gate(flat_canvas, det))
