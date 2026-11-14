@@ -150,6 +150,27 @@ class WizardSafetyContracts(unittest.TestCase):
         files_block = source.split('for name in [', 1)[1].split(']:', 1)[0]
         self.assertNotIn('ForensicDGP.manifest', files_block)
 
+    def test_uninstall_stops_owned_processes_and_handles_long_paths(self):
+        uninstall_ps1 = (BASE / 'packaging' / 'uninstall.ps1').read_text(encoding='utf8')
+        self.assertIn('function Stop-OwnedAppProcesses', uninstall_ps1)
+        self.assertIn('Stop-OwnedAppProcesses $shell $root', uninstall_ps1)
+        self.assertIn('$mutex.WaitOne(5000)', uninstall_ps1)
+        self.assertIn('Local\\ForensicDGP-close-', uninstall_ps1)
+
+        remove_tree = self.section('function RemoveOwnedTree', 'procedure RemoveOwnedRuntime')
+        self.assertIn('LongWinPath(Path)', remove_tree)
+        self.assertIn('DeleteFileW(LongPath)', remove_tree)
+        self.assertIn('RemoveDirectoryW(LongPath)', remove_tree)
+        self.assertIn('(Attr and $400) <> 0', remove_tree)
+
+        long_path = self.section('function LongWinPath', 'function RemoveOwnedTree')
+        self.assertIn(r"'\\?\'", long_path)
+
+        remove_runtime = self.section('procedure RemoveOwnedRuntime', 'procedure RemoveLocationBackups')
+        self.assertIn('RemoveOwnedTree(Child)', remove_runtime)
+        self.assertIn('RemoveDirectoryW(LongWinPath(Root))', remove_runtime)
+        self.assertIn('DeleteFileW(LongWinPath(Owner))', remove_runtime)
+
 
 @unittest.skipUnless(PS.is_file(), 'Windows PowerShell is required')
 class GuiSetupWrapper(unittest.TestCase):

@@ -114,6 +114,12 @@ var
 
 function GetFileAttributes(Name: String): LongWord;
   external 'GetFileAttributesW@kernel32.dll stdcall';
+function SetFileAttributes(Name: String; Attr: LongWord): Boolean;
+  external 'SetFileAttributesW@kernel32.dll stdcall';
+function DeleteFileW(Name: String): Boolean;
+  external 'DeleteFileW@kernel32.dll stdcall';
+function RemoveDirectoryW(Name: String): Boolean;
+  external 'RemoveDirectoryW@kernel32.dll stdcall';
 function CloseHandle(Handle: THandle): Boolean;
   external 'CloseHandle@kernel32.dll stdcall';
 function CreateMutex(Security: LongWord; InitialOwner: Boolean; Name: String): THandle;
@@ -776,6 +782,56 @@ begin
   if Result then Result := GetSHA256OfFile(Path) = ExpectedHash;
 end;
 
+function LongWinPath(const Path: String): String;
+begin
+  if Pos('\\?\', Path) = 1 then
+    Result := Path
+  else
+    Result := '\\?\' + Path;
+end;
+
+function RemoveOwnedTree(const Path: String): Boolean;
+var
+  LongPath: String;
+  Attr: LongWord;
+  Entry: TFindRec;
+begin
+  Result := False;
+  LongPath := LongWinPath(Path);
+  Attr := GetFileAttributes(LongPath);
+  if Attr = $FFFFFFFF then begin
+    Result := True;
+    Exit;
+  end;
+  if (Attr and $10) = 0 then begin
+    if (Attr and 1) <> 0 then
+      SetFileAttributes(LongPath, Attr and (not 1));
+    Result := DeleteFileW(LongPath);
+    Exit;
+  end;
+  if (Attr and $400) <> 0 then begin
+    { Do not recurse into junctions or directory reparse points. }
+    if (Attr and 1) <> 0 then
+      SetFileAttributes(LongPath, Attr and (not 1));
+    Result := RemoveDirectoryW(LongPath);
+    Exit;
+  end;
+  if FindFirst(AddBackslash(LongPath) + '*', Entry) then begin
+    try
+      repeat
+        if (Entry.Name <> '.') and (Entry.Name <> '..') then begin
+          if not RemoveOwnedTree(AddBackslash(Path) + Entry.Name) then Exit;
+        end;
+      until not FindNext(Entry);
+    finally
+      FindClose(Entry);
+    end;
+  end;
+  if (Attr and 1) <> 0 then
+    SetFileAttributes(LongPath, Attr and (not 1));
+  Result := RemoveDirectoryW(LongPath);
+end;
+
 procedure RemoveOwnedRuntime;
 var
   Root, Owner, OwnerHash, Child: String;
@@ -788,19 +844,19 @@ begin
   Root := ExpandConstant('{app}\runtime');
   Owner := AddBackslash(Root) + 'owner.json';
   OwnerHash := JsonField(CheckOutput, 'runtime_owner_sha256');
-  Attr := GetFileAttributes(Root);
+  Attr := GetFileAttributes(LongWinPath(Root));
   if (Attr = $FFFFFFFF) and (OwnerHash = '') then Exit;
   if (Attr = $FFFFFFFF) or ((Attr and $410) <> $10) then
     RaiseException('The application runtime path changed. Uninstall stopped.');
   if OwnerHash = '' then begin
-    if not RemoveDir(Root) then RaiseException('The runtime folder is no longer empty or cannot be removed.');
+    if not RemoveDirectoryW(LongWinPath(Root)) then RaiseException('The runtime folder is no longer empty or cannot be removed.');
     Exit;
   end;
   if not MatchesUninstallRecord(Owner, OwnerHash) or not LoadStringFromFile(Owner, OwnerText) then
     RaiseException('The runtime ownership record changed. Uninstall stopped.');
   Entries := TStringList.Create;
   try
-    if not FindFirst(AddBackslash(Root) + '*', Entry) then
+    if not FindFirst(AddBackslash(LongWinPath(Root)) + '*', Entry) then
       RaiseException('The runtime contents could not be read.');
     try
       repeat
@@ -811,19 +867,19 @@ begin
       FindClose(Entry);
     end;
     for I := 0 to Entries.Count - 1 do begin
-      if not OrdinaryShellPath or ((GetFileAttributes(Root) and $410) <> $10) then
+      if not OrdinaryShellPath or ((GetFileAttributes(LongWinPath(Root)) and $410) <> $10) then
         RaiseException('The application runtime path changed. Uninstall stopped.');
       Child := AddBackslash(Root) + Entries[I];
-      Attr := GetFileAttributes(Child);
-      { Inno removes directory links without traversing their targets. }
-      if (Attr <> $FFFFFFFF) and not DelTree(Child, (Attr and $10) <> 0, True, True) then
+      Attr := GetFileAttributes(LongWinPath(Child));
+      { RemoveOwnedTree handles >260-char paths, read-only files, and removes junctions without traversing targets. }
+      if (Attr <> $FFFFFFFF) and not RemoveOwnedTree(Child) then
         RaiseException('Could not remove ' + Child + '. Close programs using that folder and retry uninstall.');
     end;
-    if not MatchesUninstallRecord(Owner, OwnerHash) or not DeleteFile(Owner) then
+    if not MatchesUninstallRecord(Owner, OwnerHash) or not DeleteFileW(LongWinPath(Owner)) then
       RaiseException('Could not remove the runtime ownership record. Retry uninstall.');
-    if not RemoveDir(Root) then begin
-      if OrdinaryShellPath and ((GetFileAttributes(Root) and $410) = $10) and
-          (GetFileAttributes(Owner) = $FFFFFFFF) then
+    if not RemoveDirectoryW(LongWinPath(Root)) then begin
+      if OrdinaryShellPath and ((GetFileAttributes(LongWinPath(Root)) and $410) = $10) and
+          (GetFileAttributes(LongWinPath(Owner)) = $FFFFFFFF) then
         SaveStringToFile(Owner, OwnerText, False);
       RaiseException('Could not remove the runtime folder. Close programs using that folder and retry uninstall.');
     end;

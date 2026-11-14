@@ -211,6 +211,57 @@ class NativeUninstallTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, log)
         self.assert_removed(log)
 
+    def test_uninstall_removes_long_paths_and_readonly_files(self):
+        deep_dir = self.runtime / 'environments' / ('a' * 60) / ('b' * 60) / ('c' * 60) / 'licenses'
+        deep_file = deep_dir / ('long_license_notice_' + 'd' * 40 + '.txt')
+        self.assertGreater(len(str(deep_file)), 280)
+        long_dir = Path('\\\\?\\' + str(deep_dir))
+        long_file = Path('\\\\?\\' + str(deep_file))
+        long_dir.mkdir(parents=True, exist_ok=True)
+        long_file.write_bytes(b'long path license content')
+        readonly_file = self.runtime / 'environments' / 'capture' / 'readonly.txt'
+        self.write(readonly_file, b'readonly content')
+        os.chmod(readonly_file, 0o444)
+        os.chmod(str(long_file), 0o444)
+        result, log = self.run_inno(self.uninstaller, 'uninstall')
+        self.assertEqual(result.returncode, 0, log)
+        self.assert_removed(log)
+
+    def test_uninstall_stops_running_app_processes_and_removes_folder(self):
+        powershell = Path(os.environ['SystemRoot']) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
+        ident = hashlib.sha256(str(self.runtime.resolve()).lower().encode()).hexdigest()[:24].upper()
+        mutex_name = 'Local\\DGP-app-' + ident
+        work_dir = self.runtime / 'environments' / 'capture'
+        script = (
+            "$m = New-Object Threading.Mutex($false, $env:DGP_TEST_MUTEX); "
+            "$m.WaitOne() | Out-Null; "
+            "Write-Output 'ready'; [Console]::Out.Flush(); "
+            "Start-Sleep -Seconds 60"
+        )
+        proc = subprocess.Popen(
+            [str(powershell), '-NoProfile', '-NonInteractive', '-Command',
+             f"# {work_dir}\n{script}"],
+            cwd=work_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=dict(os.environ, DGP_TEST_MUTEX=mutex_name),
+        )
+        try:
+            self.assertEqual(proc.stdout.readline().strip(), 'ready')
+            result, log = self.run_inno(self.uninstaller, 'uninstall')
+            self.assertEqual(result.returncode, 0, log)
+            self.assertIsNotNone(proc.wait(timeout=10))
+            self.assert_removed(log)
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.wait(timeout=5)
+            if proc.stdout:
+                proc.stdout.close()
+            if proc.stderr:
+                proc.stderr.close()
+
 
 if __name__ == '__main__':
     unittest.main()
