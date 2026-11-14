@@ -30,7 +30,33 @@ function paddedRgba(bounds, innerRgba, padRgba = [128, 128, 128, 255]) {
   return data;
 }
 
-function loadReferenceHarness(imagesByUrl) {
+function rectInImageRgba(w, h, [rx, ry, rw, rh], insideRgba, outsideRgba) {
+  const data = solidRgba(w, h, outsideRgba);
+  for (let y = ry; y < ry + rh; y++) {
+    for (let x = rx; x < rx + rw; x++) {
+      const i = (y * w + x) * 4;
+      data[i] = insideRgba[0];
+      data[i + 1] = insideRgba[1];
+      data[i + 2] = insideRgba[2];
+      data[i + 3] = insideRgba[3];
+    }
+  }
+  return data;
+}
+
+class MockFormData {
+  constructor() {
+    this._entries = new Map();
+  }
+  append(key, value) {
+    this._entries.set(key, value);
+  }
+  get(key) {
+    return this._entries.get(key);
+  }
+}
+
+function loadReferenceHarness(imagesByUrl, options = {}) {
   const revoked = [];
   let nextBlobId = 1;
 
@@ -82,19 +108,28 @@ function loadReferenceHarness(imagesByUrl) {
         }
       }
     }
-    drawImage(image, dx = 0, dy = 0, dw = image.naturalWidth, dh = image.naturalHeight) {
+    drawImage(image, ...args) {
       this._EnsureBuffer();
       const srcW = image.naturalWidth;
       const srcH = image.naturalHeight;
+      let sx = 0, sy = 0, sw = srcW, sh = srcH;
+      let dx = 0, dy = 0, dw = srcW, dh = srcH;
+      if (args.length >= 8) {
+        [sx, sy, sw, sh, dx, dy, dw, dh] = args;
+      } else if (args.length >= 4) {
+        [dx, dy, dw, dh] = args;
+      } else if (args.length >= 2) {
+        [dx, dy] = args;
+      }
       const x0 = Math.max(0, Math.floor(dx));
       const y0 = Math.max(0, Math.floor(dy));
       const x1 = Math.min(this.canvas.width, Math.floor(dx + dw));
       const y1 = Math.min(this.canvas.height, Math.floor(dy + dh));
       for (let yy = y0; yy < y1; yy++) {
-        const sy = Math.min(srcH - 1, Math.floor(((yy - dy) * srcH) / dh));
+        const srcY = Math.max(0, Math.min(srcH - 1, sy + Math.min(sh - 1, Math.floor(((yy - dy) * sh) / dh))));
         for (let xx = x0; xx < x1; xx++) {
-          const sx = Math.min(srcW - 1, Math.floor(((xx - dx) * srcW) / dw));
-          const si = (sy * srcW + sx) * 4;
+          const srcX = Math.max(0, Math.min(srcW - 1, sx + Math.min(sw - 1, Math.floor(((xx - dx) * sw) / dw))));
+          const si = (srcY * srcW + srcX) * 4;
           const di = (yy * this.canvas.width + xx) * 4;
           this.canvas._data[di] = image._pixels[si];
           this.canvas._data[di + 1] = image._pixels[si + 1];
@@ -125,10 +160,12 @@ function loadReferenceHarness(imagesByUrl) {
     }
   }
 
-  const windowObj = {};
+  const windowObj = options.protocol ? { location: { protocol: options.protocol } } : {};
   const sandbox = {
     window: windowObj,
     Image: MockImage,
+    FormData: MockFormData,
+    fetch: options.fetch,
     document: {
       createElement(tag) {
         assert.equal(tag, 'canvas');
@@ -150,6 +187,7 @@ function loadReferenceHarness(imagesByUrl) {
     Number,
     Array,
     Math,
+    JSON,
     Promise,
   };
   const source = fs.readFileSync(path.join(__dirname, '..', 'static', 'restoration_reference.js'), 'utf8');
@@ -302,4 +340,187 @@ test('supports empty-MIME PNG/JPEG extension fallback and rejects invalid types,
     _image: { width: 256, height: 256, pixels: solidRgba(256, 256, [100, 100, 100, 128]) },
   };
   await assert.rejects(scoreVideoReference(transparentRef, result), /must be opaque/i);
+});
+
+test('slices full uncropped reference using picture_crop and source_size in local fallback', async () => {
+  const bounds = [32, 0, 224, 256];
+  const images = new Map([
+    ['orig.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [130, 130, 130, 255]) }],
+    ['out.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [140, 140, 140, 255]) }],
+  ]);
+  const { scoreVideoReference, revoked } = loadReferenceHarness(images);
+  const fullScene = {
+    type: 'image/png',
+    name: 'full.png',
+    size: 4096,
+    _image: {
+      width: 400,
+      height: 300,
+      pixels: rectInImageRgba(400, 300, [100, 50, 120, 160], [140, 140, 140, 255], [10, 220, 30, 255]),
+    },
+  };
+  const scores = await scoreVideoReference(fullScene, {
+    original_input: 'orig.png',
+    result: 'out.png',
+    metadata: {
+      picture_crop: [100, 50, 120, 160],
+      source_size: [400, 300],
+      geometry: { observed_bounds_256: bounds, native_size: [120, 160] },
+    },
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(scores)), {
+    before: { mae: '10.00', psnr: (10 * Math.log10((255 ** 2) / 100)).toFixed(2) },
+    after: { mae: '0.00', psnr: '∞' },
+  });
+  assert.equal(revoked.length, 1);
+
+  // Also works when the full uncropped source image happens to be 256x256
+  const square256Full = {
+    type: 'image/png',
+    name: 'full_256.png',
+    size: 2048,
+    _image: {
+      width: 256,
+      height: 256,
+      pixels: rectInImageRgba(256, 256, [40, 20, 96, 128], [140, 140, 140, 255], [20, 200, 40, 255]),
+    },
+  };
+  const scores256 = await scoreVideoReference(square256Full, {
+    original_input: 'orig.png',
+    result: 'out.png',
+    metadata: {
+      picture_crop: [40, 20, 96, 128],
+      source_size: [256, 256],
+      geometry: { observed_bounds_256: bounds, native_size: [96, 128] },
+    },
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(scores256)), {
+    before: { mae: '10.00', psnr: (10 * Math.log10((255 ** 2) / 100)).toFixed(2) },
+    after: { mae: '0.00', psnr: '∞' },
+  });
+});
+
+test('rejects transparent non-256x256 PNG references before gray padding masks alpha', async () => {
+  const bounds = [28, 0, 228, 256];
+  const images = new Map([
+    ['orig.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [120, 120, 120, 255]) }],
+    ['out.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [120, 120, 120, 255]) }],
+  ]);
+  const { scoreVideoReference } = loadReferenceHarness(images);
+  for (const alpha of [0, 128]) {
+    const transparentCrop = {
+      type: 'image/png',
+      name: `alpha_${alpha}.png`,
+      size: 1024,
+      _image: { width: 150, height: 180, pixels: solidRgba(150, 180, [120, 120, 120, alpha]) },
+    };
+    await assert.rejects(
+      scoreVideoReference(transparentCrop, {
+        original_input: 'orig.png',
+        result: 'out.png',
+        metadata: { geometry: { observed_bounds_256: bounds, native_size: [100, 120] } },
+      }),
+      /must be opaque/i,
+    );
+  }
+});
+
+test('uses /face/restoration/reference when fetch succeeds, scores prepared_input, and handles 400 vs 404/network fallback', async () => {
+  const bounds = [28, 0, 228, 256];
+  const images = new Map([
+    ['orig.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [100, 100, 100, 255]) }],
+    ['prep.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [106, 106, 106, 255]) }],
+    ['out.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [110, 110, 110, 255]) }],
+    ['server_ref.png', { width: 256, height: 256, pixels: paddedRgba(bounds, [110, 110, 110, 255]) }],
+  ]);
+  const requests = [];
+  const { scoreVideoReference, revoked } = loadReferenceHarness(images, {
+    fetch: async (url, init) => {
+      requests.push({ url, init });
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ reference_256: 'server_ref.png' }),
+      };
+    },
+  });
+  const refFile = {
+    type: 'image/png',
+    name: 'full.png',
+    size: 4096,
+    _image: { width: 400, height: 300, pixels: solidRgba(400, 300, [10, 10, 10, 255]) },
+  };
+  const result = {
+    original_input: 'orig.png',
+    prepared_input: 'prep.png',
+    result: 'out.png',
+    metadata: {
+      preparation_applied: true,
+      picture_crop: [50, 40, 100, 120],
+      source_size: [400, 300],
+      geometry: { observed_bounds_256: bounds, native_size: [100, 120] },
+    },
+  };
+  const scores = await scoreVideoReference(refFile, result);
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, '/face/restoration/reference');
+  assert.equal(requests[0].init.method, 'POST');
+  assert.equal(requests[0].init.body.get('file'), refFile);
+  assert.deepEqual(JSON.parse(requests[0].init.body.get('geometry')), {
+    observed_bounds_256: bounds,
+    native_size: [100, 120],
+    picture_crop: [50, 40, 100, 120],
+    source_size: [400, 300],
+  });
+  assert.deepEqual(JSON.parse(JSON.stringify(scores)), {
+    before: { mae: '10.00', psnr: (10 * Math.log10((255 ** 2) / 100)).toFixed(2) },
+    prepared: { mae: '4.00', psnr: (10 * Math.log10((255 ** 2) / 16)).toFixed(2) },
+    after: { mae: '0.00', psnr: '∞' },
+  });
+  assert.equal(revoked.length, 0);
+
+  // HTTP 400 propagates server detail without falling back
+  const err400 = loadReferenceHarness(images, {
+    fetch: async () => ({
+      ok: false,
+      status: 400,
+      json: async () => ({ detail: 'The reference must be opaque.' }),
+    }),
+  });
+  await assert.rejects(err400.scoreVideoReference(refFile, result), /The reference must be opaque\./);
+
+  // HTTP 404 and network errors fall back to local Canvas2D
+  const localRef = {
+    type: 'image/png',
+    name: 'crop.png',
+    size: 2048,
+    _image: { width: 100, height: 120, pixels: solidRgba(100, 120, [110, 110, 110, 255]) },
+  };
+  for (const fetchImpl of [
+    async () => ({ ok: false, status: 404, json: async () => ({ detail: 'Not Found' }) }),
+    async () => { throw new Error('network down'); },
+  ]) {
+    const fallback = loadReferenceHarness(images, { fetch: fetchImpl });
+    const fbScores = await fallback.scoreVideoReference(localRef, {
+      ...result,
+      metadata: { ...result.metadata, picture_crop: null, source_size: null },
+    });
+    assert.deepEqual(JSON.parse(JSON.stringify(fbScores)), {
+      before: { mae: '10.00', psnr: (10 * Math.log10((255 ** 2) / 100)).toFixed(2) },
+      prepared: { mae: '4.00', psnr: (10 * Math.log10((255 ** 2) / 16)).toFixed(2) },
+      after: { mae: '0.00', psnr: '∞' },
+    });
+    assert.equal(fallback.revoked.length, 1);
+  }
+
+  // localOnly skips fetch even when fetch is available
+  let fetchCalled = false;
+  const localOnlyHarness = loadReferenceHarness(images, {
+    fetch: async () => { fetchCalled = true; return { ok: true, status: 200, json: async () => ({}) }; },
+  });
+  await localOnlyHarness.scoreVideoReference(localRef, {
+    ...result,
+    metadata: { ...result.metadata, picture_crop: null, source_size: null },
+  }, { localOnly: true });
+  assert.equal(fetchCalled, false);
 });

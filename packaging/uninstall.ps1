@@ -1,5 +1,4 @@
-# Inno uninstalls its shell separately. Backend versions, environments, models,
-# and records may also be used by the batch workflow and are retained here.
+# Validate the install before Inno removes it under the application mutex.
 param(
     [ValidateSet('Check','Uninstall')][string]$Action = 'Check',
     [Parameter(Mandatory=$true)][string]$ManagedRoot,
@@ -21,6 +20,27 @@ function Assert-OrdinaryParents([string]$Path) {
         if (!$parent -or $parent -eq $probe) { break }
         $probe = $parent
     }
+}
+
+function Test-LocationBinding($Value, [string]$Shell, [string]$Root) {
+    return ($Value -and @($Value.PSObject.Properties).Count -eq 3 -and
+        $Value.schema -is [int] -and $Value.schema -eq 1 -and
+        $Value.install_root -is [string] -and $Value.install_root -ceq $Shell -and
+        $Value.managed_root -is [string] -and $Value.managed_root -ceq $Root)
+}
+
+function Read-OwnershipRecord([string]$Path) {
+    Assert-OrdinaryParents $Path
+    if (!(Test-Path -LiteralPath $Path -PathType Leaf)) { throw 'An installation ownership record is missing.' }
+    $reader = [IO.BinaryReader]::new([IO.File]::OpenRead($Path))
+    try { $bytes = $reader.ReadBytes(8193) }
+    finally { $reader.Dispose() }
+    if ($bytes.Length -gt 8192) { throw 'An installation ownership record is oversized.' }
+    $value = [Text.Encoding]::UTF8.GetString($bytes).TrimStart([char]0xFEFF) | ConvertFrom-Json
+    $digest = [Security.Cryptography.SHA256]::Create()
+    try { $hash = [BitConverter]::ToString($digest.ComputeHash($bytes)).Replace('-','').ToLowerInvariant() }
+    finally { $digest.Dispose() }
+    return @{ value = $value; hash = $hash }
 }
 
 $mutex = $null
@@ -56,10 +76,9 @@ try {
         foreach ($base in $personal) { if ($base -and [string]::Equals($shell,[IO.Path]::GetFullPath($base).TrimEnd('\'),[StringComparison]::OrdinalIgnoreCase)) { throw 'Personal directory root refused.' } }
         Assert-OrdinaryParents $shell
         $shellMarker = Join-Path $shell 'shell-owner.json'
-        Assert-OrdinaryParents $shellMarker
-        if (!(Test-Path -LiteralPath $shellMarker -PathType Leaf) -or (Get-Item -LiteralPath $shellMarker).Length -gt 8192) { throw 'Desktop shell ownership marker is missing or invalid.' }
-        $shellOwner = Get-Content -LiteralPath $shellMarker -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($null -eq $shellOwner -or @($shellOwner.PSObject.Properties).Count -ne 2 -or $shellOwner.schema -isnot [int] -or $shellOwner.schema -ne 1 -or $shellOwner.application -cne 'Forensic DGP') { throw 'Desktop shell ownership marker differs.' }
+        $shellReceipt = Read-OwnershipRecord $shellMarker
+        $shellOwner = $shellReceipt.value
+        if ($null -eq $shellOwner -or @($shellOwner.PSObject.Properties).Count -ne 2 -or $shellOwner.schema -isnot [int] -or $shellOwner.schema -ne 1 -or $shellOwner.application -isnot [string] -or $shellOwner.application -cne 'Forensic DGP') { throw 'Desktop shell ownership marker differs.' }
         $customRoot = Join-Path $shell 'runtime'
         $custom = [string]::Equals($root,$customRoot,[StringComparison]::OrdinalIgnoreCase)
         if (!$custom -and !([string]::Equals($shell,$legacyShell,[StringComparison]::OrdinalIgnoreCase) -and [string]::Equals($root,$legacyRoot,[StringComparison]::OrdinalIgnoreCase))) { throw 'Managed root does not match the selected installation folder.' }
@@ -85,18 +104,41 @@ try {
     }
     Assert-OrdinaryParents $root
     $exists = Test-Path -LiteralPath $root
+    $ownerHash = ''
+    $locationHash = ''
+    $shellHash = ''
+    $boundBackups = @()
+    if ($custom) {
+        $locationPath = Join-Path $shell 'install-location.json'
+        if (!(Test-Path -LiteralPath $locationPath -PathType Leaf)) { throw 'Installation location record is missing.' }
+        $locationReceipt = Read-OwnershipRecord $locationPath
+        if (!(Test-LocationBinding $locationReceipt.value $shell $root)) { throw 'Installation location record does not match this runtime.' }
+        $locationHash = $locationReceipt.hash
+        $shellHash = $shellReceipt.hash
+        foreach ($backup in Get-ChildItem -LiteralPath $shell -Filter 'install-location.json.previous.*' -File -Force) {
+            if ($backup.Name -cnotmatch '^install-location\.json\.previous\.[0-9a-f]{32}$' -or
+                $backup.Length -gt 8192 -or ($backup.Attributes -band [IO.FileAttributes]::ReparsePoint)) { continue }
+            try {
+                $receipt = Read-OwnershipRecord $backup.FullName
+                if (Test-LocationBinding $receipt.value $shell $root) { $boundBackups += $backup.Name + ':' + $receipt.hash }
+            } catch { continue }
+        }
+    }
+    $emptyOwnedRuntime = $false
     if ($exists) {
         $directory = Get-Item -LiteralPath $root -Force
         if (!$directory.PSIsContainer) { throw 'Managed root is not a directory; backend files were retained.' }
         $markerPath = Join-Path $root 'owner.json'
         Assert-OrdinaryParents $markerPath
-        if (!(Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+        $emptyOwnedRuntime = $custom -and !(Test-Path -LiteralPath $markerPath) -and
+            $null -eq (Get-ChildItem -LiteralPath $root -Force | Select-Object -First 1)
+        if (!$emptyOwnedRuntime -and !(Test-Path -LiteralPath $markerPath -PathType Leaf)) {
             throw 'Managed installation marker is missing. All backend files were retained.'
         }
-        $markerInfo = Get-Item -LiteralPath $markerPath -Force
-        if ($markerInfo.Length -gt 8192) { throw 'Managed installation marker is oversized.' }
-        try { $marker = Get-Content -LiteralPath $markerPath -Raw -Encoding UTF8 | ConvertFrom-Json }
-        catch { throw 'Managed installation marker could not be read.' }
+    }
+    if ($exists -and !$emptyOwnedRuntime) {
+        $runtimeReceipt = Read-OwnershipRecord $markerPath
+        $marker = $runtimeReceipt.value
         $expectedSchema = 1
         $expectedProperties = 2
         if ($custom) { $expectedSchema=2; $expectedProperties=4 }
@@ -105,25 +147,29 @@ try {
             @($marker.PSObject.Properties.Name) -notcontains 'schema_version' -or
             @($marker.PSObject.Properties.Name) -notcontains 'repository' -or
             $marker.schema_version -isnot [int] -or $marker.schema_version -ne $expectedSchema -or
-            $marker.repository -cne 'janusinss/forensic-dgp') {
+            $marker.repository -isnot [string] -or $marker.repository -cne 'janusinss/forensic-dgp') {
             throw 'Managed installation marker differs. All backend files were retained.'
         }
-        if ($custom -and ($marker.layout -cne 'desktop-runtime-v1' -or $marker.install_root -cne $shell)) {
+        if ($custom -and ($marker.layout -isnot [string] -or $marker.layout -cne 'desktop-runtime-v1' -or
+            $marker.install_root -isnot [string] -or $marker.install_root -cne $shell)) {
             throw 'Managed installation marker binding differs. All backend files were retained.'
         }
+        if ($custom) { $ownerHash = $runtimeReceipt.hash }
     }
-    # There is deliberately no backend deletion action. Shared package caches,
-    # model files and Python environments have no exclusive Inno ownership proof.
-    # The Inno [Files] entries own only the shell, shortcuts and registration.
+    # The helper reports ownership only. Inno deletes after confirmation while
+    # it holds the mutex. The older batch-managed root remains shared.
     [ordered]@{
         schema = 1
         action = $Action
-        policy = 'retain_shared_backend'
+        policy = $(if ($custom) { 'remove_owned_runtime' } else { 'retain_shared_backend' })
         managed_root = $root
         managed_exists = [bool]$exists
         mutex_name = $mutexName
+        runtime_owner_sha256 = $ownerHash
+        location_sha256 = $locationHash
+        shell_owner_sha256 = $shellHash
+        location_backups = ($boundBackups -join '|')
         retained_data = (Join-Path $root 'data')
-        message = 'The desktop shell can be removed. Shared backend files and saved evidence are retained.'
     } | ConvertTo-Json -Compress | Write-Output
     exit 0
 } catch {

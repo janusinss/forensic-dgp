@@ -1,10 +1,10 @@
 # Build Windows installer releases
 
-Current release: **0.2.2 unsigned offline preview**, with Completion R2 and
-manifest-bound model-set isolation. See [R2_VERIFICATION.md](R2_VERIFICATION.md)
-for the exact artifact and local-PC acceptance. Earlier release evidence remains in
-[PAYLOAD_PATH_HOTFIX.md](PAYLOAD_PATH_HOTFIX.md) for 0.2.1 results and
-[VERIFICATION.md](VERIFICATION.md) for historical 0.2.0 results.
+Version **0.2.4** is the unsigned offline preview with complete removal of the
+verified desktop runtime on Windows uninstall. Release and artifact details are
+in [0.2.4 deployment](../download-site/DEPLOYMENT.md). Earlier verification
+remains in [R2_VERIFICATION.md](R2_VERIFICATION.md),
+[PAYLOAD_PATH_HOTFIX.md](PAYLOAD_PATH_HOTFIX.md) and [VERIFICATION.md](VERIFICATION.md).
 
 The offline release targets Windows x64 and contains private CPython, CPU-only
 application packages, an isolated capture environment, and all six admitted
@@ -39,12 +39,11 @@ changes, changed preparer bytes, or payload locks differing from that commit.
 
 ```powershell
 python -B -m unittest discover -s tests
-node --test tests/*.test.cjs
-python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.3 --offline-payload scratch/offline-payload
+node --test tests/*.test.cjs tests/test_restoration_queue.cjs
+python packaging/build_release.py --iscc scratch/tools/inno-7.1.1/ISCC.exe --version 0.2.5 --offline-payload scratch/offline-payload
 ```
 
-The command shows the next unpublished version, 0.2.2; do not replace assets
-for the already-published 0.2.0 or 0.2.1 releases.
+The command uses the next release version, 0.2.5. Published versioned assets are immutable.
 
 Output: scratch/dist/ForensicDGP_Setup.exe and release.json. The release records
 source ancestry, setup-input hashes, the offline manifest fingerprint, exact
@@ -104,9 +103,13 @@ Unknown or changed files remain. Older installations may retain unproven Python
 or cache files; setup reports this instead of presenting cleanup as total removal.
 The old uninstaller is never used against the newly registered location.
 
-Normal uninstall retains runtime and saved records. Reinstalling into an exact
-owned retained folder can reuse verified resources. Unrecognized nonempty folders
-are preserved. Legacy batch-managed DGP/app roots are not implicitly migrated.
+Starting with 0.2.4, Windows uninstall removes the verified desktop runtime,
+including models, private Python, caches and saved records. The confirmation
+describes permanent removal. Setup-created location records and Windows
+shortcuts are removed, along with the selected folder once it is empty.
+Unrelated files at the top level and legacy batch-managed DGP/app roots are
+preserved. If a runtime file is locked, close the program using it and retry
+uninstall from Windows Settings.
 
 ## Release verification and distribution
 
