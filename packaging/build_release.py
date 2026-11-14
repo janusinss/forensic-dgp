@@ -139,19 +139,55 @@ def main() -> int:
     }
     for dest, source in inputs.items():
         (stage / dest).write_bytes(git("show", commit + ":" + source))
-    assembly = ('using System.Reflection;\n' +
-                '[assembly: AssemblyTitle("Forensic DGP")]\n' +
-                '[assembly: AssemblyProduct("Forensic DGP")]\n' +
-                '[assembly: AssemblyCompany("Forensic DGP Research")]\n' +
-                '[assembly: AssemblyDescription("Forensic DGP desktop launcher")]\n' +
-                '[assembly: AssemblyVersion("' + args.version + '.0")]\n' +
-                '[assembly: AssemblyFileVersion("' + args.version + '.0")]\n' +
-                '[assembly: AssemblyInformationalVersion("' + args.version + '+' + commit + '")]\n')
+    assembly = (
+        'using System.Reflection;\n'
+        'using System.Resources;\n'
+        'using System.Runtime.InteropServices;\n'
+        '[assembly: AssemblyTitle("Forensic DGP")]\n'
+        '[assembly: AssemblyDescription("Forensic DGP Desktop Launcher")]\n'
+        '[assembly: AssemblyCompany("Forensic DGP Research")]\n'
+        '[assembly: AssemblyProduct("Forensic DGP")]\n'
+        '[assembly: AssemblyCopyright("Copyright (c) 2026 Forensic DGP Research")]\n'
+        '[assembly: ComVisible(false)]\n'
+        '[assembly: Guid("FEE649E9-195D-4576-8F30-DAE06A5099C8")]\n'
+        '[assembly: NeutralResourcesLanguage("en-US")]\n'
+        f'[assembly: AssemblyVersion("{args.version}.0")]\n'
+        f'[assembly: AssemblyFileVersion("{args.version}.0")]\n'
+        f'[assembly: AssemblyInformationalVersion("{args.version}+{commit[:12]}")]\n'
+    )
     (stage / 'AssemblyInfo.cs').write_text(assembly, encoding='utf-8')
+    manifest_file = stage / 'ForensicDGP.manifest'
+    manifest_file.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">\n'
+        '  <assemblyIdentity version="1.0.0.0" name="ForensicDGP.DesktopLauncher" type="win32"/>\n'
+        '  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v2">\n'
+        '    <security>\n'
+        '      <requestedPrivileges xmlns="urn:schemas-microsoft-com:asm.v3">\n'
+        '        <requestedExecutionLevel level="asInvoker" uiAccess="false"/>\n'
+        '      </requestedPrivileges>\n'
+        '    </security>\n'
+        '  </trustInfo>\n'
+        '  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">\n'
+        '    <application>\n'
+        '      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>\n'
+        '    </application>\n'
+        '  </compatibility>\n'
+        '  <application xmlns="urn:schemas-microsoft-com:asm.v3">\n'
+        '    <windowsSettings>\n'
+        '      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>\n'
+        '      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>\n'
+        '      <longPathAware xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">true</longPathAware>\n'
+        '    </windowsSettings>\n'
+        '  </application>\n'
+        '</assembly>\n',
+        encoding='utf-8',
+    )
     compiler = Path(os.environ["SystemRoot"]) / "Microsoft.NET/Framework64/v4.0.30319/csc.exe"
     subprocess.run([str(compiler), "/nologo", "/target:winexe", "/platform:x64", "/optimize+",
                     "/reference:System.Windows.Forms.dll", "/reference:System.Drawing.dll",
-                    "/reference:System.Web.Extensions.dll", "/win32icon:" + str(stage / "app.ico"), "/out:" + str(stage / "ForensicDGP.exe"),
+                    "/reference:System.Web.Extensions.dll", "/win32icon:" + str(stage / "app.ico"),
+                    "/win32manifest:" + str(manifest_file), "/out:" + str(stage / "ForensicDGP.exe"),
                     str(stage / "Program.cs"), str(stage / "AssemblyInfo.cs")], check=True)
     check_inno_version(args.iscc)
     build = dict(schema=1, version=args.version, commit=commit, inno_version=INNO_VERSION,

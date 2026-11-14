@@ -13,6 +13,7 @@ import unittest
 BASE=Path(__file__).resolve().parents[1]
 PS=Path(os.environ.get('SystemRoot',r'C:\Windows'))/'System32/WindowsPowerShell/v1.0/powershell.exe'
 LOCATION=BASE/'packaging/install_location.ps1'
+COMPILER=Path(os.environ.get('DGP_INNO_COMPILER',BASE/'scratch/tools/inno-7.1.1/ISCC.exe'))
 
 @unittest.skipUnless(PS.is_file(),'Windows PowerShell required')
 class DestinationPreflightTests(unittest.TestCase):
@@ -57,7 +58,7 @@ class SetupWrapperTests(unittest.TestCase):
         self.log=self.area/'setup.log'
         for name in ('gui_setup.ps1','install_location.ps1','install_state.ps1'):
             shutil.copyfile(BASE/'packaging'/name,self.stage/name)
-        for name in ('ForensicDGP.exe','uninstall.ps1'):
+        for name in ('ForensicDGP.exe','uninstall.ps1','check_update.ps1'):
             (self.stage/name).write_bytes(b'inert embedded fixture')
         (self.stage/'app-source.zip').write_bytes(b'inert source bundle')
         (self.stage/'app-source.json').write_text(json.dumps({'schema':1,'commit':'b'*40,'ancestors':['b'*40],
@@ -75,7 +76,7 @@ exit 0
         python_zip=payload/'python/python-3.13.9-amd64.zip'
         (payload/'manifest.json').write_text(json.dumps({'schema':1,'platform':'win_amd64','files':[{'path':'python/python-3.13.9-amd64.zip','bytes':python_zip.stat().st_size,'sha256':hashlib.sha256(python_zip.read_bytes()).hexdigest()}],'models':[]}))
         files={name:hashlib.sha256((self.stage/name).read_bytes()).hexdigest() for name in
-               ('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1')}
+               ('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','check_update.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1')}
         files['offline-payload-manifest.json']=hashlib.sha256((payload/'manifest.json').read_bytes()).hexdigest()
         self.manifest={'schema':1,'version':'0.2.0','commit':'b'*40,'payload':'offline-bundled',
                        'payload_expanded_bytes':1,'files':files}
@@ -179,7 +180,7 @@ exit 0
         self.assertNotEqual(result.returncode,0)
         self.assertFalse(self.target.exists())
 
-@unittest.skipUnless((BASE/'scratch/tools/inno-7.1.1/ISCC.exe').is_file(),'Verified Inno compiler required')
+@unittest.skipUnless(COMPILER.is_file(),'Verified Inno compiler required')
 class NativeCopyProgressTests(unittest.TestCase):
     def test_interleaved_copy_progress_displays_one_transfer_until_it_finishes(self):
         with tempfile.TemporaryDirectory(prefix='copy-progress-',dir=BASE/'scratch') as temporary:
@@ -214,7 +215,7 @@ begin
             initialize+="end;\n"
             (area/'progress.iss').write_text(setup+declarations+'function JsonField('+json_function+
                 'function PhaseNumber('+progress_functions+initialize,encoding='utf8')
-            built=subprocess.run([str(BASE/'scratch/tools/inno-7.1.1/ISCC.exe'),str(area/'progress.iss')],
+            built=subprocess.run([str(COMPILER),str(area/'progress.iss')],
                 capture_output=True,text=True,timeout=25)
             self.assertEqual(built.returncode,0,built.stdout+built.stderr)
             log=area/'progress.log'

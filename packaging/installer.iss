@@ -9,7 +9,20 @@ AppName=Forensic DGP
 AppVersion={#ReleaseVersion}
 AppVerName=Forensic DGP {#ReleaseVersion} preview
 AppPublisher=Forensic DGP Research
+AppCopyright=Copyright (c) 2026 Forensic DGP Research
+AppPublisherURL=https://forensic-dgp.pages.dev/
+AppSupportURL=https://github.com/janusinss/forensic-dgp-downloads/releases
+AppUpdatesURL=https://forensic-dgp.pages.dev/
 AppComments=Experimental local face restoration
+VersionInfoVersion={#ReleaseVersion}.0
+VersionInfoCompany=Forensic DGP Research
+VersionInfoDescription=Forensic DGP Offline Setup
+VersionInfoTextVersion={#ReleaseVersion}
+VersionInfoCopyright=Copyright (c) 2026 Forensic DGP Research
+VersionInfoProductName=Forensic DGP
+VersionInfoProductVersion={#ReleaseVersion}
+VersionInfoProductTextVersion={#ReleaseVersion}
+VersionInfoOriginalFileName=ForensicDGP_Setup.exe
 DefaultDirName={localappdata}\Programs\Forensic DGP
 DefaultGroupName=Forensic DGP
 DisableDirPage=no
@@ -662,7 +675,7 @@ begin
     ProgressPage.SetText('Preparing bundled files', 'Extracting verified offline components. No download is required.');
     ExtractTemporaryFiles('{tmp}\payload\*');
 #endif
-    if not ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_SHOWNORMAL,
+    if not ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_HIDE,
         ewWaitUntilTerminated, ResultCode, @SetupOutput) then begin
       Result := 'Could not run application setup. Log: ' + SetupLog;
       Exit;
@@ -706,7 +719,7 @@ begin
   CheckFailure := '';
   if not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
       Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Check -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -ManagedRoot ' +
-      Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_SHOWNORMAL,
+      Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_HIDE,
       ewWaitUntilTerminated, Code, @UninstallLog) or (Code <> 0) then begin
     if CheckFailure = '' then CheckFailure := 'The installation could not be verified.';
     SuppressibleMsgBox(CheckFailure + ' Files were preserved.', mbError, MB_OK, IDOK);

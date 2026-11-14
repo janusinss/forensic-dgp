@@ -94,7 +94,7 @@ class NativeUninstallTests(unittest.TestCase):
         self.write(self.area / 'shell-owner.json', {'schema': 1, 'application': 'Forensic DGP'})
         self.write(self.area / 'release.json', {})
         for file in ('ForensicDGP.exe', 'gui_setup.ps1', 'distribution.ps1', 'app-source.zip',
-                     'app-source.json', 'install_location.ps1', 'install_state.ps1', 'LICENSE.txt'):
+                     'app-source.json', 'install_location.ps1', 'install_state.ps1', 'check_update.ps1', 'LICENSE.txt'):
             self.write(self.area / file, b'Fixture for uninstall testing. This file is never executed.')
         self.write(self.area / 'release.inc', (
             '#define ReleaseVersion "0.0.1"\n'

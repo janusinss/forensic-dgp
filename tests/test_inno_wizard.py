@@ -15,6 +15,7 @@ import unittest
 BASE = Path(__file__).resolve().parents[1]
 WIZARD = BASE / 'packaging' / 'installer.iss'
 WRAPPER = BASE / 'packaging' / 'gui_setup.ps1'
+BUILD_SCRIPT = BASE / 'packaging' / 'build_release.py'
 PS = Path(os.environ.get('SystemRoot', r'C:\Windows')) / 'System32/WindowsPowerShell/v1.0/powershell.exe'
 COMMIT = 'a' * 40
 
@@ -96,6 +97,59 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertIn('RemoveOwnedRuntime;', cleanup)
         self.assertIn('ConfirmUninstall=Uninstall %1 and permanently delete', self.code)
 
+    def test_setup_version_info_and_publisher_metadata(self):
+        setup = self.section('[Setup]', '[Tasks]')
+        for directive in (
+            'AppCopyright=Copyright (c) 2026 Forensic DGP Research',
+            'AppPublisherURL=https://forensic-dgp.pages.dev/',
+            'AppSupportURL=https://github.com/janusinss/forensic-dgp-downloads/releases',
+            'AppUpdatesURL=https://forensic-dgp.pages.dev/',
+            'VersionInfoVersion={#ReleaseVersion}.0',
+            'VersionInfoCompany=Forensic DGP Research',
+            'VersionInfoDescription=Forensic DGP Offline Setup',
+            'VersionInfoTextVersion={#ReleaseVersion}',
+            'VersionInfoCopyright=Copyright (c) 2026 Forensic DGP Research',
+            'VersionInfoProductName=Forensic DGP',
+            'VersionInfoProductVersion={#ReleaseVersion}',
+            'VersionInfoProductTextVersion={#ReleaseVersion}',
+            'VersionInfoOriginalFileName=ForensicDGP_Setup.exe',
+        ):
+            self.assertIn(directive, setup)
+        self.assertNotIn('UninstallDisplayName', setup)
+
+    def test_helper_exec_and_log_output_hides_powershell_windows(self):
+        prepare = self.section('function PrepareToInstall', 'procedure UninstallLog')
+        self.assertRegex(
+            prepare,
+            r'ExecAndLogOutput\(PS,\s*Params,\s*ExpandConstant\(\'\{tmp\}\'\),\s*SW_HIDE,',
+        )
+        self.assertNotIn('SW_SHOWNORMAL', prepare)
+        uninstall = self.section('function InitializeUninstall', 'procedure CurStepChanged')
+        self.assertRegex(
+            uninstall,
+            r'ExecAndLogOutput\(PS,[\s\S]*?ExpandConstant\(\'\{app\}\'\),\s*SW_HIDE,',
+        )
+        self.assertNotIn('SW_SHOWNORMAL', uninstall)
+
+    def test_launcher_assembly_metadata_and_embedded_manifest(self):
+        source = BUILD_SCRIPT.read_text(encoding='utf8')
+        for expected in (
+            'AssemblyCopyright("Copyright (c) 2026 Forensic DGP Research")',
+            'ComVisible(false)',
+            'Guid("FEE649E9-195D-4576-8F30-DAE06A5099C8")',
+            'NeutralResourcesLanguage("en-US")',
+            'commit[:12]',
+            '/win32manifest:',
+            'asInvoker',
+            '8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a',
+            'PerMonitorV2',
+            'longPathAware',
+        ):
+            self.assertIn(expected, source)
+        self.assertNotIn('/deterministic', source)
+        files_block = source.split('for name in [', 1)[1].split(']:', 1)[0]
+        self.assertNotIn('ForensicDGP.manifest', files_block)
+
 
 @unittest.skipUnless(PS.is_file(), 'Windows PowerShell is required')
 class GuiSetupWrapper(unittest.TestCase):
@@ -148,6 +202,7 @@ exit 0
             'app-source.json': json.dumps({'schema':1,'commit':COMMIT,'ancestors':[COMMIT],'files':{'app.py':'0'*40}}).encode('utf8'),
             'distribution.ps1': script.encode('utf8'),
             'uninstall.ps1': b'# inert fixture',
+            'check_update.ps1': b'# inert fixture',
             'gui_setup.ps1': WRAPPER.read_bytes(),
             'ForensicDGP.exe': b'inert executable; never started',
             'install_location.ps1': location_script.encode('utf8'),

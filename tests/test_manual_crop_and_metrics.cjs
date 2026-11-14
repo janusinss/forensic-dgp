@@ -471,4 +471,24 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
   await refInput2.dispatchEvent({ type: 'change' });
   assert.equal(rows2[2].children[1].textContent, '—');
   assert.equal(rows2[2].children[3].textContent, '—');
+
+  // When scores.prepared is returned, Prepared MAE and PSNR render in column 2 and clear back to em dash
+  nextScores = {
+    before: { mae: '12.34', psnr: '26.30' },
+    prepared: { mae: '9.01', psnr: '29.04' },
+    after: { mae: '4.56', psnr: '34.95' },
+  };
+  refInput2.files = [{ name: 'ref.png', type: 'image/png', size: 100 }];
+  await refInput2.dispatchEvent({ type: 'change' });
+  assert.equal(rows2[2].children[1].textContent, '12.34');
+  assert.equal(rows2[2].children[2].textContent, '9.01');
+  assert.equal(rows2[2].children[3].textContent, '4.56');
+  assert.equal(rows2[3].children[1].textContent, '26.30');
+  assert.equal(rows2[3].children[2].textContent, '29.04');
+  assert.equal(rows2[3].children[3].textContent, '34.95');
+
+  refInput2.files = [];
+  await refInput2.dispatchEvent({ type: 'change' });
+  assert.equal(rows2[2].children[2].textContent, '—');
+  assert.equal(rows2[3].children[2].textContent, '—');
 });

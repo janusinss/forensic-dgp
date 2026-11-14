@@ -18,7 +18,7 @@ import zipfile
 from typing import Annotated
 
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 import psutil
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, Response
@@ -27,7 +27,7 @@ from starlette.concurrency import run_in_threadpool
 
 from .preparation import MAX_MASK_BYTES, MAX_UPLOAD_BYTES, build_preview, decode_original, png
 from .quality import quality_signals
-from .runtime import model_contract, prepare_crop
+from .runtime import MAX_IMAGE_SIDE, model_contract, prepare_crop
 from .setup_models import ROOT, verify_models
 from .managed_paths import data_path
 
@@ -77,16 +77,22 @@ def review_input(value):
     need(value in ('usable', 'picture_upload'), 'Choose a picture before continuing.')
 
 
-def picture_native(contents, rectangle=None):
+def picture_native_with_source_size(contents, rectangle=None):
     image = decode_original(contents)
+    source_size = [int(image.shape[1]), int(image.shape[0])]
     if rectangle is None:
-        return image
+        return image, source_size
     need(isinstance(rectangle, list) and len(rectangle) == 4 and all(type(n) is int for n in rectangle),
          'Choose a valid picture crop.')
     x, y, width, height = rectangle
     need(x >= 0 and y >= 0 and min(width, height) >= 16 and
-         x + width <= image.shape[1] and y + height <= image.shape[0], 'Picture crop is outside the allowed area.')
-    return image[y:y + height, x:x + width].copy()
+         x + width <= source_size[0] and y + height <= source_size[1], 'Picture crop is outside the allowed area.')
+    return image[y:y + height, x:x + width].copy(), source_size
+
+
+def picture_native(contents, rectangle=None):
+    native, _ = picture_native_with_source_size(contents, rectangle)
+    return native
 
 
 @lru_cache(maxsize=1)
@@ -421,6 +427,153 @@ async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form
     return await run_in_threadpool(invoke, execute)
 
 
+def _decode_reference(contents):
+    need(type(contents) is bytes and 0 < len(contents) <= MAX_UPLOAD_BYTES,
+         'Choose a PNG or JPEG reference under 10 MB.')
+    try:
+        with Image.open(io.BytesIO(contents)) as source:
+            need(source.format in ('PNG', 'JPEG') and getattr(source, 'n_frames', 1) == 1,
+                 'Choose a valid PNG or JPEG reference image.')
+            need(0 < source.width <= MAX_IMAGE_SIDE and 0 < source.height <= MAX_IMAGE_SIDE
+                 and source.width * source.height <= MAX_IMAGE_SIDE * MAX_IMAGE_SIDE,
+                 'Use a reference image no larger than 1600 pixels per side.')
+            has_alpha = 'A' in source.mode or 'transparency' in source.info
+            transposed = ImageOps.exif_transpose(source)
+            if has_alpha:
+                alpha_min, _ = transposed.convert('RGBA').getchannel('A').getextrema()
+                need(alpha_min == 255, 'The reference must be opaque.')
+            return np.asarray(transposed.convert('RGB')).copy()
+    except ValueError:
+        raise
+    except (OSError, Image.DecompressionBombError) as error:
+        raise ValueError('Choose a valid PNG or JPEG reference image.') from error
+
+
+def _valid_reference_crop(picture_crop, source_size):
+    if not (isinstance(picture_crop, list) and len(picture_crop) == 4
+            and all(type(n) is int for n in picture_crop)):
+        return None
+    if not (isinstance(source_size, list) and len(source_size) == 2
+            and all(type(n) is int and n > 0 for n in source_size)):
+        return None
+    cx, cy, cw, ch = picture_crop
+    sw, sh = source_size
+    if cx < 0 or cy < 0 or cw <= 0 or ch <= 0 or cx + cw > sw or cy + ch > sh:
+        return None
+    return (cx, cy, cw, ch), (sw, sh)
+
+
+def _parse_reference_geometry(geometry):
+    if isinstance(geometry, str):
+        need(0 < len(geometry) <= 4096, 'Invalid reference geometry.')
+        try:
+            geo = json.loads(geometry)
+        except ValueError as error:
+            raise ValueError('Invalid reference geometry.') from error
+    elif isinstance(geometry, dict):
+        geo = geometry
+    else:
+        raise ValueError('Invalid reference geometry.')
+    need(isinstance(geo, dict), 'Invalid reference geometry.')
+    bounds = geo.get('observed_bounds_256')
+    need(isinstance(bounds, list) and len(bounds) == 4
+         and all(type(n) is int and 0 <= n <= 256 for n in bounds)
+         and bounds[0] < bounds[2] and bounds[1] < bounds[3],
+         'The observed crop bounds could not be verified.')
+    native_size = geo.get('native_size')
+    if not (isinstance(native_size, list) and len(native_size) == 2
+            and all(type(n) is int and n > 0 for n in native_size)):
+        native_size = None
+    crop_rect = _valid_reference_crop(geo.get('picture_crop'), geo.get('source_size'))
+    return bounds, native_size, crop_rect
+
+
+def _has_uniform_gray_padding(rgb, bounds):
+    left, top, right, bottom = bounds
+    margin = 2
+    yy, xx = np.indices((256, 256))
+    outside_bounds = (xx < left) | (xx >= right) | (yy < top) | (yy >= bottom)
+    outside_margin = (
+        (xx < left - margin) | (xx >= right + margin)
+        | (yy < top - margin) | (yy >= bottom + margin)
+    )
+    mask = outside_bounds & outside_margin
+    if not mask.any():
+        mask = outside_bounds
+    if not mask.any():
+        return True
+    region = rgb[mask].astype(np.int16)
+    mismatched = np.any(np.abs(region - 128) > 16, axis=1)
+    return float(mismatched.mean()) <= 0.02
+
+
+def prepare_reference(contents, geometry):
+    """Align an uploaded ground-truth reference to the exact 256x256 restoration canvas."""
+    bounds, native_size, crop_rect = _parse_reference_geometry(geometry)
+    rgb = _decode_reference(contents)
+    nat_h, nat_w = rgb.shape[:2]
+    is_padded = bounds != [0, 0, 256, 256]
+    obs_w, obs_h = bounds[2] - bounds[0], bounds[3] - bounds[1]
+    ref_geo = None
+
+    def _from_full_crop():
+        cx, cy, cw, ch = crop_rect[0]
+        return prepare_crop(rgb[cy:cy + ch, cx:cx + cw].copy())
+
+    if (nat_w, nat_h) == (256, 256):
+        if is_padded and _has_uniform_gray_padding(rgb, bounds):
+            target_256, source_mode = rgb, 'padded_256'
+        elif crop_rect is not None and crop_rect[1] == (256, 256):
+            target_256, _, _, ref_geo = _from_full_crop()
+            source_mode = 'full_cropped'
+        elif is_padded:
+            raise ValueError(
+                'The 256 × 256 reference is not padded to match this crop. '
+                'Upload the clean unpadded crop or a 256 × 256 padded frame.'
+            )
+        else:
+            target_256, source_mode = rgb, 'padded_256'
+    elif crop_rect is not None and (nat_w, nat_h) == crop_rect[1]:
+        target_256, _, _, ref_geo = _from_full_crop()
+        source_mode = 'full_cropped'
+    else:
+        exact_native = native_size is not None and (nat_w, nat_h) == tuple(native_size)
+        ref_aspect = nat_w / nat_h
+        obs_aspect = obs_w / obs_h
+        diff_obs = abs(ref_aspect - obs_aspect) / max(ref_aspect, obs_aspect)
+        if native_size is not None:
+            nat_aspect = native_size[0] / native_size[1]
+            diff_native = abs(ref_aspect - nat_aspect) / max(ref_aspect, nat_aspect)
+        else:
+            diff_native = diff_obs
+        need(exact_native or diff_native <= 0.05 or diff_obs <= 0.05,
+             'Reference aspect ratio does not match the input crop. '
+             'Use the full original photo, a clean crop matching the input, or a 256 × 256 padded frame.')
+        target_256, _, _, ref_geo = prepare_crop(rgb)
+        source_mode = 'native_crop'
+
+    if ref_geo is not None:
+        need(ref_geo['observed_bounds_256'] == bounds,
+             'Reference aspect ratio does not match the input crop. '
+             'Use the full original photo, a clean crop matching the input, or a 256 × 256 padded frame.')
+    return {
+        'reference_256': url(png(target_256)),
+        'observed_bounds_256': bounds,
+        'source_mode': source_mode,
+    }
+
+
+@app.post('/face/restoration/reference')
+async def reference(file: UploadFile = File(...), geometry: str = Form(...)):
+    contents = await file.read(MAX_UPLOAD_BYTES + 1)
+    def execute():
+        try:
+            return prepare_reference(contents, geometry)
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from error
+    return await run_in_threadpool(execute)
+
+
 @app.post('/face/restoration/preview')
 async def make_preview(file: UploadFile = File(...), protect_mask: UploadFile = File(...),
                        apply_mask: UploadFile = File(...), radius: float = Form(1), input_review: str = Form(''),
@@ -472,7 +625,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         need(not picture_crop or (input_review == 'picture_upload' and not capture_id),
              'A picture crop requires a picture upload.')
         rectangle = picture_rectangle(picture_crop)
-        native = picture_native(contents, rectangle)
+        native, source_size = picture_native_with_source_size(contents, rectangle)
         need(np.ptp(native.reshape(-1, 3).astype(np.int16), axis=0).max() > 0,
              'No usable structure is visible. Upload a clearer face crop.')
         original, observed, _, geometry = prepare_crop(native)
@@ -772,6 +925,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     'training_optimizer_VM_calls': 0, 'capture_id': capture_id or None}
         if rectangle is not None:
             metadata['picture_crop'] = rectangle
+        metadata['source_size'] = source_size
         if auto_decision is not None:
             metadata['automatic_preparation'] = auto_decision
         if picture_regions is not None:

@@ -959,18 +959,13 @@
         );
         const mae = metric('MAE (RGB levels)', '—', '—', '—');
         const psnr = metric('PSNR (dB)', '—', '—', '—');
-        const afterIndex = hasPrepared ? 2 : 1;
         return {
             table,
             setReference(scores) {
-                if (hasPrepared) {
-                    mae[1].textContent = '—';
-                    psnr[1].textContent = '—';
-                }
-                [
-                    [0, scores?.before],
-                    [afterIndex, scores?.after],
-                ].forEach(([col, score]) => {
+                const columns = hasPrepared
+                    ? [[0, scores?.before], [1, scores?.prepared], [2, scores?.after]]
+                    : [[0, scores?.before], [1, scores?.after]];
+                columns.forEach(([col, score]) => {
                     mae[col].textContent = score?.mae ?? '—';
                     psnr[col].textContent = score?.psnr ?? '—';
                 });
@@ -1002,9 +997,9 @@
         reference.type = 'file';
         reference.accept = 'image/png,image/jpeg';
         const label = document.createElement('label');
-        label.append('Add aligned clean reference', reference);
+        label.append('Add clean reference', reference);
         const hint = document.createElement('p');
-        hint.textContent = 'Use a 256 × 256 padded frame or clean face crop matching the input. Scores measure pixel agreement.';
+        hint.textContent = 'Upload the full uncropped clean photo, a clean crop matching the input, or a 256 × 256 padded frame. Scores measure pixel agreement.';
         let referenceRevision = 0;
         reference.addEventListener('change', async () => {
             const version = ++referenceRevision;
@@ -1016,7 +1011,7 @@
                 const scores = await window.scoreVideoReference(file, result);
                 if (version === referenceRevision) {
                     metrics.setReference(scores);
-                    score.textContent = 'MAE and PSNR compare both images with your supplied reference. Padding is excluded.';
+                    score.textContent = 'MAE and PSNR compare the images with your supplied reference. Padding is excluded.';
                 }
             } catch (problem) {
                 if (version === referenceRevision) score.textContent = `Ground truth unavailable. ${problem.message}`;

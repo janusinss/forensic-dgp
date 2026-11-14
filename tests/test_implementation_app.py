@@ -911,6 +911,198 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(set(auto_prep_meta['output_diagnostics'].keys()), {'before', 'prepared', 'after'})
         self.assertTrue(auto_prep_meta['Auto_assessed_original_canvas_before_preparation'])
 
+    def post_reference(self, file_bytes, geometry, *, filename='ref.png', content_type='image/png'):
+        boundary = b'ref-test-boundary'
+        geometry_str = geometry if isinstance(geometry, str) else json.dumps(geometry)
+        body = (
+            b'--' + boundary
+            + b'\r\nContent-Disposition: form-data; name="geometry"\r\n\r\n'
+            + geometry_str.encode('utf-8')
+            + b'\r\n--' + boundary
+            + f'\r\nContent-Disposition: form-data; name="file"; filename="{filename}"\r\n'
+              f'Content-Type: {content_type}\r\n\r\n'.encode('utf-8')
+            + file_bytes
+            + b'\r\n--' + boundary + b'--\r\n'
+        )
+        headers = {'host': '127.0.0.1', 'content-type': f'multipart/form-data; boundary={boundary.decode()}'}
+        status, response = asyncio.run(asgi_request(controller.app, 'POST', '/face/restoration/reference', body, headers))
+        return status, json.loads(response)
+
+    @staticmethod
+    def decode_data_url_rgb(data_url):
+        raw = base64.b64decode(data_url.split(',', 1)[1])
+        with Image.open(io.BytesIO(raw)) as image:
+            return np.asarray(image.convert('RGB')).copy()
+
+    def test_picture_native_compatibility_and_restore_source_size_metadata(self):
+        native_only = controller.picture_native(self.contents, [10, 8, 40, 32])
+        np.testing.assert_array_equal(native_only, self.rgb[8:40, 10:50])
+        native_pair, source_size = controller.picture_native_with_source_size(self.contents, [10, 8, 40, 32])
+        np.testing.assert_array_equal(native_pair, native_only)
+        self.assertEqual(source_size, [128, 96])
+
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            full_res = self.restore(restoration='off', input_review='picture_upload')
+            crop_res = self.restore(restoration='off', input_review='picture_upload', picture_crop='[10,8,40,32]')
+        self.assertEqual(full_res['metadata']['source_size'], [128, 96])
+        self.assertNotIn('picture_crop', full_res['metadata'])
+        self.assertEqual(crop_res['metadata']['source_size'], [128, 96])
+        self.assertEqual(crop_res['metadata']['picture_crop'], [10, 8, 40, 32])
+
+    def test_reference_endpoint_full_cropped_and_native_crop_match_prepare_crop_exactly(self):
+        rng = np.random.default_rng(42)
+        full_rgb = rng.integers(0, 256, (240, 320, 3), dtype=np.uint8)
+        full_png = png(full_rgb)
+        crop = [50, 30, 120, 160]
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            restored = self.restore(file=self.upload(full_png), restoration='off',
+                                    input_review='picture_upload', picture_crop=json.dumps(crop))
+        meta = restored['metadata']
+        geometry = {
+            'observed_bounds_256': meta['geometry']['observed_bounds_256'],
+            'native_size': meta['geometry']['native_size'],
+            'picture_crop': meta['picture_crop'],
+            'source_size': meta['source_size'],
+        }
+        expected_256 = self.decode_data_url_rgb(restored['original_input'])
+
+        status_full, body_full = self.post_reference(full_png, geometry)
+        self.assertEqual(status_full, 200, body_full)
+        self.assertEqual(body_full['source_mode'], 'full_cropped')
+        self.assertEqual(body_full['observed_bounds_256'], geometry['observed_bounds_256'])
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_full['reference_256']), expected_256)
+
+        clean_crop_png = png(full_rgb[30:190, 50:170])
+        status_crop, body_crop = self.post_reference(clean_crop_png, geometry)
+        self.assertEqual(status_crop, 200, body_crop)
+        self.assertEqual(body_crop['source_mode'], 'native_crop')
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_crop['reference_256']), expected_256)
+
+        # EXIF-rotated clean crop (Orientation=6) matches upright restore input.
+        upright_bytes = io.BytesIO()
+        Image.fromarray(full_rgb[30:190, 50:170]).save(upright_bytes, format='PNG')
+        rotated_pil = Image.fromarray(full_rgb[30:190, 50:170]).rotate(90, expand=True)
+        exif = Image.Exif()
+        exif[274] = 6
+        exif_buf = io.BytesIO()
+        rotated_pil.save(exif_buf, format='JPEG', quality=95, exif=exif)
+        status_exif, body_exif = self.post_reference(exif_buf.getvalue(), geometry,
+                                                     filename='exif.jpg', content_type='image/jpeg')
+        self.assertEqual(status_exif, 200, body_exif)
+        self.assertEqual(body_exif['source_mode'], 'native_crop')
+
+    def test_reference_endpoint_256_padded_and_256_source_crop_routing(self):
+        rng = np.random.default_rng(77)
+        full_256 = rng.integers(0, 256, (256, 256, 3), dtype=np.uint8)
+        full_256_png = png(full_256)
+
+        # Non-square crop from a 256x256 source -> padded bounds.
+        crop_rect = [40, 20, 120, 160]
+        padded_256, _, _, geo_padded = prepare_crop(full_256[20:180, 40:160])
+        bounds_padded = geo_padded['observed_bounds_256']
+        geometry_padded = {
+            'observed_bounds_256': bounds_padded,
+            'native_size': [120, 160],
+            'picture_crop': crop_rect,
+            'source_size': [256, 256],
+        }
+        status_ok, body_ok = self.post_reference(png(padded_256), geometry_padded)
+        self.assertEqual(status_ok, 200, body_ok)
+        self.assertEqual(body_ok['source_mode'], 'padded_256')
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_ok['reference_256']), padded_256)
+
+        # Unpadded 256x256 full source matching source_size=[256, 256] slices picture_crop.
+        status_slice, body_slice = self.post_reference(full_256_png, geometry_padded)
+        self.assertEqual(status_slice, 200, body_slice)
+        self.assertEqual(body_slice['source_mode'], 'full_cropped')
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_slice['reference_256']), padded_256)
+
+        # Unpadded 256x256 without matching 256x256 source_size+picture_crop is rejected.
+        geometry_no_source = {'observed_bounds_256': bounds_padded, 'native_size': [120, 160]}
+        status_bad, body_bad = self.post_reference(full_256_png, geometry_no_source)
+        self.assertEqual(status_bad, 400)
+        self.assertEqual(
+            body_bad['detail'],
+            'The 256 × 256 reference is not padded to match this crop. '
+            'Upload the clean unpadded crop or a 256 × 256 padded frame.',
+        )
+
+        # Square crop (is_padded=False) from 256x256 source still slices picture_crop when source_size==[256,256].
+        sq_crop = [20, 20, 180, 180]
+        sq_256, _, _, _ = prepare_crop(full_256[20:200, 20:200])
+        status_sq, body_sq = self.post_reference(full_256_png, {
+            'observed_bounds_256': [0, 0, 256, 256],
+            'native_size': [180, 180],
+            'picture_crop': sq_crop,
+            'source_size': [256, 256],
+        })
+        self.assertEqual(status_sq, 200, body_sq)
+        self.assertEqual(body_sq['source_mode'], 'full_cropped')
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_sq['reference_256']), sq_256)
+
+    def test_reference_endpoint_rejects_invalid_files_transparency_and_geometry(self):
+        valid_geo = {'observed_bounds_256': [0, 0, 256, 256], 'native_size': [128, 128]}
+
+        # Transparent RGBA PNG rejected with exact message.
+        rgba = np.full((128, 128, 4), 255, dtype=np.uint8)
+        rgba[10, 10, 3] = 250
+        buf = io.BytesIO()
+        Image.fromarray(rgba, mode='RGBA').save(buf, format='PNG')
+        status_alpha, body_alpha = self.post_reference(buf.getvalue(), valid_geo)
+        self.assertEqual(status_alpha, 400)
+        self.assertEqual(body_alpha['detail'], 'The reference must be opaque.')
+
+        # Paletted PNG with tRNS transparency rejected.
+        pal = Image.fromarray(np.zeros((128, 128), dtype=np.uint8), mode='P')
+        pal_buf = io.BytesIO()
+        pal.save(pal_buf, format='PNG', transparency=0)
+        status_trns, body_trns = self.post_reference(pal_buf.getvalue(), valid_geo)
+        self.assertEqual(status_trns, 400)
+        self.assertEqual(body_trns['detail'], 'The reference must be opaque.')
+
+        # Opaque RGBA PNG accepted.
+        rgba_opaque = np.full((128, 128, 4), 255, dtype=np.uint8)
+        buf_ok = io.BytesIO()
+        Image.fromarray(rgba_opaque, mode='RGBA').save(buf_ok, format='PNG')
+        status_opaque, body_opaque = self.post_reference(buf_ok.getvalue(), valid_geo)
+        self.assertEqual(status_opaque, 200, body_opaque)
+
+        # Oversized > 10 MiB, bad format, > 1600px side.
+        status_big, _ = self.post_reference(b'x' * (controller.MAX_UPLOAD_BYTES + 1), valid_geo)
+        self.assertEqual(status_big, 400)
+        gif_buf = io.BytesIO()
+        Image.fromarray(np.zeros((64, 64, 3), dtype=np.uint8)).save(gif_buf, format='GIF')
+        status_gif, _ = self.post_reference(gif_buf.getvalue(), valid_geo)
+        self.assertEqual(status_gif, 400)
+        wide_buf = io.BytesIO()
+        Image.new('RGB', (1601, 64), (100, 100, 100)).save(wide_buf, format='PNG')
+        status_wide, _ = self.post_reference(wide_buf.getvalue(), {'observed_bounds_256': [0, 0, 256, 256]})
+        self.assertEqual(status_wide, 400)
+
+        # Bad bounds and mismatched aspect ratio.
+        for bad_geo in ('not-json', {'observed_bounds_256': [10, 0, 10, 256]}, {'observed_bounds_256': [-1, 0, 256, 256]}):
+            status_bad_geo, _ = self.post_reference(self.contents, bad_geo)
+            self.assertEqual(status_bad_geo, 400)
+
+        status_aspect, body_aspect = self.post_reference(
+            png(np.zeros((100, 200, 3), dtype=np.uint8)),
+            {'observed_bounds_256': [32, 0, 224, 256], 'native_size': [120, 160]},
+        )
+        self.assertEqual(status_aspect, 400)
+        self.assertEqual(
+            body_aspect['detail'],
+            'Reference aspect ratio does not match the input crop. '
+            'Use the full original photo, a clean crop matching the input, or a 256 × 256 padded frame.',
+        )
+
+        # Within 5% aspect ratio but prepare_crop produces different observed_bounds_256 -> rejected.
+        _, _, _, base_geo = prepare_crop(np.zeros((120, 100, 3), dtype=np.uint8))
+        status_drift, _ = self.post_reference(
+            png(np.zeros((124, 100, 3), dtype=np.uint8)),
+            {'observed_bounds_256': base_geo['observed_bounds_256'], 'native_size': [100, 120]},
+        )
+        self.assertEqual(status_drift, 400)
+
 
 if __name__ == '__main__':
     unittest.main()
