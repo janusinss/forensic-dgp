@@ -2,7 +2,8 @@
 param(
     [ValidateSet('Check','Uninstall')][string]$Action = 'Check',
     [Parameter(Mandatory=$true)][string]$ManagedRoot,
-    [string]$InstallRoot
+    [string]$InstallRoot,
+    [switch]$PreserveRuntimeCache
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version 2.0
@@ -125,6 +126,76 @@ function Stop-OwnedAppProcesses([string]$ShellPath, [string]$RootPath) {
     }
 }
 
+function Remove-ExtendedTree([string]$ExtendedPath) {
+    if (-not $ExtendedPath.StartsWith('\\?\')) {
+        $ExtendedPath = '\\?\' + [IO.Path]::GetFullPath($ExtendedPath)
+    }
+    try {
+        if ([IO.File]::Exists($ExtendedPath)) {
+            $attrs = [IO.File]::GetAttributes($ExtendedPath)
+            if (($attrs -band [IO.FileAttributes]::ReadOnly) -ne 0) {
+                [IO.File]::SetAttributes($ExtendedPath, $attrs -band (-bnot [IO.FileAttributes]::ReadOnly))
+            }
+            [IO.File]::Delete($ExtendedPath)
+            return
+        }
+        if (-not [IO.Directory]::Exists($ExtendedPath)) { return }
+        $dirInfo = [IO.DirectoryInfo]::new($ExtendedPath)
+        $dirAttrs = $dirInfo.Attributes
+        if (($dirAttrs -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            if (($dirAttrs -band [IO.FileAttributes]::ReadOnly) -ne 0) {
+                [IO.File]::SetAttributes($ExtendedPath, $dirAttrs -band (-bnot [IO.FileAttributes]::ReadOnly))
+            }
+            [IO.Directory]::Delete($ExtendedPath, $false)
+            return
+        }
+        foreach ($child in $dirInfo.EnumerateFileSystemInfos()) {
+            $childPath = $child.FullName
+            if (-not $childPath.StartsWith('\\?\')) { $childPath = '\\?\' + $childPath }
+            $childAttrs = $child.Attributes
+            if (($childAttrs -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+                if (($childAttrs -band [IO.FileAttributes]::ReadOnly) -ne 0) {
+                    [IO.File]::SetAttributes($childPath, $childAttrs -band (-bnot [IO.FileAttributes]::ReadOnly))
+                }
+                if ($child -is [IO.DirectoryInfo]) {
+                    [IO.Directory]::Delete($childPath, $false)
+                } else {
+                    [IO.File]::Delete($childPath)
+                }
+            } elseif ($child -is [IO.DirectoryInfo]) {
+                Remove-ExtendedTree $childPath
+            } else {
+                if (($childAttrs -band [IO.FileAttributes]::ReadOnly) -ne 0) {
+                    [IO.File]::SetAttributes($childPath, $childAttrs -band (-bnot [IO.FileAttributes]::ReadOnly))
+                }
+                [IO.File]::Delete($childPath)
+            }
+        }
+        if (($dirAttrs -band [IO.FileAttributes]::ReadOnly) -ne 0) {
+            [IO.File]::SetAttributes($ExtendedPath, $dirAttrs -band (-bnot [IO.FileAttributes]::ReadOnly))
+        }
+        [IO.Directory]::Delete($ExtendedPath, $false)
+    } catch [IO.DirectoryNotFoundException] {
+    } catch [IO.FileNotFoundException] {
+    }
+}
+
+function Remove-OwnedRuntimeLongPaths([string]$RuntimeRoot, [switch]$PreserveRuntimeCache) {
+    if ([string]::IsNullOrWhiteSpace($RuntimeRoot)) { return }
+    $runtimeFull = [IO.Path]::GetFullPath($RuntimeRoot).TrimEnd('\')
+    $subtrees = @('environments', 'python', 'logs', 'tmp', 'versions')
+    if (-not $PreserveRuntimeCache) {
+        $subtrees += @('cache', 'wheelhouse')
+    }
+    foreach ($name in $subtrees) {
+        $target = Join-Path $runtimeFull $name
+        $extended = if ($target.StartsWith('\\?\')) { $target } else { '\\?\' + $target }
+        if ([IO.Directory]::Exists($extended) -or [IO.File]::Exists($extended)) {
+            Remove-ExtendedTree $extended
+        }
+    }
+}
+
 $mutex = $null
 $held = $false
 try {
@@ -240,8 +311,11 @@ try {
         }
         if ($custom) { $ownerHash = $runtimeReceipt.hash }
     }
-    # The helper reports ownership only. Inno deletes after confirmation while
-    # it holds the mutex. The older batch-managed root remains shared.
+    if ($Action -eq 'Uninstall' -and $custom -and $exists -and !$emptyOwnedRuntime) {
+        Remove-OwnedRuntimeLongPaths -RuntimeRoot $root -PreserveRuntimeCache:$PreserveRuntimeCache
+    }
+    # The helper reports ownership and removes owned long-path runtime subtrees on Uninstall.
+    # Inno deletes the remaining runtime folder after confirmation while holding the mutex.
     [ordered]@{
         schema = 1
         action = $Action

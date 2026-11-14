@@ -1,6 +1,22 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.11 offline preview
+## Current 0.2.12 offline preview
+
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 57a63f37](https://57a63f37.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.12)
+references `ForensicDGP_Setup-0.2.12.exe` from build source
+`8a6e7c5710bf262a97a6388485059156b37a50ec` (`1,314,091,355` bytes, SHA-256
+`7851d17899c053065690b6411698c2672e75483e9a85f976b5d00efc1adbba57`). This release
+replaces the installer's network update check with an in-app triple-dot **Check Update**
+and top-left **Install Update** self-updater, fixes Avast `EvoGen` and Windows Defender
+false-positive triggers (`upx=False`, no `SW_HIDE`, no P/Invoke delete APIs), and keeps
+`\\?\` long-path safe uninstall cleanup. Published versions remain immutable: future updates
+must use a new version, build, and release rather than replacing `0.2.12`.
+
+## Historical 0.2.11 offline preview
 
 Published November 14, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs

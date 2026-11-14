@@ -69,7 +69,7 @@ try {
   if ($ExpectedManifestHash -cnotmatch '^[0-9a-f]{64}$' -or (Hash-File $manifestPath) -cne $ExpectedManifestHash) { throw 'Embedded release manifest differs.' }
   $release=Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
   if ($release.schema -ne 1 -or $release.commit -cnotmatch '^[0-9a-f]{40}$') { throw 'Invalid embedded release identity.' }
-  $required=@('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1','check_update.ps1')
+  $required=@('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1')
   $allowed=$required+@('offline-payload-manifest.json')
   foreach ($item in $release.files.psobject.Properties) {
     if ($item.Name -notin $allowed -or $item.Value -cnotmatch '^[0-9a-f]{64}$') { throw 'Unexpected release input.' }

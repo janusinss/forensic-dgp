@@ -30,6 +30,13 @@ from .quality import quality_signals
 from .runtime import MAX_IMAGE_SIDE, model_contract, prepare_crop
 from .setup_models import ROOT, verify_models
 from .managed_paths import data_path
+from .updater import (
+    UpdateUnavailableError,
+    UpdateValidationError,
+    check_for_updates,
+    get_current_version,
+    install_update,
+)
 
 app = FastAPI(title="Forensic face restoration — IMPLEMENTATION")
 app.mount('/static', StaticFiles(directory=str(ROOT / 'static')), name='static')
@@ -251,6 +258,35 @@ def one_forward(contents, model):
 def health():
     return {'status': 'ok', 'default_model': DEFAULT_MODEL, 'model_loaded_in_server': False,
             'model_qualified': False, 'busy': LOCK.locked(), 'uncertain': STATE['uncertain']}
+
+
+@app.get('/app/version')
+def app_version():
+    return {'version': get_current_version()}
+
+
+@app.post('/app/update/check')
+async def app_update_check():
+    def execute():
+        try:
+            return check_for_updates()
+        except UpdateValidationError as error:
+            raise HTTPException(400, str(error)) from error
+        except UpdateUnavailableError as error:
+            raise HTTPException(502, str(error)) from error
+    return await run_in_threadpool(execute)
+
+
+@app.post('/app/update/install')
+async def app_update_install():
+    def execute():
+        try:
+            return install_update()
+        except UpdateValidationError as error:
+            raise HTTPException(400, str(error)) from error
+        except UpdateUnavailableError as error:
+            raise HTTPException(502, str(error)) from error
+    return await run_in_threadpool(execute)
 
 
 _STAGE_REASONS = {
