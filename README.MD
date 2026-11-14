@@ -2,9 +2,9 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.8
+## Windows installer 0.2.9
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) Â· [v0.2.8 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.8)
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) Â· [v0.2.9 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.9)
 
 ## Developer batch installation
 
@@ -32,7 +32,7 @@ Package installation is pinned at the direct-dependency level; transitive depend
 
 Choose **Picture** to upload one PNG/JPEG face image, or **Video** for an uploaded clip, webcam or LAN RTSP camera. A chosen video file opens automatically. Native playback controls support Space play/pause and a separate 0.25Ã—â€“4Ã— speed selector.
 
-Picture scans the upload with YuNet and selects **Face 1** when a crop is available. Faces are numbered from left to right. **Picture crop** lets you preview another detected face or keep the full picture. When no face is detected, you can use the full picture or upload a close-up. Before/After metrics refer to the chosen crop. The review ZIP retains the original upload and crop coordinates.
+Picture scans the upload with YuNet and selects **Face 1** when a crop is available. Faces are numbered from left to right. **Picture crop** lets you preview another detected face, keep the full picture, or use **Manual crop** to draw, move, and resize a rectangular crop directly on the picture (drag or Enter, Arrow keys, and Shift+arrow keys). When no face is detected, you can use the full picture, draw a manual crop, or upload a close-up. Before/After metrics refer to the chosen crop. The review ZIP retains the original upload and crop coordinates.
 
 Freeze a frame to scan it locally. The numbered boxes mark the detected faces in the original frame. Selecting a box gives you a slightly wider crop that you can adjust before review. You can also drag on the preview or press Enter to create a manual crop. Arrow keys move it, and Shift+arrow keys resize it. **Full frame crop** returns to the entire frame while keeping the selection. **Use this face** sends the selected rectangular crop directly to Settings.
 
@@ -70,7 +70,7 @@ In reviewed preparation, green-only **Auto-match surrounding blur** measures rel
 
 After freezing a video, webcam, or RTSP frame, select one face or click **Add all** for up to 12 faces. **Use this face** or **Use these faces** opens Settings directly. Settings shows the selected crops and one shared **Auto**, **Manual**, or **Off** choice, with **Auto** selected by default. Video **Auto** reuses preparation of the verified frozen frame across the selected crops and offers one shared full-frame PNG when full-frame preparation is applied. Video capture skips manual preparation. In Restore, the app processes the selected faces in order, one at a time.
 
-In Restore, choose a numbered face button to see that faceâ€™s **Before** and **After** images. Each image has **Download PNG** and **Enlarge** controls. When review files are requested, **Download ZIP** appears beside the After image. Edge variation and estimated noise appear below the pair. Add a clean 256 Ã— 256 PNG or JPEG for that face if it matches the pose and crop. The app compares the resized original and result to the supplied reference using MAE and PSNR over the observed crop area. Without a reference, the panel displays **Ground truth unavailable**. Switching faces keeps each reference and its scores with the corresponding result.
+In Restore, choose a numbered face button to see that faceâ€™s **Before** and **After** images. Each image has **Download PNG** and **Enlarge** controls. When review files are requested, **Download ZIP** appears beside the After image. Edge variation and estimated noise appear below the pair, including a **Prepared** column when preparation runs and the native-scale **Before** noise estimate when it differs from the 256-pixel scale. Add a clean unpadded crop or a 256 Ã— 256 PNG or JPEG for that face if it matches the pose and crop. The app compares the resized original and result to the supplied reference using MAE and PSNR over the observed crop area. Without a reference, the panel displays **Ground truth unavailable**. Switching faces keeps each reference and its scores with the corresponding result.
 
 Optional removal review uses **Trained CodeFormer Completion R2** after the picture result, including when restoration was Off. Paint only the covering orange, inspect it, confirm the two statements and generate. Pixels outside the reviewed area are copied exactly from the supplied prepared/restored canvas; an empty selection skips completion. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
 

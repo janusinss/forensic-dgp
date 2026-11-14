@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/static/workbench.css">
   <link rel="stylesheet" href="/static/viewport-workbench.css?v=31">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
-  <link rel="stylesheet" href="/static/capture.css?v=10">
+  <link rel="stylesheet" href="/static/capture.css?v=11">
   <link rel="stylesheet" href="/static/capture-modern.css?v=2">
   <link rel="stylesheet" href="/static/selects.css?v=1">
 </head>
@@ -59,13 +59,15 @@
         <div class="input-review">
         <div id="picture-face-field" class="field hidden"><label for="picture-face">Picture crop</label><select id="picture-face" aria-describedby="picture-face-status"></select></div>
         <p id="picture-face-status" class="field-hint hidden" role="status"></p>
+        <div id="picture-manual-bar" class="picture-manual-bar hidden"><button id="picture-manual-crop" class="tool-btn" type="button" disabled>Manual crop</button></div>
+        <div id="picture-manual-controls" class="picture-manual-controls hidden"><p id="picture-manual-size" class="field-hint">Drag on the picture to select an area, or press Enter.</p><div class="picture-manual-buttons"><button id="picture-manual-apply" class="tool-btn" type="button" disabled>Apply crop</button><button id="picture-manual-cancel" class="text-btn" type="button">Cancel</button></div></div>
         <p class="work-note">If the face is hard to see, use a clearer picture. A sharper image does not prove who someone is.</p>
         <div class="work-actions"><button id="brush-continue" class="execute-btn" type="button" data-nav="options" disabled>Continue <span aria-hidden="true">→</span></button><button id="capture-back" class="text-btn hidden" type="button">Back to capture</button></div>
         </div>
         <div class="picture-feedback"><div class="status-block quiet-status"><span class="status-indicator" id="brush-status-indicator" aria-hidden="true"></span><span id="brush-service-status" class="mono-label" role="status">CHECKING LOCAL SERVICE</span></div><div class="feedback-slot"></div></div>
       </div>
       <aside class="work-visual capture-visual" aria-label="Picture or video preview">
-        <div id="picture-preview" class="picture-preview"><img id="picture-main-preview" class="hidden" width="1280" height="720" alt="Current Picture input"><div id="picture-empty"><h2>Your picture appears here</h2><p>Choose a picture on the left, or switch to Video to capture a face.</p></div></div>
+        <div id="picture-preview" class="picture-preview"><img id="picture-main-preview" class="hidden" width="1280" height="720" alt="Current Picture input"><canvas id="picture-crop-canvas" class="hidden" width="0" height="0" tabindex="0" aria-label="Full picture crop editor. Drag to draw, move, or resize the crop. Press Enter to create a crop, Arrow keys to move, Shift and arrow keys to resize."></canvas><div id="picture-empty"><h2>Your picture appears here</h2><p>Choose a picture on the left, or switch to Video to capture a face.</p></div></div>
         <div id="capture-preview" class="capture-preview hidden">
           <div class="capture-preview-heading"><span>Preview</span><p id="capture-view-label" class="capture-view-label" role="status">Full frame</p></div>
           <div id="capture-stage" class="capture-stage"><p id="capture-empty">Choose a video file or start a camera on the left.</p><video id="capture-video" class="hidden" width="1280" height="720" muted playsinline controls tabindex="0" aria-keyshortcuts="Space" aria-label="Video source preview" aria-describedby="capture-player-help"></video><img id="capture-stream" class="hidden" width="1280" height="720" alt="Local RTSP camera preview"><canvas id="capture-canvas" class="hidden" width="0" height="0" tabindex="0" aria-label="Frozen source frame. Select a detected face, drag to crop, or press Enter to create a crop. Arrow keys move the crop; Shift and arrow keys resize it."></canvas></div>
@@ -210,12 +212,12 @@
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
 <script src="/static/restoration_queue.js?v=3"></script>
 <script src="/static/capture_geometry.js?v=2"></script>
-<script src="/static/implementation.js?v=37"></script>
+<script src="/static/implementation.js?v=38"></script>
 <script src="/static/completion.js?v=12"></script>
 <script src="/static/viewport-workbench.js?v=21"></script>
 <script src="/static/capture_playback.js?v=3"></script>
 <script src="/static/capture.js?v=20"></script>
-<script src="/static/restoration_reference.js?v=2"></script>
+<script src="/static/restoration_reference.js?v=3"></script>
 <script src="/static/shader-background.js?v=16"></script>
 </body>
 </html>
