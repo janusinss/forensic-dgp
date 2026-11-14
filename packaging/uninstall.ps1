@@ -43,6 +43,88 @@ function Read-OwnershipRecord([string]$Path) {
     return @{ value = $value; hash = $hash }
 }
 
+function Stop-OwnedAppProcesses([string]$ShellPath, [string]$RootPath) {
+    $shellTrim = if ($ShellPath) { $ShellPath.TrimEnd('\') } else { '' }
+    $rootTrim = $RootPath.TrimEnd('\')
+    if ($shellTrim) {
+        $canonicalShell = [IO.Path]::GetFullPath($shellTrim).TrimEnd('\').ToUpperInvariant()
+        $sha = [Security.Cryptography.SHA256]::Create()
+        try {
+            $eventHex = ([BitConverter]::ToString($sha.ComputeHash(
+                [Text.Encoding]::UTF8.GetBytes($canonicalShell)))).Replace('-', '').ToLowerInvariant()
+        } finally { $sha.Dispose() }
+        $eventName = 'Local\ForensicDGP-close-' + $eventHex
+        $signaled = $false
+        try {
+            $closeEvent = [Threading.EventWaitHandle]::OpenExisting($eventName)
+            try {
+                $null = $closeEvent.Set()
+                $signaled = $true
+            } finally { $closeEvent.Dispose() }
+        } catch { }
+        if ($signaled) {
+            $deadline = [DateTime]::UtcNow.AddSeconds(3)
+            while ([DateTime]::UtcNow -lt $deadline) {
+                $stillHeld = $false
+                try {
+                    $desktopMutex = [Threading.Mutex]::OpenExisting('Local\ForensicDGP-Desktop')
+                    try {
+                        try {
+                            if ($desktopMutex.WaitOne(0)) {
+                                $desktopMutex.ReleaseMutex()
+                            } else {
+                                $stillHeld = $true
+                            }
+                        } catch [Threading.AbandonedMutexException] {
+                            $desktopMutex.ReleaseMutex()
+                        }
+                    } finally { $desktopMutex.Dispose() }
+                } catch [Threading.WaitHandleCannotBeOpenedException] {
+                    $stillHeld = $false
+                } catch {
+                    $stillHeld = $true
+                }
+                if (-not $stillHeld) { break }
+                Start-Sleep -Milliseconds 150
+            }
+        }
+    }
+
+    $shellPrefix = if ($shellTrim) { $shellTrim + '\' } else { '' }
+    $rootPrefix = $rootTrim + '\'
+    $launcherNeedle = if ($shellTrim) { $shellTrim + '\ForensicDGP.exe' } else { '' }
+    $processes = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue
+    if (-not $processes) { return }
+    $stoppedIds = @()
+    foreach ($proc in $processes) {
+        if ($proc.ProcessId -eq $PID) { continue }
+        $name = [string]$proc.Name
+        if ($name -match '^(?i:unins\d+\.exe|_unins\.tmp)$') { continue }
+        $cmd = [string]$proc.CommandLine
+        if ($cmd -like '*uninstall.ps1*') { continue }
+        $exe = [string]$proc.ExecutablePath
+        $owned = $false
+        if ($shellPrefix -and $exe -and $exe.StartsWith($shellPrefix, [StringComparison]::OrdinalIgnoreCase)) { $owned = $true }
+        elseif ($exe -and $exe.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) { $owned = $true }
+        elseif ($cmd -and $cmd.IndexOf($rootPrefix, [StringComparison]::OrdinalIgnoreCase) -ge 0) { $owned = $true }
+        elseif ($launcherNeedle -and $cmd -and $cmd.IndexOf($launcherNeedle, [StringComparison]::OrdinalIgnoreCase) -ge 0) { $owned = $true }
+        if ($owned) {
+            try {
+                Stop-Process -Id $proc.ProcessId -Force -ErrorAction SilentlyContinue
+                $stoppedIds += [int]$proc.ProcessId
+            } catch { }
+        }
+    }
+    if ($stoppedIds.Count -gt 0) {
+        $waitDeadline = [DateTime]::UtcNow.AddSeconds(5)
+        while ([DateTime]::UtcNow -lt $waitDeadline) {
+            $alive = @(Get-Process -Id $stoppedIds -ErrorAction SilentlyContinue)
+            if ($alive.Count -eq 0) { break }
+            Start-Sleep -Milliseconds 100
+        }
+    }
+}
+
 $mutex = $null
 $held = $false
 try {
@@ -54,6 +136,7 @@ try {
     $root = [IO.Path]::GetFullPath($ManagedRoot).TrimEnd('\')
     $legacyRoot = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'DGP\app')).TrimEnd('\')
     $legacyShell = [IO.Path]::GetFullPath((Join-Path $env:LOCALAPPDATA 'Programs\Forensic DGP')).TrimEnd('\')
+    $shell = ''
     $custom = $false
     if (!$InstallRoot -and $env:DGP_INSTALL_ROOT) { $InstallRoot = $env:DGP_INSTALL_ROOT }
     if ($InstallRoot) {
@@ -87,6 +170,7 @@ try {
     }
     Assert-OrdinaryParents $root
 
+    Stop-OwnedAppProcesses $shell $root
     # Same lock identity as implementation/distribution.ps1. A caller performing
     # shell removal should acquire this reported mutex itself after Check and
     # retain its handle through uninstall (another-process Check would contend).
@@ -97,7 +181,7 @@ try {
     } finally { $digest.Dispose() }
     $mutexName = 'Local\DGP-app-' + $identity
     $mutex = New-Object Threading.Mutex($false, $mutexName)
-    try { $held = $mutex.WaitOne(0) }
+    try { $held = $mutex.WaitOne(5000) }
     catch [Threading.AbandonedMutexException] { $held = $true }
     if (!$held) {
         throw 'The application or installer is running. Close it before uninstalling the shell.'

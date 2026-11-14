@@ -1,6 +1,22 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.10 offline preview
+## Current 0.2.11 offline preview
+
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment bd2c3680](https://bd2c3680.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.11)
+references `ForensicDGP_Setup-0.2.11.exe` from build source
+`7e78f28ae420ddb1e4c5b95668b186fb47bfdf5c` (`1,314,084,061` bytes, SHA-256
+`05a4640e302a37c258d4cbd1fa388d854645269a029e7f0101de476c366b1051`). This release
+adds automatic shutdown of running Forensic DGP instances during upgrade/uninstall
+and `\\?\` long-path safe uninstall cleanup in `packaging/uninstall.ps1` and
+`packaging/installer.iss`. All 19 site tests and `tsc --noEmit` + Vite production
+build passed. Published versions remain immutable: future updates must use a new
+version, build, and release rather than replacing `0.2.11`.
+
+## Historical 0.2.10 offline preview
 
 Published November 14, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs

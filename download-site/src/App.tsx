@@ -21,6 +21,7 @@ const updateCheck = newerMinor || (minor === 2 && patch >= 7)
 const solverSuite = newerMinor || (minor === 2 && patch >= 8)
 const manualCrop = newerMinor || (minor === 2 && patch >= 9)
 const alignedReference = newerMinor || (minor === 2 && patch >= 10)
+const safeLifecycle = newerMinor || (minor === 2 && patch >= 11)
 
 function DownloadIcon() {
   return (
@@ -107,12 +108,16 @@ export default function App() {
               ? 'Includes Python, application libraries and models. After downloading, setup works offline. Microsoft Edge is required; setup checks available disk space. Existing installations can be updated, repaired or moved.'
               : 'First setup needs internet access, Microsoft Edge and at least 4 GB of free space. Setup shows download progress for Python and approximately 720 MiB of models.'}</p>
             {updateCheck && (
-              <p className="setup-note">{alignedReference
-                ? 'Use Check for updates on the installer’s Before you install page. To upgrade, run the newer installer in your existing folder to keep your saved records. This release includes Windows PE version, DPI-aware and long-path launcher metadata, quiet helper execution, and fixes startup when Windows uses different spellings of the same temporary folder.'
-                : 'Use Check for updates on the installer’s Before you install page. To upgrade, run the newer installer in your existing folder to keep your saved records. This release also fixes startup when Windows uses different spellings of the same temporary folder.'}</p>
+              <p className="setup-note">{safeLifecycle
+                ? 'Use Check for updates on the installer’s Before you install page. To upgrade, run the newer installer in your existing folder to keep your saved records. This release automatically closes running Forensic DGP instances during upgrade/uninstall, uses \\\\?\\ long-path safe uninstall, includes Windows PE version, DPI-aware and long-path launcher metadata, quiet helper execution, and fixes startup when Windows uses different spellings of the same temporary folder.'
+                : alignedReference
+                  ? 'Use Check for updates on the installer’s Before you install page. To upgrade, run the newer installer in your existing folder to keep your saved records. This release includes Windows PE version, DPI-aware and long-path launcher metadata, quiet helper execution, and fixes startup when Windows uses different spellings of the same temporary folder.'
+                  : 'Use Check for updates on the installer’s Before you install page. To upgrade, run the newer installer in your existing folder to keep your saved records. This release also fixes startup when Windows uses different spellings of the same temporary folder.'}</p>
             )}
             {(release.version === '0.2.4' || currentWorkflow) && (
-              <p className="setup-note">Uninstalling permanently removes the app, models and saved records from the installation folder.</p>
+              <p className="setup-note">{safeLifecycle
+                ? 'Uninstalling automatically closes running Forensic DGP processes and permanently removes the app, models and saved records (including deep \\\\?\\ long-path caches) from the installation folder.'
+                : 'Uninstalling permanently removes the app, models and saved records from the installation folder.'}</p>
             )}
           </section>
 
