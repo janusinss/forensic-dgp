@@ -4,7 +4,12 @@ import unittest
 
 import numpy as np
 
-from implementation.scanline_cleanup import detect_scanlines, prepare_scanlines
+from implementation.scanline_cleanup import (
+    clean_residual_scanline_comb,
+    detect_and_clean_spatial_comb,
+    detect_scanlines,
+    prepare_scanlines,
+)
 
 
 class ScanlineCleanupTests(unittest.TestCase):
@@ -20,3 +25,23 @@ class ScanlineCleanupTests(unittest.TestCase):
         self.assertLess(np.mean(np.abs(prepared - clean)), .25 * np.mean(np.abs(noisy - clean)))
         self.assertIsNone(detect_scanlines(noisy.transpose(1, 0, 2)))
         self.assertIsNone(detect_scanlines(np.rint(clean).astype(np.uint8)))
+
+    def test_residual_scanline_comb_cleanup_and_spatial_comb_gate(self):
+        y, x = np.indices((160, 160))
+        base = 120 + 28 * np.sin(x / 11) + 14 * np.cos(y / 17)
+        clean = np.repeat(np.rint(base)[..., None].astype(np.uint8), 3, axis=2)
+        out_clean, stats = clean_residual_scanline_comb(clean, source=clean)
+        self.assertEqual(out_clean.shape, clean.shape)
+        self.assertIn('comb_ela_masked_pixels', stats)
+        self.assertIn('chroma_cleanup_pixels', stats)
+        self.assertEqual(detect_and_clean_spatial_comb(clean), (None, None, {}))
+
+        combed = clean.astype(np.int16)
+        combed[::2, :, :] += 14
+        combed[1::2, :, :] -= 14
+        combed_u8 = np.clip(combed, 0, 255).astype(np.uint8)
+        spatial_out, spatial_report, spatial_ev = detect_and_clean_spatial_comb(combed_u8)
+        self.assertIsNotNone(spatial_out)
+        self.assertIsNotNone(spatial_report)
+        self.assertEqual(spatial_report['policy'], 'spatial-comb-ela-v1')
+        self.assertIn('spatial-comb-cleaned.png', spatial_ev)

@@ -23,7 +23,38 @@
       scale
     };
   }
-  const api = Object.freeze({makeView, pointerToSource});
+  function isValidCropRect(rect, frameWidth, frameHeight, minSide = 16, maxSide = 1600) {
+    if (!rect || typeof rect !== 'object') return false;
+    if (!Number.isInteger(frameWidth) || !Number.isInteger(frameHeight) || frameWidth < 1 || frameHeight < 1) return false;
+    if (!Number.isInteger(minSide) || !Number.isInteger(maxSide) || minSide < 1 || maxSide < minSide) return false;
+    const { x, y, width, height } = rect;
+    if (![x, y, width, height].every(Number.isInteger)) return false;
+    return (
+      x >= 0 &&
+      y >= 0 &&
+      width >= minSide &&
+      height >= minSide &&
+      width <= maxSide &&
+      height <= maxSide &&
+      x + width <= frameWidth &&
+      y + height <= frameHeight
+    );
+  }
+  function clampCropRect(rect, frameWidth, frameHeight, minSide = 16, maxSide = 1600) {
+    if (!Number.isInteger(frameWidth) || !Number.isInteger(frameHeight) || frameWidth < 1 || frameHeight < 1) throw new RangeError('Invalid frame dimensions.');
+    if (!Number.isInteger(minSide) || !Number.isInteger(maxSide) || minSide < 1 || maxSide < minSide) throw new RangeError('Invalid crop bounds.');
+    if (frameWidth < minSide || frameHeight < minSide) throw new RangeError('Frame dimensions are smaller than minimum crop side.');
+    if (!rect || typeof rect !== 'object' || ![rect.x, rect.y, rect.width, rect.height].every(Number.isFinite)) throw new RangeError('Invalid crop rectangle.');
+    const roundInt = value => { const n = Math.round(value); return n === 0 ? 0 : n; };
+    const maxWidth = Math.min(maxSide, frameWidth);
+    const maxHeight = Math.min(maxSide, frameHeight);
+    const width = Math.max(minSide, Math.min(maxWidth, roundInt(rect.width)));
+    const height = Math.max(minSide, Math.min(maxHeight, roundInt(rect.height)));
+    const x = Math.max(0, Math.min(frameWidth - width, roundInt(rect.x)));
+    const y = Math.max(0, Math.min(frameHeight - height, roundInt(rect.y)));
+    return { x, y, width, height };
+  }
+  const api = Object.freeze({makeView, pointerToSource, clampCropRect, isValidCropRect});
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.captureGeometry = api;
 })(globalThis);

@@ -1,8 +1,46 @@
 """Experimental detector for regions composed of small, nearly flat cells."""
 
+import cv2
 import numpy as np
 from scipy.ndimage import (binary_closing, binary_fill_holes, find_objects, label,
                           uniform_filter)
+
+
+def _cell_is_compact(cell_mask):
+    """Reject thin curved arc fragments typical of gradient contour bands."""
+    contours, _ = cv2.findContours(cell_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return True
+    contour = max(contours, key=cv2.contourArea)
+    contour_area = cv2.contourArea(contour)
+    if contour_area < 2.0:
+        return True
+    perimeter = cv2.arcLength(contour, True)
+    if perimeter * perimeter > 48.0 * contour_area:
+        return False
+    hull_area = cv2.contourArea(cv2.convexHull(contour))
+    return hull_area <= 0.0 or contour_area >= 0.52 * hull_area
+
+
+def _is_tonal_banding_region(region_rgb, local_mask):
+    """Identify curved/quantized gradient banding regions by step concentration."""
+    dh = np.abs(np.diff(region_rgb, axis=1)).max(-1)
+    dv = np.abs(np.diff(region_rgb, axis=0)).max(-1)
+    loc_h = local_mask[:, :-1] & local_mask[:, 1:] & (dh > 1)
+    loc_v = local_mask[:-1, :] & local_mask[1:, :] & (dv > 1)
+    steps = np.concatenate([dh[loc_h], dv[loc_v]])
+    if steps.size < 24:
+        return False
+    med_step = float(np.median(steps))
+    p90_step = float(np.percentile(steps, 90))
+    if med_step > 16.0 or p90_step > 28.0:
+        return False
+    _, step_counts = np.unique(steps, return_counts=True)
+    top3_frac = float(np.sort(step_counts)[-3:].sum() / step_counts.sum())
+    dh_ch = (np.abs(np.diff(region_rgb, axis=1)) > 1).sum(-1)
+    dv_ch = (np.abs(np.diff(region_rgb, axis=0)) > 1).sum(-1)
+    one_ch_frac = float(np.concatenate([dh_ch[loc_h] == 1, dv_ch[loc_v] == 1]).mean())
+    return (one_ch_frac >= 0.70 and top3_frac >= 0.55) or top3_frac >= 0.80
 
 
 def irregular_mosaic_mask(source):
@@ -27,6 +65,8 @@ def irregular_mosaic_mask(source):
             continue
         if area[cell_id] < .43 * height * width:
             continue
+        if not _cell_is_compact((components[bounds] == cell_id).astype(np.uint8)):
+            continue
         cell_ids.append(cell_id)
         y, x = (int((axis.start + axis.stop - 1) // 2) for axis in bounds)
         centers[y, x] = 1.
@@ -42,10 +82,13 @@ def irregular_mosaic_mask(source):
         local = regions[bounds] == index
         if local.sum() < max(200, flat.size * .008):
             continue
-        samples = (rgb[bounds][local & present[bounds]] // 12)
+        region_rgb = rgb[bounds]
+        samples = (region_rgb[local & present[bounds]] // 12)
         if not samples.size:
             continue
         _, colours = np.unique(samples, axis=0, return_counts=True)
         if len(colours) >= 8 and np.sort(colours)[-2:].sum() <= .60 * len(samples):
+            if _is_tonal_banding_region(region_rgb, local):
+                continue
             output[bounds] |= local
     return output
