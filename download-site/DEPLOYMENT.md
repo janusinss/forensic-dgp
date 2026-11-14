@@ -1,6 +1,22 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.8 offline preview
+## Current 0.2.9 offline preview
+
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 5cbf135f](https://5cbf135f.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.9)
+contains `ForensicDGP_Setup-0.2.9.exe` from build source
+`e874076519ca9063797cda4ea3b0307b2bb0e3cf`. GitHub confirmed
+1,314,071,849 bytes (`Content-Range: bytes 0-0/1314071849`) and SHA-256
+`3944d95b2c388fc7ece38b0ff214a0a58ef585030c6b68c35483eee27bcb94f6`.
+The published `/release.json` and `.sha256` checksum were verified live. All 19
+site tests and `tsc --noEmit` + Vite production build passed. The live page
+passed Playwright checks at 375, 768 and 1280 pixels without horizontal overflow
+or browser errors.
+
+## Historical 0.2.8 offline preview
 
 Published November 14, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs

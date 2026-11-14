@@ -19,6 +19,7 @@ const newerMinor = major > 0 || minor > 2
 const currentWorkflow = newerMinor || (minor === 2 && patch >= 6)
 const updateCheck = newerMinor || (minor === 2 && patch >= 7)
 const solverSuite = newerMinor || (minor === 2 && patch >= 8)
+const manualCrop = newerMinor || (minor === 2 && patch >= 9)
 
 function DownloadIcon() {
   return (
@@ -123,9 +124,11 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">01</span>
                   <div>
                     <h3>Choose the faces</h3>
-                    <p>{solverSuite
-                      ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
-                      : 'Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.'}</p>
+                    <p>{manualCrop
+                      ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically or lets you draw a Manual crop; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
+                      : solverSuite
+                        ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
+                        : 'Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.'}</p>
                   </div>
                 </li>
                 <li>
@@ -143,7 +146,9 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">03</span>
                   <div>
                     <h3>Compare and download</h3>
-                    <p>Switch between faces to see Before and After, image diagnostics and PNG downloads. Add an aligned clean reference to see MAE and PSNR.</p>
+                    <p>{manualCrop
+                      ? 'Switch between faces to compare Before, Prepared and After, native noise and edge diagnostics, and PNG downloads. Add an aligned clean reference or padded crop to see MAE and PSNR.'
+                      : 'Switch between faces to see Before and After, image diagnostics and PNG downloads. Add an aligned clean reference to see MAE and PSNR.'}</p>
                   </div>
                 </li>
               </ol>
