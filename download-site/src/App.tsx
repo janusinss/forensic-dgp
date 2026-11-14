@@ -18,6 +18,7 @@ const [major, minor, patch] = release.version.split('.').map(Number)
 const newerMinor = major > 0 || minor > 2
 const currentWorkflow = newerMinor || (minor === 2 && patch >= 6)
 const updateCheck = newerMinor || (minor === 2 && patch >= 7)
+const solverSuite = newerMinor || (minor === 2 && patch >= 8)
 
 function DownloadIcon() {
   return (
@@ -122,16 +123,20 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">01</span>
                   <div>
                     <h3>Choose the faces</h3>
-                    <p>Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.</p>
+                    <p>{solverSuite
+                      ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
+                      : 'Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.'}</p>
                   </div>
                 </li>
                 <li>
                   <span className="step-number" aria-hidden="true">02</span>
                   <div>
                     <h3>Restore with Auto</h3>
-                    <p>{updateCheck
-                      ? 'Auto handles regular, tilted and irregular mosaics, scanlines, JPEG blocking and localized blur. When it finds separate evidence for overlapping artifacts, it can combine treatments before restoring each face.'
-                      : 'Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.'}</p>
+                    <p>{solverSuite
+                      ? 'Auto handles regular, tilted, perspective and irregular mosaics, scanlines, 8 × 8 / 16 × 16 macroblocks, localized blur, noise, color cast or haze, ringing, banding, aliasing and color bleeding before restoring each face.'
+                      : updateCheck
+                        ? 'Auto handles regular, tilted and irregular mosaics, scanlines, JPEG blocking and localized blur. When it finds separate evidence for overlapping artifacts, it can combine treatments before restoring each face.'
+                        : 'Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.'}</p>
                   </div>
                 </li>
                 <li>

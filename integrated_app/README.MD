@@ -2,9 +2,9 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.6
+## Windows installer 0.2.8
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.2.6 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.6)
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.2.8 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.8)
 
 ## Developer batch installation
 
