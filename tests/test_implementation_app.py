@@ -844,6 +844,73 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
 
+    def test_output_diagnostics_before_native_noise_and_off_equality(self):
+        rng = np.random.default_rng(19)
+        y, x = np.indices((512, 512))
+        base = np.stack(((x * 2) % 256, (y * 2) % 256, ((x + y)) % 256), axis=2).astype(np.float32)
+        noisy = np.clip(np.rint(base + rng.normal(0.0, 14.0, base.shape)), 0, 255).astype(np.uint8)
+        noisy_png = png(noisy)
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            result = self.restore(file=self.upload(noisy_png), restoration='off', input_review='picture_upload')
+        meta = result['metadata']
+        diag = meta['output_diagnostics']
+        self.assertEqual(set(diag.keys()), {'before', 'after'})
+        self.assertIn('noise_sigma_native', diag['before'])
+        self.assertEqual(diag['before']['noise_sigma_native'], meta['quality_signals']['noise_sigma_native'])
+        self.assertGreater(diag['before']['noise_sigma_native'], diag['before']['noise_sigma_255'] + 2.0)
+        self.assertEqual(diag['before']['blur_variance'], diag['after']['blur_variance'])
+        self.assertEqual(diag['before']['noise_sigma_255'], diag['after']['noise_sigma_255'])
+        self.assertFalse(meta['Auto_assessed_original_canvas_before_preparation'])
+
+    def test_output_diagnostics_includes_prepared_only_when_preparation_ran(self):
+        protect = np.zeros(self.rgb.shape[:2], np.uint8)
+        apply = np.full(self.rgb.shape[:2], 255, np.uint8)
+        preview, payload = build_preview(self.contents, png(protect), png(apply), nominal_radius=4)
+        worker_out = png(np.full((256, 256, 3), 128, dtype=np.uint8))
+
+        with patch.object(controller, 'one_forward', return_value=(None, worker_out, {'fake': True})):
+            manual_res = self.restore(
+                preparation_mode='manual',
+                protect_mask=self.upload(png(protect)),
+                apply_mask=self.upload(png(apply)),
+                radius=4,
+                preview_id=preview['preview_id'],
+                confirmed=True,
+            )
+        manual_meta = manual_res['metadata']
+        manual_diag = manual_meta['output_diagnostics']
+        self.assertEqual(set(manual_diag.keys()), {'before', 'prepared', 'after'})
+        self.assertEqual(set(manual_diag['prepared'].keys()), {'blur_variance', 'noise_sigma_255'})
+        self.assertLess(manual_diag['prepared']['blur_variance'], manual_diag['before']['blur_variance'])
+        self.assertFalse(manual_meta['Auto_assessed_original_canvas_before_preparation'])
+
+        from implementation import automatic_preparation
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+            patch.object(capture_api, 'detect_faces', return_value=[]),
+            patch.object(controller, 'one_forward', return_value=(None, worker_out, {'fake': True})),
+        ):
+            direct_res = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        direct_meta = direct_res['metadata']
+        self.assertFalse(direct_meta['preparation_applied'])
+        self.assertEqual(set(direct_meta['output_diagnostics'].keys()), {'before', 'after'})
+        self.assertTrue(direct_meta['Auto_assessed_original_canvas_before_preparation'])
+
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+            patch.object(capture_api, 'detect_faces', return_value=[[20, 12, 50, 60]]),
+            patch.object(automatic_preparation, 'decide', return_value={'route': 'protect_auto', 'reason': 'test'}),
+            patch('implementation.preparation.match_surroundings',
+                  side_effect=lambda rgb, source, rectangle, effective: (
+                      np.where(effective[..., None], np.uint8(0), rgb), effective, {'status': 'estimated'})),
+            patch.object(controller, 'one_forward', return_value=(None, worker_out, {'fake': True})),
+        ):
+            auto_prep_res = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
+        auto_prep_meta = auto_prep_res['metadata']
+        self.assertTrue(auto_prep_meta['preparation_applied'])
+        self.assertEqual(set(auto_prep_meta['output_diagnostics'].keys()), {'before', 'prepared', 'after'})
+        self.assertTrue(auto_prep_meta['Auto_assessed_original_canvas_before_preparation'])
+
 
 if __name__ == '__main__':
     unittest.main()

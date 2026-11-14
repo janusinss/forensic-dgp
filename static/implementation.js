@@ -3,12 +3,15 @@
 (() => {
     'use strict';
     const api = '/face/restoration', byId = id => document.getElementById(id);
+    const { makeView, pointerToSource, isValidCropRect } = window.captureGeometry;
     let videoBatch, videoRunMode, videoToken, pictureMode;
     let videoRetryBlocked = false;
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
+    const cropCanvas = byId('picture-crop-canvas'), cropCtx = cropCanvas.getContext('2d');
     const protectColor = [45, 185, 90], applyColor = [55, 125, 220];
     let sourceFile, captureId, originalPixels, width = 0, height = 0, planes, undo = [];
     let pictureImage, pictureCrops = [], pictureCrop, pictureLabel;
+    let manualCropRect, manualDraftRect, manualCropMode = false, manualDrawing = false, manualGesture;
     let available = false, busy = false, revision = 0, operation = 0;
     let previewId, confirmedPreviewId, masks, drawing = false, previous, cursorX = 0, cursorY = 0;
     let overlayPixels, dirty, renderFrame = 0, protectCount = 0, applyCount = 0;
@@ -100,6 +103,36 @@
         for (const id of ['brush-download-input', 'brush-download-prepared', 'brush-download-output', 'brush-result-bundle', 'brush-download-full-picture']) byId(id).removeAttribute('href');
         for (const id of ['brush-result-input', 'brush-result-prepared', 'brush-result-output']) byId(id).removeAttribute('src');
     };
+    const updateManualCropSize = () => {
+        const label = byId('picture-manual-size');
+        if (!manualCropMode || !pictureImage) {
+            label.textContent = 'Drag on the picture to select an area, or press Enter.';
+            return;
+        }
+        if (!manualDraftRect) {
+            label.textContent = pictureImage.naturalWidth < 16 || pictureImage.naturalHeight < 16
+                ? 'Image must be at least 16 × 16 px to crop.'
+                : 'Drag on the picture to select an area, or press Enter.';
+            return;
+        }
+        const { x, y, width: w, height: h } = manualDraftRect;
+        const valid = isValidCropRect(manualDraftRect, pictureImage.naturalWidth, pictureImage.naturalHeight, 16, 1600);
+        label.textContent = valid
+            ? `${w} × ${h} px at (${x}, ${y})`
+            : `${w} × ${h} px at (${x}, ${y}) — choose 16–1600 px per side inside the picture.`;
+    };
+    const updateManualCropUI = () => {
+        const pictureActive = Boolean(pictureImage && !captureId);
+        const valid = pictureActive && manualCropMode && isValidCropRect(
+            manualDraftRect, pictureImage.naturalWidth, pictureImage.naturalHeight, 16, 1600
+        );
+        byId('picture-manual-bar').classList.toggle('hidden', !pictureActive || manualCropMode);
+        byId('picture-manual-controls').classList.toggle('hidden', !pictureActive || !manualCropMode);
+        byId('picture-manual-crop').disabled = busy || !pictureActive || manualCropMode;
+        byId('picture-manual-apply').disabled = busy || !valid;
+        byId('picture-manual-cancel').disabled = busy || !pictureActive || !manualCropMode;
+        updateManualCropSize();
+    };
     const update = () => {
         document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => {
             if (!item.closest('[data-capture-controls], .capture-visual, #video-face-selector') && !item.matches('.video-comparison [data-zoom]')) item.disabled = busy;
@@ -112,6 +145,7 @@
             : !sourceFile || !planes || (manual() && !off() && !automatic() && !preparationConfirmed()));
         byId('picture-preparation').classList.toggle('hidden', Boolean(videoBatch) || automatic());
         byId('picture-preparation-details').classList.toggle('hidden', Boolean(videoBatch) || automatic());
+        updateManualCropUI();
         byId('brush-undo').disabled = busy || !undo.length;
         byId('brush-edit-section').classList.toggle('hidden', !planes || !manual());
         canvas.setAttribute('aria-disabled', String(busy));
@@ -314,11 +348,199 @@
         data.append('match_blur', String(matchBlur()));
         return data;
     };
+    const renderManualCropCanvas = () => {
+        if (!manualCropMode || !pictureImage) return;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        if (cropCanvas.width !== imgW || cropCanvas.height !== imgH) {
+            cropCanvas.width = imgW;
+            cropCanvas.height = imgH;
+        }
+        cropCtx.clearRect(0, 0, imgW, imgH);
+        cropCtx.drawImage(pictureImage, 0, 0, imgW, imgH);
+        if (!manualDraftRect) return;
+        const { x, y, width: w, height: h } = manualDraftRect;
+        cropCtx.save();
+        cropCtx.fillStyle = 'rgba(10, 20, 18, 0.55)';
+        cropCtx.beginPath();
+        cropCtx.rect(0, 0, imgW, imgH);
+        cropCtx.rect(x, y, w, h);
+        cropCtx.fill('evenodd');
+        if (w > 0 && h > 0) {
+            const unit = Math.max(1, Math.max(imgW, imgH) / 300);
+            cropCtx.strokeStyle = '#dbec87';
+            cropCtx.lineWidth = unit * 1.5;
+            cropCtx.strokeRect(x, y, w, h);
+            const handle = Math.max(2, Math.min(unit * 6, w, h));
+            cropCtx.fillStyle = '#dbec87';
+            cropCtx.fillRect(x + w - handle, y + h - handle, handle, handle);
+        }
+        cropCtx.restore();
+    };
+    const setManualDraftRect = next => {
+        manualDraftRect = next;
+        renderManualCropCanvas();
+        updateManualCropUI();
+    };
+    const exitManualCrop = () => {
+        manualCropMode = false;
+        manualDrawing = false;
+        manualGesture = undefined;
+        manualDraftRect = undefined;
+        byId('picture-preview').classList.remove('is-manual-crop');
+        cropCanvas.classList.add('hidden');
+        cropCanvas.width = 0;
+        cropCanvas.height = 0;
+        updateManualCropSize();
+    };
+    const enterManualCrop = () => {
+        if (busy || !pictureImage || captureId || manualCropMode) return;
+        manualCropMode = true;
+        manualDrawing = false;
+        manualGesture = undefined;
+        manualDraftRect = Array.isArray(pictureCrop)
+            ? { x: pictureCrop[0], y: pictureCrop[1], width: pictureCrop[2], height: pictureCrop[3] }
+            : undefined;
+        byId('picture-preview').classList.add('is-manual-crop');
+        cropCanvas.classList.remove('hidden');
+        renderManualCropCanvas();
+        update();
+        cropCanvas.focus({ preventScroll: true });
+    };
+    const applyManualCrop = () => {
+        if (busy || !pictureImage || captureId || !manualCropMode) return false;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        if (!isValidCropRect(manualDraftRect, imgW, imgH, 16, 1600)) return false;
+        const { x, y, width: w, height: h } = manualDraftRect;
+        manualCropRect = [x, y, w, h];
+        const choices = byId('picture-face');
+        let manualOption = choices.querySelector('option[value="manual"]');
+        if (!manualOption) {
+            manualOption = new Option('Manual crop', 'manual');
+            const fullOption = choices.querySelector('option[value="-1"]');
+            choices.add(manualOption, fullOption || null);
+        }
+        choices.value = 'manual';
+        byId('picture-face-field').classList.remove('hidden');
+        const status = byId('picture-face-status');
+        status.textContent = `Using manual crop (${w} × ${h} px).`;
+        status.classList.remove('hidden');
+        exitManualCrop();
+        selectPictureCrop(manualCropRect, 'Manual crop');
+        return true;
+    };
+    const manualPoint = event => {
+        const view = makeView(pictureImage.naturalWidth, pictureImage.naturalHeight);
+        return pointerToSource(event.clientX, event.clientY, cropCanvas.getBoundingClientRect(), view);
+    };
+    cropCanvas.addEventListener('pointerdown', event => {
+        if (busy || !manualCropMode || !pictureImage || captureId) return;
+        if (event.button && event.button !== 0) return;
+        event.preventDefault();
+        cropCanvas.focus({ preventScroll: true });
+        const p = manualPoint(event);
+        const resize = manualDraftRect && Math.abs(p.x - manualDraftRect.x - manualDraftRect.width) < 20 / p.scale
+            && Math.abs(p.y - manualDraftRect.y - manualDraftRect.height) < 20 / p.scale;
+        const move = manualDraftRect && p.x >= manualDraftRect.x && p.x <= manualDraftRect.x + manualDraftRect.width
+            && p.y >= manualDraftRect.y && p.y <= manualDraftRect.y + manualDraftRect.height;
+        manualGesture = {
+            start: p,
+            rect: manualDraftRect ? { ...manualDraftRect } : undefined,
+            mode: resize ? 'resize' : move ? 'move' : 'draw',
+        };
+        manualDrawing = true;
+        cropCanvas.setPointerCapture(event.pointerId);
+        if (manualGesture.mode === 'draw') setManualDraftRect({ x: p.x, y: p.y, width: 0, height: 0 });
+    });
+    cropCanvas.addEventListener('pointermove', event => {
+        if (!manualDrawing || !manualGesture || !manualCropMode || busy || !pictureImage) return;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        const p = manualPoint(event), s = manualGesture.start, r = manualGesture.rect;
+        if (manualGesture.mode === 'move') {
+            setManualDraftRect({
+                ...r,
+                x: Math.max(0, Math.min(imgW - r.width, r.x + p.x - s.x)),
+                y: Math.max(0, Math.min(imgH - r.height, r.y + p.y - s.y)),
+            });
+        } else if (manualGesture.mode === 'resize') {
+            const maxW = Math.min(1600, imgW - r.x);
+            const maxH = Math.min(1600, imgH - r.y);
+            setManualDraftRect({
+                ...r,
+                width: Math.max(Math.min(16, maxW), Math.min(maxW, p.x - r.x)),
+                height: Math.max(Math.min(16, maxH), Math.min(maxH, p.y - r.y)),
+            });
+        } else {
+            const left = p.x >= s.x ? s.x : Math.max(s.x - 1600, p.x);
+            const top = p.y >= s.y ? s.y : Math.max(s.y - 1600, p.y);
+            const right = p.x >= s.x ? Math.min(s.x + 1600, p.x) : s.x;
+            const bottom = p.y >= s.y ? Math.min(s.y + 1600, p.y) : s.y;
+            setManualDraftRect({ x: left, y: top, width: right - left, height: bottom - top });
+        }
+    });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        cropCanvas.addEventListener(name, () => {
+            if (!manualDrawing) return;
+            manualDrawing = false;
+            const gestureMode = manualGesture?.mode;
+            manualGesture = undefined;
+            if (gestureMode === 'draw' && manualDraftRect && (manualDraftRect.width === 0 || manualDraftRect.height === 0)) {
+                setManualDraftRect(undefined);
+            } else {
+                update();
+            }
+        });
+    }
+    cropCanvas.addEventListener('keydown', event => {
+        if (busy || !manualCropMode || !pictureImage || captureId) return;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        if (event.key === 'Enter' && !manualDraftRect) {
+            event.preventDefault();
+            if (imgW < 16 || imgH < 16) { updateManualCropSize(); return; }
+            const w = Math.min(imgW, 1600, Math.max(16, Math.round(imgW / 2)));
+            const h = Math.min(imgH, 1600, Math.max(16, Math.round(imgH / 2)));
+            setManualDraftRect({ x: Math.floor((imgW - w) / 2), y: Math.floor((imgH - h) / 2), width: w, height: h });
+            return;
+        }
+        if (!manualDraftRect || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const next = { ...manualDraftRect };
+        const dx = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        const dy = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+        if (event.shiftKey) {
+            const maxW = Math.min(1600, imgW - next.x);
+            const maxH = Math.min(1600, imgH - next.y);
+            next.width = Math.max(Math.min(16, maxW), Math.min(maxW, next.width + dx));
+            next.height = Math.max(Math.min(16, maxH), Math.min(maxH, next.height + dy));
+        } else {
+            next.x = Math.max(0, Math.min(imgW - next.width, next.x + dx));
+            next.y = Math.max(0, Math.min(imgH - next.height, next.y + dy));
+        }
+        setManualDraftRect(next);
+    });
+    byId('picture-manual-crop').addEventListener('click', enterManualCrop);
+    byId('picture-manual-apply').addEventListener('click', () => {
+        if (applyManualCrop()) byId('picture-manual-crop').focus({ preventScroll: true });
+    });
+    byId('picture-manual-cancel').addEventListener('click', () => {
+        if (busy || !manualCropMode) return;
+        exitManualCrop();
+        update();
+        byId('picture-manual-crop').focus({ preventScroll: true });
+    });
+    byId('brush-continue').addEventListener('click', () => {
+        if (busy || !manualCropMode) return;
+        if (!applyManualCrop()) {
+            exitManualCrop();
+            update();
+        }
+    });
     const resetInput = () => {
         if (renderFrame) cancelAnimationFrame(renderFrame);
         renderFrame = 0; overlayPixels = undefined; dirty = undefined; protectCount = 0; applyCount = 0;
         sourceFile = undefined; captureId = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
         pictureImage = pictureCrop = undefined; pictureCrops = [];
+        manualCropRect = undefined;
+        exitManualCrop();
         byId('picture-face').replaceChildren();
         byId('picture-face-field').classList.add('hidden');
         byId('picture-face-status').classList.add('hidden');
@@ -363,7 +585,16 @@
     }
     byId('picture-face').addEventListener('change', event => {
         if (busy || !pictureImage || captureId) return;
-        const index = Number(event.target.value);
+        if (manualCropMode) exitManualCrop();
+        const value = event.target.value;
+        if (value === 'manual') {
+            if (!manualCropRect) return;
+            selectPictureCrop(manualCropRect, 'Manual crop');
+            byId('picture-face-status').textContent = `Using manual crop (${manualCropRect[2]} × ${manualCropRect[3]} px).`;
+            byId('picture-face-status').classList.remove('hidden');
+            return;
+        }
+        const index = Number(value);
         const selected = Number.isInteger(index) && index >= 0 ? pictureCrops[index] : undefined;
         if (!selected) {
             selectPictureCrop(undefined, pictureLabel);
@@ -679,40 +910,69 @@
         return figure;
     }
     function restorationMetrics(caption, diagnostics) {
+        const hasPrepared = Boolean(diagnostics?.prepared && typeof diagnostics.prepared === 'object');
         const table = document.createElement('table');
         table.className = 'video-metrics';
         table.createCaption().textContent = caption;
         const header = table.createTHead().insertRow();
-        for (const title of ['Metric', 'Before', 'After']) {
+        const columns = hasPrepared ? ['Metric', 'Before', 'Prepared', 'After'] : ['Metric', 'Before', 'After'];
+        for (const title of columns) {
             const cell = document.createElement('th');
             cell.scope = 'col';
             cell.textContent = title;
             header.append(cell);
         }
         const body = table.createTBody();
-        function metric(label, before, after) {
+        function metric(label, before, prepared, after) {
             const row = body.insertRow();
             const name = document.createElement('th');
             name.scope = 'row';
             name.textContent = label;
             row.append(name);
-            return [before, after].map(value => {
+            const values = hasPrepared ? [before, prepared, after] : [before, after];
+            return values.map(cellValue => {
                 const cell = row.insertCell();
-                cell.textContent = value;
+                cell.textContent = cellValue;
                 return cell;
             });
         }
         const value = n => Number.isFinite(n) ? n.toFixed(2) : 'Unavailable';
-        metric('Sharpness (edge variation)', value(diagnostics?.before?.blur_variance), value(diagnostics?.after?.blur_variance));
-        metric('Noise estimate', value(diagnostics?.before?.noise_sigma_255), value(diagnostics?.after?.noise_sigma_255));
-        const mae = metric('MAE (RGB levels)', '—', '—');
-        const psnr = metric('PSNR (dB)', '—', '—');
+        const formatNoise = entry => {
+            const base = value(entry?.noise_sigma_255);
+            if (Number.isFinite(entry?.noise_sigma_native) && Number.isFinite(entry?.noise_sigma_255)
+                && Math.abs(entry.noise_sigma_native - entry.noise_sigma_255) >= 0.5) {
+                return `${base} (native ${entry.noise_sigma_native.toFixed(2)})`;
+            }
+            return base;
+        };
+        metric(
+            'Sharpness (edge variation)',
+            value(diagnostics?.before?.blur_variance),
+            value(diagnostics?.prepared?.blur_variance),
+            value(diagnostics?.after?.blur_variance)
+        );
+        metric(
+            'Noise estimate',
+            formatNoise(diagnostics?.before),
+            value(diagnostics?.prepared?.noise_sigma_255),
+            value(diagnostics?.after?.noise_sigma_255)
+        );
+        const mae = metric('MAE (RGB levels)', '—', '—', '—');
+        const psnr = metric('PSNR (dB)', '—', '—', '—');
+        const afterIndex = hasPrepared ? 2 : 1;
         return {
             table,
             setReference(scores) {
-                [scores?.before, scores?.after].forEach((score, i) => {
-                    mae[i].textContent = score?.mae ?? '—';
-                    psnr[i].textContent = score?.psnr ?? '—';
+                if (hasPrepared) {
+                    mae[1].textContent = '—';
+                    psnr[1].textContent = '—';
+                }
+                [
+                    [0, scores?.before],
+                    [afterIndex, scores?.after],
+                ].forEach(([col, score]) => {
+                    mae[col].textContent = score?.mae ?? '—';
+                    psnr[col].textContent = score?.psnr ?? '—';
                 });
             }
         };
@@ -742,9 +1002,9 @@
         reference.type = 'file';
         reference.accept = 'image/png,image/jpeg';
         const label = document.createElement('label');
-        label.append('Add aligned clean reference (256 × 256)', reference);
+        label.append('Add aligned clean reference', reference);
         const hint = document.createElement('p');
-        hint.textContent = 'Use the same face, pose, and crop. Scores measure pixel agreement.';
+        hint.textContent = 'Use a 256 × 256 padded frame or clean face crop matching the input. Scores measure pixel agreement.';
         let referenceRevision = 0;
         reference.addEventListener('change', async () => {
             const version = ++referenceRevision;

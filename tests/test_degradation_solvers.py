@@ -8,6 +8,7 @@ import io
 import json
 import math
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -1403,7 +1404,12 @@ class UIAndImplementationHygieneTests(unittest.TestCase):
     def test_ui_preparation_summary_routes_and_template_hints(self):
         html_path = APP_ROOT / 'templates' / 'implementation.html'
         html = html_path.read_text(encoding='utf-8')
-        self.assertIn('/static/implementation.js?v=37', html)
+        js_ver_match = re.search(r'/static/implementation\.js\?v=(\d+)', html)
+        self.assertIsNotNone(js_ver_match, 'Missing cache-busted /static/implementation.js?v=... script tag')
+        self.assertGreaterEqual(int(js_ver_match.group(1)), 38)
+        css_ver_match = re.search(r'/static/capture\.css\?v=(\d+)', html)
+        self.assertIsNotNone(css_ver_match, 'Missing cache-busted /static/capture.css?v=... stylesheet tag')
+        self.assertGreaterEqual(int(css_ver_match.group(1)), 11)
         self.assertIn('macroblocking, ringing, banding, aliasing, color bleeding', html)
 
         js_path = (APP_ROOT / 'static' / 'implementation.js').resolve()
