@@ -6,6 +6,7 @@ from functools import lru_cache
 import hashlib
 import io
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -740,8 +741,20 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         if applied:
             raw_bytes, output, worker = one_forward(selected, model)
         output_signals = quality_signals(decode_original(output), (~observed).astype(np.uint8)) if applied else signals
-        diagnostics = {stage: {name: values[name] for name in ('blur_variance', 'noise_sigma_255')}
-                       for stage, values in (('before', signals), ('after', output_signals))}
+        mask_u8 = (~observed).astype(np.uint8)
+        before_diag = {name: signals[name] for name in ('blur_variance', 'noise_sigma_255')}
+        noise_native = signals.get('noise_sigma_native')
+        if isinstance(noise_native, (int, float)) and not isinstance(noise_native, bool) and math.isfinite(noise_native):
+            before_diag['noise_sigma_native'] = noise_native
+        diagnostics = {'before': before_diag}
+        if applied and preparation is not None and prepared is not None:
+            prepared_signals = quality_signals(prepared, mask_u8)
+            diagnostics['prepared'] = {
+                name: prepared_signals[name] for name in ('blur_variance', 'noise_sigma_255')
+            }
+        diagnostics['after'] = {
+            name: output_signals[name] for name in ('blur_variance', 'noise_sigma_255')
+        }
         metadata = {'selection': ARMS[model], 'model': model, 'restoration_requested': restoration,
                     'input_review': input_review,
                     'restoration_applied': bool(applied), 'preparation_applied': preparation is not None,
@@ -750,7 +763,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                          'Auto_did_not_suggest_restoration' if not applied else
                          'operator_bypass' if preparation_mode == 'bypass' else None),
                     'quality_signals': signals, 'output_diagnostics': diagnostics,
-                    'Auto_assessed_original_canvas_before_preparation': True,
+                    'Auto_assessed_original_canvas_before_preparation': bool(applied and automatic),
                     'neural_forward_attempts': int(applied), 'neural_forward_returns': int(applied),
                     'seconds': time.monotonic() - started, 'uploaded_bytes_sha256': digest(contents),
                     'selected_input_sha256': digest(selected), 'result_file_sha256': digest(output),
