@@ -1092,5 +1092,126 @@
     };
     byId('brush-refresh').addEventListener('click', checkService);
     byId('brush-model').addEventListener('change', () => { clearResults(); update(); });
+
+    const appMenuContainer = byId('app-menu-container');
+    const appMenuButton = byId('app-menu-button');
+    const appMenuDropdown = byId('app-menu-dropdown');
+    const appCheckUpdate = byId('app-check-update');
+    const appUpdateStatus = byId('app-update-status');
+    const appUpdatePrompt = byId('app-update-prompt');
+    const appUpdatePromptText = byId('app-update-prompt-text');
+    const appInstallUpdate = byId('app-install-update');
+    let updateBusy = false;
+
+    const setMenuOpen = open => {
+        if (!appMenuDropdown || !appMenuButton) return;
+        appMenuDropdown.classList.toggle('hidden', !open);
+        appMenuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    const setUpdateStatus = (message, isError = false) => {
+        if (!appUpdateStatus) return;
+        appUpdateStatus.textContent = message;
+        appUpdateStatus.classList.toggle('is-error', Boolean(isError));
+        appUpdateStatus.classList.toggle('hidden', !message);
+    };
+
+    if (appMenuButton && appMenuDropdown && appCheckUpdate) {
+        appMenuButton.addEventListener('click', event => {
+            event.stopPropagation?.();
+            const isOpen = !appMenuDropdown.classList.contains('hidden');
+            setMenuOpen(!isOpen);
+        });
+
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('click', event => {
+                if (appMenuDropdown.classList.contains('hidden')) return;
+                if (appMenuContainer && typeof appMenuContainer.contains === 'function' && appMenuContainer.contains(event.target)) return;
+                setMenuOpen(false);
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !appMenuDropdown.classList.contains('hidden')) {
+                    setMenuOpen(false);
+                    appMenuButton.focus?.();
+                }
+            });
+        }
+
+        appCheckUpdate.addEventListener('click', async () => {
+            if (updateBusy) return;
+            updateBusy = true;
+            appCheckUpdate.disabled = true;
+            setUpdateStatus('Checking...');
+            try {
+                const response = await fetch('/app/update/check', { method: 'POST' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'Could not check for updates.');
+                }
+                if (payload.status === 'update_available' || payload.update_available === true) {
+                    const latest = payload.latest_version || '';
+                    setUpdateStatus(`Update available (${latest})`);
+                    if (appUpdatePromptText) appUpdatePromptText.textContent = `Update ${latest} available`;
+                    if (appUpdatePrompt) appUpdatePrompt.classList.remove('hidden');
+                    if (appInstallUpdate) appInstallUpdate.disabled = false;
+                } else {
+                    setUpdateStatus(payload.message || 'Up to date');
+                    if (appUpdatePrompt) appUpdatePrompt.classList.add('hidden');
+                }
+            } catch (err) {
+                setUpdateStatus(err?.message || 'Update check failed.', true);
+            } finally {
+                updateBusy = false;
+                appCheckUpdate.disabled = false;
+            }
+        });
+    }
+
+    if (appInstallUpdate) {
+        appInstallUpdate.addEventListener('click', async () => {
+            if (updateBusy) return;
+            updateBusy = true;
+            appInstallUpdate.disabled = true;
+            if (appUpdatePromptText) appUpdatePromptText.textContent = 'Installing update and restarting...';
+            try {
+                const response = await fetch('/app/update/install', { method: 'POST' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'Update installation failed.');
+                }
+                const targetVersion = payload.target_version || '';
+                const deadline = Date.now() + 90000;
+                const pollVersion = async () => {
+                    while (Date.now() < deadline) {
+                        try {
+                            const versionResp = await fetch('/app/version', { cache: 'no-store' });
+                            if (versionResp.ok) {
+                                const versionData = await versionResp.json().catch(() => ({}));
+                                if (!targetVersion || versionData.version === targetVersion) {
+                                    if (appUpdatePrompt) appUpdatePrompt.classList.add('hidden');
+                                    setUpdateStatus(`Up to date (${versionData.version || targetVersion})`);
+                                    if (typeof window.location?.reload === 'function') {
+                                        window.location.reload();
+                                    }
+                                    return;
+                                }
+                            }
+                        } catch {
+                            // Server may be restarting; keep polling until deadline.
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                    if (appUpdatePromptText) appUpdatePromptText.textContent = 'Restart pending. Reopen the app if it does not reload.';
+                };
+                await pollVersion();
+            } catch (err) {
+                if (appUpdatePromptText) appUpdatePromptText.textContent = err?.message || 'Update failed.';
+                appInstallUpdate.disabled = false;
+            } finally {
+                updateBusy = false;
+            }
+        });
+    }
+
     update(); checkService();
 })();
