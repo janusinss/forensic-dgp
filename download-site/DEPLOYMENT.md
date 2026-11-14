@@ -1,37 +1,106 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.4 release
+## Current 0.2.12 offline preview
 
-Published on November 8, 2026 in Asia/Manila. The download is live on the
-[Forensic DGP page](https://forensic-dgp.pages.dev/). This release uses
-[Pages deployment 4f620787](https://4f620787.forensic-dgp.pages.dev/).
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 57a63f37](https://57a63f37.forensic-dgp.pages.dev/).
 
-[ForensicDGP_Setup-0.2.4.exe](https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.4/ForensicDGP_Setup-0.2.4.exe)
-is 1,045,804,246 bytes. SHA-256
-`af2b4ad8be7ca85858e697a43f2ec3db728685fabe5d89050e98da5d9464f01d`.
-The build source is `f1de97eaec5351243a6191e7e7d76b3c0d6cf468`.
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.12)
+references `ForensicDGP_Setup-0.2.12.exe` from build source
+`8a6e7c5710bf262a97a6388485059156b37a50ec` (`1,314,091,355` bytes, SHA-256
+`7851d17899c053065690b6411698c2672e75483e9a85f976b5d00efc1adbba57`). This release
+replaces the installer's network update check with an in-app triple-dot **Check Update**
+and top-left **Install Update** self-updater, fixes Avast `EvoGen` and Windows Defender
+false-positive triggers (`upx=False`, no `SW_HIDE`, no P/Invoke delete APIs), and keeps
+`\\?\` long-path safe uninstall cleanup. Published versions remain immutable: future updates
+must use a new version, build, and release rather than replacing `0.2.12`.
 
-Three isolated Windows registrations exercised the compiled uninstall flow.
-They covered removing the full installation, preserving an unrelated file and a
-junction target, and retrying a removal blocked by a locked saved record. The
-uninstaller runs after confirmation. The full public download matched its
-size and SHA-256. The installer remains an unsigned preview.
+## Historical 0.2.11 offline preview
 
-## Historical 0.2.3 release
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment bd2c3680](https://bd2c3680.forensic-dgp.pages.dev/).
 
-Published 2026-11-08, Asia/Manila. Canonical page: https://forensic-dgp.pages.dev/.
-Deployment: https://7796fe47.forensic-dgp.pages.dev/.
-Installer: https://github.com/janusinss/forensic-dgp-downloads/releases/download/v0.2.3/ForensicDGP_Setup-0.2.3.exe.
-Build source: 8dc6b97a00a3f34792389b749cc02f9547d9d4ca.
-Bytes: 1,045,794,849. SHA-256:
-2e00d62617cab338edfa01f4c2227f410e63596ea251836b21551c86484dc066.
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.11)
+references `ForensicDGP_Setup-0.2.11.exe` from build source
+`7e78f28ae420ddb1e4c5b95668b186fb47bfdf5c` (`1,314,084,061` bytes, SHA-256
+`05a4640e302a37c258d4cbd1fa388d854645269a029e7f0101de476c366b1051`). This release
+adds automatic shutdown of running Forensic DGP instances during upgrade/uninstall
+and `\\?\` long-path safe uninstall cleanup in `packaging/uninstall.ps1` and
+`packaging/installer.iss`. All 19 site tests and `tsc --noEmit` + Vite production
+build passed. Published versions remain immutable: future updates must use a new
+version, build, and release rather than replacing `0.2.11`.
 
-The bundled source and offline setup helper passed an upgrade from 0.2.2 in a
-dedicated Windows test folder. The saved record and all 15 existing model-store
-files kept their hashes. Installed-app checks detected two faces, queued both
-crops, processed an approved crop, verified the PNG and ZIP exports, and ran
-restoration once for the illustrated benchmark. The installed-app layout passed
-at 375, 768 and 1280 pixels. The full anonymous download matched the published size and SHA-256. The installer remains an unsigned research preview.
+## Historical 0.2.10 offline preview
+
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 343115ac](https://343115ac.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.10)
+references `ForensicDGP_Setup-0.2.10.exe` from build source
+`2c70789c967493ac7e9094a0332d2f2db803e142` (`1,314,080,732` bytes, SHA-256
+`a4ed08386f2125c8be9937045c53a5520cb13f29761f2e6442ae9dd95ff7f66b`). This release
+ships aligned GT reference evaluation across native, padded, and manual crops
+plus hardened Windows PE version/manifest metadata. The published `/release.json`
+and `/downloads/ForensicDGP_Setup-0.2.10.exe.sha256` checksum were verified live.
+All 19 site tests and `tsc --noEmit` + Vite production build passed. Published
+versions remain immutable: future updates must use a new version, build, and
+release rather than replacing `0.2.10`.
+
+## Historical 0.2.9 offline preview
+
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 5cbf135f](https://5cbf135f.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.9)
+contains `ForensicDGP_Setup-0.2.9.exe` from build source
+`e874076519ca9063797cda4ea3b0307b2bb0e3cf`. GitHub confirmed
+1,314,071,849 bytes (`Content-Range: bytes 0-0/1314071849`) and SHA-256
+`3944d95b2c388fc7ece38b0ff214a0a58ef585030c6b68c35483eee27bcb94f6`.
+The published `/release.json` and `.sha256` checksum were verified live. All 19
+site tests and `tsc --noEmit` + Vite production build passed. The live page
+passed Playwright checks at 375, 768 and 1280 pixels without horizontal overflow
+or browser errors.
+
+## Historical 0.2.8 offline preview
+
+Published November 14, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment e487a1a1](https://e487a1a1.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.8)
+contains `ForensicDGP_Setup-0.2.8.exe` from build source
+`e837197bda6f95761fa2f16ca275e62322fa103b`. GitHub confirmed
+1,314,059,206 bytes (`Content-Range: bytes 0-0/1314059206`) and SHA-256
+`d804ddbca9ed6697a6c37ff4ad348a8c55541f509c6e35614c7aff2ea9a5697e`.
+The published `/release.json` and `.sha256` checksum were verified live. All 19
+site tests and `tsc --noEmit` + Vite production build passed. The live page
+passed Playwright checks at 375, 768 and 1280 pixels without horizontal overflow
+or browser errors.
+
+## Historical 0.2.6 offline preview
+
+Published November 9, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 91204018](https://91204018.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.6)
+contains `ForensicDGP_Setup-0.2.6.exe` from build source
+`19aff929e5f18e4a928f9ca5558d93875a46cd38`. GitHub confirmed
+1,045,830,949 bytes and SHA-256
+`d35eeabbe27c43d86cb52e5322c5778c82fd6eb2cbcc76444708bdb91baf0ad9`.
+The public download responded to a range request with the expected total size.
+The published checksum, no-script download, and previous release checksum
+were verified. All 19 site tests passed. The live page passed at 375, 768 and
+1280 pixels without horizontal overflow or browser errors.
+
+The previous production deployment was
+[0.2.4 on Pages](https://4f620787.forensic-dgp.pages.dev/).
+The [0.2.4 installer](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.4)
+and its checksum remain available.
 
 ## Historical 0.2.2 Completion R2 release
 
