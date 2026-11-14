@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/static/workbench.css">
   <link rel="stylesheet" href="/static/viewport-workbench.css?v=31">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
-  <link rel="stylesheet" href="/static/capture.css?v=8">
+  <link rel="stylesheet" href="/static/capture.css?v=10">
   <link rel="stylesheet" href="/static/capture-modern.css?v=2">
   <link rel="stylesheet" href="/static/selects.css?v=1">
 </head>
@@ -83,7 +83,7 @@
       <div class="work-controls">
         <div class="work-heading"><span class="work-kicker">RESTORATION / 02</span><h1 id="restoration-mode-heading">Choose restoration</h1><p>Choose whether to improve the picture and prepare it first.</p></div>
         <input id="brush-model" type="hidden" value="v2">
-        <fieldset class="choice-group"><legend>Improve the face</legend><select id="brush-restoration" hidden><option value="auto" selected>Auto</option><option value="on">Manual</option><option value="off">Off</option></select><div class="choice-list three"><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="auto" data-select="brush-restoration" checked><span class="choice-content">Auto</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="on" data-select="brush-restoration"><span class="choice-content">Manual</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="off" data-select="brush-restoration"><span class="choice-content">Off</span></label></div><p class="field-hint">Auto checks for repeating scanlines, pixelation, and localized blur before restoring. Manual lets you choose preparation settings. Off keeps the resized original.</p></fieldset>
+        <fieldset class="choice-group"><legend>Improve the face</legend><select id="brush-restoration" hidden><option value="auto" selected>Auto</option><option value="on">Manual</option><option value="off">Off</option></select><div class="choice-list three"><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="auto" data-select="brush-restoration" checked><span class="choice-content">Auto</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="on" data-select="brush-restoration"><span class="choice-content">Manual</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="off" data-select="brush-restoration"><span class="choice-content">Off</span></label></div><p class="field-hint">Auto checks for scanlines, privacy mosaics, macroblocking, ringing, banding, aliasing, color bleeding, and localized blur before restoring. Manual lets you choose preparation settings. Off keeps the resized original.</p></fieldset>
         <fieldset id="picture-preparation" class="choice-group"><legend>Prepare the picture</legend><select id="brush-preparation" hidden><option value="bypass">Bypass</option><option value="manual">Choose areas to protect or blur</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-preparation-choice" value="bypass" data-select="brush-preparation" checked><span class="choice-content">Bypass</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-preparation-choice" value="manual" data-select="brush-preparation"><span class="choice-content">Choose areas to protect or blur</span></label></div><p class="field-hint">Bypass uses the original picture. Choose areas to protect or blur when improving it. If Off is selected, preparation is skipped.</p></fieldset>
         <div class="feedback-slot"></div>
         <div class="work-actions"><button class="tool-btn" type="button" data-nav="inspect">Back</button><button class="execute-btn" type="button" data-nav="options-next">Continue <span aria-hidden="true">→</span></button><button id="picture-preparation-details" class="text-btn" type="button" data-dialog="preparation-dialog">Preparation details</button></div>
@@ -209,12 +209,12 @@
 <dialog id="preparation-dialog" class="work-dialog" aria-labelledby="preparation-heading"><h2 id="preparation-heading">Prepare the picture</h2><p>Bypass keeps the original picture. You can also blur areas before improving it. This may not help every picture and can make some worse.</p><p>Mark only green to protect an area and select the rest for blur. Mark blue to blur only the areas you choose; no green is needed. If you use both, blue selects where to blur and green takes priority. With no markings, the picture stays unchanged.</p><p>Preparation is used only if the picture is improved. Off skips preparation and restoration. Auto chooses preparation automatically before restoring. Review the preview, including already blurry areas: selected areas can become blurrier. Protected areas stay unchanged during preparation, but the generated face may still look different.</p><button class="tool-btn" type="button" data-close-dialog>Close</button></dialog>
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
 <script src="/static/restoration_queue.js?v=3"></script>
-<script src="/static/implementation.js?v=36"></script>
+<script src="/static/capture_geometry.js?v=2"></script>
+<script src="/static/implementation.js?v=37"></script>
 <script src="/static/completion.js?v=12"></script>
 <script src="/static/viewport-workbench.js?v=21"></script>
-<script src="/static/capture_geometry.js?v=1"></script>
 <script src="/static/capture_playback.js?v=3"></script>
-<script src="/static/capture.js?v=18"></script>
+<script src="/static/capture.js?v=20"></script>
 <script src="/static/restoration_reference.js?v=2"></script>
 <script src="/static/shader-background.js?v=16"></script>
 </body>

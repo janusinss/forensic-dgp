@@ -68,9 +68,9 @@ class CaptureAPITests(unittest.TestCase):
         self.store = patch.object(capture_api, "STORE", Path(self.temp.name))
         self.store.start()
         self.addCleanup(self.store.stop)
-        detector_patch = patch.object(capture_api, "detect_faces", return_value=[[4, 5, 40, 32]])
-        self.detector = detector_patch.start()
-        self.addCleanup(detector_patch.stop)
+        self._detector_patch = patch.object(capture_api, "detect_faces", return_value=[[4, 5, 40, 32]])
+        self.detector = self._detector_patch.start()
+        self.addCleanup(self._detector_patch.stop)
         self.app = FastAPI()
         capture_api.register(self.app)
         status, content = self.request("GET", "/capture/status")
@@ -98,6 +98,7 @@ class CaptureAPITests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual((frame["width"], frame["height"]), (80, 64))
         self.assertEqual(frame["faces"], [[4, 5, 40, 32]])
+        self.assertNotIn("face_crops", frame)
         status, original = self.request("GET", frame["frame_url"], headers={"x-capture-token": self.token})
         self.assertEqual((status, original), (200, self.frame))
         rect = {"x": 7, "y": 8, "width": 30, "height": 25}
@@ -231,6 +232,39 @@ class CaptureAPITests(unittest.TestCase):
         status, _ = self.request("POST", f'/capture/frames/{frame["frame_id"]}/crop', rect,
                                  {"x-capture-token": other, "content-type": "application/json"})
         self.assertGreaterEqual(status, 400)
+
+    def test_unmocked_detect_faces_uses_detect_face_details_for_face_crops(self):
+        self._detector_patch.stop()
+        try:
+            details = [{"box": [10, 12, 30, 36], "crop": [4, 4, 48, 48], "score": 0.91}]
+            with patch.object(capture_api, "detect_face_details", return_value=details) as detail_call:
+                status, frame = self.freeze()
+            detail_call.assert_called_once()
+            self.assertEqual(status, 200)
+            self.assertEqual(frame["faces"], [[10, 12, 30, 36]])
+            self.assertEqual(frame["face_crops"], [[4, 4, 48, 48]])
+
+            with patch.object(capture_api, "detect_face_details", side_effect=RuntimeError("unavailable")):
+                status, err_frame = self.freeze()
+            self.assertEqual(status, 200)
+            self.assertEqual(err_frame["faces"], [])
+            self.assertEqual(err_frame["face_crops"], [])
+            self.assertTrue(err_frame["detection_warning"])
+        finally:
+            self.detector = self._detector_patch.start()
+
+    def test_detect_face_details_worker_contract_and_stdout_bound(self):
+        image = Image.fromarray(self.pixels, "RGB")
+        payload = [{"box": [4, 5, 40, 32], "crop": [0, 0, 56, 56], "score": 0.9}]
+        with patch.object(capture_api, "worker_python", return_value="python.exe"), \
+             patch.object(capture_api.subprocess, "run") as run:
+            run.return_value = SimpleNamespace(stdout=json.dumps(payload).encode())
+            self.assertEqual(capture_api.detect_face_details(image), payload)
+            self.assertEqual(run.call_args.args[0][-1], "detect-details")
+
+            run.return_value = SimpleNamespace(stdout=b"[]" + b" " * 65536)
+            with self.assertRaises(RuntimeError):
+                capture_api.detect_face_details(image)
 
 
 if __name__ == "__main__":

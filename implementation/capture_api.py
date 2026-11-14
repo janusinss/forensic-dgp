@@ -104,19 +104,30 @@ def _image(raw):
         raise ValueError('Invalid image frame.') from exc
 
 
-def detect_faces(image):
+def _run_face_worker(image, mode, max_stdout):
     buffer = io.BytesIO()
     image.save(buffer, format='PNG')
     try:
-        result = subprocess.run([worker_python(), '-B', str(Path(__file__).with_name('capture_worker.py')), 'detect'],
+        result = subprocess.run([worker_python(), '-B', str(Path(__file__).with_name('capture_worker.py')), mode],
                                 input=buffer.getvalue(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
                                 timeout=15, check=True, cwd=ROOT,
                                 creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-        if len(result.stdout) > 16384:
+        if len(result.stdout) > max_stdout:
             raise ValueError
         return json.loads(result.stdout)
     except (subprocess.SubprocessError, OSError, ValueError) as exc:
         raise RuntimeError('Face detection failed or timed out.') from exc
+
+
+def detect_faces(image):
+    return _run_face_worker(image, 'detect', 16384)
+
+
+_DEFAULT_DETECT_FACES = detect_faces
+
+
+def detect_face_details(image):
+    return _run_face_worker(image, 'detect-details', 65536)
 
 
 def _freeze_inner(raw, source_kind, source_time, owner):
@@ -126,10 +137,18 @@ def _freeze_inner(raw, source_kind, source_time, owner):
         raise ValueError('Invalid source time.')
     im = _image(raw)
     warning = None
+    use_details = detect_faces is _DEFAULT_DETECT_FACES
+    face_crops = None
     try:
-        faces = detect_faces(im)
+        if use_details:
+            recs = detect_face_details(im)
+            faces = [r['box'] for r in recs]
+            face_crops = [r['crop'] for r in recs]
+        else:
+            faces = detect_faces(im)
     except RuntimeError:
         faces = []
+        face_crops = [] if use_details else None
         warning = 'Face detection is unavailable. Select the face area manually.'
     with LOCK:
         if len(FRAMES) >= 64:
@@ -141,8 +160,11 @@ def _freeze_inner(raw, source_kind, source_time, owner):
         (path / 'frame.png').write_bytes(raw)
         FRAMES[ident] = {'path': path, 'sha': _sha(raw), 'size': im.size,
                          'source_kind': source_kind, 'source_time': source_time, 'owner': owner}
-    return {'frame_id': ident, 'width': im.width, 'height': im.height,
-            'faces': faces, 'detection_warning': warning, 'frame_url': '/capture/frames/' + ident + '/image'}
+    payload = {'frame_id': ident, 'width': im.width, 'height': im.height,
+               'faces': faces, 'detection_warning': warning, 'frame_url': '/capture/frames/' + ident + '/image'}
+    if face_crops is not None:
+        payload['face_crops'] = face_crops
+    return payload
 
 
 def _freeze(raw, source_kind, source_time, owner):

@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { makeView, pointerToSource } = require('../static/capture_geometry.js');
+const { makeView, pointerToSource, clampCropRect, isValidCropRect } = require('../static/capture_geometry.js');
 
 test('full frame view retains native source dimensions', () => {
   assert.deepEqual(makeView(1920, 1080), { x: 0, y: 0, width: 1920, height: 1080 });
@@ -58,4 +58,45 @@ test('invalid frame, rectangle, and hidden preview fail explicitly', () => {
   assert.throws(() => makeView(100, 100, { x: 0, y: 0, width: NaN, height: 10 }), RangeError);
   assert.throws(() => pointerToSource(0, 0, { left: 0, top: 0, width: 0, height: 100 },
     { x: 0, y: 0, width: 100, height: 100 }), RangeError);
+});
+
+test('clampCropRect clamps coordinates and sizes to valid integer source bounds', () => {
+  const input = { x: 12.6, y: -0.2, width: 8, height: 9999 };
+  const clamped = clampCropRect(input, 400, 300);
+  assert.deepEqual(clamped, { x: 13, y: 0, width: 16, height: 300 });
+  assert.equal(Object.is(clamped.y, 0), true);
+  assert.deepEqual(input, { x: 12.6, y: -0.2, width: 8, height: 9999 });
+  assert.equal(isValidCropRect(clamped, 400, 300), true);
+
+  assert.deepEqual(clampCropRect({ x: 350, y: 260, width: 100, height: 80 }, 400, 300),
+    { x: 300, y: 220, width: 100, height: 80 });
+  assert.deepEqual(clampCropRect({ x: -20, y: -15, width: 2000, height: 2000 }, 2400, 1800),
+    { x: 0, y: 0, width: 1600, height: 1600 });
+  assert.deepEqual(clampCropRect({ x: 5, y: 5, width: 2, height: 50 }, 100, 100, 8, 32),
+    { x: 5, y: 5, width: 8, height: 32 });
+});
+
+test('clampCropRect rejects invalid frame, bounds, or non-finite rectangles', () => {
+  assert.throws(() => clampCropRect({ x: 0, y: 0, width: 20, height: 20 }, 15, 100), RangeError);
+  assert.throws(() => clampCropRect({ x: 0, y: 0, width: 20, height: 20 }, 100, 15), RangeError);
+  assert.throws(() => clampCropRect({ x: 0, y: 0, width: 20, height: 20 }, 0, 100), RangeError);
+  assert.throws(() => clampCropRect({ x: 0, y: 0, width: 20, height: 20 }, 100, 100, 20, 10), RangeError);
+  assert.throws(() => clampCropRect(null, 100, 100), RangeError);
+  assert.throws(() => clampCropRect({ x: 0, y: 0, width: NaN, height: 20 }, 100, 100), RangeError);
+});
+
+test('isValidCropRect enforces finite integer bounds and side limits', () => {
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: 16, height: 16 }, 16, 16), true);
+  assert.equal(isValidCropRect({ x: 400, y: 200, width: 1600, height: 1600 }, 2000, 1800), true);
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: 15, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: 1601, height: 100 }, 2000, 2000), false);
+  assert.equal(isValidCropRect({ x: -1, y: 0, width: 16, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 85, y: 0, width: 16, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0, y: 85, width: 16, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0.5, y: 0, width: 16, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: NaN, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: Infinity, height: 16 }, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: 16, height: 16 }, 12, 100), false);
+  assert.equal(isValidCropRect(null, 100, 100), false);
+  assert.equal(isValidCropRect({ x: 0, y: 0, width: 8, height: 8 }, 32, 32, 8, 24), true);
 });
