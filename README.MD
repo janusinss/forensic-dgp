@@ -2,9 +2,9 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.11
+## Windows installer 0.2.12
 
-Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.11](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.11).
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.12](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.12).
 
 ## Developer batch installation
 
@@ -46,7 +46,7 @@ Auto runs the restoration model once per crop. The result shows the preparation 
 
 Auto can also handle tilted or perspective-warped mosaics, irregular cell mosaics, and strong grids in 32–47 px crops. When separate artifacts are supported, it can treat distinct regular and irregular mosaic regions, combine scanline correction with local mosaic smoothing, combine a supported 4 px mosaic with exterior JPEG deblocking, run DCT macroblock deblocking (8 × 8 FBCNN / 16 × 16 HEVC boundary filtering), or compose native YCrCb noise denoising, color-cast/dark-channel dehazing, spatial comb cleanup, edge deringing, gradient debanding, tangent anti-aliasing, and chroma debleeding before V2. The offline installer includes the pinned FBCNN checkpoint for JPEG and macroblock preparation.
 
-On the installer's **Before you install** page, **Check for updates** checks the published release. **Download update** appears when a newer installer is available. Run the downloaded installer and keep the existing folder to update in place while retaining saved records.
+Use the top-right triple-dot menu (**Check Update**) inside the app to check for a newer release and install verified updates in place while retaining saved records.
 
 In reviewed preparation, green-only **Auto-match surrounding blur** measures reliable edges across the full upload, including protected areas, and adds blur to sharper areas outside green. With this matching option off or blue marks present, **Manual blur strength** sets the radius. Green takes priority. Select **Continue** on the preparation preview to use it for restoration. Generated appearance can change.
 

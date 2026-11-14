@@ -19,7 +19,7 @@
   <link rel="stylesheet" href="/static/protection_editor.css">
   <link rel="stylesheet" href="/static/completion.css">
   <link rel="stylesheet" href="/static/workbench.css">
-  <link rel="stylesheet" href="/static/viewport-workbench.css?v=31">
+  <link rel="stylesheet" href="/static/viewport-workbench.css?v=32">
   <link rel="stylesheet" href="/static/left-progress.css?v=1">
   <link rel="stylesheet" href="/static/capture.css?v=11">
   <link rel="stylesheet" href="/static/capture-modern.css?v=2">
@@ -27,6 +27,17 @@
 </head>
 <body>
 <main class="viewport-workspace" id="workspace" aria-label="Face restoration workspace">
+  <aside id="app-update-prompt" class="app-update-prompt hidden" role="region" aria-label="Application update">
+    <span id="app-update-prompt-text" class="app-update-prompt-text">Update available</span>
+    <button id="app-install-update" class="execute-btn app-install-update-btn" type="button">Install Update</button>
+  </aside>
+  <div id="app-menu-container" class="app-menu-container">
+    <button id="app-menu-button" class="tool-btn app-menu-button" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="Application menu" title="Menu">&#8943;</button>
+    <div id="app-menu-dropdown" class="app-menu-dropdown hidden" role="menu" aria-labelledby="app-menu-button">
+      <button id="app-check-update" class="app-menu-item" type="button" role="menuitem">Check Update</button>
+      <p id="app-update-status" class="app-update-status hidden" role="status" aria-live="polite"></p>
+    </div>
+  </div>
   <form id="brush-form" class="work-form">
     <section class="work-screen is-active input-split" data-screen="inspect" data-input-mode="picture" data-input-phase="review" data-capture-state="idle" aria-labelledby="brush-upload-heading">
       <div class="work-controls input-controls">
@@ -212,9 +223,9 @@
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
 <script src="/static/restoration_queue.js?v=3"></script>
 <script src="/static/capture_geometry.js?v=2"></script>
-<script src="/static/implementation.js?v=39"></script>
+<script src="/static/implementation.js?v=40"></script>
 <script src="/static/completion.js?v=12"></script>
-<script src="/static/viewport-workbench.js?v=21"></script>
+<script src="/static/viewport-workbench.js?v=22"></script>
 <script src="/static/capture_playback.js?v=3"></script>
 <script src="/static/capture.js?v=20"></script>
 <script src="/static/restoration_reference.js?v=4"></script>

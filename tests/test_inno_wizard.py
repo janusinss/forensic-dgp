@@ -94,7 +94,8 @@ class WizardSafetyContracts(unittest.TestCase):
         self.assertNotIn('RemoveOwnedRuntime', uninstall)
         cleanup = self.code.split('procedure CurUninstallStepChanged', 1)[1]
         self.assertIn('if CurUninstallStep = usUninstall then begin', cleanup)
-        self.assertIn('RemoveOwnedRuntime;', cleanup)
+        self.assertIn('DelTree(RuntimeRoot, True, True, True)', cleanup)
+        self.assertIn('-Action Uninstall', cleanup)
         self.assertIn('ConfirmUninstall=Uninstall %1 and permanently delete', self.code)
 
     def test_setup_version_info_and_publisher_metadata(self):
@@ -113,23 +114,43 @@ class WizardSafetyContracts(unittest.TestCase):
             'VersionInfoProductVersion={#ReleaseVersion}',
             'VersionInfoProductTextVersion={#ReleaseVersion}',
             'VersionInfoOriginalFileName=ForensicDGP_Setup.exe',
+            'CloseApplications=yes',
+            'RestartApplications=no',
         ):
             self.assertIn(directive, setup)
         self.assertNotIn('UninstallDisplayName', setup)
 
-    def test_helper_exec_and_log_output_hides_powershell_windows(self):
+    def test_helper_exec_and_log_output_avoids_sw_hide_and_av_triggers(self):
+        self.assertFalse((BASE / 'packaging' / 'check_update.ps1').exists())
+        for forbidden in (
+            'check_update',
+            'CheckForUpdate',
+            'DownloadUpdate',
+            'DeleteFileW',
+            'RemoveDirectoryW',
+            'SetFileAttributesW',
+            'SW_HIDE',
+            'ShellExec',
+            'RemoveOwnedRuntime',
+            'RemoveOwnedTree',
+            'LongWinPath',
+        ):
+            self.assertNotIn(forbidden, self.code)
+        self.assertNotIn('check_update.ps1', BUILD_SCRIPT.read_text(encoding='utf8'))
+        self.assertNotIn('check_update.ps1', WRAPPER.read_text(encoding='utf8'))
+
         prepare = self.section('function PrepareToInstall', 'procedure UninstallLog')
         self.assertRegex(
             prepare,
-            r'ExecAndLogOutput\(PS,\s*Params,\s*ExpandConstant\(\'\{tmp\}\'\),\s*SW_HIDE,',
+            r'ExecAndLogOutput\(PS,\s*Params,\s*ExpandConstant\(\'\{tmp\}\'\),\s*SW_SHOWNORMAL,',
         )
-        self.assertNotIn('SW_SHOWNORMAL', prepare)
         uninstall = self.section('function InitializeUninstall', 'procedure CurStepChanged')
         self.assertRegex(
             uninstall,
-            r'ExecAndLogOutput\(PS,[\s\S]*?ExpandConstant\(\'\{app\}\'\),\s*SW_HIDE,',
+            r'ExecAndLogOutput\(PS,[\s\S]*?ExpandConstant\(\'\{app\}\'\),\s*SW_SHOWNORMAL,',
         )
-        self.assertNotIn('SW_SHOWNORMAL', uninstall)
+        cleanup = self.code.split('procedure CurUninstallStepChanged', 1)[1]
+        self.assertIn('SW_SHOWNORMAL', cleanup)
 
     def test_launcher_assembly_metadata_and_embedded_manifest(self):
         source = BUILD_SCRIPT.read_text(encoding='utf8')
@@ -144,32 +165,74 @@ class WizardSafetyContracts(unittest.TestCase):
             '8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a',
             'PerMonitorV2',
             'longPathAware',
+            'upx=False',
         ):
             self.assertIn(expected, source)
         self.assertNotIn('/deterministic', source)
         files_block = source.split('for name in [', 1)[1].split(']:', 1)[0]
         self.assertNotIn('ForensicDGP.manifest', files_block)
+        self.assertNotIn('check_update.ps1', files_block)
 
     def test_uninstall_stops_owned_processes_and_handles_long_paths(self):
         uninstall_ps1 = (BASE / 'packaging' / 'uninstall.ps1').read_text(encoding='utf8')
         self.assertIn('function Stop-OwnedAppProcesses', uninstall_ps1)
+        self.assertIn('function Remove-OwnedRuntimeLongPaths', uninstall_ps1)
+        self.assertIn('PreserveRuntimeCache', uninstall_ps1)
         self.assertIn('Stop-OwnedAppProcesses $shell $root', uninstall_ps1)
+        self.assertIn('Remove-OwnedRuntimeLongPaths -RuntimeRoot $root', uninstall_ps1)
         self.assertIn('$mutex.WaitOne(5000)', uninstall_ps1)
         self.assertIn('Local\\ForensicDGP-close-', uninstall_ps1)
+        self.assertIn(r"'\\?\'", uninstall_ps1)
+        for subtree in ('environments', 'cache', 'wheelhouse', 'python', 'logs', 'tmp', 'versions'):
+            self.assertIn(subtree, uninstall_ps1)
 
-        remove_tree = self.section('function RemoveOwnedTree', 'procedure RemoveOwnedRuntime')
-        self.assertIn('LongWinPath(Path)', remove_tree)
-        self.assertIn('DeleteFileW(LongPath)', remove_tree)
-        self.assertIn('RemoveDirectoryW(LongPath)', remove_tree)
-        self.assertIn('(Attr and $400) <> 0', remove_tree)
+        if PS.is_file():
+            (BASE / 'scratch').mkdir(exist_ok=True)
+            with tempfile.TemporaryDirectory(prefix='longpath-ps-', dir=BASE / 'scratch', ignore_cleanup_errors=True) as tmp:
+                area = Path(tmp)
+                shell = area / 'app'
+                runtime = shell / 'runtime'
+                shell.mkdir()
+                runtime.mkdir()
+                (shell / 'shell-owner.json').write_text(json.dumps({'schema': 1, 'application': 'Forensic DGP'}), encoding='utf8')
+                (shell / 'install-location.json').write_text(json.dumps({'schema': 1, 'install_root': str(shell), 'managed_root': str(runtime)}), encoding='utf8')
+                (runtime / 'owner.json').write_text(json.dumps({'schema_version': 2, 'repository': 'janusinss/forensic-dgp', 'layout': 'desktop-runtime-v1', 'install_root': str(shell)}), encoding='utf8')
+                deep_dir = runtime / 'environments' / ('a' * 60) / ('b' * 60) / ('c' * 60) / 'torch'
+                deep_file = deep_dir / ('long_weights_' + 'd' * 40 + '.bin')
+                self.assertGreater(len(str(deep_file)), 280)
+                Path('\\\\?\\' + str(deep_dir)).mkdir(parents=True, exist_ok=True)
+                Path('\\\\?\\' + str(deep_file)).write_bytes(b'long path payload')
+                os.chmod('\\\\?\\' + str(deep_file), 0o444)
+                cache_file = runtime / 'cache' / 'cached.bin'
+                cache_file.parent.mkdir(parents=True, exist_ok=True)
+                cache_file.write_bytes(b'cache')
+                data_file = runtime / 'data' / 'saved.json'
+                data_file.parent.mkdir(parents=True, exist_ok=True)
+                data_file.write_bytes(b'saved')
 
-        long_path = self.section('function LongWinPath', 'function RemoveOwnedTree')
-        self.assertIn(r"'\\?\'", long_path)
+                res = subprocess.run(
+                    [str(PS), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                     '-File', str(BASE / 'packaging' / 'uninstall.ps1'),
+                     '-Action', 'Uninstall', '-InstallRoot', str(shell), '-ManagedRoot', str(runtime),
+                     '-PreserveRuntimeCache'],
+                    capture_output=True, text=True, timeout=20,
+                    env=dict(os.environ, LOCALAPPDATA=str(area / 'local')),
+                )
+                self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+                self.assertFalse((runtime / 'environments').exists())
+                self.assertTrue(cache_file.is_file())
+                self.assertTrue(data_file.is_file())
 
-        remove_runtime = self.section('procedure RemoveOwnedRuntime', 'procedure RemoveLocationBackups')
-        self.assertIn('RemoveOwnedTree(Child)', remove_runtime)
-        self.assertIn('RemoveDirectoryW(LongWinPath(Root))', remove_runtime)
-        self.assertIn('DeleteFileW(LongWinPath(Owner))', remove_runtime)
+                res2 = subprocess.run(
+                    [str(PS), '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+                     '-File', str(BASE / 'packaging' / 'uninstall.ps1'),
+                     '-Action', 'Uninstall', '-InstallRoot', str(shell), '-ManagedRoot', str(runtime)],
+                    capture_output=True, text=True, timeout=20,
+                    env=dict(os.environ, LOCALAPPDATA=str(area / 'local')),
+                )
+                self.assertEqual(res2.returncode, 0, res2.stdout + res2.stderr)
+                self.assertFalse((runtime / 'cache').exists())
+                self.assertTrue(data_file.is_file())
 
 
 @unittest.skipUnless(PS.is_file(), 'Windows PowerShell is required')
@@ -223,7 +286,6 @@ exit 0
             'app-source.json': json.dumps({'schema':1,'commit':COMMIT,'ancestors':[COMMIT],'files':{'app.py':'0'*40}}).encode('utf8'),
             'distribution.ps1': script.encode('utf8'),
             'uninstall.ps1': b'# inert fixture',
-            'check_update.ps1': b'# inert fixture',
             'gui_setup.ps1': WRAPPER.read_bytes(),
             'ForensicDGP.exe': b'inert executable; never started',
             'install_location.ps1': location_script.encode('utf8'),

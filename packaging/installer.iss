@@ -52,7 +52,7 @@ WizardStyle=modern
 InfoBeforeFile={#StageDir}\LICENSE.txt
 SetupIconFile={#StageDir}\app.ico
 UninstallDisplayIcon={app}\ForensicDGP.exe
-CloseApplications=no
+CloseApplications=yes
 RestartApplications=no
 AllowCancelDuringInstall=no
 SetupLogging=yes
@@ -71,7 +71,6 @@ Source: "{#StageDir}\app-source.zip"; Flags: dontcopy
 Source: "{#StageDir}\app-source.json"; Flags: dontcopy
 Source: "{#StageDir}\install_location.ps1"; Flags: dontcopy
 Source: "{#StageDir}\install_state.ps1"; Flags: dontcopy
-Source: "{#StageDir}\check_update.ps1"; Flags: dontcopy
 #ifdef OfflinePayload
 Source: "{#StageDir}\payload\*"; DestDir: "{tmp}\payload"; Flags: dontcopy recursesubdirs createallsubdirs
 #endif
@@ -98,9 +97,6 @@ var
   EventsFile, CancelFile, SetupLog, LastStage, ActiveDownloadStage: String;
   UninstallMutex: THandle;
   RequirementsPage: TOutputMsgWizardPage;
-  CheckUpdateButton, DownloadUpdateButton: TNewButton;
-  UpdateStatus: TNewStaticText;
-  UpdateOutput, AvailableVersion: String;
   StepLabel, TransferLabel: TNewStaticText;
   DetailsButton: TNewButton;
   DetailsMemo: TNewMemo;
@@ -114,12 +110,6 @@ var
 
 function GetFileAttributes(Name: String): LongWord;
   external 'GetFileAttributesW@kernel32.dll stdcall';
-function SetFileAttributes(Name: String; Attr: LongWord): Boolean;
-  external 'SetFileAttributesW@kernel32.dll stdcall';
-function DeleteFileW(Name: String): Boolean;
-  external 'DeleteFileW@kernel32.dll stdcall';
-function RemoveDirectoryW(Name: String): Boolean;
-  external 'RemoveDirectoryW@kernel32.dll stdcall';
 function CloseHandle(Handle: THandle): Boolean;
   external 'CloseHandle@kernel32.dll stdcall';
 function CreateMutex(Security: LongWord; InitialOwner: Boolean; Name: String): THandle;
@@ -191,92 +181,6 @@ begin
   if (not Error) and (Pos('"mode"', S) > 0) then StateOutput := S;
 end;
 
-function IsReleaseVersion(const Version: String): Boolean;
-var
-  I, Digits, Parts: Integer;
-begin
-  Result := False;
-  Digits := 0;
-  Parts := 0;
-  for I := 1 to Length(Version) do begin
-    if Version[I] = '.' then begin
-      if Digits = 0 then Exit;
-      Parts := Parts + 1;
-      Digits := 0;
-    end else begin
-      if (Version[I] < '0') or (Version[I] > '9') then Exit;
-      Digits := Digits + 1;
-      if Digits > 4 then Exit;
-    end;
-  end;
-  Result := (Parts = 2) and (Digits > 0);
-end;
-
-procedure UpdateCheckLog(const S: String; const Error, FirstLine: Boolean);
-begin
-  if not Error then UpdateOutput := Trim(S);
-end;
-
-procedure CheckForUpdate(Sender: TObject);
-var
-  ReleaseText: AnsiString;
-  CheckPath, RegisteredVersion, LocalVersion: String;
-  Code: Integer;
-begin
-  AvailableVersion := '';
-  DownloadUpdateButton.Visible := False;
-  CheckUpdateButton.Enabled := False;
-  UpdateStatus.Caption := 'Checking for a newer installer...';
-  UpdateStatus.Update;
-  try
-    try
-      ExtractTemporaryFile('release.json');
-      ExtractTemporaryFile('check_update.ps1');
-      CheckPath := ExpandConstant('{tmp}\check_update.ps1');
-      if (GetSHA256OfFile(ExpandConstant('{tmp}\release.json')) <> '{#ReleaseManifestSHA256}') or
-         (not LoadStringFromFile(ExpandConstant('{tmp}\release.json'), ReleaseText)) or
-         (GetSHA256OfFile(CheckPath) <> JsonField(String(ReleaseText), 'check_update.ps1')) then
-        RaiseException('The embedded update helper could not be verified.');
-      LocalVersion := '{#ReleaseVersion}';
-      RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{FEE649E9-195D-4576-8F30-DAE06A5099C8}_is1', 'DisplayVersion', RegisteredVersion);
-      if not IsReleaseVersion(RegisteredVersion) then RegisteredVersion := LocalVersion;
-      UpdateOutput := '';
-      if (not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
-         Q(CheckPath) + ' -LocalVersion ' + Q(LocalVersion) + ' -InstalledVersion ' + Q(RegisteredVersion),
-         ExpandConstant('{tmp}'), SW_HIDE, ewWaitUntilTerminated, Code, @UpdateCheckLog)) or (Code <> 0) then
-        RaiseException('The update check could not run.');
-      if UpdateOutput = 'DGP_CURRENT' then
-        UpdateStatus.Caption := 'No newer published installer found.'
-      else begin
-        if Pos('DGP_UPDATE ', UpdateOutput) <> 1 then RaiseException('The release could not be checked.');
-        AvailableVersion := Copy(UpdateOutput, 12, Length(UpdateOutput));
-        if not IsReleaseVersion(AvailableVersion) then RaiseException('The available version could not be verified.');
-        UpdateStatus.Caption := 'Forensic DGP ' + AvailableVersion + ' is available.';
-        DownloadUpdateButton.Visible := True;
-      end;
-    except
-      UpdateStatus.Caption := 'Unable to check for updates. You can continue with this installer.';
-      Log(GetExceptionMessage);
-    end;
-  finally
-    CheckUpdateButton.Enabled := True;
-  end;
-end;
-
-procedure DownloadUpdate(Sender: TObject);
-var
-  Code: Integer;
-  Url: String;
-begin
-  if not IsReleaseVersion(AvailableVersion) then Exit;
-  Url := 'https://github.com/janusinss/forensic-dgp-downloads/releases/download/v' + AvailableVersion +
-         '/ForensicDGP_Setup-' + AvailableVersion + '.exe';
-  if ShellExec('open', Url, '', '', SW_SHOWNORMAL, ewNoWait, Code) then
-    UpdateStatus.Caption := 'After downloading, close this setup and run the newer installer.'
-  else
-    UpdateStatus.Caption := 'Unable to open the update download.';
-end;
-
 procedure PrepareStateFiles;
 var
   ReleaseText: AnsiString;
@@ -308,7 +212,7 @@ begin
     ' -InstallRoot ' + Q(WizardDirValue) + ' -ReleaseVersion {#ReleaseVersion} -ReleaseCommit {#ReleaseCommit}' +
     ' -SourceManifest ' + Q(ExpandConstant('{tmp}\app-source.json'));
   if PreviousInstallRoot <> '' then Params := Params + ' -RegisteredRoot ' + Q(PreviousInstallRoot);
-  Result := ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_HIDE,
+  Result := ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_SHOWNORMAL,
     ewWaitUntilTerminated, Code, @StateLog) and (Code = 0);
 end;
 
@@ -360,7 +264,7 @@ begin
   if PreviousLauncherVerified and (PreviousInstallRoot <> '') and (InstalledVersion <> '') and (CompareText(InstalledVersion, '0.2.0') >= 0) then begin
     if MsgBox('Forensic DGP is running. Close its dedicated window and continue setup? Active work must finish or be stopped before installation.', mbConfirmation, MB_YESNO) <> IDYES then Exit;
     if Exec(AddBackslash(PreviousInstallRoot) + 'ForensicDGP.exe', '--request-close', PreviousInstallRoot,
-      SW_HIDE, ewWaitUntilTerminated, Code) and (Code = 0) then begin
+      SW_SHOWNORMAL, ewWaitUntilTerminated, Code) and (Code = 0) then begin
       for I := 1 to 150 do begin
         if not CheckForMutexes('Local\ForensicDGP-Desktop') then begin Result := True; Exit; end;
         Sleep(100);
@@ -496,23 +400,7 @@ begin
 #endif
     'The folder you choose contains the full application, downloaded components and saved records. No administrator access is required.' + #13#10#13#10 +
     'This is an unsigned research preview. Generated facial details are estimates and cannot verify identity.');
-  RequirementsPage.MsgLabel.Height := ScaleY(155);
-  CheckUpdateButton := TNewButton.Create(WizardForm);
-  CheckUpdateButton.Parent := RequirementsPage.Surface;
-  CheckUpdateButton.SetBounds(0, ScaleY(161), ScaleX(145), ScaleY(28));
-  CheckUpdateButton.Caption := 'Check for updates';
-  CheckUpdateButton.OnClick := @CheckForUpdate;
-  DownloadUpdateButton := TNewButton.Create(WizardForm);
-  DownloadUpdateButton.Parent := RequirementsPage.Surface;
-  DownloadUpdateButton.SetBounds(ScaleX(153), ScaleY(161), ScaleX(135), ScaleY(28));
-  DownloadUpdateButton.Caption := 'Download update';
-  DownloadUpdateButton.OnClick := @DownloadUpdate;
-  DownloadUpdateButton.Visible := False;
-  UpdateStatus := TNewStaticText.Create(WizardForm);
-  UpdateStatus.Parent := RequirementsPage.Surface;
-  UpdateStatus.AutoSize := False;
-  UpdateStatus.WordWrap := True;
-  UpdateStatus.SetBounds(0, ScaleY(194), RequirementsPage.SurfaceWidth, ScaleY(34));
+  RequirementsPage.MsgLabel.Height := ScaleY(200);
   ModePage := CreateOutputMsgPage(wpSelectDir, 'Installation options', 'Keep your existing work', '');
   ModePage.MsgLabel.Height := ScaleY(125);
   OpenExistingButton := TNewButton.Create(WizardForm);
@@ -647,7 +535,6 @@ begin
   end;
 #endif
   ExtractTemporaryFile('gui_setup.ps1');
-  ExtractTemporaryFile('check_update.ps1');
   ExtractTemporaryFile('distribution.ps1');
   ExtractTemporaryFile('app-source.zip');
   ExtractTemporaryFile('app-source.json');
@@ -681,7 +568,7 @@ begin
     ProgressPage.SetText('Preparing bundled files', 'Extracting verified offline components. No download is required.');
     ExtractTemporaryFiles('{tmp}\payload\*');
 #endif
-    if not ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_HIDE,
+    if not ExecAndLogOutput(PS, Params, ExpandConstant('{tmp}'), SW_SHOWNORMAL,
         ewWaitUntilTerminated, ResultCode, @SetupOutput) then begin
       Result := 'Could not run application setup. Log: ' + SetupLog;
       Exit;
@@ -705,6 +592,11 @@ begin
   if not Error and (Pos('"mutex_name"', S) > 0) then CheckOutput := S;
 end;
 
+procedure UninstallExecLog(const S: String; const Error, FirstLine: Boolean);
+begin
+  Log(S);
+end;
+
 function InitializeUninstall: Boolean;
 var
   Code: Integer;
@@ -725,7 +617,7 @@ begin
   CheckFailure := '';
   if not ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
       Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Check -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -ManagedRoot ' +
-      Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_HIDE,
+      Q(ExpandConstant('{app}\runtime')), ExpandConstant('{app}'), SW_SHOWNORMAL,
       ewWaitUntilTerminated, Code, @UninstallLog) or (Code <> 0) then begin
     if CheckFailure = '' then CheckFailure := 'The installation could not be verified.';
     SuppressibleMsgBox(CheckFailure + ' Files were preserved.', mbError, MB_OK, IDOK);
@@ -782,112 +674,6 @@ begin
   if Result then Result := GetSHA256OfFile(Path) = ExpectedHash;
 end;
 
-function LongWinPath(const Path: String): String;
-begin
-  if Pos('\\?\', Path) = 1 then
-    Result := Path
-  else
-    Result := '\\?\' + Path;
-end;
-
-function RemoveOwnedTree(const Path: String): Boolean;
-var
-  LongPath: String;
-  Attr: LongWord;
-  Entry: TFindRec;
-begin
-  Result := False;
-  LongPath := LongWinPath(Path);
-  Attr := GetFileAttributes(LongPath);
-  if Attr = $FFFFFFFF then begin
-    Result := True;
-    Exit;
-  end;
-  if (Attr and $10) = 0 then begin
-    if (Attr and 1) <> 0 then
-      SetFileAttributes(LongPath, Attr and (not 1));
-    Result := DeleteFileW(LongPath);
-    Exit;
-  end;
-  if (Attr and $400) <> 0 then begin
-    { Do not recurse into junctions or directory reparse points. }
-    if (Attr and 1) <> 0 then
-      SetFileAttributes(LongPath, Attr and (not 1));
-    Result := RemoveDirectoryW(LongPath);
-    Exit;
-  end;
-  if FindFirst(AddBackslash(LongPath) + '*', Entry) then begin
-    try
-      repeat
-        if (Entry.Name <> '.') and (Entry.Name <> '..') then begin
-          if not RemoveOwnedTree(AddBackslash(Path) + Entry.Name) then Exit;
-        end;
-      until not FindNext(Entry);
-    finally
-      FindClose(Entry);
-    end;
-  end;
-  if (Attr and 1) <> 0 then
-    SetFileAttributes(LongPath, Attr and (not 1));
-  Result := RemoveDirectoryW(LongPath);
-end;
-
-procedure RemoveOwnedRuntime;
-var
-  Root, Owner, OwnerHash, Child: String;
-  OwnerText: AnsiString;
-  Attr: LongWord;
-  Entry: TFindRec;
-  Entries: TStringList;
-  I: Integer;
-begin
-  Root := ExpandConstant('{app}\runtime');
-  Owner := AddBackslash(Root) + 'owner.json';
-  OwnerHash := JsonField(CheckOutput, 'runtime_owner_sha256');
-  Attr := GetFileAttributes(LongWinPath(Root));
-  if (Attr = $FFFFFFFF) and (OwnerHash = '') then Exit;
-  if (Attr = $FFFFFFFF) or ((Attr and $410) <> $10) then
-    RaiseException('The application runtime path changed. Uninstall stopped.');
-  if OwnerHash = '' then begin
-    if not RemoveDirectoryW(LongWinPath(Root)) then RaiseException('The runtime folder is no longer empty or cannot be removed.');
-    Exit;
-  end;
-  if not MatchesUninstallRecord(Owner, OwnerHash) or not LoadStringFromFile(Owner, OwnerText) then
-    RaiseException('The runtime ownership record changed. Uninstall stopped.');
-  Entries := TStringList.Create;
-  try
-    if not FindFirst(AddBackslash(LongWinPath(Root)) + '*', Entry) then
-      RaiseException('The runtime contents could not be read.');
-    try
-      repeat
-        if (Entry.Name <> '.') and (Entry.Name <> '..') and (CompareText(Entry.Name, 'owner.json') <> 0) then
-          Entries.Add(Entry.Name);
-      until not FindNext(Entry);
-    finally
-      FindClose(Entry);
-    end;
-    for I := 0 to Entries.Count - 1 do begin
-      if not OrdinaryShellPath or ((GetFileAttributes(LongWinPath(Root)) and $410) <> $10) then
-        RaiseException('The application runtime path changed. Uninstall stopped.');
-      Child := AddBackslash(Root) + Entries[I];
-      Attr := GetFileAttributes(LongWinPath(Child));
-      { RemoveOwnedTree handles >260-char paths, read-only files, and removes junctions without traversing targets. }
-      if (Attr <> $FFFFFFFF) and not RemoveOwnedTree(Child) then
-        RaiseException('Could not remove ' + Child + '. Close programs using that folder and retry uninstall.');
-    end;
-    if not MatchesUninstallRecord(Owner, OwnerHash) or not DeleteFileW(LongWinPath(Owner)) then
-      RaiseException('Could not remove the runtime ownership record. Retry uninstall.');
-    if not RemoveDirectoryW(LongWinPath(Root)) then begin
-      if OrdinaryShellPath and ((GetFileAttributes(LongWinPath(Root)) and $410) = $10) and
-          (GetFileAttributes(LongWinPath(Owner)) = $FFFFFFFF) then
-        SaveStringToFile(Owner, OwnerText, False);
-      RaiseException('Could not remove the runtime folder. Close programs using that folder and retry uninstall.');
-    end;
-  finally
-    Entries.Free;
-  end;
-end;
-
 procedure RemoveLocationBackups;
 var
   Backups, RecordParts: TArrayOfString;
@@ -909,14 +695,53 @@ begin
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  RuntimeRoot, OwnerPath, OwnerHash, MutexName: String;
+  OwnerText: AnsiString;
+  HasOwner, ExecOk: Boolean;
+  Code: Integer;
+  WaitCode: LongWord;
 begin
   if CurUninstallStep = usUninstall then begin
     if (UninstallMutex = 0) or not OrdinaryShellPath or
         ((RegisteredInstallRoot <> '') and (CompareText(RegisteredInstallRoot, RemoveBackslashUnlessRoot(ExpandConstant('{app}'))) <> 0)) or
         not MatchesUninstallRecord(ExpandConstant('{app}\shell-owner.json'), JsonField(CheckOutput, 'shell_owner_sha256')) or
-        not MatchesUninstallRecord(ExpandConstant('{app}\install-location.json'), JsonField(CheckOutput, 'location_sha256')) then
+        not MatchesUninstallRecord(ExpandConstant('{app}\install-location.json'), JsonField(CheckOutput, 'location_sha256')) or
+        (GetSHA256OfFile(ExpandConstant('{app}\uninstall.ps1')) <> '{#UninstallSHA256}') then
       RaiseException('The installation changed before removal. Uninstall stopped.');
-    RemoveOwnedRuntime;
+    RuntimeRoot := ExpandConstant('{app}\runtime');
+    OwnerPath := AddBackslash(RuntimeRoot) + 'owner.json';
+    OwnerHash := JsonField(CheckOutput, 'runtime_owner_sha256');
+    HasOwner := False;
+    if OwnerHash <> '' then begin
+      if not MatchesUninstallRecord(OwnerPath, OwnerHash) or not LoadStringFromFile(OwnerPath, OwnerText) then
+        RaiseException('The runtime ownership record changed. Uninstall stopped.');
+      HasOwner := True;
+    end;
+    MutexName := JsonField(CheckOutput, 'mutex_name');
+    ReleaseMutex(UninstallMutex);
+    CloseHandle(UninstallMutex);
+    UninstallMutex := 0;
+    ExecOk := ExecAndLogOutput(PS, '-NoProfile -NonInteractive -ExecutionPolicy RemoteSigned -File ' +
+      Q(ExpandConstant('{app}\uninstall.ps1')) + ' -Action Uninstall -InstallRoot ' + Q(ExpandConstant('{app}')) + ' -ManagedRoot ' +
+      Q(RuntimeRoot), ExpandConstant('{app}'), SW_SHOWNORMAL, ewWaitUntilTerminated, Code, @UninstallExecLog);
+    UninstallMutex := CreateMutex(0, False, MutexName);
+    if UninstallMutex <> 0 then begin
+      WaitCode := WaitForSingleObject(UninstallMutex, 5000);
+      if (WaitCode <> 0) and (WaitCode <> $80) then begin
+        CloseHandle(UninstallMutex);
+        UninstallMutex := 0;
+      end;
+    end;
+    if (not ExecOk) or (Code <> 0) or (UninstallMutex = 0) then
+      RaiseException('Could not prepare the runtime folder for uninstall. Close running programs and retry uninstall.');
+    if not OrdinaryShellPath then
+      RaiseException('The installation path changed before removal. Uninstall stopped.');
+    if DirExists(RuntimeRoot) and not DelTree(RuntimeRoot, True, True, True) then begin
+      if HasOwner and DirExists(RuntimeRoot) and not FileExists(OwnerPath) then
+        SaveStringToFile(OwnerPath, OwnerText, False);
+      RaiseException('Could not remove the runtime folder. Close programs using that folder and retry uninstall.');
+    end;
     RemoveLocationBackups;
   end;
   if (CurUninstallStep = usPostUninstall) and OrdinaryShellPath then

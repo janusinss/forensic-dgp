@@ -58,7 +58,7 @@ class SetupWrapperTests(unittest.TestCase):
         self.log=self.area/'setup.log'
         for name in ('gui_setup.ps1','install_location.ps1','install_state.ps1'):
             shutil.copyfile(BASE/'packaging'/name,self.stage/name)
-        for name in ('ForensicDGP.exe','uninstall.ps1','check_update.ps1'):
+        for name in ('ForensicDGP.exe','uninstall.ps1'):
             (self.stage/name).write_bytes(b'inert embedded fixture')
         (self.stage/'app-source.zip').write_bytes(b'inert source bundle')
         (self.stage/'app-source.json').write_text(json.dumps({'schema':1,'commit':'b'*40,'ancestors':['b'*40],
@@ -76,7 +76,7 @@ exit 0
         python_zip=payload/'python/python-3.13.9-amd64.zip'
         (payload/'manifest.json').write_text(json.dumps({'schema':1,'platform':'win_amd64','files':[{'path':'python/python-3.13.9-amd64.zip','bytes':python_zip.stat().st_size,'sha256':hashlib.sha256(python_zip.read_bytes()).hexdigest()}],'models':[]}))
         files={name:hashlib.sha256((self.stage/name).read_bytes()).hexdigest() for name in
-               ('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','check_update.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1')}
+               ('app-source.zip','app-source.json','distribution.ps1','uninstall.ps1','gui_setup.ps1','ForensicDGP.exe','install_location.ps1','install_state.ps1')}
         files['offline-payload-manifest.json']=hashlib.sha256((payload/'manifest.json').read_bytes()).hexdigest()
         self.manifest={'schema':1,'version':'0.2.0','commit':'b'*40,'payload':'offline-bundled',
                        'payload_expanded_bytes':1,'files':files}

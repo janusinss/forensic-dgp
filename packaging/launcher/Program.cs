@@ -470,7 +470,7 @@ internal static class Native
         {
             handle = CreateJobObject(IntPtr.Zero, null);
             Check(handle != IntPtr.Zero, "Cannot create owned application job");
-            ExtendedLimit limits = new ExtendedLimit(); limits.Basic.LimitFlags = 0x2000;
+            ExtendedLimit limits = new ExtendedLimit(); limits.Basic.LimitFlags = 0x2800;
             int size = Marshal.SizeOf(limits); IntPtr data = Marshal.AllocHGlobal(size);
             try { Marshal.StructureToPtr(limits, data, false); Check(SetInformationJobObject(handle, 9, data, (uint)size), "Cannot configure owned application shutdown"); }
             finally { Marshal.FreeHGlobal(data); }

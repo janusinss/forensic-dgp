@@ -79,6 +79,13 @@ class ReleaseManifestTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             builder.source_manifest("a" * 40, b"zip", b"100644 blob " + b"b" * 40 + b"\tapp.py\0", b"bad\n")
 
+    def test_release_builder_excludes_check_update_and_disables_upx(self):
+        packaging = Path(__file__).resolve().parents[1] / "packaging"
+        self.assertFalse((packaging / "check_update.ps1").exists())
+        source = (packaging / "build_release.py").read_text(encoding="utf8")
+        self.assertNotIn("check_update.ps1", source)
+        self.assertIn("upx=False", source)
+
 
 if __name__ == "__main__":
     unittest.main()
