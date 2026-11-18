@@ -911,11 +911,20 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(set(auto_prep_meta['output_diagnostics'].keys()), {'before', 'prepared', 'after'})
         self.assertTrue(auto_prep_meta['Auto_assessed_original_canvas_before_preparation'])
 
-    def post_reference(self, file_bytes, geometry, *, filename='ref.png', content_type='image/png'):
+    def post_reference(self, file_bytes, geometry, *, filename='ref.png', content_type='image/png',
+                       original_input=''):
         boundary = b'ref-test-boundary'
         geometry_str = geometry if isinstance(geometry, str) else json.dumps(geometry)
-        body = (
+        orig_part = (
             b'--' + boundary
+            + b'\r\nContent-Disposition: form-data; name="original_input"\r\n\r\n'
+            + original_input.encode('utf-8')
+            + b'\r\n'
+            if original_input else b''
+        )
+        body = (
+            orig_part
+            + b'--' + boundary
             + b'\r\nContent-Disposition: form-data; name="geometry"\r\n\r\n'
             + geometry_str.encode('utf-8')
             + b'\r\n--' + boundary
@@ -1102,6 +1111,240 @@ class ControllerTests(unittest.TestCase):
             {'observed_bounds_256': base_geo['observed_bounds_256'], 'native_size': [100, 120]},
         )
         self.assertEqual(status_drift, 400)
+
+    def test_implementation_app_mounts_capture_and_completion_idempotently(self):
+        route_paths_before = [getattr(r, 'path', None) for r in controller.app.routes]
+        middleware_before = list(controller.app.user_middleware)
+        self.assertEqual(route_paths_before.count('/capture/status'), 1)
+        self.assertEqual(route_paths_before.count('/face/completion/status'), 1)
+
+        import app as compat_app
+        self.assertIs(compat_app.app, controller.app)
+        route_paths_after = [getattr(r, 'path', None) for r in controller.app.routes]
+        middleware_after = list(controller.app.user_middleware)
+        self.assertEqual(route_paths_after.count('/capture/status'), 1)
+        self.assertEqual(route_paths_after.count('/face/completion/status'), 1)
+        self.assertEqual(len(middleware_after), len(middleware_before))
+
+        with patch.object(capture_api, 'TOKENS', set()):
+            cap_status, cap_body = asyncio.run(
+                asgi_request(controller.app, 'GET', '/capture/status', headers={'host': '127.0.0.1'})
+            )
+            self.assertEqual(cap_status, 200)
+            cap_json = json.loads(cap_body)
+            self.assertTrue(cap_json['available'])
+            self.assertTrue(cap_json.get('token'))
+
+        comp_status, comp_body = asyncio.run(
+            asgi_request(controller.app, 'GET', '/face/completion/status', headers={'host': '127.0.0.1'})
+        )
+        self.assertEqual(comp_status, 200)
+        comp_json = json.loads(comp_body)
+        self.assertEqual(comp_json['model'], 'completion_r2')
+
+    def test_video_restore_records_capture_crop_frame_size_and_slices_full_hd_reference(self):
+        rng = np.random.default_rng(1080)
+        full_hd_rgb = rng.integers(0, 256, (1080, 1920, 3), dtype=np.uint8)
+        full_hd_png = png(full_hd_rgb)
+
+        self.capture_owner = 'capture-owner-hd'
+        for key, value in {
+            'STORE': self.root / 'capture_hd',
+            'FRAMES': {},
+            'CROPS': {},
+            'TOKENS': {self.capture_owner},
+            'detect_faces': lambda image: [],
+        }.items():
+            setting = patch.object(capture_api, key, value)
+            setting.start()
+            self.addCleanup(setting.stop)
+
+        frame = capture_api._freeze(full_hd_png, 'video', 2.5, self.capture_owner)
+        rectangle = capture_api.Rectangle(x=640, y=220, width=320, height=400)
+        crop = capture_api._crop(frame['frame_id'], rectangle, self.capture_owner)
+        self.capture_id = crop['capture_id']
+        self.capture_contents = base64.b64decode(crop['image'].split(',', 1)[1])
+
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            status, response = self.video_restore(self.capture_owner)
+        self.assertEqual(status, 200, response.get('detail'))
+        meta = response['metadata']
+        self.assertEqual(meta['capture_crop'], [640, 220, 320, 400])
+        self.assertEqual(meta['frame_size'], [1920, 1080])
+        self.assertEqual(meta['source_size'], [320, 400])
+        self.assertEqual(meta['source_time'], 2.5)
+
+        expected_256 = self.decode_data_url_rgb(response['original_input'])
+        ref_geo = {
+            'observed_bounds_256': meta['geometry']['observed_bounds_256'],
+            'native_size': meta['geometry']['native_size'],
+            'picture_crop': meta['capture_crop'],
+            'source_size': meta['frame_size'],
+        }
+        status_ref, body_ref = self.post_reference(full_hd_png, ref_geo)
+        self.assertEqual(status_ref, 200, body_ref)
+        self.assertEqual(body_ref['source_mode'], 'full_cropped')
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_ref['reference_256']), expected_256)
+
+    def test_video_restore_slices_scaled_1920x1080_reference_from_1280x720_frame_size(self):
+        rng = np.random.default_rng(720)
+        full_hd_rgb = rng.integers(0, 256, (1080, 1920, 3), dtype=np.uint8)
+        full_hd_png = png(full_hd_rgb)
+        hd_rgb = np.asarray(Image.fromarray(full_hd_rgb).resize((1280, 720), Image.Resampling.BILINEAR))
+        hd_png = png(hd_rgb)
+
+        self.capture_owner = 'capture-owner-720p'
+        for key, value in {
+            'STORE': self.root / 'capture_720p',
+            'FRAMES': {},
+            'CROPS': {},
+            'TOKENS': {self.capture_owner},
+            'detect_faces': lambda image: [],
+        }.items():
+            setting = patch.object(capture_api, key, value)
+            setting.start()
+            self.addCleanup(setting.stop)
+
+        frame = capture_api._freeze(hd_png, 'video', 4.75, self.capture_owner)
+        rectangle = capture_api.Rectangle(x=420, y=140, width=220, height=280)
+        crop = capture_api._crop(frame['frame_id'], rectangle, self.capture_owner)
+        self.capture_id = crop['capture_id']
+        self.capture_contents = base64.b64decode(crop['image'].split(',', 1)[1])
+
+        with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+            status, response = self.video_restore(self.capture_owner)
+        self.assertEqual(status, 200, response.get('detail'))
+        meta = response['metadata']
+        self.assertEqual(meta['capture_crop'], [420, 140, 220, 280])
+        self.assertEqual(meta['frame_size'], [1280, 720])
+        self.assertEqual(meta['source_time'], 4.75)
+
+        ref_geo = {
+            'observed_bounds_256': meta['geometry']['observed_bounds_256'],
+            'native_size': meta['geometry']['native_size'],
+            'picture_crop': meta['capture_crop'],
+            'source_size': meta['frame_size'],
+        }
+        status_ref, body_ref = self.post_reference(
+            full_hd_png, ref_geo, original_input=response['original_input'],
+        )
+        self.assertEqual(status_ref, 200, body_ref)
+        self.assertEqual(body_ref['source_mode'], 'full_cropped')
+        self.assertEqual(body_ref['observed_bounds_256'], meta['geometry']['observed_bounds_256'])
+
+        expected_scaled = np.asarray(Image.fromarray(full_hd_rgb).resize((1280, 720), Image.Resampling.BILINEAR))
+        expected_256, _, _, _ = prepare_crop(expected_scaled[140:420, 420:640].copy())
+        np.testing.assert_array_equal(self.decode_data_url_rgb(body_ref['reference_256']), expected_256)
+
+    def test_reference_endpoint_real_world_template_and_subcrop_alignment_pairs(self):
+        here = Path(__file__).resolve()
+        test_images_dir = next(
+            (p / 'test_images' for p in (here.parents[1], here.parents[2], *here.parents[3:]) if (p / 'test_images').is_dir()),
+            None,
+        )
+        if test_images_dir is None:
+            raise unittest.SkipTest('test_images fixture directory is not present in this checkout')
+        b1_path = test_images_dir / '851128671_1090321427166748_3093066005956191228_n.png'
+        b2_path = test_images_dir / '851128671_1090321427166748_3093066005956191228_n - Copy.png'
+        b1_bytes = b1_path.read_bytes()
+        b2_bytes = b2_path.read_bytes()
+        b1_rgb = np.asarray(Image.open(io.BytesIO(b1_bytes)).convert('RGB'))
+        b2_rgb = np.asarray(Image.open(io.BytesIO(b2_bytes)).convert('RGB'))
+        self.assertEqual((b1_rgb.shape[1], b1_rgb.shape[0]), (253, 232))
+        self.assertEqual((b2_rgb.shape[1], b2_rgb.shape[0]), (133, 146))
+
+        b1_face1_crop = [88, 51, 122, 141]
+        b1_wide_crop = [75, 45, 148, 160]
+        b2_face1_crop = [7, 2, 125, 138]
+
+        def restore_pair(src_bytes, crop=None):
+            with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
+                kwargs = {'file': self.upload(src_bytes), 'restoration': 'off', 'input_review': 'picture_upload'}
+                if crop is not None:
+                    kwargs['picture_crop'] = json.dumps(crop)
+                res = self.restore(**kwargs)
+            meta = res['metadata']
+            geo = {
+                'observed_bounds_256': meta['geometry']['observed_bounds_256'],
+                'native_size': meta['geometry']['native_size'],
+            }
+            if crop is not None:
+                geo['picture_crop'] = meta['picture_crop']
+                geo['source_size'] = meta['source_size']
+            return res, geo
+
+        def assert_aligned(res, geo, ref_bytes, expected_mode, *, expect_eval_bounds=False):
+            status, body = self.post_reference(ref_bytes, geo, original_input=res['original_input'])
+            self.assertEqual(status, 200, body)
+            self.assertEqual(body['source_mode'], expected_mode)
+            obs = body['observed_bounds_256']
+            self.assertEqual(obs, geo['observed_bounds_256'])
+            if expect_eval_bounds:
+                eb = body.get('eval_bounds_256')
+                self.assertIsInstance(eb, list)
+                self.assertEqual(len(eb), 4)
+                self.assertGreaterEqual(eb[0], obs[0])
+                self.assertGreaterEqual(eb[1], obs[1])
+                self.assertLessEqual(eb[2], obs[2])
+                self.assertLessEqual(eb[3], obs[3])
+                self.assertLess(eb[0], eb[2])
+                self.assertLess(eb[1], eb[3])
+                l, t, r, b = eb
+            else:
+                self.assertNotIn('eval_bounds_256', body)
+                l, t, r, b = obs
+            orig_256 = self.decode_data_url_rgb(res['original_input'])
+            ref_256 = self.decode_data_url_rgb(body['reference_256'])
+            mae = float(np.abs(orig_256[t:b, l:r].astype(np.float32) - ref_256[t:b, l:r].astype(np.float32)).mean())
+            self.assertLess(mae, 2.5)
+            return body
+
+        # b1(Face1) <-> b2: wider crop -> subcrop_aligned, tighter Face1 -> template_cropped
+        res_b1_wide, geo_b1_wide = restore_pair(b1_bytes, b1_wide_crop)
+        assert_aligned(res_b1_wide, geo_b1_wide, b2_bytes, 'subcrop_aligned', expect_eval_bounds=True)
+
+        res_b1_face1, geo_b1_face1 = restore_pair(b1_bytes, b1_face1_crop)
+        assert_aligned(res_b1_face1, geo_b1_face1, b2_bytes, 'template_cropped')
+
+        # b2(Face1) -> b1: template_cropped
+        res_b2_face1, geo_b2_face1 = restore_pair(b2_bytes, b2_face1_crop)
+        assert_aligned(res_b2_face1, geo_b2_face1, b1_bytes, 'template_cropped')
+
+        # b2(Full) -> b1: template_cropped
+        res_b2_full, geo_b2_full = restore_pair(b2_bytes)
+        assert_aligned(res_b2_full, geo_b2_full, b1_bytes, 'template_cropped')
+
+        # b1(Full) -> b2: subcrop_aligned + eval_bounds_256
+        res_b1_full, geo_b1_full = restore_pair(b1_bytes)
+        assert_aligned(res_b1_full, geo_b1_full, b2_bytes, 'subcrop_aligned', expect_eval_bounds=True)
+
+        # Multi-scale template match: 0.55x scaled b1 inside mismatched-aspect canvas -> template_cropped
+        scaled_small_b1 = Image.fromarray(b1_rgb).resize((139, 128), Image.Resampling.BILINEAR)
+        canvas = Image.new('RGB', (210, 150), (30, 40, 50))
+        canvas.paste(scaled_small_b1, (20, 10))
+        canvas_buf = io.BytesIO()
+        canvas.save(canvas_buf, format='PNG')
+        assert_aligned(res_b2_face1, geo_b2_face1, canvas_buf.getvalue(), 'template_cropped')
+
+        # Malformed original_input falls back safely without crashing.
+        status_bad_orig, body_bad_orig = self.post_reference(
+            b1_bytes, geo_b2_full, original_input='data:image/png;base64,not-valid-base64!!!',
+        )
+        self.assertEqual(status_bad_orig, 400)
+        self.assertIn('Reference aspect ratio does not match', body_bad_orig['detail'])
+
+        # Aspect-matched native_crop fallback with orig_256 handles minor bounds drift within 5% aspect ratio.
+        _, _, _, base_geo = prepare_crop(np.zeros((120, 100, 3), dtype=np.uint8))
+        orig_drift_256, _, _, _ = prepare_crop(b1_rgb[:120, :100])
+        drift_ref = np.asarray(Image.fromarray(b1_rgb[:120, :100]).resize((102, 118), Image.Resampling.BILINEAR))
+        status_drift_ok, body_drift_ok = self.post_reference(
+            png(drift_ref),
+            {'observed_bounds_256': base_geo['observed_bounds_256'], 'native_size': [100, 120]},
+            original_input=controller.url(png(orig_drift_256)),
+        )
+        self.assertEqual(status_drift_ok, 200, body_drift_ok)
+        self.assertEqual(body_drift_ok['source_mode'], 'native_crop')
+        self.assertEqual(body_drift_ok['observed_bounds_256'], base_geo['observed_bounds_256'])
 
 
 if __name__ == '__main__':

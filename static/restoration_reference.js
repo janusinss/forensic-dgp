@@ -64,6 +64,13 @@
             && cx + cw <= sourceSize[0] && cy + ch <= sourceSize[1];
     }
 
+    function canvasResult(canvas, data) {
+        return {
+            data,
+            dataUrl: typeof canvas.toDataURL === 'function' ? canvas.toDataURL('image/png') : null,
+        };
+    }
+
     function drawCroppedToBounds(image, bounds, cropRect) {
         const [left, top, right, bottom] = bounds;
         const obsW = right - left, obsH = bottom - top;
@@ -91,7 +98,7 @@
         context.fillStyle = 'rgb(128, 128, 128)';
         context.fillRect(0, 0, side, side);
         draw(context);
-        return context.getImageData(0, 0, side, side).data;
+        return canvasResult(canvas, context.getImageData(0, 0, side, side).data);
     }
 
     async function referencePixels(source, result) {
@@ -103,8 +110,10 @@
         const [left, top, right, bottom] = bounds;
         const obsW = right - left, obsH = bottom - top;
         const isPadded = left > 0 || top > 0 || right < side || bottom < side;
-        const pictureCrop = result?.metadata?.picture_crop ?? geometry?.picture_crop;
-        const sourceSize = result?.metadata?.source_size ?? geometry?.source_size;
+        const pictureCrop = result?.metadata?.picture_crop ?? result?.metadata?.capture_crop ?? geometry?.picture_crop;
+        const sourceSize = result?.metadata?.picture_crop != null
+            ? (result?.metadata?.source_size ?? geometry?.source_size)
+            : (result?.metadata?.frame_size ?? result?.metadata?.source_size ?? geometry?.source_size);
         const canSliceSource = validPositivePair(sourceSize)
             && natW === sourceSize[0] && natH === sourceSize[1]
             && validCropWithinSource(pictureCrop, sourceSize);
@@ -117,7 +126,7 @@
             const data = context.getImageData(0, 0, side, side).data;
             if (isPadded) {
                 if (hasUniformGrayPadding(data, bounds)) {
-                    return data;
+                    return canvasResult(canvas, data);
                 }
                 if (canSliceSource) {
                     return drawCroppedToBounds(image, bounds, pictureCrop);
@@ -127,7 +136,7 @@
             if (canSliceSource) {
                 return drawCroppedToBounds(image, bounds, pictureCrop);
             }
-            return data;
+            return canvasResult(canvas, data);
         }
 
         if (canSliceSource) {
@@ -161,8 +170,109 @@
             }
         }
         const count = (right - left) * (bottom - top) * 3;
+        const maeNum = absolute / count;
+        const accuracy = `${((1 - maeNum / 255) * 100).toFixed(2)}%`;
         const psnr = squared ? (10 * Math.log10(255 ** 2 / (squared / count))).toFixed(2) : '∞';
-        return { mae: (absolute / count).toFixed(2), psnr };
+        return { mae: maeNum.toFixed(2), psnr, accuracy };
+    }
+
+    function waitForVideoEvent(video, eventName, timeoutMessage, trigger) {
+        return new Promise((resolve, reject) => {
+            let settled = false;
+            let timer = null;
+            const cleanup = () => {
+                video.removeEventListener?.(eventName, onSuccess);
+                video.removeEventListener?.('error', onError);
+                if (video.onloadeddata === onSuccess) video.onloadeddata = null;
+                if (video.onseeked === onSuccess) video.onseeked = null;
+                if (video.onerror === onError) video.onerror = null;
+                if (timer != null && typeof clearTimeout === 'function') clearTimeout(timer);
+            };
+            const finish = problem => {
+                if (settled) return;
+                settled = true;
+                cleanup();
+                problem ? reject(problem) : resolve();
+            };
+            const onSuccess = () => finish();
+            const onError = () => finish(new Error('This browser cannot decode this video reference. Try MP4 or WebM.'));
+            if (typeof setTimeout === 'function') {
+                timer = setTimeout(() => finish(new Error(timeoutMessage)), 15000);
+            }
+            if (typeof video.addEventListener === 'function') {
+                video.addEventListener(eventName, onSuccess, { once: true });
+                video.addEventListener('error', onError, { once: true });
+            } else if (eventName === 'loadeddata') {
+                video.onloadeddata = onSuccess;
+                video.onerror = onError;
+            } else {
+                video.onseeked = onSuccess;
+                video.onerror = onError;
+            }
+            if (trigger) trigger();
+        });
+    }
+
+    async function extractVideoFrameAsPngFile(file, result) {
+        if (!file || !file.size || file.size > 500 * 1024 ** 2) {
+            throw new Error('Choose a video reference under 500 MB.');
+        }
+        const targetTime = Number.isFinite(result?.metadata?.source_time) && result.metadata.source_time >= 0
+            ? result.metadata.source_time
+            : 0;
+        const objectUrl = URL.createObjectURL(file);
+        try {
+            const video = document.createElement('video');
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = 'auto';
+            await waitForVideoEvent(
+                video,
+                'loadeddata',
+                'The video reference could not be decoded within 15 seconds. Try another file.',
+                () => {
+                    video.src = objectUrl;
+                    if (typeof video.load === 'function') video.load();
+                }
+            );
+            const hasFiniteDuration = Number.isFinite(video.duration) && video.duration > 0;
+            const maxSeek = hasFiniteDuration
+                ? Math.max(0, (video.duration || 0) - 0.001)
+                : targetTime;
+            const zeroFrames = video.getVideoPlaybackQuality?.().totalVideoFrames === 0;
+            if (targetTime > 0 || zeroFrames) {
+                const seekTo = targetTime > 0
+                    ? Math.min(targetTime, maxSeek)
+                    : (hasFiniteDuration ? Math.min(0.001, maxSeek) : 0);
+                if (seekTo > 0 || zeroFrames) {
+                    await waitForVideoEvent(
+                        video,
+                        'seeked',
+                        'Timed out while seeking to the matching video reference frame.',
+                        () => {
+                            video.currentTime = seekTo;
+                        }
+                    );
+                }
+            }
+            const width = video.videoWidth;
+            const height = video.videoHeight;
+            if (!width || !height) {
+                throw new Error('The browser could not decode a frame from this video reference.');
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, width, height);
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!blob || !blob.size) {
+                throw new Error('Could not encode the extracted video reference frame.');
+            }
+            return new File([blob], 'reference-frame.png', { type: 'image/png' });
+        } finally {
+            URL.revokeObjectURL(objectUrl);
+        }
     }
 
     async function fetchServerReference(file, result, geometry, bounds) {
@@ -170,11 +280,19 @@
         form.append('file', file);
         const payload = { observed_bounds_256: bounds };
         if (geometry?.native_size != null) payload.native_size = geometry.native_size;
-        const pictureCrop = result.metadata?.picture_crop ?? geometry?.picture_crop;
+        const pictureCrop = result?.metadata?.picture_crop ?? result?.metadata?.capture_crop ?? geometry?.picture_crop;
         if (pictureCrop != null) payload.picture_crop = pictureCrop;
-        const sourceSize = result.metadata?.source_size ?? geometry?.source_size;
+        const sourceSize = result?.metadata?.picture_crop != null
+            ? (result?.metadata?.source_size ?? geometry?.source_size)
+            : (result?.metadata?.frame_size ?? result?.metadata?.source_size ?? geometry?.source_size);
         if (sourceSize != null) payload.source_size = sourceSize;
         form.append('geometry', JSON.stringify(payload));
+        const alignmentOriginal = typeof result?._alignmentOriginalInput === 'string' && result._alignmentOriginalInput.startsWith('data:image/png;base64,')
+            ? result._alignmentOriginalInput
+            : result?.original_input;
+        if (typeof alignmentOriginal === 'string' && alignmentOriginal.startsWith('data:image/png;base64,')) {
+            form.append('original_input', alignmentOriginal);
+        }
         let response;
         try {
             response = await fetch('/face/restoration/reference', { method: 'POST', body: form });
@@ -201,22 +319,41 @@
         if (!body || typeof body.reference_256 !== 'string' || !body.reference_256) {
             throw new Error('The prepared reference image is unavailable.');
         }
-        return body.reference_256;
+        return {
+            reference_256: body.reference_256,
+            eval_bounds_256: body.eval_bounds_256,
+        };
+    }
+
+    function validBounds256(bounds) {
+        return Array.isArray(bounds)
+            && bounds.length === 4
+            && bounds.every(n => Number.isInteger(n) && n >= 0 && n <= side)
+            && bounds[0] < bounds[2]
+            && bounds[1] < bounds[3];
     }
 
     window.scoreVideoReference = async (file, result, options = {}) => {
-        const allowedTypes = ['image/png', 'image/jpeg'];
-        const hasAllowedType = allowedTypes.includes(file?.type);
-        const hasAllowedExt = !file?.type && /\.(png|jpe?g)$/i.test(file?.name || '');
-        if (!file || !file.size || file.size > 10 * 1024 ** 2 || (!hasAllowedType && !hasAllowedExt)) {
-            throw new Error('Choose a PNG or JPEG reference under 10 MB.');
+        const isVideo = /^video\//i.test(file?.type || '') || /\.(mp4|webm|mov|m4v)$/i.test(file?.name || '');
+        if (isVideo) {
+            if (!file || !file.size || file.size > 500 * 1024 ** 2) {
+                throw new Error('Choose a video reference under 500 MB.');
+            }
+        } else {
+            const allowedTypes = ['image/png', 'image/jpeg'];
+            const hasAllowedType = allowedTypes.includes(file?.type);
+            const hasAllowedExt = !file?.type && /\.(png|jpe?g)$/i.test(file?.name || '');
+            if (!file || !file.size || file.size > 10 * 1024 ** 2 || (!hasAllowedType && !hasAllowedExt)) {
+                throw new Error('Choose a PNG or JPEG reference under 10 MB.');
+            }
         }
         const geometry = result.metadata?.geometry;
         const bounds = geometry?.observed_bounds_256;
-        if (bounds?.length !== 4 || !bounds.every(n => Number.isInteger(n) && n >= 0 && n <= side)
-            || bounds[0] >= bounds[2] || bounds[1] >= bounds[3]) {
+        if (!validBounds256(bounds)) {
             throw new Error('The observed crop bounds could not be verified.');
         }
+
+        const resolvedFile = isVideo ? await extractVideoFrameAsPngFile(file, result) : file;
 
         const canFetch = typeof fetch === 'function'
             && typeof FormData === 'function'
@@ -224,32 +361,43 @@
             && typeof window !== 'undefined'
             && window.location?.protocol !== 'file:';
 
-        let serverRefUrl = null;
+        let serverRef = null;
         if (canFetch) {
-            serverRefUrl = await fetchServerReference(file, result, geometry, bounds);
+            serverRef = await fetchServerReference(resolvedFile, result, geometry, bounds);
         }
 
+        const scoreBounds = validBounds256(serverRef?.eval_bounds_256) ? serverRef.eval_bounds_256 : bounds;
         const hasPrepared = Boolean(result.metadata?.preparation_applied && result.prepared_input);
         let url = null;
         try {
-            const targetPromise = serverRefUrl
-                ? pixels(serverRefUrl)
+            const targetPromise = serverRef?.reference_256
+                ? pixels(serverRef.reference_256).then(data => ({ data, dataUrl: serverRef.reference_256 }))
                 : (() => {
-                    url = URL.createObjectURL(file);
+                    url = URL.createObjectURL(resolvedFile);
                     return referencePixels(url, result);
                 })();
-            const [target, original, output, prepared] = await Promise.all([
+            const [targetResult, original, output, prepared] = await Promise.all([
                 targetPromise,
                 pixels(result.original_input),
                 pixels(result.result),
                 hasPrepared ? pixels(result.prepared_input) : Promise.resolve(null),
             ]);
+            const target = targetResult.data;
+            const refDataUrl = targetResult.dataUrl;
             const scores = {
-                before: score(target, original, bounds),
-                after: score(target, output, bounds),
+                before: score(target, original, scoreBounds),
+                after: score(target, output, scoreBounds),
             };
             if (prepared) {
-                scores.prepared = score(target, prepared, bounds);
+                scores.prepared = score(target, prepared, scoreBounds);
+            }
+            if (typeof refDataUrl === 'string' && refDataUrl) {
+                Object.defineProperty(scores, 'reference_256', {
+                    value: refDataUrl,
+                    enumerable: false,
+                    configurable: true,
+                    writable: true,
+                });
             }
             return scores;
         } finally {

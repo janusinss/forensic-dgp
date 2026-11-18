@@ -154,11 +154,11 @@
   function show(name, focus = true, revealResult = false) {
     const screen = screens.find(item => item.dataset.screen === name);
     if (!screen || screen.closest('.hidden')) return false;
-    if (name === 'options') {
+    if (name === 'options' && !window.restorationInput.video) {
       const original = byId('upload-preview').getAttribute('src');
       setPreviewSource(byId('options-preview'), original);
     }
-    if (name === 'run') {
+    if (name === 'run' && !window.restorationInput.video) {
       const manual = byId('brush-preparation').value === 'manual' && byId('brush-restoration').value === 'on';
       const image = byId(manual ? 'brush-derived' : 'upload-preview');
       const source = image.getAttribute('src');
@@ -191,6 +191,7 @@
   function go(name) {
     if (window.restorationInput.video) {
       if (name === 'inspect') window.restorationInput.clearVideoBatch();
+      if (name === 'options') return show('options');
       if (name === 'options-next') return show('run');
       if (name === 'run-back') return show('options');
     }
@@ -230,13 +231,21 @@
   }, true);
   byId('brush-preview').addEventListener('click', () => { pendingPreview = true; });
   window.addEventListener('completion:prepared', () => show('completion-paint'));
+  window.addEventListener('completion:generating', () => {
+    pendingEstimate = true;
+    show('completion-confirm');
+  });
+  window.addEventListener('completion:failed', () => {
+    pendingEstimate = false;
+    show('result');
+  });
   byId('completion-generate').addEventListener('click', () => { pendingEstimate = true; });
   const observe = (id, ready) => new MutationObserver(() => {
     if (!byId(id).classList.contains('hidden')) ready();
   }).observe(byId(id), { attributes: true, attributeFilter: ['class'] });
   observe('brush-preview-section', () => { if (pendingPreview) { pendingPreview = false; show('brush-preview'); } });
   observe('completion-result-section', () => { if (pendingEstimate) { pendingEstimate = false; show('completion-result', true, true); } });
-  window.addEventListener('restoration:completed', () => show('result', true, true));
+  window.addEventListener('restoration:completed', () => show('result', current !== 'result', current !== 'result'));
   window.addEventListener('video:settings', () => show('options'));
   show('inspect', false);
 })();

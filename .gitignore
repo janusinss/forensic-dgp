@@ -21,6 +21,7 @@ htmlcov/
 /results/
 *.pth
 *.pt
+*.onnx
 *.h5
 *.npz
 !/implementation/assets/*.npz

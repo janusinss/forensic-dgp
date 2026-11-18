@@ -70,10 +70,13 @@
         for (const id of ['completion-original', 'completion-input', 'completion-result-mask', 'completion-result']) byId(id).removeAttribute('src');
         for (const id of ['completion-original-download', 'completion-input-download', 'completion-mask-download', 'completion-result-download', 'completion-bundle']) byId(id).removeAttribute('href');
         byId('completion-summary').textContent = '';
+        byId('completion-result-metrics')?.replaceChildren();
     };
     const update = () => {
         const ready = Boolean(session && imagePixels);
-        document.querySelectorAll('#completion-stage input, #completion-stage select, #completion-stage button:not([data-wizard-nav])').forEach(item => { item.disabled = busy || !ready; });
+        document.querySelectorAll('#completion-stage input, #completion-stage select, #completion-stage button:not([data-wizard-nav])').forEach(item => {
+            if (!item.closest('#completion-result-section')) item.disabled = busy || !ready;
+        });
         byId('completion-start').disabled = busy || !source;
         byId('completion-start').setAttribute('aria-busy', String(busy));
         byId('completion-undo').disabled = busy || !ready || !undo.length;
@@ -267,28 +270,132 @@
             setTimeout(() => URL.revokeObjectURL(objectURL), 1000);
         } catch (problem) { error(problem.message); }
     });
+    const decodeProposalMask = async dataUrl => {
+        const image = new Image(); image.src = pngURL(dataUrl); await image.decode();
+        if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The detected removal area has an unexpected size. Please try again.');
+        const buffer = document.createElement('canvas'); buffer.width = buffer.height = 256;
+        const ctx = buffer.getContext('2d'); ctx.drawImage(image, 0, 0);
+        const pixels = ctx.getImageData(0, 0, 256, 256).data, values = new Uint8Array(256 * 256);
+        for (let i = 0; i < values.length; i++) values[i] = pixels[i * 4] >= 128 ? 255 : 0;
+        return values;
+    };
+    const prepareSession = async (fixed, token, version) => {
+        const data = new FormData(); data.append('file', pngBlob(fixed.result.result), 'restoration-result.png');
+        data.append('original', fixed.originalFile, fixed.originalFile.name); data.append('restoration_metadata', JSON.stringify(fixed.result.metadata));
+        const result = await post('/prepare', data);
+        if (!current(token, version)) return false;
+        if (typeof result.session_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.session_id) || !Array.isArray(result.bounds) || result.bounds.length !== 4 || result.bounds.some(value => !Number.isInteger(value))) throw new Error('The image could not be prepared. Please try again.');
+        const b = result.bounds;
+        if (!(0 <= b[0] && b[0] < b[2] && b[2] <= 256 && 0 <= b[1] && b[1] < b[3] && b[3] <= 256)) throw new Error('The image could not be prepared. Please try again.');
+        const image = new Image(); image.src = pngURL(result.input_png); await image.decode();
+        if (!current(token, version)) return false;
+        if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The restored image has an unexpected size. Please restore it again.');
+        session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = [];
+        context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); rebuildOverlay();
+        return true;
+    };
+    const verifyReviewEcho = async (submittedMask, result, token, version) => {
+        if (typeof result.review_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.review_id)) throw new Error('Could not save the selected area. Please check and confirm it again.');
+        if (result.visibility?.rejected === true) throw new Error('Too much of the face is hidden. Choose a clearer photo with more of the face visible.');
+        // The service validates the binary mask and returns its original PNG
+        // bytes. Compare those bytes directly: canvas image decoding can alter
+        // colours on some displays, even when the PNG itself is valid.
+        const echoed = pngBlob(pngURL(result.mask_png));
+        const [sentBytes, returnedBytes] = await Promise.all([submittedMask.arrayBuffer(), echoed.arrayBuffer()]);
+        if (!current(token, version)) return false;
+        const sent = new Uint8Array(sentBytes), returned = new Uint8Array(returnedBytes);
+        if (sent.length !== returned.length || sent.some((value, index) => value !== returned[index])) throw new Error('The saved area does not match your selection. Please check and confirm it again.');
+        return true;
+    };
+    const presentResult = async (fixed, result, hasRemoval, token, version) => {
+        const output = pngURL(result.result_png), removal = pngURL(result.mask_png), evidence = zipURL(result.bundle);
+        const original = pngURL(fixed.result.original_input), input = pngURL(fixed.result.result);
+        byId('completion-original').src = original; byId('completion-original-download').href = original;
+        byId('completion-input').src = input; byId('completion-input-download').href = input;
+        byId('completion-result-mask').src = removal; byId('completion-mask-download').href = removal;
+        byId('completion-result').src = output; byId('completion-result-download').href = output; byId('completion-bundle').href = evidence;
+        const calls = result.neural_calls ?? result.metadata?.neural_calls;
+        if (![0, 1].includes(calls) || calls !== Number(hasRemoval)) throw new Error('The result did not match the selected area. Please review the area and try again.');
+        await Promise.all(['completion-original', 'completion-input', 'completion-result-mask', 'completion-result'].map(id => byId(id).decode()));
+        if (!current(token, version)) return false;
+        const srcMeta = fixed.result.metadata || {};
+        const completionMeta = {
+            output_diagnostics: result.metadata?.output_diagnostics,
+            geometry: srcMeta.geometry,
+        };
+        for (const key of ['picture_crop', 'capture_crop', 'source_size', 'frame_size', 'source_time']) {
+            if (srcMeta[key] !== undefined) completionMeta[key] = srcMeta[key];
+        }
+        const completionResult = { original_input: input, result: output, metadata: completionMeta };
+        Object.defineProperty(completionResult, '_alignmentOriginalInput', { value: original, enumerable: false, configurable: true });
+        const metricsContainer = byId('completion-result-metrics');
+        if (metricsContainer) {
+            metricsContainer.replaceChildren();
+            window.appendResultMetrics?.(metricsContainer, 'Completion metrics', completionResult, {
+                afterLabel: 'Completed result',
+                autoReferenceFile: window.getLastReferenceFile?.(),
+            });
+        }
+        const seconds = result.metadata?.seconds;
+        const timing = Number.isFinite(seconds) ? `${seconds.toFixed(1)} seconds. ` : '';
+        const summary = `${timing}${calls ? 'The image outside the selected area is unchanged. Hidden features are estimated and may not match the real person.' : 'Nothing was selected, so the restored image is unchanged.'}`;
+        byId('completion-summary').textContent = summary;
+        byId('completion-result-section').classList.remove('hidden');
+        progress(summary);
+        return true;
+    };
     byId('completion-start').addEventListener('click', async () => {
         if (busy || !source) return;
         invalidateReview(); error(''); const token = begin(), version = revision, fixed = source;
+        byId('completion-editor-section').classList.remove('hidden');
+        setGenerating(true);
+        window.dispatchEvent(new Event('completion:generating'));
         progress('Preparing your result for covering removal.');
         try {
-            const data = new FormData(); data.append('file', pngBlob(fixed.result.result), 'restoration-result.png');
-            data.append('original', fixed.originalFile, fixed.originalFile.name); data.append('restoration_metadata', JSON.stringify(fixed.result.metadata));
-            const result = await post('/prepare', data);
+            if (!(await prepareSession(fixed, token, version))) return;
+            progress('Detecting covered areas.');
+            const proposeData = new FormData(); proposeData.append('session_id', session);
+            const proposal = await post('/propose', proposeData);
             if (!current(token, version)) return;
-            if (typeof result.session_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.session_id) || !Array.isArray(result.bounds) || result.bounds.length !== 4 || result.bounds.some(value => !Number.isInteger(value))) throw new Error('The image could not be prepared. Please try again.');
-            const b = result.bounds;
-            if (!(0 <= b[0] && b[0] < b[2] && b[2] <= 256 && 0 <= b[1] && b[1] < b[3] && b[3] <= 256)) throw new Error('The image could not be prepared. Please try again.');
-            const image = new Image(); image.src = pngURL(result.input_png); await image.decode();
+            if (typeof proposal.proposal_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(proposal.proposal_id)) throw new Error('Could not detect covered areas. Please try again.');
+            const proposalURL = pngURL(proposal.proposal_png);
+            mask = await decodeProposalMask(proposalURL);
             if (!current(token, version)) return;
-            if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The restored image has an unexpected size. Please restore it again.');
-            session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = [];
-            context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); rebuildOverlay();
-            byId('completion-editor-section').classList.remove('hidden'); update();
-            progress('Paint the covering you want to remove, then review your selection.');
-            window.dispatchEvent(new Event('completion:prepared'));
-        } catch (problem) { if (current(token, version)) { error(problem.message); progress('Could not prepare covering removal. You can keep your result or check the error and try again.'); } }
-        finally { finish(token); }
+            rebuildOverlay();
+            const hasRemoval = mask.some(Boolean) || (proposal.metadata?.proposed_mask_pixels ?? 0) > 0;
+            const submittedMask = pngBlob(proposalURL);
+            progress('Reviewing detected covering.');
+            const reviewData = new FormData();
+            reviewData.append('session_id', session);
+            reviewData.append('mask', submittedMask, 'proposed-mask.png');
+            reviewData.append('proposal_id', proposal.proposal_id);
+            const reviewResult = await post('/review', reviewData);
+            if (!current(token, version)) return;
+            if (!(await verifyReviewEcho(submittedMask, reviewResult, token, version))) return;
+            progress(hasRemoval ? 'Creating an estimate of the covered area. Please keep the app open.' : 'No covering was detected, so your restored image will stay the same.');
+            const genData = new FormData();
+            genData.append('session_id', session);
+            genData.append('mask', submittedMask, 'proposed-mask.png');
+            genData.append('review_id', reviewResult.review_id);
+            genData.append('mask_confirmed', 'true');
+            genData.append('visible_confirmed', 'true');
+            genData.append('proposal_id', proposal.proposal_id);
+            const result = await post('/generate', genData);
+            if (!current(token, version)) return;
+            await presentResult(fixed, result, hasRemoval, token, version);
+        } catch (problem) {
+            if (current(token, version)) {
+                clearResult();
+                byId('completion-editor-section').classList.add('hidden');
+                setGenerating(false);
+                window.dispatchEvent(new Event('completion:failed'));
+                error(problem.message);
+                progress('Could not remove covering. You can keep your result or check the error and try again.');
+            }
+        } finally {
+            if (token === operation) setGenerating(false);
+            finish(token);
+        }
     });
     byId('completion-mask-confirm').addEventListener('change', async () => {
         reviewId = undefined; reviewedMask = undefined; clearResult(); update();
@@ -301,16 +408,7 @@
             if (!current(token, version)) return;
             const result = await post('/review', data);
             if (!current(token, version)) return;
-            if (typeof result.review_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(result.review_id)) throw new Error('Could not save the selected area. Please check and confirm it again.');
-            if (result.visibility?.rejected === true) throw new Error('Too much of the face is hidden. Choose a clearer photo with more of the face visible.');
-            // The service validates the binary mask and returns its original PNG
-            // bytes. Compare those bytes directly: canvas image decoding can alter
-            // colours on some displays, even when the PNG itself is valid.
-            const echoed = pngBlob(pngURL(result.mask_png));
-            const [sentBytes, returnedBytes] = await Promise.all([submittedMask.arrayBuffer(), echoed.arrayBuffer()]);
-            if (!current(token, version)) return;
-            const sent = new Uint8Array(sentBytes), returned = new Uint8Array(returnedBytes);
-            if (sent.length !== returned.length || sent.some((value, index) => value !== returned[index])) throw new Error('The saved area does not match your selection. Please check and confirm it again.');
+            if (!(await verifyReviewEcho(submittedMask, result, token, version))) return;
             reviewId = result.review_id; reviewedMask = submittedMask;
             progress('Selection saved.');
         } catch (problem) { if (current(token, version)) { reviewId = undefined; reviewedMask = undefined; byId('completion-mask-confirm').checked = false; error(problem.message); progress('Could not save the area. Adjust it or choose a clearer photo.'); } }
@@ -328,20 +426,7 @@
             if (!current(token, version)) return;
             const result = await post('/generate', data);
             if (!current(token, version)) return;
-            const output = pngURL(result.result_png), removal = pngURL(result.mask_png), evidence = zipURL(result.bundle);
-            const original = pngURL(fixed.result.original_input), input = pngURL(fixed.result.result);
-            byId('completion-original').src = original; byId('completion-original-download').href = original;
-            byId('completion-input').src = input; byId('completion-input-download').href = input;
-            byId('completion-result-mask').src = removal; byId('completion-mask-download').href = removal;
-            byId('completion-result').src = output; byId('completion-result-download').href = output; byId('completion-bundle').href = evidence;
-            const calls = result.neural_calls ?? result.metadata?.neural_calls;
-            if (![0, 1].includes(calls) || calls !== Number(fixedMask.some(Boolean))) throw new Error('The result did not match the selected area. Please review the area and try again.');
-            await Promise.all(['completion-original', 'completion-input', 'completion-result-mask', 'completion-result'].map(id => byId(id).decode()));
-            if (!current(token, version)) return;
-            const seconds = result.metadata?.seconds;
-            const timing = Number.isFinite(seconds) ? `${seconds.toFixed(1)} seconds. ` : '';
-            const summary = `${timing}${calls ? 'The image outside the selected area is unchanged. Hidden features are estimated and may not match the real person.' : 'Nothing was selected, so the restored image is unchanged.'}`;
-            byId('completion-summary').textContent = summary; byId('completion-result-section').classList.remove('hidden'); progress(summary);
+            if (!(await presentResult(fixed, result, fixedMask.some(Boolean), token, version))) return;
             // The server consumes a review after one successful generation.
             // Keep this result visible, but require a fresh review for another.
             reviewId = undefined; reviewedMask = undefined;

@@ -21,6 +21,8 @@ function makeClassList(element) {
       return Boolean(force);
     },
     contains(name) { return set.has(name); },
+    clear() { set.clear(); },
+    toArray() { return [...set]; },
   };
 }
 
@@ -52,6 +54,13 @@ class MockNode {
     if (this.tagName === 'TABLE') {
       this._tHead = null;
       this._bodies = [];
+    }
+  }
+  get className() { return this.classList.toArray().join(' '); }
+  set className(val) {
+    this.classList.clear();
+    for (const name of String(val || '').trim().split(/\s+/)) {
+      if (name) this.classList.add(name);
     }
   }
   append(...nodes) {
@@ -112,11 +121,22 @@ class MockNode {
     const queue = [...this.children];
     while (queue.length) {
       const item = queue.shift();
-      if (selector.startsWith('.') && item.classList.contains(selector.slice(1))) return item;
-      if (item.tagName.toLowerCase() === selector.toLowerCase()) return item;
-      queue.push(...item.children);
+      if (selector.startsWith('.') && item.classList?.contains(selector.slice(1))) return item;
+      if (item.tagName?.toLowerCase() === selector.toLowerCase()) return item;
+      if (Array.isArray(item.children)) queue.push(...item.children);
     }
     return null;
+  }
+  querySelectorAll(selector) {
+    const results = [];
+    const queue = [...this.children];
+    while (queue.length) {
+      const item = queue.shift();
+      if (selector.startsWith('.') && item.classList?.contains(selector.slice(1))) results.push(item);
+      else if (item.tagName?.toLowerCase() === selector.toLowerCase()) results.push(item);
+      if (Array.isArray(item.children)) queue.push(...item.children);
+    }
+    return results;
   }
   createCaption() { const c = new MockNode('caption'); this.append(c); return c; }
   createTHead() {
@@ -163,8 +183,21 @@ class MockNode {
 
 function createImplementationHarness({ inspectResponse, restoreResponse, referenceScorer } = {}) {
   const elements = new Map();
+  const findInTree = (node, id) => {
+    if (node.id === id) return node;
+    if (!Array.isArray(node.children)) return null;
+    for (const child of node.children) {
+      const match = findInTree(child, id);
+      if (match) return match;
+    }
+    return null;
+  };
   const byId = id => {
     if (!elements.has(id)) {
+      for (const root of elements.values()) {
+        const existing = findInTree(root, id);
+        if (existing) return existing;
+      }
       const tag = id === 'picture-face' || id === 'brush-model' || id === 'brush-restoration' || id === 'brush-preparation'
         ? 'select'
         : id === 'brush-editor' || id === 'picture-crop-canvas' ? 'canvas' : 'div';
@@ -198,7 +231,14 @@ function createImplementationHarness({ inspectResponse, restoreResponse, referen
   };
 
   class MockImage {
-    constructor() { this.src = ''; this.naturalWidth = 0; this.naturalHeight = 0; }
+    constructor() {
+      this.tagName = 'IMG';
+      this.children = [];
+      this.classList = makeClassList(this);
+      this.src = '';
+      this.naturalWidth = 0;
+      this.naturalHeight = 0;
+    }
     async decode() {
       if (this.src === PNG_1X1) {
         this.naturalWidth = currentInspect?.width || 256;
@@ -221,6 +261,7 @@ function createImplementationHarness({ inspectResponse, restoreResponse, referen
   class MockFormData {
     constructor() { this._entries = new Map(); }
     append(k, v) { this._entries.set(k, v); }
+    set(k, v) { this._entries.set(k, v); }
     get(k) { return this._entries.get(k); }
   }
 
@@ -228,12 +269,17 @@ function createImplementationHarness({ inspectResponse, restoreResponse, referen
     constructor(type, init = {}) { this.type = type; Object.assign(this, init); }
   }
 
+  let nextBlobId = 0;
   const sandbox = {
     window: windowObj,
     document: {
       getElementById: byId,
       querySelectorAll: () => [],
       createElement: tag => new MockNode(tag),
+    },
+    URL: {
+      createObjectURL: () => `blob:mock-${++nextBlobId}`,
+      revokeObjectURL() {},
     },
     Image: MockImage,
     ImageData: class { constructor(data, w, h) { this.data = data; this.width = w; this.height = h; } },
@@ -260,7 +306,8 @@ function createImplementationHarness({ inspectResponse, restoreResponse, referen
         return { ok: true, json: async () => currentInspect };
       }
       if (url === '/face/restoration/restore') {
-        return { ok: true, json: async () => currentRestore };
+        const body = typeof currentRestore === 'function' ? currentRestore() : currentRestore;
+        return { ok: true, json: async () => body };
       }
       throw new Error(`Unexpected fetch: ${url}`);
     },
@@ -276,6 +323,11 @@ function createImplementationHarness({ inspectResponse, restoreResponse, referen
     Set,
     Map,
   };
+
+  const queueSource = fs.readFileSync(path.join(__dirname, '..', 'static', 'restoration_queue.js'), 'utf8');
+  vm.runInNewContext(queueSource, sandbox, { filename: 'restoration_queue.js' });
+  windowObj.createRestorationQueue = sandbox.createRestorationQueue;
+  windowObj.restorationQueueLimit = sandbox.restorationQueueLimit;
 
   const source = fs.readFileSync(path.join(__dirname, '..', 'static', 'implementation.js'), 'utf8');
   vm.runInNewContext(source, sandbox, { filename: 'implementation.js' });
@@ -417,8 +469,15 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
   const headers1 = table1.querySelector('thead').children[0].children.map(c => c.textContent);
   assert.deepEqual(headers1, ['Metric', 'Before', 'After']);
   const rows1 = table1._bodies[0].children;
+  assert.equal(rows1[0].children[0].textContent, 'Sharpness (px² variance)');
+  assert.equal(rows1[1].children[0].textContent, 'Noise estimate (σ, RGB levels)');
+  assert.equal(rows1[2].children[0].textContent, 'MAE (RGB levels)');
+  assert.equal(rows1[3].children[0].textContent, 'PSNR (dB)');
+  assert.equal(rows1[4].children[0].textContent, 'Accuracy (%)');
   assert.equal(rows1[1].children[1].textContent, '3.20 (native 11.45)');
   assert.equal(rows1[1].children[2].textContent, '1.10');
+  assert.equal(rows1[4].children[1].textContent, '—');
+  assert.equal(rows1[4].children[2].textContent, '—');
 
   const refInput1 = container.querySelector('input');
   refInput1.files = [{ name: 'ref.png', type: 'image/png', size: 100 }];
@@ -427,6 +486,8 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
   assert.equal(rows1[2].children[2].textContent, '4.56');
   assert.equal(rows1[3].children[1].textContent, '26.30');
   assert.equal(rows1[3].children[2].textContent, '34.95');
+  assert.equal(rows1[4].children[1].textContent, '—');
+  assert.equal(rows1[4].children[2].textContent, '98.21%');
 
   // Case 2: With prepared diagnostics -> Metric | Before | Prepared | After, native omitted (< 0.5 delta)
   h.setRestore({
@@ -452,9 +513,17 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
   const headers2 = table2.querySelector('thead').children[0].children.map(c => c.textContent);
   assert.deepEqual(headers2, ['Metric', 'Before', 'Prepared', 'After']);
   const rows2 = table2._bodies[0].children;
+  assert.equal(rows2[0].children[0].textContent, 'Sharpness (px² variance)');
+  assert.equal(rows2[1].children[0].textContent, 'Noise estimate (σ, RGB levels)');
+  assert.equal(rows2[2].children[0].textContent, 'MAE (RGB levels)');
+  assert.equal(rows2[3].children[0].textContent, 'PSNR (dB)');
+  assert.equal(rows2[4].children[0].textContent, 'Accuracy (%)');
   assert.equal(rows2[1].children[1].textContent, '4.00');
   assert.equal(rows2[1].children[2].textContent, '1.80');
   assert.equal(rows2[1].children[3].textContent, '1.00');
+  assert.equal(rows2[4].children[1].textContent, '—');
+  assert.equal(rows2[4].children[2].textContent, '—');
+  assert.equal(rows2[4].children[3].textContent, '—');
 
   const refInput2 = container.querySelector('input');
   refInput2.files = [{ name: 'ref.png', type: 'image/png', size: 100 }];
@@ -465,14 +534,20 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
   assert.equal(rows2[3].children[1].textContent, '26.30');
   assert.equal(rows2[3].children[2].textContent, '—');
   assert.equal(rows2[3].children[3].textContent, '34.95');
+  assert.equal(rows2[4].children[1].textContent, '—');
+  assert.equal(rows2[4].children[2].textContent, '—');
+  assert.equal(rows2[4].children[3].textContent, '98.21%');
 
   // Clearing reference resets Before and After back to em dash
   refInput2.files = [];
   await refInput2.dispatchEvent({ type: 'change' });
   assert.equal(rows2[2].children[1].textContent, '—');
   assert.equal(rows2[2].children[3].textContent, '—');
+  assert.equal(rows2[4].children[1].textContent, '—');
+  assert.equal(rows2[4].children[2].textContent, '—');
+  assert.equal(rows2[4].children[3].textContent, '—');
 
-  // When scores.prepared is returned, Prepared MAE and PSNR render in column 2 and clear back to em dash
+  // When scores.prepared is returned, Prepared MAE and PSNR render in column 2 while Accuracy stays Restored-only and clears back to em dash
   nextScores = {
     before: { mae: '12.34', psnr: '26.30' },
     prepared: { mae: '9.01', psnr: '29.04' },
@@ -486,9 +561,821 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
   assert.equal(rows2[3].children[1].textContent, '26.30');
   assert.equal(rows2[3].children[2].textContent, '29.04');
   assert.equal(rows2[3].children[3].textContent, '34.95');
+  assert.equal(rows2[4].children[1].textContent, '—');
+  assert.equal(rows2[4].children[2].textContent, '—');
+  assert.equal(rows2[4].children[3].textContent, '98.21%');
 
   refInput2.files = [];
   await refInput2.dispatchEvent({ type: 'change' });
   assert.equal(rows2[2].children[2].textContent, '—');
   assert.equal(rows2[3].children[2].textContent, '—');
+  assert.equal(rows2[4].children[1].textContent, '—');
+  assert.equal(rows2[4].children[2].textContent, '—');
+  assert.equal(rows2[4].children[3].textContent, '—');
+});
+
+test('Step 2 manual blur stays hidden, side-by-side [Before — Auto output — Restored] renders, and dedicated [Ground truth — Restored] comparison works in Picture and Video Step 4', async () => {
+  const PNG_GT_256 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const PNG_RESTORED_PIC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+  let scorerError = null;
+  let nextScores = {
+    before: { mae: '50.00', psnr: '26.30', accuracy: '95.16%' },
+    prepared: { mae: '40.00', psnr: '29.04', accuracy: '96.47%' },
+    after: { mae: '30.00', psnr: '34.95', accuracy: '98.21%' },
+    reference_256: PNG_GT_256,
+  };
+  const h = createImplementationHarness({
+    inspectResponse: { width: 256, height: 256, source: PNG_1X1, neural_calls: 0, face_crops: [] },
+    restoreResponse: {
+      original_input: PNG_1X1,
+      prepared_input: PNG_1X1,
+      result: PNG_RESTORED_PIC,
+      metadata: {
+        neural_forward_returns: 1,
+        neural_forward_attempts: 1,
+        selection: 'conditioned_sft_v2_p2_u0224',
+        restoration_applied: true,
+        preparation_applied: true,
+        automatic_preparation: true,
+        seconds: 1.1,
+        output_diagnostics: {
+          before: { blur_variance: 18.5, noise_sigma_255: 3.2 },
+          prepared: { blur_variance: 15.0, noise_sigma_255: 1.8 },
+          after: { blur_variance: 42.1, noise_sigma_255: 1.1 },
+        },
+      },
+    },
+    referenceScorer: async () => {
+      if (scorerError) throw scorerError;
+      return nextScores;
+    },
+  });
+  await h.flushMicrotasks();
+
+  const assertStep2ManualControlsHidden = () => {
+    assert.equal(h.byId('picture-preparation').classList.contains('hidden'), true);
+    assert.equal(h.byId('picture-preparation-details').classList.contains('hidden'), true);
+    assert.equal(h.byId('brush-edit-section').classList.contains('hidden'), true);
+  };
+
+  const assertComparisonHiddenAndReset = comparison => {
+    assert.equal(comparison.classList.contains('hidden'), true);
+    const imgs = comparison.querySelectorAll('img');
+    const links = comparison.querySelectorAll('a');
+    assert.equal(imgs.length, 2);
+    assert.equal(links.length, 2);
+    assert.equal(imgs[0].src, undefined);
+    assert.equal(imgs[1].src, undefined);
+    assert.equal(links[0].href, undefined);
+    assert.equal(links[1].href, undefined);
+    const compRows = comparison.querySelector('.reference-metrics')._bodies[0].children;
+    assert.deepEqual(compRows.map(r => r.children[1].textContent), ['—', '—', '—']);
+  };
+
+  const assertComparisonRevealed = (comparison, expectedGtSrc, expectedRestoredSrc, expectedAfter) => {
+    assert.equal(comparison.classList.contains('hidden'), false);
+    const gallery = comparison.querySelector('.reference-before-after');
+    assert.equal(gallery.classList.contains('visual-gallery'), true);
+    assert.equal(gallery.getAttribute('aria-label'), 'Ground truth and Restored');
+    const figures = gallery.querySelectorAll('figure');
+    assert.equal(figures.length, 2);
+
+    const [gtFig, restoredFig] = figures;
+    const gtImg = gtFig.querySelector('img');
+    const gtZoom = gtFig.querySelector('button');
+    const gtDownload = gtFig.querySelector('a');
+    assert.match(gtImg.id, /^reference-gt-img-\d+$/);
+    assert.equal(gtImg.width, 256);
+    assert.equal(gtImg.height, 256);
+    assert.equal(gtImg.alt, 'Ground truth reference, aligned');
+    assert.equal(gtImg.src, expectedGtSrc);
+    assert.equal(gtFig.querySelector('figcaption').textContent, 'Ground truth');
+    assert.equal(gtDownload.download, 'ground-truth-256.png');
+    assert.equal(gtDownload.href, expectedGtSrc);
+    assert.equal(gtDownload.textContent, 'Download PNG');
+    assert.equal(gtZoom.classList.contains('zoom-btn'), true);
+    assert.equal(gtZoom.dataset.zoom, gtImg.id);
+    assert.equal(gtZoom.getAttribute('data-zoom'), gtImg.id);
+    assert.equal(gtZoom.hasAttribute('data-wizard-nav'), true);
+    assert.equal(gtZoom.textContent, 'Enlarge');
+
+    const restoredImg = restoredFig.querySelector('img');
+    const restoredZoom = restoredFig.querySelector('button');
+    const restoredDownload = restoredFig.querySelector('a');
+    assert.match(restoredImg.id, /^reference-restored-img-\d+$/);
+    assert.notEqual(restoredImg.id, gtImg.id);
+    assert.equal(restoredImg.width, 256);
+    assert.equal(restoredImg.height, 256);
+    assert.equal(restoredImg.alt, 'Restored picture');
+    assert.equal(restoredImg.src, expectedRestoredSrc);
+    assert.equal(restoredFig.querySelector('figcaption').textContent, 'Restored');
+    assert.equal(restoredDownload.download, 'restored-256.png');
+    assert.equal(restoredDownload.href, expectedRestoredSrc);
+    assert.equal(restoredDownload.textContent, 'Download PNG');
+    assert.equal(restoredZoom.classList.contains('zoom-btn'), true);
+    assert.equal(restoredZoom.dataset.zoom, restoredImg.id);
+    assert.equal(restoredZoom.getAttribute('data-zoom'), restoredImg.id);
+    assert.equal(restoredZoom.hasAttribute('data-wizard-nav'), true);
+    assert.equal(restoredZoom.textContent, 'Enlarge');
+
+    const compTable = comparison.querySelector('.reference-metrics');
+    assert.equal(compTable.classList.contains('video-metrics'), true);
+    assert.equal(compTable.querySelector('caption').textContent, 'Ground truth vs. Restored');
+    const compHeaders = compTable.querySelector('thead').children[0].children.map(c => c.textContent);
+    assert.deepEqual(compHeaders, ['Metric', 'Restored vs. Ground truth']);
+    const compRows = compTable._bodies[0].children;
+    assert.equal(compRows.length, 3);
+    assert.equal(compRows[0].children[0].textContent, 'MAE (RGB levels)');
+    assert.equal(compRows[0].children[1].textContent, expectedAfter.mae);
+    assert.equal(compRows[1].children[0].textContent, 'PSNR (dB)');
+    assert.equal(compRows[1].children[1].textContent, expectedAfter.psnr);
+    assert.equal(compRows[2].children[0].textContent, 'Accuracy (%)');
+    assert.equal(compRows[2].children[1].textContent, expectedAfter.accuracy);
+
+    return { gtId: gtImg.id, restoredId: restoredImg.id };
+  };
+
+  // Picture mode update() keeps Step 2 manual blur controls hidden
+  assert.equal(await h.windowObj.restorationInput.use({ size: 1024, type: 'image/png', name: 'p.png' }), true);
+  assertStep2ManualControlsHidden();
+
+  // Trigger displayResult via picture form submit -> Before / Auto output / Restored side-by-side
+  await h.byId('brush-form').dispatchEvent({ type: 'submit' });
+  assert.equal(h.byId('brush-result-input').src, PNG_1X1);
+  assert.equal(h.byId('brush-result-prepared').src, PNG_1X1);
+  assert.equal(h.byId('brush-result-output').src, PNG_RESTORED_PIC);
+  assert.equal(h.byId('brush-prepared-heading').textContent, 'Auto output');
+  assert.equal(h.byId('brush-output-heading').textContent, 'Restored');
+  assert.equal(h.byId('brush-prepared-details').classList.contains('hidden'), true);
+
+  // .reference-comparison starts hidden and reset in Picture Step 4
+  const container = h.byId('picture-result-metrics');
+  const table = container.children[0];
+  const scoreStatus = container.children[1];
+  const picComparison = container.children[4];
+  assert.equal(picComparison.classList.contains('reference-comparison'), true);
+  assertComparisonHiddenAndReset(picComparison);
+
+  // Uploading Ground Truth keeps top table Before/Prepared Accuracy at em dash, shows After Accuracy, and reveals [Ground truth — Restored]
+  const rows = table._bodies[0].children;
+  const refInput = container.querySelector('input');
+  refInput.files = [{ name: 'ref.png', type: 'image/png', size: 100 }];
+  await refInput.dispatchEvent({ type: 'change' });
+  assert.equal(rows[4].children[1].textContent, '—');
+  assert.equal(rows[4].children[2].textContent, '—');
+  assert.equal(rows[4].children[3].textContent, '98.21%');
+  assert.equal(
+    scoreStatus.textContent,
+    'MAE, PSNR, and Accuracy (%) compare the images with your supplied reference. Padding is excluded.'
+  );
+  const picIds = assertComparisonRevealed(picComparison, PNG_GT_256, PNG_RESTORED_PIC, nextScores.after);
+
+  // Clearing the file input hides and resets .reference-comparison cleanly
+  refInput.files = [];
+  await refInput.dispatchEvent({ type: 'change' });
+  assert.equal(rows[4].children[3].textContent, '—');
+  assertComparisonHiddenAndReset(picComparison);
+
+  // Scorer error also keeps .reference-comparison hidden and reset
+  scorerError = new Error('Bad reference');
+  refInput.files = [{ name: 'bad.png', type: 'image/png', size: 100 }];
+  await refInput.dispatchEvent({ type: 'change' });
+  assert.equal(scoreStatus.textContent, 'Ground truth unavailable. Bad reference');
+  assertComparisonHiddenAndReset(picComparison);
+  scorerError = null;
+
+  // Video mode: useVideo(...) -> videoVisibility(true) + update() keeps Step 2 manual blur controls hidden
+  const videoCrop = {
+    captureId: 'cap-1',
+    faceNumber: 1,
+    file: { size: 1024, type: 'image/png', name: 'face1.png' },
+  };
+  assert.equal(
+    h.windowObj.restorationInput.useVideo([videoCrop], { isCurrent: () => true, token: 'tok-1' }),
+    true
+  );
+  assertStep2ManualControlsHidden();
+
+  // Submit video batch -> showVideoResult renders Before / Auto output / Restored figures AND Step 4 displayResult renders comparison
+  await h.byId('brush-form').dispatchEvent({ type: 'submit' });
+  const videoPanels = h.byId('video-face-panels');
+  const videoCard = videoPanels.children[0];
+  const videoImages = videoCard.querySelector('.video-face-images');
+  const captions = videoImages.children.map(fig => fig.querySelector('figcaption').textContent);
+  assert.deepEqual(captions, ['Before', 'Auto output', 'Restored']);
+  assert.deepEqual(
+    videoImages.children.map(fig => fig.querySelector('img').src),
+    [PNG_1X1, PNG_1X1, PNG_RESTORED_PIC]
+  );
+
+  // Video Step 4 (#picture-result-metrics) comparison starts hidden, generates unique IDs, reveals on upload, and resets on clear
+  const videoStep4Metrics = h.byId('picture-result-metrics');
+  const videoStep4Comparison = videoStep4Metrics.children[4];
+  assertComparisonHiddenAndReset(videoStep4Comparison);
+  const videoStep4RefInput = videoStep4Metrics.querySelector('input');
+  videoStep4RefInput.files = [{ name: 'video-ref.png', type: 'image/png', size: 100 }];
+  await videoStep4RefInput.dispatchEvent({ type: 'change' });
+  const videoStep4Ids = assertComparisonRevealed(videoStep4Comparison, PNG_GT_256, PNG_RESTORED_PIC, nextScores.after);
+  assert.notEqual(videoStep4Ids.gtId, picIds.gtId);
+  assert.notEqual(videoStep4Ids.restoredId, picIds.restoredId);
+  videoStep4RefInput.files = [];
+  await videoStep4RefInput.dispatchEvent({ type: 'change' });
+  assertComparisonHiddenAndReset(videoStep4Comparison);
+
+  // clearVideoBatch() -> videoVisibility(false) + update() keeps Step 2 manual blur controls hidden
+  h.windowObj.restorationInput.clearVideoBatch();
+  assertStep2ManualControlsHidden();
+});
+
+test('restoreVideo() unifies Step 4 Review, preserves non-enumerable full frame, and switches multi-face results', async () => {
+  const PNG_FACE1_OUT = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+  const PNG_FACE2_OUT = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+  const ZIP_1 = 'data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==';
+  const ZIP_2 = 'data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAg==';
+  const makeResponse = (outputImg, bundleZip, crop, diagBefore, diagAfter) => ({
+    original_input: PNG_1X1,
+    prepared_input: PNG_1X1,
+    result: outputImg,
+    bundle: bundleZip,
+    smoothed_full_frame: PNG_1X1,
+    metadata: {
+      neural_forward_returns: 1,
+      neural_forward_attempts: 1,
+      selection: 'conditioned_sft_v2_p2_u0224',
+      restoration_applied: true,
+      preparation_applied: true,
+      automatic_preparation: { route: 'direct' },
+      capture_crop: crop,
+      frame_size: [1920, 1080],
+      frame_pixelation: { native_size: [256, 256] },
+      seconds: 1.5,
+      output_diagnostics: {
+        before: diagBefore,
+        prepared: { blur_variance: 22.0, noise_sigma_255: 1.9 },
+        after: diagAfter,
+      },
+    },
+  });
+
+  let callIndex = 0;
+  const responses = [
+    makeResponse(PNG_FACE1_OUT, ZIP_1, [100, 120, 200, 200], { blur_variance: 12.5, noise_sigma_255: 3.1 }, { blur_variance: 45.2, noise_sigma_255: 1.1 }),
+    makeResponse(PNG_FACE2_OUT, ZIP_2, [400, 120, 200, 200], { blur_variance: 15.0, noise_sigma_255: 2.8 }, { blur_variance: 52.7, noise_sigma_255: 0.9 }),
+  ];
+  const h = createImplementationHarness({
+    inspectResponse: { width: 256, height: 256, source: PNG_1X1, neural_calls: 0, face_crops: [] },
+    restoreResponse: () => responses[callIndex++],
+    referenceScorer: async () => ({
+      before: { mae: '10.00', psnr: '28.13', accuracy: '96.08%' },
+      prepared: { mae: '8.00', psnr: '30.07', accuracy: '96.86%' },
+      after: { mae: '2.00', psnr: '42.11', accuracy: '99.22%' },
+    }),
+  });
+  await h.flushMicrotasks();
+
+  const completedEvents = [];
+  h.windowObj.addEventListener('restoration:completed', evt => completedEvents.push(evt.detail));
+
+  const face1File = { size: 1024, type: 'image/png', name: 'face1.png' };
+  const face2File = { size: 1024, type: 'image/png', name: 'face2.png' };
+  assert.equal(
+    h.windowObj.restorationInput.useVideo(
+      [
+        { captureId: 'cap-1', faceNumber: 1, file: face1File },
+        { captureId: 'cap-2', faceNumber: 2, file: face2File },
+      ],
+      { isCurrent: () => true, token: 'tok-video' }
+    ),
+    true
+  );
+
+  const loadingStates = [];
+  const origToggle = h.byId('video-restore-gallery').classList.toggle;
+  h.byId('video-restore-gallery').classList.toggle = (name, force) => {
+    if (name === 'hidden') loadingStates.push(force);
+    return origToggle.call(h.byId('video-restore-gallery').classList, name, force);
+  };
+
+  await h.byId('brush-form').dispatchEvent({ type: 'submit' });
+
+  // restorationLoading toggled #video-restore-gallery hidden during run and restored it in finally
+  assert.deepEqual(loadingStates, [true, false]);
+
+  // Step 4 Review populated for Face 1 alongside #video-face-panels
+  assert.equal(completedEvents.length, 1);
+  assert.equal(completedEvents[0].originalFile, face1File);
+  assert.equal(Object.prototype.propertyIsEnumerable.call(completedEvents[0].result, '_videoFullFrame'), false);
+  assert.equal(Object.prototype.propertyIsEnumerable.call(completedEvents[0].result, '_videoFullFrameScanlines'), false);
+  assert.equal('smoothed_full_frame' in completedEvents[0].result, false);
+  assert.equal(h.byId('brush-results').classList.contains('hidden'), false);
+  assert.equal(h.byId('brush-result-input').src, PNG_1X1);
+  assert.equal(h.byId('brush-result-prepared').src, PNG_1X1);
+  assert.equal(h.byId('brush-result-output').src, PNG_FACE1_OUT);
+  assert.equal(h.byId('brush-result-bundle').href, ZIP_1);
+  assert.equal(h.byId('brush-full-picture-result').classList.contains('hidden'), false);
+  assert.equal(h.byId('brush-download-full-picture').href, PNG_1X1);
+  assert.equal(h.byId('brush-download-full-picture').download, 'frozen-frame-smoothed.png');
+  assert.equal(h.byId('brush-result-summary').textContent.startsWith('Before and After show the selected face crop. '), true);
+
+  // 5-row metrics table rendered on Step 4
+  const rows1 = h.byId('picture-result-metrics').children[0]._bodies[0].children;
+  assert.equal(rows1.length, 5);
+  assert.equal(rows1[0].children[3].textContent, '45.20');
+  assert.equal(rows1[4].children[0].textContent, 'Accuracy (%)');
+
+  // Multi-face selector on Step 4 switches active face
+  const selector = h.byId('result-video-face-selector');
+  assert.equal(selector.classList.contains('hidden'), false);
+  assert.equal(selector.children.length, 2);
+  assert.equal(selector.children[0].textContent, 'Face 1');
+  assert.equal(selector.children[0].getAttribute('aria-pressed'), 'true');
+  assert.equal(selector.children[1].textContent, 'Face 2');
+  assert.equal(selector.children[1].getAttribute('aria-pressed'), 'false');
+
+  await selector.children[1].dispatchEvent({ type: 'click' });
+  assert.equal(selector.children[0].getAttribute('aria-pressed'), 'false');
+  assert.equal(selector.children[1].getAttribute('aria-pressed'), 'true');
+  assert.equal(completedEvents.length, 2);
+  assert.equal(completedEvents[1].originalFile, face2File);
+  assert.equal(h.byId('brush-result-output').src, PNG_FACE2_OUT);
+  assert.equal(h.byId('brush-result-bundle').href, ZIP_2);
+  const rows2 = h.byId('picture-result-metrics').children[0]._bodies[0].children;
+  assert.equal(rows2[0].children[3].textContent, '52.70');
+  assert.equal(h.byId('video-face-panels').children[0].hidden, true);
+  assert.equal(h.byId('video-face-panels').children[1].hidden, false);
+
+  h.windowObj.restorationInput.clearVideoBatch();
+  assert.equal(selector.classList.contains('hidden'), true);
+  assert.equal(selector.children.length, 0);
+});
+
+test('viewport-workbench allows Change input settings (options) in Video mode without copying stale picture previews', async () => {
+  const screens = ['inspect', 'options', 'run', 'result'].map(name => {
+    const s = new MockNode('section');
+    s.dataset = { screen: name };
+    s.querySelector = sel => sel === 'h1' ? new MockNode('h1') : null;
+    s.querySelectorAll = () => [];
+    s.closest = sel => sel === '.hidden' ? null : s;
+    return s;
+  });
+  const elements = new Map();
+  const byId = id => {
+    if (!elements.has(id)) {
+      const el = new MockNode(id === 'brush-form' ? 'form' : 'div', id);
+      if (id === 'upload-preview') {
+        el.classList.add('hidden');
+        el.setAttribute('src', 'data:image/png;base64,STALE');
+      }
+      if (id === 'brush-preparation') el.value = 'bypass';
+      if (id === 'brush-restoration') el.value = 'auto';
+      elements.set(id, el);
+    }
+    return elements.get(id);
+  };
+  const windowListeners = new Map();
+  const sandbox = {
+    window: {
+      restorationInput: { video: true, clearVideoBatch() {}, confirmPreparation: () => true },
+      addEventListener(type, fn) {
+        if (!windowListeners.has(type)) windowListeners.set(type, []);
+        windowListeners.get(type).push(fn);
+      },
+      dispatchEvent(evt) {
+        for (const fn of windowListeners.get(evt.type) || []) fn(evt);
+      },
+    },
+    document: {
+      title: '',
+      getElementById: byId,
+      querySelectorAll: sel => sel === '.work-screen' ? screens : [],
+      createElement: tag => new MockNode(tag),
+      addEventListener(type, fn) {
+        if (!windowListeners.has(`doc:${type}`)) windowListeners.set(`doc:${type}`, []);
+        windowListeners.get(`doc:${type}`).push(fn);
+      },
+    },
+    MutationObserver: class { observe() {} },
+    ResizeObserver: class { observe() {} },
+    CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } },
+    Event: class { constructor(type) { this.type = type; } },
+    requestAnimationFrame: () => 1,
+  };
+  const vwSource = fs.readFileSync(path.join(__dirname, '..', 'static', 'viewport-workbench.js'), 'utf8');
+  vm.runInNewContext(vwSource, sandbox, { filename: 'viewport-workbench.js' });
+
+  // Trigger restoration:completed -> activates Step 4 result
+  for (const fn of windowListeners.get('restoration:completed') || []) fn();
+  assert.equal(screens[3].classList.contains('is-active'), true);
+
+  // Clicking "Change input settings" ([data-nav="options"]) navigates to Step 2 options without error
+  const navBtn = { dataset: { nav: 'options' }, closest: sel => sel === '[data-nav]' ? navBtn : null };
+  for (const fn of windowListeners.get('doc:click') || []) fn({ target: navBtn });
+  assert.equal(screens[1].classList.contains('is-active'), true);
+  assert.equal(byId('workbench-notice').textContent, '');
+  assert.equal(byId('options-preview').getAttribute('src'), null);
+
+  // Navigating to run does not copy stale #upload-preview src to #restoration-idle
+  const nextBtn = { dataset: { nav: 'options-next' }, closest: sel => sel === '[data-nav]' ? nextBtn : null };
+  for (const fn of windowListeners.get('doc:click') || []) fn({ target: nextBtn });
+  assert.equal(screens[2].classList.contains('is-active'), true);
+  assert.equal(byId('restoration-idle').getAttribute('src'), null);
+});
+
+test('appendResultMetrics supports afterLabel, autoReferenceFile, and getLastReferenceFile across Step 4 and Step 5', async () => {
+  const PNG_STEP5 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const PNG_GT_256 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const scoredCalls = [];
+  const h = createImplementationHarness({
+    inspectResponse: { width: 256, height: 256, source: PNG_1X1, neural_calls: 0, face_crops: [] },
+    restoreResponse: {
+      original_input: PNG_1X1,
+      prepared_input: PNG_1X1,
+      result: PNG_1X1,
+      metadata: {
+        neural_forward_returns: 1,
+        neural_forward_attempts: 1,
+        selection: 'conditioned_sft_v2_p2_u0224',
+        restoration_applied: true,
+        preparation_applied: false,
+        seconds: 1.0,
+        output_diagnostics: {
+          before: { blur_variance: 12.0, noise_sigma_255: 2.5 },
+          after: { blur_variance: 36.0, noise_sigma_255: 1.0 },
+        },
+      },
+    },
+    referenceScorer: async (file, result) => {
+      scoredCalls.push({ file, result });
+      return {
+        before: { mae: '14.00', psnr: '25.20', accuracy: '94.51%' },
+        after: { mae: '3.25', psnr: '37.89', accuracy: '98.73%' },
+        reference_256: PNG_GT_256,
+      };
+    },
+  });
+  await h.flushMicrotasks();
+
+  assert.equal(typeof h.windowObj.appendResultMetrics, 'function');
+  assert.equal(typeof h.windowObj.getLastReferenceFile, 'function');
+  assert.equal(h.windowObj.getLastReferenceFile(), null);
+
+  assert.equal(await h.windowObj.restorationInput.use({ size: 1024, type: 'image/png', name: 'p.png' }), true);
+  await h.byId('brush-form').dispatchEvent({ type: 'submit' });
+
+  const step4Metrics = h.byId('picture-result-metrics');
+  const step4RefInput = step4Metrics.querySelector('input');
+  const gtFile = { name: 'gt.png', type: 'image/png', size: 256 };
+  step4RefInput.files = [gtFile];
+  await step4RefInput.dispatchEvent({ type: 'change' });
+  assert.equal(h.windowObj.getLastReferenceFile(), gtFile);
+
+  // Explicit clear resets getLastReferenceFile() to null
+  step4RefInput.files = [];
+  await step4RefInput.dispatchEvent({ type: 'change' });
+  assert.equal(h.windowObj.getLastReferenceFile(), null);
+
+  // Re-upload before advancing to Step 5
+  step4RefInput.files = [gtFile];
+  await step4RefInput.dispatchEvent({ type: 'change' });
+  assert.equal(h.windowObj.getLastReferenceFile(), gtFile);
+
+  // Step 5 appendResultMetrics with afterLabel + autoReferenceFile auto-runs comparison
+  const step5Metrics = h.byId('completion-result-metrics');
+  const completionResult = {
+    original_input: PNG_1X1,
+    result: PNG_STEP5,
+    metadata: {
+      output_diagnostics: {
+        before: { blur_variance: 36.0, noise_sigma_255: 1.0 },
+        after: { blur_variance: 44.5, noise_sigma_255: 0.8 },
+      },
+    },
+  };
+  h.windowObj.appendResultMetrics(step5Metrics, 'Completion metrics', completionResult, {
+    afterLabel: 'Completed result',
+    autoReferenceFile: h.windowObj.getLastReferenceFile(),
+  });
+  await h.flushMicrotasks();
+
+  assert.equal(scoredCalls[scoredCalls.length - 1].file, gtFile);
+  assert.equal(scoredCalls[scoredCalls.length - 1].result, completionResult);
+
+  const step5Comparison = step5Metrics.children[4];
+  assert.equal(step5Comparison.classList.contains('hidden'), false);
+  const gallery = step5Comparison.querySelector('.reference-before-after');
+  assert.equal(gallery.getAttribute('aria-label'), 'Ground truth and Completed result');
+  const figures = gallery.querySelectorAll('figure');
+  assert.equal(figures[1].querySelector('figcaption').textContent, 'Completed result');
+  assert.equal(figures[1].querySelector('img').alt, 'Completed result picture');
+  assert.equal(figures[1].querySelector('img').src, PNG_STEP5);
+  assert.equal(figures[1].querySelector('a').download, 'completed-result-256.png');
+
+  const compTable = step5Comparison.querySelector('.reference-metrics');
+  assert.equal(compTable.querySelector('caption').textContent, 'Ground truth vs. Completed result');
+  assert.deepEqual(
+    compTable.querySelector('thead').children[0].children.map(c => c.textContent),
+    ['Metric', 'Completed result vs. Ground truth']
+  );
+  const compRows = compTable._bodies[0].children;
+  assert.equal(compRows[0].children[1].textContent, '3.25');
+  assert.equal(compRows[1].children[1].textContent, '37.89');
+  assert.equal(compRows[2].children[1].textContent, '98.73%');
+});
+
+test('restoration_reference sends _alignmentOriginalInput as original_input while scoring against result.original_input', async () => {
+  const PNG_ALIGN = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  const PNG_BEFORE_REMOVAL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const PNG_COMPLETED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+  let sentForm = null;
+  class MockCanvas {
+    constructor() { this.width = 0; this.height = 0; this._src = ''; }
+    getContext() {
+      const self = this;
+      return {
+        drawImage(img) { self._src = img.src; },
+        getImageData: () => {
+          const data = new Uint8ClampedArray(256 * 256 * 4);
+          const v = self._src === PNG_ALIGN ? 200 : self._src === PNG_BEFORE_REMOVAL ? 100 : 180;
+          for (let i = 0; i < data.length; i += 4) {
+            data[i] = v; data[i + 1] = v; data[i + 2] = v; data[i + 3] = 255;
+          }
+          return { data };
+        },
+      };
+    }
+    toDataURL() { return PNG_ALIGN; }
+  }
+  class MockImage {
+    constructor() { this.src = ''; this.naturalWidth = 256; this.naturalHeight = 256; }
+    async decode() {}
+  }
+  class MockFormData {
+    constructor() { this.fields = new Map(); }
+    append(k, v) { this.fields.set(k, v); }
+  }
+  const sandbox = {
+    window: { location: { protocol: 'http:' } },
+    document: {
+      createElement: tag => tag === 'canvas' ? new MockCanvas() : new MockNode(tag),
+    },
+    Image: MockImage,
+    FormData: MockFormData,
+    URL: { createObjectURL: () => 'blob:ref', revokeObjectURL() {} },
+    fetch: async (url, init) => {
+      assert.equal(url, '/face/restoration/reference');
+      sentForm = init.body;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ reference_256: PNG_ALIGN, eval_bounds_256: [0, 0, 256, 256] }),
+      };
+    },
+    Uint8ClampedArray,
+    Math,
+    Number,
+    Array,
+    JSON,
+    Promise,
+    Error,
+    Object,
+  };
+  const refSource = fs.readFileSync(path.join(__dirname, '..', 'static', 'restoration_reference.js'), 'utf8');
+  vm.runInNewContext(refSource, sandbox, { filename: 'restoration_reference.js' });
+
+  const completionResult = {
+    original_input: PNG_BEFORE_REMOVAL,
+    result: PNG_COMPLETED,
+    metadata: { geometry: { observed_bounds_256: [0, 0, 256, 256] } },
+  };
+  Object.defineProperty(completionResult, '_alignmentOriginalInput', {
+    value: PNG_ALIGN,
+    enumerable: false,
+    configurable: true,
+  });
+
+  const scores = await sandbox.window.scoreVideoReference(
+    { name: 'gt.png', type: 'image/png', size: 512 },
+    completionResult
+  );
+  assert.equal(sentForm.fields.get('original_input'), PNG_ALIGN);
+  assert.equal(scores.reference_256, PNG_ALIGN);
+  assert.equal(scores.before.mae, '100.00');
+  assert.equal(scores.after.mae, '20.00');
+});
+
+test('completion.js + viewport-workbench.js automatically chain Step 4 -> completion-confirm -> Step 5 and recover on failure', async () => {
+  const PNG_INPUT = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  const PNG_RESTORED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const PNG_MASK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==';
+  const PNG_COMPLETED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  const ZIP_EVIDENCE = 'data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==';
+  const SESSION_ID = 'a'.repeat(32);
+  const PROPOSAL_ID = 'b'.repeat(32);
+  const REVIEW_ID = 'c'.repeat(32);
+
+  const elements = new Map();
+  const screens = ['inspect', 'options', 'run', 'result', 'completion-paint', 'completion-tools', 'completion-confirm', 'completion-result'].map(name => {
+    const s = new MockNode('section');
+    s.dataset = { screen: name };
+    s.querySelector = sel => sel === 'h1' ? new MockNode('h1') : sel === '.feedback-slot' ? new MockNode('div') : null;
+    s.querySelectorAll = () => [];
+    s.closest = sel => {
+      if (sel === '.hidden') {
+        if (name === 'completion-confirm' && elements.get('completion-editor-section')?.classList.contains('hidden')) return elements.get('completion-editor-section');
+        if (name === 'completion-result' && s.classList.contains('hidden')) return s;
+        return null;
+      }
+      return s;
+    };
+    if (name === 'completion-result') {
+      s.id = 'completion-result-section';
+      s.classList.add('hidden');
+      elements.set('completion-result-section', s);
+    }
+    return s;
+  });
+
+  const confirmScreen = screens.find(s => s.dataset.screen === 'completion-confirm');
+  const completionStage = new MockNode('div', 'completion-stage');
+  completionStage.classList.add('hidden');
+  completionStage.contains = node => screens.some(s => s.dataset.screen.startsWith('completion-') && s === node);
+  elements.set('completion-stage', completionStage);
+
+  const observerCallbacks = new Map();
+  const byId = id => {
+    if (!elements.has(id)) {
+      const tag = id === 'brush-form' ? 'form' : id === 'completion-editor' ? 'canvas' : 'div';
+      const el = new MockNode(tag, id);
+      if (id === 'brush-form') el.contains = () => false;
+      if (id === 'completion-loading') {
+        el.closest = sel => sel === '.work-screen' ? confirmScreen : null;
+      }
+      if (id === 'completion-editor-section') el.classList.add('hidden');
+      if (id === 'completion-result-section') el.classList.add('hidden');
+      elements.set(id, el);
+    }
+    return elements.get(id);
+  };
+
+  // Wire classList mutation notifications for completion-result-section
+  const resultSection = byId('completion-result-section');
+  const origRemove = resultSection.classList.remove.bind(resultSection.classList);
+  resultSection.classList.remove = (...names) => {
+    origRemove(...names);
+    if (!resultSection.classList.contains('hidden')) {
+      for (const cb of observerCallbacks.get(resultSection) || []) cb();
+    }
+  };
+
+  const windowListeners = new Map();
+  const metricsCalls = [];
+  const fakeGtFile = { name: 'gt.png', type: 'image/png', size: 123 };
+  const routeCalls = [];
+  let failPropose = false;
+
+  const sandbox = {
+    window: {
+      restorationInput: { video: false, clearVideoBatch() {}, confirmPreparation: () => true },
+      getLastReferenceFile: () => fakeGtFile,
+      appendResultMetrics: (container, caption, result, options) => {
+        metricsCalls.push({ container, caption, result, options });
+      },
+      addEventListener(type, fn) {
+        if (!windowListeners.has(type)) windowListeners.set(type, []);
+        windowListeners.get(type).push(fn);
+      },
+      dispatchEvent(evt) {
+        for (const fn of windowListeners.get(evt.type) || []) fn(evt);
+      },
+    },
+    document: {
+      title: '',
+      getElementById: byId,
+      querySelectorAll: sel => sel === '.work-screen' ? screens : [],
+      createElement: tag => new MockNode(tag),
+      addEventListener(type, fn) {
+        if (!windowListeners.has(`doc:${type}`)) windowListeners.set(`doc:${type}`, []);
+        windowListeners.get(`doc:${type}`).push(fn);
+      },
+    },
+    MutationObserver: class {
+      constructor(cb) { this.cb = cb; }
+      observe(target) {
+        if (!observerCallbacks.has(target)) observerCallbacks.set(target, []);
+        observerCallbacks.get(target).push(this.cb);
+      }
+    },
+    ResizeObserver: class { observe() {} },
+    Image: class {
+      constructor() { this.src = ''; this.naturalWidth = 256; this.naturalHeight = 256; }
+      async decode() {}
+    },
+    ImageData: class { constructor(data, w, h) { this.data = data; this.width = w; this.height = h; } },
+    Blob: class {
+      constructor(parts, opts = {}) { this.parts = parts; this.type = opts.type || ''; }
+      async arrayBuffer() { return this.parts[0].buffer; }
+    },
+    File: class {
+      constructor(parts, name, opts = {}) { this.parts = parts; this.name = name; this.type = opts.type || ''; this.size = 10; }
+    },
+    FormData: class {
+      constructor() { this._entries = new Map(); }
+      append(k, v) { this._entries.set(k, v); }
+      get(k) { return this._entries.get(k); }
+    },
+    Event: class { constructor(type) { this.type = type; } },
+    CustomEvent: class { constructor(type, init = {}) { this.type = type; Object.assign(this, init); } },
+    requestAnimationFrame: () => 1,
+    cancelAnimationFrame() {},
+    atob: str => Buffer.from(str, 'base64').toString('binary'),
+    fetch: async (url, init) => {
+      routeCalls.push({ url, form: init.body });
+      if (url === '/face/completion/prepare') {
+        return { ok: true, json: async () => ({ session_id: SESSION_ID, bounds: [0, 0, 256, 256], input_png: PNG_RESTORED }) };
+      }
+      if (url === '/face/completion/propose') {
+        if (failPropose) return { ok: false, json: async () => ({ detail: 'Service temporarily unavailable.' }) };
+        return { ok: true, json: async () => ({ proposal_id: PROPOSAL_ID, proposal_png: PNG_MASK, metadata: { proposed_mask_pixels: 42 } }) };
+      }
+      if (url === '/face/completion/review') {
+        return { ok: true, json: async () => ({ review_id: REVIEW_ID, mask_png: PNG_MASK, visibility: { rejected: false } }) };
+      }
+      if (url === '/face/completion/generate') {
+        return {
+          ok: true,
+          json: async () => ({
+            result_png: PNG_COMPLETED,
+            mask_png: PNG_MASK,
+            bundle: ZIP_EVIDENCE,
+            neural_calls: 1,
+            metadata: { seconds: 2.4, output_diagnostics: { before: { blur_variance: 20, noise_sigma_255: 1 }, after: { blur_variance: 30, noise_sigma_255: 0.9 } } },
+          }),
+        };
+      }
+      throw new Error(`Unexpected url: ${url}`);
+    },
+    Uint8Array, Uint8ClampedArray, Uint32Array, DataView, TextEncoder, Array, Math, Number, JSON, Promise, Error, Object, Set, Map,
+  };
+
+  for (const id of ['completion-original', 'completion-input', 'completion-result-mask', 'completion-result']) {
+    byId(id).decode = async () => {};
+  }
+
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'static', 'viewport-workbench.js'), 'utf8'), sandbox, { filename: 'viewport-workbench.js' });
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'static', 'completion.js'), 'utf8'), sandbox, { filename: 'completion.js' });
+
+  const restorationDetail = {
+    originalFile: new sandbox.File(['orig'], 'face.png', { type: 'image/png' }),
+    result: {
+      original_input: PNG_INPUT,
+      result: PNG_RESTORED,
+      metadata: {
+        selection: 'conditioned_sft_v2_p2_u0224',
+        geometry: { observed_bounds_256: [0, 0, 256, 256] },
+        picture_crop: [10, 20, 100, 100],
+        source_size: [200, 200],
+      },
+    },
+  };
+  sandbox.window.dispatchEvent(new sandbox.CustomEvent('restoration:completed', { detail: restorationDetail }));
+  assert.equal(screens[3].classList.contains('is-active'), true);
+
+  await byId('completion-start').dispatchEvent({ type: 'click' });
+
+  assert.deepEqual(routeCalls.map(c => c.url), [
+    '/face/completion/prepare',
+    '/face/completion/propose',
+    '/face/completion/review',
+    '/face/completion/generate',
+  ]);
+  assert.equal(routeCalls[3].form.get('mask_confirmed'), 'true');
+  assert.equal(routeCalls[3].form.get('visible_confirmed'), 'true');
+  assert.equal(routeCalls[3].form.get('proposal_id'), PROPOSAL_ID);
+
+  assert.equal(resultSection.classList.contains('is-active'), true);
+  assert.equal(byId('completion-original').src, PNG_INPUT);
+  assert.equal(byId('completion-input').src, PNG_RESTORED);
+  assert.equal(byId('completion-result-mask').src, PNG_MASK);
+  assert.equal(byId('completion-result').src, PNG_COMPLETED);
+  assert.equal(byId('completion-bundle').href, ZIP_EVIDENCE);
+
+  assert.equal(metricsCalls.length, 1);
+  assert.equal(metricsCalls[0].caption, 'Completion metrics');
+  assert.equal(metricsCalls[0].options.afterLabel, 'Completed result');
+  assert.equal(metricsCalls[0].options.autoReferenceFile, fakeGtFile);
+  assert.equal(metricsCalls[0].result.original_input, PNG_RESTORED);
+  assert.equal(metricsCalls[0].result.result, PNG_COMPLETED);
+  assert.equal(metricsCalls[0].result._alignmentOriginalInput, PNG_INPUT);
+  assert.equal(Object.prototype.propertyIsEnumerable.call(metricsCalls[0].result, '_alignmentOriginalInput'), false);
+  assert.deepEqual(metricsCalls[0].result.metadata.picture_crop, [10, 20, 100, 100]);
+
+  // Failure path returns user cleanly to Step 4 (result) with error alert visible
+  failPropose = true;
+  await byId('completion-start').dispatchEvent({ type: 'click' });
+  assert.equal(screens[3].classList.contains('is-active'), true);
+  assert.equal(byId('completion-editor-section').classList.contains('hidden'), true);
+  assert.equal(confirmScreen.classList.contains('is-loading'), false);
+  assert.equal(byId('completion-error').classList.contains('hidden'), false);
+  assert.equal(byId('completion-error').textContent, 'Service temporarily unavailable.');
 });
