@@ -24,7 +24,6 @@ import psutil
 from fastapi import File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 
-from . import app as restoration
 from .completion_process_guard import OwnedWorker
 from .setup_models import ROOT
 from .managed_paths import data_path
@@ -348,14 +347,24 @@ def propose(ident):
     observed = read_png((record['path']/'observed.png').read_bytes(), 'L') > 0
     expected = proposal_from_probability(probability, observed)
     need(np.array_equal(raw, expected[0]) and np.array_equal(proposed, expected[1]), 'Detector proposal replay differs.')
+    from .automatic_covering import detect_face_covering
+    rgb = read_png((record['path'] / 'input.png').read_bytes(), 'RGB')
+    proposed, auto_meta = detect_face_covering(rgb, probability, proposed, observed)
+    proposed_raw = png(proposed)
+    metadata = {
+        **result['metadata'],
+        'auto_covering': auto_meta,
+        'proposed_mask_pixels': int((proposed > 0).sum()),
+        'proposal_empty': not bool(proposed.any()),
+    }
     proposal_id = uuid.uuid4().hex
-    record['proposals'][proposal_id] = {'mask': proposed.copy(), 'path': output, 'metadata': result['metadata'],
+    record['proposals'][proposal_id] = {'mask': proposed.copy(), 'path': output, 'metadata': metadata,
                                         'sha256': sha(proposed_raw), 'supervisor': supervisor}
     record['review'] = None
     return {'proposal_id': proposal_id, 'proposal_png': restoration.url(proposed_raw),
             'message': ('No covering was proposed. This does not establish an uncovered face; paint any covered area.'
                         if not proposed.any() else 'Correct the proposed area before confirming. Clear glasses and visible features must stay protected.'),
-            'metadata': result['metadata']}
+            'metadata': metadata}
 
 
 def review(ident, mask_raw, proposal_id=''):
@@ -412,10 +421,18 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
         need(len(value) == item['bytes'] and sha(value) == item['sha256'], 'Completion evidence fingerprint differs.')
     need(receipt['source_pins']['input']['sha256'] == record['pins']['input.png'] and
          receipt['source_pins']['mask']['sha256'] == sha(mask_raw), 'Worker input bindings differ.')
+    mask_u8 = (~read_png((record['path'] / 'observed.png').read_bytes(), 'L').astype(bool)).astype(np.uint8)
+    before_signals = restoration.quality_signals(original, mask_u8)
+    after_signals = restoration.quality_signals(final, mask_u8)
+    diagnostics = {
+        'before': {name: before_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
+        'after': {name: after_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
+    }
     metadata = {**result['metadata'], 'source': source, 'proposal_id': proposal_id or None,
                 'review_id': review_id, 'restoration': record['restoration'], 'supervisor': supervisor,
                 'seconds': supervisor['seconds'], 'neural_calls': int(bool(mask.any())),
                 'outside_reviewed_support_exact_to': 'restoration-result.png',
+                'output_diagnostics': diagnostics,
                 'exact_hidden_identity_claimed': False, 'model_qualified': False}
     save(output/'combined-workflow.json', canonical(metadata))
     payloads = {name: (record['path']/name).read_bytes() for name in record['pins']}
@@ -438,6 +455,10 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
 
 
 def register(app):
+    if getattr(app, '_completion_api_registered', False):
+        return
+    app._completion_api_registered = True
+
     app.add_middleware(RestorationReceiptMiddleware)
     app.add_middleware(BoundedResponseMiddleware)
 
@@ -472,3 +493,6 @@ def register(app):
                              mask_confirmed: bool = Form(False), visible_confirmed: bool = Form(False), proposal_id: str = Form('')):
         raw = await mask.read(MAX_PNG+1)
         return await run_in_threadpool(invoke, generate, session_id, raw, review_id, mask_confirmed, visible_confirmed, proposal_id)
+
+
+from . import app as restoration

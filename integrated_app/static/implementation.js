@@ -4,7 +4,7 @@
     'use strict';
     const api = '/face/restoration', byId = id => document.getElementById(id);
     const { makeView, pointerToSource, isValidCropRect } = window.captureGeometry;
-    let videoBatch, videoRunMode, videoToken, pictureMode;
+    let videoBatch, videoRunMode, videoToken, pictureMode, selectedVideoId;
     let videoRetryBlocked = false;
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
     const cropCanvas = byId('picture-crop-canvas'), cropCtx = cropCanvas.getContext('2d');
@@ -15,6 +15,7 @@
     let available = false, busy = false, revision = 0, operation = 0;
     let previewId, confirmedPreviewId, masks, drawing = false, previous, cursorX = 0, cursorY = 0;
     let overlayPixels, dirty, renderFrame = 0, protectCount = 0, applyCount = 0;
+    let lastReferenceFile = null;
     const error = message => {
         byId('brush-error').textContent = message;
         byId('brush-error').classList.toggle('hidden', !message);
@@ -96,6 +97,11 @@
     const clearResults = () => {
         byId('brush-results').classList.add('hidden');
         byId('picture-result-metrics').replaceChildren();
+        const resultSelector = byId('result-video-face-selector');
+        if (resultSelector) {
+            resultSelector.replaceChildren();
+            resultSelector.classList.add('hidden');
+        }
         byId('brush-result-summary').classList.add('hidden');
         byId('brush-result-downloads').classList.add('hidden');
         byId('brush-full-picture-result').classList.add('hidden');
@@ -135,7 +141,7 @@
     };
     const update = () => {
         document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => {
-            if (!item.closest('[data-capture-controls], .capture-visual, #video-face-selector') && !item.matches('.video-comparison [data-zoom]')) item.disabled = busy;
+            if (!item.closest('[data-capture-controls], .capture-visual, #video-face-selector') && !item.matches('.video-comparison [data-zoom], .reference-comparison [data-zoom]')) item.disabled = busy;
         });
         byId('brush-continue').disabled = busy || !sourceFile || !planes;
         byId('brush-preview').disabled = busy || !available || !planes || !manual();
@@ -143,11 +149,11 @@
         updateBlurStrength();
         byId('brush-run').disabled = busy || !available || (videoBatch ? videoRetryBlocked || !videoBatch.items.some(item => item.status !== 'completed') && videoRunMode === byId('brush-restoration').value
             : !sourceFile || !planes || (manual() && !off() && !automatic() && !preparationConfirmed()));
-        byId('picture-preparation').classList.toggle('hidden', Boolean(videoBatch) || automatic());
-        byId('picture-preparation-details').classList.toggle('hidden', Boolean(videoBatch) || automatic());
+        byId('picture-preparation').classList.add('hidden');
+        byId('picture-preparation-details').classList.add('hidden');
         updateManualCropUI();
         byId('brush-undo').disabled = busy || !undo.length;
-        byId('brush-edit-section').classList.toggle('hidden', !planes || !manual());
+        byId('brush-edit-section').classList.add('hidden');
         canvas.setAttribute('aria-disabled', String(busy));
         window.dispatchEvent(new CustomEvent('restoration:busy', {detail:{busy}}));
     };
@@ -161,7 +167,12 @@
     const finish = token => { if (token === operation) { busy = false; update(); } };
     const current = (token, version) => token === operation && version === revision;
     const restorationLoading = active => {
-        byId('restoration-idle').classList.toggle('hidden', active);
+        if (videoBatch) {
+            byId('restoration-idle').classList.add('hidden');
+            byId('video-restore-gallery')?.classList.toggle('hidden', active);
+        } else {
+            byId('restoration-idle').classList.toggle('hidden', active);
+        }
         byId('restoration-loading').classList.toggle('hidden', !active);
         byId('restoration-loading').closest('.work-screen').classList.toggle('is-loading', active);
     };
@@ -535,6 +546,7 @@
         }
     });
     const resetInput = () => {
+        lastReferenceFile = null;
         if (renderFrame) cancelAnimationFrame(renderFrame);
         renderFrame = 0; overlayPixels = undefined; dirty = undefined; protectCount = 0; applyCount = 0;
         sourceFile = undefined; captureId = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
@@ -653,6 +665,8 @@
         return true;
     }
     window.restorationInput = {use:usePicture, useVideo, clearVideoBatch, confirmPreparation, get video() {return Boolean(videoBatch);}, get busy() {return busy;}};
+    window.appendResultMetrics = appendResultMetrics;
+    window.getLastReferenceFile = () => lastReferenceFile;
     byId('brush-file').addEventListener('change', () => usePicture(byId('brush-file').files[0]));
     byId('brush-preview').addEventListener('click', async () => {
         if (busy || !planes || !sourceFile || !manual()) return;
@@ -725,18 +739,24 @@
         byId('brush-download-output').href = result.result;
         const prepared = byId('brush-prepared-details');
         prepared.open = false;
-        prepared.classList.toggle('hidden', !metadata.preparation_applied);
-        byId('brush-output-heading').textContent = metadata.restoration_applied ? 'After' : 'After (resized original)';
+        prepared.classList.add('hidden');
+        if (byId('brush-prepared-heading')) byId('brush-prepared-heading').textContent = 'Auto output';
+        byId('brush-output-heading').textContent = metadata.restoration_applied ? 'Restored' : 'Restored (resized original)';
         byId('brush-result-downloads').classList.toggle('hidden', !result.bundle);
         if (result.bundle) byId('brush-result-bundle').href = result.bundle;
         const fullPictureDownload = byId('brush-download-full-picture');
-        const fullPicture = result.scanline_cleaned_full_image || result.smoothed_full_picture;
+        const fullPicture = result.scanline_cleaned_full_image || result.smoothed_full_picture || result._videoFullFrame;
         byId('brush-full-picture-result').classList.toggle('hidden', !fullPicture);
         if (fullPicture) {
-            const scanlines = Boolean(result.scanline_cleaned_full_image);
+            const scanlines = Boolean(result.scanline_cleaned_full_image || result._videoFullFrameScanlines);
+            const isVideoFrame = Boolean(result._videoFullFrame);
             fullPictureDownload.href = fullPicture;
-            fullPictureDownload.download = scanlines ? 'scanline-cleaned-picture.png' : 'full-image-smoothed.png';
-            fullPictureDownload.textContent = scanlines ? 'Download scanline-cleaned picture (PNG)' : 'Download smoothed full picture (PNG)';
+            fullPictureDownload.download = scanlines
+                ? (isVideoFrame ? 'scanline-cleaned-frame.png' : 'scanline-cleaned-picture.png')
+                : (isVideoFrame ? 'frozen-frame-smoothed.png' : 'full-image-smoothed.png');
+            fullPictureDownload.textContent = scanlines
+                ? (isVideoFrame ? 'Download scanline-cleaned frame (PNG)' : 'Download scanline-cleaned picture (PNG)')
+                : (isVideoFrame ? 'Download smoothed full frame (PNG)' : 'Download smoothed full picture (PNG)');
             byId('brush-full-picture-note').textContent = scanlines
                 ? 'Original framing with repeating horizontal lines reduced.'
                 : 'Original framing with Gaussian smoothing in the regions Auto flagged.';
@@ -746,13 +766,49 @@
         byId('brush-standby').classList.add('hidden');
         const seconds = Number.isFinite(metadata.seconds) ? `${metadata.seconds.toFixed(1)} seconds. ` : '';
         const summary = `${seconds}${preparationSummary(metadata)}`;
-        byId('brush-result-summary').textContent = metadata.picture_crop ? `Before and After show the selected face crop. ${summary}` : summary;
+        const summaryPrefix = (metadata.picture_crop || metadata.capture_crop) ? 'Before and After show the selected face crop. ' : '';
+        byId('brush-result-summary').textContent = `${summaryPrefix}${summary}`;
         byId('brush-result-summary').classList.remove('hidden');
         progress('Result ready to review.');
         const pictureMetrics = byId('picture-result-metrics');
         pictureMetrics.replaceChildren();
         appendResultMetrics(pictureMetrics, 'Picture metrics', result);
-        window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile } }));
+        const resultSelector = byId('result-video-face-selector');
+        if (resultSelector) {
+            const completedItems = videoBatch ? videoBatch.items.filter(item => item.result) : [];
+            if (completedItems.length > 1) {
+                const existingIds = [...resultSelector.children].map(btn => btn.dataset?.faceId);
+                const nextIds = completedItems.map(item => String(item.id));
+                const matches = existingIds.length === nextIds.length && existingIds.every((id, i) => id === nextIds[i]);
+                if (!matches) {
+                    resultSelector.replaceChildren();
+                    for (const item of completedItems) {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'tool-btn';
+                        button.textContent = `Face ${item.faceNumber}`;
+                        button.dataset.faceId = String(item.id);
+                        button.setAttribute('aria-pressed', String(item.id === selectedVideoId));
+                        button.addEventListener('click', () => selectVideoFace(item.id));
+                        resultSelector.append(button);
+                    }
+                } else {
+                    for (const button of resultSelector.children) {
+                        button.setAttribute('aria-pressed', String(button.dataset?.faceId === String(selectedVideoId)));
+                    }
+                }
+                resultSelector.classList.remove('hidden');
+            } else {
+                resultSelector.replaceChildren();
+                resultSelector.classList.add('hidden');
+            }
+        }
+        const eventFile = typeof File !== 'undefined' && originalFile instanceof File
+            ? originalFile
+            : (typeof Blob !== 'undefined' && typeof File !== 'undefined' && originalFile instanceof Blob
+                ? new File([originalFile], 'captured-face.png', { type: originalFile.type || 'image/png' })
+                : originalFile);
+        window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile: eventFile } }));
     }
     byId('brush-form').addEventListener('submit', async event => {
         event.preventDefault();
@@ -780,15 +836,18 @@
     });
     function videoVisibility(active) {
         for (const id of ['video-settings-gallery', 'video-restore-gallery']) byId(id).classList.toggle('hidden', !active);
-        for (const id of ['options-preview', 'options-preview-caption', 'restoration-idle', 'picture-preparation', 'picture-preparation-details', 'picture-restore-note']) {
+        for (const id of ['options-preview', 'options-preview-caption', 'restoration-idle', 'picture-restore-note']) {
             byId(id).classList.toggle('hidden', active);
         }
+        byId('picture-preparation').classList.add('hidden');
+        byId('picture-preparation-details').classList.add('hidden');
         byId('brush-form').classList.toggle('video-batch', active);
     }
     function clearVideoBatch() {
         if (!videoBatch || busy) return;
+        lastReferenceFile = null;
         for (const item of videoBatch.items) URL.revokeObjectURL(item.url);
-        videoBatch = videoRunMode = videoToken = undefined;
+        videoBatch = videoRunMode = videoToken = selectedVideoId = undefined;
         byId('video-settings-gallery').replaceChildren();
         byId('video-face-selector').replaceChildren();
         byId('video-face-panels').replaceChildren();
@@ -840,11 +899,20 @@
         return true;
     }
     function selectVideoFace(id) {
+        selectedVideoId = id;
         const panel = `video-face-${id}`;
         for (const button of byId('video-face-selector').children) {
             button.setAttribute('aria-pressed', String(button.getAttribute('aria-controls') === panel));
         }
+        const resultSelector = byId('result-video-face-selector');
+        if (resultSelector) {
+            for (const button of resultSelector.children) {
+                button.setAttribute('aria-pressed', String(button.dataset?.faceId === String(id)));
+            }
+        }
         for (const card of byId('video-face-panels').children) card.hidden = card.id !== panel;
+        const item = videoBatch?.items.find(entry => entry.id === id);
+        if (item?.result) displayResult(item.result, item.file);
     }
     function videoImage(src, alt) {
         const image = new Image();
@@ -875,7 +943,8 @@
         return card;
     }
     function videoComparisonImage(item, stage, source, bundle) {
-        const id = `video-face-${item.id}-${stage.toLowerCase()}`;
+        const slug = stage.toLowerCase().replace(/\s+/g, '-');
+        const id = `video-face-${item.id}-${slug}`;
         const name = `Face ${item.faceNumber}`;
         const figure = document.createElement('figure');
         const image = videoImage(source, `${name} ${stage.toLowerCase()} restoration`);
@@ -886,7 +955,7 @@
         const download = document.createElement('a');
         download.className = 'tool-btn';
         download.href = source;
-        download.download = `face-${item.faceNumber}-${stage.toLowerCase()}.png`;
+        download.download = `face-${item.faceNumber}-${slug}.png`;
         download.textContent = 'Download PNG';
         download.setAttribute('aria-label', `Download PNG for ${name} ${stage.toLowerCase()}`);
         const enlarge = document.createElement('button');
@@ -908,6 +977,14 @@
         }
         figure.append(actions);
         return figure;
+    }
+    let referenceComparisonSeq = 0;
+    function formatAccuracy(score) {
+        if (typeof score?.accuracy === 'string' && score.accuracy) return score.accuracy;
+        const m = Number(score?.mae);
+        return score?.mae != null && score.mae !== '' && Number.isFinite(m)
+            ? `${((1 - m / 255) * 100).toFixed(2)}%`
+            : '—';
     }
     function restorationMetrics(caption, diagnostics) {
         const hasPrepared = Boolean(diagnostics?.prepared && typeof diagnostics.prepared === 'object');
@@ -946,19 +1023,20 @@
             return base;
         };
         metric(
-            'Sharpness (edge variation)',
+            'Sharpness (px² variance)',
             value(diagnostics?.before?.blur_variance),
             value(diagnostics?.prepared?.blur_variance),
             value(diagnostics?.after?.blur_variance)
         );
         metric(
-            'Noise estimate',
+            'Noise estimate (σ, RGB levels)',
             formatNoise(diagnostics?.before),
             value(diagnostics?.prepared?.noise_sigma_255),
             value(diagnostics?.after?.noise_sigma_255)
         );
         const mae = metric('MAE (RGB levels)', '—', '—', '—');
         const psnr = metric('PSNR (dB)', '—', '—', '—');
+        const accuracy = metric('Accuracy (%)', '—', '—', '—');
         return {
             table,
             setReference(scores) {
@@ -968,7 +1046,9 @@
                 columns.forEach(([col, score]) => {
                     mae[col].textContent = score?.mae ?? '—';
                     psnr[col].textContent = score?.psnr ?? '—';
+                    accuracy[col].textContent = '—';
                 });
+                accuracy[hasPrepared ? 2 : 1].textContent = formatAccuracy(scores?.after);
             }
         };
     }
@@ -983,41 +1063,164 @@
         details.append(status);
         if (!item.result) return;
         const { result } = item;
-        images.append(videoComparisonImage(item, 'After', result.result, result.bundle));
+        images.append(
+            videoComparisonImage(item, 'Auto output', result.prepared_input || result.original_input),
+            videoComparisonImage(item, 'Restored', result.result, result.bundle)
+        );
         status.textContent = result.metadata.automatic_preparation ? preparationSummary(result.metadata)
             : result.metadata.restoration_applied ? 'Original and restored result' : 'Original and resized result';
         appendResultMetrics(details, `Face ${item.faceNumber} metrics`, result);
     }
-    function appendResultMetrics(container, caption, result) {
-        const metrics = restorationMetrics(caption, result.metadata.output_diagnostics);
+    function createReferenceFigure({ id, alt, captionText, downloadName, zoomLabel }) {
+        const figure = document.createElement('figure');
+        const img = document.createElement('img');
+        img.id = id;
+        img.width = 256;
+        img.height = 256;
+        img.alt = alt;
+        const figcaption = document.createElement('figcaption');
+        figcaption.textContent = captionText;
+        const actions = document.createElement('div');
+        actions.className = 'video-image-actions';
+        const download = document.createElement('a');
+        download.className = 'tool-btn';
+        download.download = downloadName;
+        download.textContent = 'Download PNG';
+        const enlarge = document.createElement('button');
+        enlarge.type = 'button';
+        enlarge.className = 'zoom-btn';
+        enlarge.dataset.wizardNav = '';
+        enlarge.dataset.zoom = id;
+        enlarge.setAttribute('data-wizard-nav', '');
+        enlarge.setAttribute('data-zoom', id);
+        enlarge.setAttribute('aria-label', zoomLabel);
+        enlarge.textContent = 'Enlarge';
+        actions.append(download, enlarge);
+        figure.append(img, figcaption, actions);
+        return { figure, img, download };
+    }
+    function isValidReferenceFile(file) {
+        if (!file || typeof file !== 'object') return false;
+        if (typeof File !== 'undefined' && file instanceof File) return file.size > 0;
+        return typeof file.name === 'string' && file.name.length > 0 && Number.isFinite(file.size) && file.size > 0;
+    }
+    function appendResultMetrics(container, caption, result, options = {}) {
+        const compId = ++referenceComparisonSeq;
+        const afterLabel = typeof options?.afterLabel === 'string' && options.afterLabel.trim()
+            ? options.afterLabel.trim()
+            : 'Restored';
+        const afterSlug = afterLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'restored';
+        const metrics = restorationMetrics(caption, result.metadata?.output_diagnostics);
         const score = document.createElement('p');
         score.textContent = 'Ground truth unavailable.';
         score.setAttribute('role', 'status');
         const reference = document.createElement('input');
         reference.type = 'file';
-        reference.accept = 'image/png,image/jpeg';
+        reference.accept = 'image/png,image/jpeg,video/mp4,video/webm,video/quicktime';
         const label = document.createElement('label');
         label.append('Add clean reference', reference);
         const hint = document.createElement('p');
-        hint.textContent = 'Upload the full uncropped clean photo, a clean crop matching the input, or a 256 × 256 padded frame. Scores measure pixel agreement.';
+        hint.textContent = 'Upload the full original photo, a cropped face reference, a 256 × 256 padded frame, or a reference video. Scores measure pixel agreement.';
+
+        const comparison = document.createElement('div');
+        comparison.className = 'reference-comparison hidden';
+        const gallery = document.createElement('div');
+        gallery.className = 'visual-gallery reference-before-after';
+        gallery.setAttribute('aria-label', `Ground truth and ${afterLabel}`);
+        const gtPanel = createReferenceFigure({
+            id: `reference-gt-img-${compId}`,
+            alt: 'Ground truth reference, aligned',
+            captionText: 'Ground truth',
+            downloadName: 'ground-truth-256.png',
+            zoomLabel: 'Enlarge ground truth image',
+        });
+        const restoredPanel = createReferenceFigure({
+            id: `reference-restored-img-${compId}`,
+            alt: `${afterLabel} picture`,
+            captionText: afterLabel,
+            downloadName: `${afterSlug}-256.png`,
+            zoomLabel: `Enlarge ${afterLabel.toLowerCase()} comparison image`,
+        });
+        gallery.append(gtPanel.figure, restoredPanel.figure);
+
+        const compTable = document.createElement('table');
+        compTable.className = 'video-metrics reference-metrics';
+        compTable.createCaption().textContent = `Ground truth vs. ${afterLabel}`;
+        const compHeadRow = compTable.createTHead().insertRow();
+        for (const title of ['Metric', `${afterLabel} vs. Ground truth`]) {
+            const cell = document.createElement('th');
+            cell.scope = 'col';
+            cell.textContent = title;
+            compHeadRow.append(cell);
+        }
+        const compBody = compTable.createTBody();
+        const addCompRow = rowLabel => {
+            const row = compBody.insertRow();
+            const th = document.createElement('th');
+            th.scope = 'row';
+            th.textContent = rowLabel;
+            row.append(th);
+            const td = row.insertCell();
+            td.textContent = '—';
+            return td;
+        };
+        const compMae = addCompRow('MAE (RGB levels)');
+        const compPsnr = addCompRow('PSNR (dB)');
+        const compAccuracy = addCompRow('Accuracy (%)');
+        comparison.append(gallery, compTable);
+
+        const resetComparison = () => {
+            comparison.classList.add('hidden');
+            gtPanel.img.removeAttribute('src');
+            gtPanel.download.removeAttribute('href');
+            restoredPanel.img.removeAttribute('src');
+            restoredPanel.download.removeAttribute('href');
+            compMae.textContent = '—';
+            compPsnr.textContent = '—';
+            compAccuracy.textContent = '—';
+        };
+
         let referenceRevision = 0;
-        reference.addEventListener('change', async () => {
+        const runReference = async file => {
             const version = ++referenceRevision;
-            const file = reference.files[0];
             metrics.setReference();
+            resetComparison();
             score.textContent = file ? 'Comparing reference…' : 'Ground truth unavailable.';
             if (!file) return;
             try {
                 const scores = await window.scoreVideoReference(file, result);
                 if (version === referenceRevision) {
                     metrics.setReference(scores);
-                    score.textContent = 'MAE and PSNR compare the images with your supplied reference. Padding is excluded.';
+                    const gtSrc = scores?.reference_256 || '';
+                    if (gtSrc) {
+                        gtPanel.img.src = gtSrc;
+                        gtPanel.download.href = gtSrc;
+                    }
+                    restoredPanel.img.src = result.result;
+                    restoredPanel.download.href = result.result;
+                    compMae.textContent = scores?.after?.mae ?? '—';
+                    compPsnr.textContent = scores?.after?.psnr ?? '—';
+                    compAccuracy.textContent = formatAccuracy(scores?.after);
+                    comparison.classList.remove('hidden');
+                    score.textContent = 'MAE, PSNR, and Accuracy (%) compare the images with your supplied reference. Padding is excluded.';
                 }
             } catch (problem) {
-                if (version === referenceRevision) score.textContent = `Ground truth unavailable. ${problem.message}`;
+                if (version === referenceRevision) {
+                    resetComparison();
+                    score.textContent = `Ground truth unavailable. ${problem.message}`;
+                }
             }
+        };
+
+        reference.addEventListener('change', async () => {
+            const file = reference.files[0] || null;
+            lastReferenceFile = file;
+            await runReference(file);
         });
-        container.append(metrics.table, score, label, hint);
+        container.append(metrics.table, score, label, hint, comparison);
+        if (isValidReferenceFile(options?.autoReferenceFile)) {
+            runReference(options.autoReferenceFile);
+        }
     }
     async function restoreVideo() {
         if (busy || !available || !videoBatch || videoRetryBlocked) return;
@@ -1047,15 +1250,19 @@
         let activeId;
         error('');
         progress('Processing the selected faces one at a time.');
+        restorationLoading(true);
         try {
             await videoBatch.run(async (request, item) => {
                 activeId = item.id;
                 showVideoResult(item);
                 request.set('include_smoothed_frame', String(!byId('video-download-smoothed-frame').hasAttribute('href')));
                 const result = await restoreRequest(request, { 'X-Capture-Token': videoToken });
-                if (result.scanline_cleaned_full_image || result.smoothed_full_frame) {
-                    setFrameDownload(result.scanline_cleaned_full_image || result.smoothed_full_frame,
-                                     Boolean(result.scanline_cleaned_full_image));
+                const fullFrame = result.scanline_cleaned_full_image || result.smoothed_full_frame;
+                if (fullFrame) {
+                    const scanlines = Boolean(result.scanline_cleaned_full_image);
+                    setFrameDownload(fullFrame, scanlines);
+                    Object.defineProperty(result, '_videoFullFrame', { value: fullFrame, configurable: true });
+                    Object.defineProperty(result, '_videoFullFrameScanlines', { value: scanlines, configurable: true });
                     delete result.scanline_cleaned_full_image;
                     delete result.smoothed_full_frame;
                 }
@@ -1063,12 +1270,19 @@
                 return result;
             });
             progress('All selected faces are ready to inspect.');
+            const completedItem = videoBatch.items.find(i => i.id === selectedVideoId && i.result)
+                || videoBatch.items.find(i => i.result);
+            if (completedItem) {
+                selectedVideoId = completedItem.id;
+                selectVideoFace(completedItem.id);
+            }
         } catch (problem) {
             videoRetryBlocked = Boolean(problem.restartRequired);
             const failed = videoBatch.items.find(item => item.id === activeId);
             if (failed) showVideoResult(failed, undefined, `Processing stopped. ${problem.message}`);
             error(videoRetryBlocked ? problem.message : 'The queue paused. Select Retry remaining faces to continue.');
         } finally {
+            restorationLoading(false);
             byId('brush-run').textContent = videoRetryBlocked ? 'Restart required' : videoBatch.items.some(item => item.status === 'failed') ? 'Retry remaining faces'
                 : videoBatch.items.length === 1 ? 'Restore face' : 'Restore faces';
             finish(token);

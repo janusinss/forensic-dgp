@@ -1,3 +1,42 @@
+# Forensic DGP project handoff
+
+## 18 November 2026 — Consultation prototype and thesis revision
+
+- The checkout's release metadata identifies the Windows offline preview as 0.2.12. The other workspace's audit records the later consultation changes as prototype work on top of that release. [Deployment history](download-site/DEPLOYMENT.md)
+- The local source shows multipass YuNet detection, Picture manual cropping, Auto or Off settings, and sequential processing of selected video faces. Auto uses artifact-specific checks before one restoration inference per crop. The audit records the narrower crop trials, rejected preparation candidates, and route-specific regressions as engineering history. [Capture and preparation source](integrated_app/implementation)
+- Result review shows Before, Auto output when available, and Restored. The reference path can match an input subregion or take a corresponding video frame using the saved source time. MAE and PSNR apply to the matched observed area. The restored-only label “Accuracy (%)” is `100 × (1 − MAE/255)`. [Reference scoring](integrated_app/static/restoration_reference.js)
+- The optional completion flow proposes a covering mask, checks the observed support, and shows the mask with the original restoration and the completed estimate. Supplemental BiSeNet and XSeg segmentation depends on the verified assets in the local environment. The audit's fixture results concern the particular tested inputs. The earlier covering-mask and R1/R2 comparisons retain their original protocols. [Automatic covering source](integrated_app/implementation/automatic_covering.py)
+- The updated manuscript describes the prototype, retains the 20-case sample evaluation and Drive link, and marks the earlier UI figures accordingly. [Thesis revision record](docs/THESIS_CROSS_WORKSPACE_REVISION_2026-11-18.md)
+
+## 14 November 2026 — Current checkout and public release
+
+| Component | Verified revision or version |
+| --- | --- |
+| Research repository and integrated app, `main` | [`e4d17b5`](https://github.com/janusinss/forensic-dgp/commit/e4d17b5043b1044ce05fb99a261fa060d09da6dc) |
+| Standalone app, `IMPLEMENTATION` | [`7549a15`](https://github.com/janusinss/forensic-dgp/commit/7549a1579e761d69e9f4a80632aaa8ed3b112468) |
+| Offline installer build, `codex/r2-installer-release` | [`7e78f28`](https://github.com/janusinss/forensic-dgp/commit/7e78f28ae420ddb1e4c5b95668b186fb47bfdf5c) |
+| Public download page | [Forensic DGP 0.2.11 preview](https://forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+
+The live release metadata and GitHub asset agree on the unsigned offline installer `ForensicDGP_Setup-0.2.11.exe`, 1,314,084,061 bytes, SHA-256 `05a4640e302a37c258d4cbd1fa388d854645269a029e7f0101de476c366b1051`. Version 0.2.10 added aligned clean-reference evaluation across native, padded, and manual crops. Version 0.2.11 added automatic shutdown of running Forensic DGP instances during upgrade and uninstall, and long-path cleanup during uninstall. This handoff check verified release metadata and branch heads. [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.11)
+
+## App workflow and evidence
+
+- Picture starts with a detected face when available and supports manual cropping. Video, webcam, and RTSP sources support freezing a frame and selecting up to 12 detected faces with **Add all**. The selected crops share one **Auto**, **Manual**, or **Off** setting and run sequentially.
+- Auto in 0.2.6 introduced adaptive Gaussian smoothing at 2.5, 3.0, or 3.5 px at the 256 px scale, localized Protect + Auto-match, and full-source scanline suppression. Later revisions document additional routes for tilted, perspective-warped, and irregular mosaics, JPEG and macroblock deblocking, and other artifact corrections. Consult the current app documentation for the route conditions and evidence files. [Integrated app guide](integrated_app/README.MD)
+- Result review shows Before and After, separate downloads, and per-face diagnostics. An aligned clean reference enables MAE and PSNR over the observed crop. Report unpaired CCTV by visible artifact changes and visual review. Reviewed covering detection and R1/R2 completion comparisons are distinct evaluations. [Thesis capture and completion revision](docs/THESIS_CAPTURE_COMPLETION_REVISION_2026-11-07.md)
+- The 0.2.6 build remains the user-approved comparison baseline. The exploratory 2 px synthetic grid was read as 4 px, and the 3 px grid used the default 3.0 px radius. That probe measured routing alone. Before claiming a benefit from finer-grid or tiny-face preparation, compare direct restoration, 0.2.6 Auto, and the candidate on matched clean-reference crops and clean controls, with `wild4` and `wild2` as visual regressions. Treat source-video deinterlacing as a separate experiment from scanline suppression on a frozen frame.
+
+## Manuscript
+
+- Edit [THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) and regenerate the matching [PDF](docs/THESIS-MANUSCRIPT-FINAL.pdf). Follow the [thesis writing standard](docs/THESIS_REWRITING_STANDARD.md). The standard retains the older filename in its introduction.
+- The November 9 revision updated the Chapter III workflow, Chapter IV application evaluation, and Appendices A, B, and J. Chapter IV retained the matched comparisons of the Phase 3 conditional model, untouched CodeFormer, and the proposed conditioned model, with the resized input as a baseline. The revision recorded a 128-page PDF and documents the 0.2.6 workflow. Review it against 0.2.11 before refreshing screenshots or describing later Auto routes and reference handling. [November 9 revision record](docs/THESIS_AUTO_PREPARATION_REVISION_2026-11-09.md)
+
+---
+
+## Historical handoff entries
+
+The dated entries below record the project state at the time of each handoff.
+
 # 2 November 2026: Master All-Folder Handoff Consolidation (`Testing`, `Testing_FACE_MASK_COMPLETION`, `Testing_RESTORATION`, `Testing_INNO_INSTALLER` / `codex/r2-installer-release`, and `IMPLEMENTATION`)
 
 STATUS: ALL_WORKTREE_HANDOFFS_CONSOLIDATED_IN_TESTING_MAIN_AND_PUSHED_TO_ORIGIN.

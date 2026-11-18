@@ -1,6 +1,24 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.12 offline preview
+## Current 0.2.13 offline preview
+
+Published November 18, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 7c6919b3](https://7c6919b3.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.13)
+references `ForensicDGP_Setup-0.2.13.exe` from build source
+`5d9652fecc8333dbc4094ac86305c1e6e12aab60` (`1,314,126,941` bytes, SHA-256
+`f4fbbd598ad33dfa3d88bad40c6793ebc2d4601759b9ab8211a2795faf594ae2`). This release
+ships the Adviser 3-panel gallery and Accuracy (%) metrics with units, unified
+start-to-finish Video Steps 1-5 flow, 7-step Ground Truth alignment and MP4 frame
+extraction with side-by-side comparison, and Step 4-5 automatic face covering
+detection with BiSeNet+XSeg ONNX occlusion segmentation (including hollow
+clear-glasses frame extraction). All 19 site tests, `tsc --noEmit`, and Vite
+production build passed. Published versions remain immutable: future updates must
+use a new version, build, and release rather than replacing `0.2.13`.
+
+## Historical 0.2.12 offline preview
 
 Published November 14, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs

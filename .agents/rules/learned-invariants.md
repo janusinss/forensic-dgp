@@ -43,5 +43,9 @@ To prevent rule bloat and unverified self-poisoning while compounding negative k
 - **[Harness-Verification]**: Never combine multi-module integration test suites exceeding 100s into a single acceptance command; partition acceptance test runs into bounded sub-suite commands.
 
 ## Promoted Guardrails
+- **[Harness-Verification]**: Ensure binary weights are ignored in root .gitignore and contract allowed_paths covers all active in-tree paths so harness verify produces status=PASS with zero scope_violations before Skeptic approval.
+- **[Runtime-Safety]**: Include native C++/pybind11 exception classes (e.g. onnxruntime.capi.onnxruntime_pybind11_state subclasses) in bounded fallback tuples and test with real library exception classes alongside RuntimeError.
+- **[Runtime-Safety]**: Enforce exclusive {0,1}/{0,255} uint8 masks, sanitize ONNX logits with nan_to_num, wrap optional ONNX import/session/inference in bounded fallback handlers returning None, and cover SHA-256 mismatch and runtime fallback with negative unit tests.
+- **[Covering-Detection]**: Validate [0,1] probability bounds and binary mask values in detect_face_covering and assert 0 FP across all test_images/review files/*.zip restored faces.
 - **[universal-face-alignment]**: Route needs_rotation, scale_in, and offcenter through align_before_prep with two-pass upright roll refinement, keep warp_with_zero_inward_bleed pre-blur disabled above scale 0.35 (INTER_CUBIC), and never apply full-canvas Gaussian smoothing before zooming into small/offcenter faces.
 - **[step1-face-crop]**: Guard enriched face-detail dispatch with reference equality against _DEFAULT_DETECT_FACES, bind faces paired with face_crops before spatial sorting, and compute landmark-aligned FFHQ square crops at ingest when frame bounds allow.

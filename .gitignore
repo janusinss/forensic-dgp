@@ -58,6 +58,7 @@ weights/
 !checkpoints/dgp_improved_epoch_[3-9]*.pth
 *.pt
 *.h5
+*.onnx
 
 # Local Codex skills, instructions, and workflow artifacts
 /.codex/
@@ -189,3 +190,9 @@ verify_cookie*.txt
 !/.agents/agents/
 /.harness/
 /.agent_worktrees/
+
+# Ephemeral Skill Runtime & Review Artifacts
+/.agents/hooks.json
+
+# Downloaded impeccable engine binaries are never committed (launcher fetches and verifies them)
+**/impeccable/scripts/bin/
