@@ -342,6 +342,10 @@ def _start_stream(value, owner):
 
 
 def register(app):
+    if getattr(app, '_capture_api_registered', False):
+        return
+    app._capture_api_registered = True
+
     @app.on_event('shutdown')
     def stop_owned_streams():
         with LOCK:

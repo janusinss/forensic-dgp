@@ -2,9 +2,16 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.12
+## Windows installer 0.2.13
 
-Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.12](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.12).
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.2.13](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.13).
+
+### What changed in 0.2.13
+
+- **Adviser UI & metrics**: Displays a 3-panel comparison gallery alongside explicit units and **Accuracy (%)** summaries for edge variation, estimated noise, MAE, and PSNR.
+- **Unified Video Steps 1–5 flow**: Connects frozen-frame selection, shared preparation, and multi-face restoration into a single continuous Steps 1–5 workflow.
+- **7-step Ground Truth alignment & MP4 extraction**: Adds 7-step GT pose/crop alignment, MP4 frame extraction, and side-by-side Ground Truth comparison.
+- **Step 4–5 automatic covering detection**: Combines Lab/YCrCb multi-family detection with optional BiSeNet + XSeg ONNX occlusion segmentation, including hollow clear-glasses frame extraction.
 
 ## Developer batch installation
 

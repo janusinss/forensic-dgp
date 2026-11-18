@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import binascii
 from functools import lru_cache
 import hashlib
 import io
@@ -463,16 +464,21 @@ async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form
     return await run_in_threadpool(invoke, execute)
 
 
-def _decode_reference(contents):
+def _decode_reference(contents, max_side=MAX_IMAGE_SIDE, max_pixels=MAX_IMAGE_SIDE * MAX_IMAGE_SIDE):
     need(type(contents) is bytes and 0 < len(contents) <= MAX_UPLOAD_BYTES,
          'Choose a PNG or JPEG reference under 10 MB.')
     try:
         with Image.open(io.BytesIO(contents)) as source:
             need(source.format in ('PNG', 'JPEG') and getattr(source, 'n_frames', 1) == 1,
                  'Choose a valid PNG or JPEG reference image.')
-            need(0 < source.width <= MAX_IMAGE_SIDE and 0 < source.height <= MAX_IMAGE_SIDE
-                 and source.width * source.height <= MAX_IMAGE_SIDE * MAX_IMAGE_SIDE,
-                 'Use a reference image no larger than 1600 pixels per side.')
+            size_msg = (
+                'Use a reference image no larger than 1600 pixels per side.'
+                if max_side == MAX_IMAGE_SIDE
+                else f'Use a reference image no larger than {max_side} pixels per side.'
+            )
+            need(0 < source.width <= max_side and 0 < source.height <= max_side
+                 and source.width * source.height <= max_pixels,
+                 size_msg)
             has_alpha = 'A' in source.mode or 'transparency' in source.info
             transposed = ImageOps.exif_transpose(source)
             if has_alpha:
@@ -543,14 +549,63 @@ def _has_uniform_gray_padding(rgb, bounds):
     return float(mismatched.mean()) <= 0.02
 
 
-def prepare_reference(contents, geometry):
+def _decode_original_256(original_input):
+    if not isinstance(original_input, str) or not original_input.startswith('data:image/png;base64,'):
+        return None
+    try:
+        raw_orig = base64.b64decode(original_input.split(',', 1)[1], validate=True)
+        orig_256 = _decode_reference(raw_orig)
+    except (ValueError, TypeError, binascii.Error):
+        return None
+    return orig_256 if orig_256.shape == (256, 256, 3) else None
+
+
+def _match_template_best(haystack_gray, needle_gray):
+    if np.ptp(haystack_gray) == 0 or np.ptp(needle_gray) == 0:
+        return -1.0, (0, 0)
+    import cv2
+    res = cv2.matchTemplate(haystack_gray, needle_gray, cv2.TM_CCOEFF_NORMED)
+    _, max_val, _, max_loc = cv2.minMaxLoc(res)
+    if not math.isfinite(max_val):
+        return -1.0, (0, 0)
+    return float(max_val), max_loc
+
+
+def prepare_reference(contents, geometry, original_input=''):
     """Align an uploaded ground-truth reference to the exact 256x256 restoration canvas."""
     bounds, native_size, crop_rect = _parse_reference_geometry(geometry)
-    rgb = _decode_reference(contents)
+    orig_256 = _decode_original_256(original_input)
+    has_extra_context = crop_rect is not None or orig_256 is not None
+    rgb = _decode_reference(
+        contents,
+        max_side=4096 if has_extra_context else MAX_IMAGE_SIDE,
+        max_pixels=8388608 if has_extra_context else MAX_IMAGE_SIDE * MAX_IMAGE_SIDE,
+    )
     nat_h, nat_w = rgb.shape[:2]
     is_padded = bounds != [0, 0, 256, 256]
-    obs_w, obs_h = bounds[2] - bounds[0], bounds[3] - bounds[1]
+    left, top, right, bottom = bounds
+    obs_w, obs_h = right - left, bottom - top
+    nw, nh = tuple(native_size) if native_size is not None else (obs_w, obs_h)
     ref_geo = None
+    target_256 = None
+    source_mode = None
+
+    tmpl_native = None
+    if orig_256 is not None:
+        tmpl_native = np.asarray(
+            Image.fromarray(orig_256[top:bottom, left:right]).resize((nw, nh), Image.Resampling.BILINEAR)
+        )
+
+    exact_native = native_size is not None and (nat_w, nat_h) == tuple(native_size)
+    ref_aspect = nat_w / nat_h
+    obs_aspect = obs_w / obs_h
+    diff_obs = abs(ref_aspect - obs_aspect) / max(ref_aspect, obs_aspect)
+    if native_size is not None:
+        nat_aspect = native_size[0] / native_size[1]
+        diff_native = abs(ref_aspect - nat_aspect) / max(ref_aspect, nat_aspect)
+    else:
+        diff_native = diff_obs
+    aspect_ok = exact_native or diff_native <= 0.05 or diff_obs <= 0.05
 
     def _from_full_crop():
         cx, cy, cw, ch = crop_rect[0]
@@ -572,21 +627,79 @@ def prepare_reference(contents, geometry):
     elif crop_rect is not None and (nat_w, nat_h) == crop_rect[1]:
         target_256, _, _, ref_geo = _from_full_crop()
         source_mode = 'full_cropped'
-    else:
-        exact_native = native_size is not None and (nat_w, nat_h) == tuple(native_size)
-        ref_aspect = nat_w / nat_h
-        obs_aspect = obs_w / obs_h
-        diff_obs = abs(ref_aspect - obs_aspect) / max(ref_aspect, obs_aspect)
-        if native_size is not None:
-            nat_aspect = native_size[0] / native_size[1]
-            diff_native = abs(ref_aspect - nat_aspect) / max(ref_aspect, nat_aspect)
-        else:
-            diff_native = diff_obs
-        need(exact_native or diff_native <= 0.05 or diff_obs <= 0.05,
+    elif (orig_256 is not None and crop_rect is not None
+          and abs((nat_w / nat_h) - (crop_rect[1][0] / crop_rect[1][1]))
+          / max(nat_w / nat_h, crop_rect[1][0] / crop_rect[1][1]) <= 0.03):
+        (cx, cy, cw, ch), (sw, sh) = crop_rect
+        scaled_rgb = np.asarray(Image.fromarray(rgb).resize((sw, sh), Image.Resampling.BILINEAR))
+        target_256, _, _, ref_geo = prepare_crop(scaled_rgb[cy:cy + ch, cx:cx + cw].copy())
+        source_mode = 'full_cropped'
+
+    if target_256 is None and tmpl_native is not None and np.ptp(rgb) > 0 and np.ptp(tmpl_native) > 0:
+        import cv2
+        rgb_gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+        tmpl_gray = cv2.cvtColor(tmpl_native, cv2.COLOR_RGB2GRAY)
+
+        if nat_w >= nw and nat_h >= nh and (nat_w, nat_h) != (nw, nh):
+            max_val, (mx, my) = _match_template_best(rgb_gray, tmpl_gray)
+            if max_val >= 0.55:
+                target_256, _, _, _ = prepare_crop(rgb[my:my + nh, mx:mx + nw].copy())
+                source_mode = 'template_cropped'
+                ref_geo = None
+
+        if target_256 is None and nat_w <= nw and nat_h <= nh and (nat_w, nat_h) != (nw, nh):
+            max_val, (mx, my) = _match_template_best(tmpl_gray, rgb_gray)
+            if max_val >= 0.55:
+                sub_l = max(left, min(right - 1, left + int(round(mx * obs_w / nw))))
+                sub_t = max(top, min(bottom - 1, top + int(round(my * obs_h / nh))))
+                sub_r = max(sub_l + 1, min(right, left + int(round((mx + nat_w) * obs_w / nw))))
+                sub_b = max(sub_t + 1, min(bottom, top + int(round((my + nat_h) * obs_h / nh))))
+                target_256 = np.full((256, 256, 3), 128, dtype=np.uint8)
+                target_256[sub_t:sub_b, sub_l:sub_r] = np.asarray(
+                    Image.fromarray(rgb).resize((sub_r - sub_l, sub_b - sub_t), Image.Resampling.BILINEAR)
+                )
+                return {
+                    'reference_256': url(png(target_256)),
+                    'observed_bounds_256': bounds,
+                    'eval_bounds_256': [sub_l, sub_t, sub_r, sub_b],
+                    'source_mode': 'subcrop_aligned',
+                }
+
+        if target_256 is None and not aspect_ok:
+            best_val = -1.0
+            best_match = None
+            for scale in np.linspace(0.3, 1.8, 13):
+                sw_c = int(round(nw * float(scale)))
+                sh_c = int(round(nh * float(scale)))
+                if 16 <= sw_c <= nat_w and 16 <= sh_c <= nat_h:
+                    scaled_tmpl = np.asarray(
+                        Image.fromarray(tmpl_gray).resize((sw_c, sh_c), Image.Resampling.BILINEAR)
+                    )
+                    max_val, (mx, my) = _match_template_best(rgb_gray, scaled_tmpl)
+                    if max_val > best_val:
+                        best_val = max_val
+                        best_match = (mx, my, sw_c, sh_c)
+            if best_val >= 0.65 and best_match is not None:
+                mx, my, sw_c, sh_c = best_match
+                matched_crop = np.asarray(
+                    Image.fromarray(rgb[my:my + sh_c, mx:mx + sw_c]).resize((nw, nh), Image.Resampling.BILINEAR)
+                )
+                target_256, _, _, _ = prepare_crop(matched_crop)
+                source_mode = 'template_cropped'
+                ref_geo = None
+
+    if target_256 is None:
+        need(aspect_ok,
              'Reference aspect ratio does not match the input crop. '
              'Use the full original photo, a clean crop matching the input, or a 256 × 256 padded frame.')
         target_256, _, _, ref_geo = prepare_crop(rgb)
         source_mode = 'native_crop'
+        if orig_256 is not None and ref_geo['observed_bounds_256'] != bounds:
+            target_256 = np.full((256, 256, 3), 128, dtype=np.uint8)
+            target_256[top:bottom, left:right] = np.asarray(
+                Image.fromarray(rgb).resize((obs_w, obs_h), Image.Resampling.BILINEAR)
+            )
+            ref_geo = None
 
     if ref_geo is not None:
         need(ref_geo['observed_bounds_256'] == bounds,
@@ -600,11 +713,12 @@ def prepare_reference(contents, geometry):
 
 
 @app.post('/face/restoration/reference')
-async def reference(file: UploadFile = File(...), geometry: str = Form(...)):
+async def reference(file: UploadFile = File(...), geometry: str = Form(...),
+                    original_input: Annotated[str, Form()] = ''):
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
     def execute():
         try:
-            return prepare_reference(contents, geometry)
+            return prepare_reference(contents, geometry, original_input=original_input)
         except ValueError as error:
             raise HTTPException(400, str(error)) from error
     return await run_in_threadpool(execute)
@@ -962,6 +1076,19 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         if rectangle is not None:
             metadata['picture_crop'] = rectangle
         metadata['source_size'] = source_size
+        if capture_id and 'capture/metadata.json' in payloads and 'capture/frame.png' in payloads:
+            cap_meta = json.loads(payloads['capture/metadata.json'])
+            if isinstance(cap_meta.get('rectangle'), list) and len(cap_meta['rectangle']) == 4:
+                metadata['capture_crop'] = cap_meta['rectangle']
+            if (
+                'source_time' in cap_meta
+                and isinstance(cap_meta['source_time'], (int, float))
+                and not isinstance(cap_meta['source_time'], bool)
+                and math.isfinite(cap_meta['source_time'])
+            ):
+                metadata['source_time'] = float(cap_meta['source_time'])
+            with Image.open(io.BytesIO(payloads['capture/frame.png'])) as frame_im:
+                metadata['frame_size'] = [int(frame_im.width), int(frame_im.height)]
         if auto_decision is not None:
             metadata['automatic_preparation'] = auto_decision
         if picture_regions is not None:
@@ -992,3 +1119,10 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             result['bundle'] = url(bundle(payloads), 'application/zip')
         return result
     return await run_in_threadpool(invoke, execute)
+
+
+from .completion_api import register as _register_completion
+from .capture_api import register as _register_capture
+
+_register_completion(app)
+_register_capture(app)

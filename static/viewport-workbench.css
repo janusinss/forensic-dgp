@@ -307,9 +307,13 @@ html:has(#image-dialog[open]) { overflow:hidden; }
 .choice-group > .field-hint { margin-top:6px; }
 
 /* Orb is visible only while the restoration request is pending. */
-.work-screen[data-screen=run].is-loading .restoration-visual {
+.work-screen[data-screen=run].is-loading .restoration-visual,
+.work-screen[data-screen=completion-confirm].is-loading .completion-confirm-visual {
   background:linear-gradient(180deg,#1c4034 0%,#132a25 58%,#101d1d 100%);
 }
+[data-screen=completion-confirm].is-loading .review-checks,
+[data-screen=completion-confirm].is-loading .work-actions { display: none; }
+[data-screen=completion-confirm].is-loading .work-note { display:none; }
 .restoration-loading { display:grid; place-items:center; width:100%; height:100%; }
 /* Faithful adaptation of the supplied AI loader, contained in the visual pane. */
 @font-face { font-family:"Loader Inter"; src:url("/static/fonts/InterVariable.woff2") format("woff2"); font-style:normal; font-weight:100 900; font-display:swap; }
@@ -348,10 +352,12 @@ html:has(#image-dialog[open]) { overflow:hidden; }
   .work-screen.is-active .work-visual:not(.has-ambient-shader) { animation:ambient-fallback 9s ease-in-out infinite alternate !important; }
 }
 @media (max-width:800px) {
-  .work-screen[data-screen=run].is-loading { grid-template-rows:minmax(0,1fr) auto; }
-  .work-screen[data-screen=run].is-loading .work-controls { overflow-y:auto; justify-content:safe center; }
-  .work-screen[data-screen=run].is-loading .restoration-visual { display:flex; min-height:140px; padding:12px 20px; }
-  .work-screen[data-screen=run].is-loading .restoration-visual { min-height:204px; }
+  .work-screen[data-screen=run].is-loading,
+  .work-screen[data-screen=completion-confirm].is-loading { grid-template-rows:minmax(0,1fr) auto; }
+  .work-screen[data-screen=run].is-loading .work-controls,
+  .work-screen[data-screen=completion-confirm].is-loading .work-controls { overflow-y:auto; justify-content:safe center; }
+  .work-screen[data-screen=run].is-loading .restoration-visual,
+  .work-screen[data-screen=completion-confirm].is-loading .completion-confirm-visual { display:flex; min-height:204px; padding:12px 20px; }
 }
 
 /* The decorative mesh stays behind the original preview and the loading orb. */
@@ -359,7 +365,8 @@ html:has(#image-dialog[open]) { overflow:hidden; }
   position:relative; isolation:isolate; overflow:hidden;
   background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%);
 }
-.work-screen[data-screen=run].is-loading .restoration-visual { background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%); }
+.work-screen[data-screen=run].is-loading .restoration-visual,
+.work-screen[data-screen=completion-confirm].is-loading .completion-confirm-visual { background:radial-gradient(ellipse at 68% 25%,#3c7158 0%,#173f32 45%,#101d1d 100%); }
 /* A moving gradient keeps the background alive if WebGL cannot run. */
 .work-screen.is-active .work-visual:not(.has-ambient-shader) {
   background-size:200% 200%; animation:ambient-fallback 9s ease-in-out infinite alternate;
@@ -462,19 +469,24 @@ html:has(#image-dialog[open]) { overflow:hidden; }
 /* Keep result labels and actions readable as the background moves. */
 .work-screen[data-screen=brush-preview] .visual-gallery figcaption,
 .work-screen[data-screen=result] .visual-gallery figcaption,
-.work-screen[data-screen=completion-result] .visual-gallery figcaption { text-shadow:0 1px 3px #101d1d; }
+.work-screen[data-screen=completion-result] .visual-gallery figcaption,
+.video-restore-gallery .visual-gallery figcaption { text-shadow:0 1px 3px #101d1d; }
 .work-screen[data-screen=brush-preview] .visual-gallery .tool-btn,
 .work-screen[data-screen=brush-preview] .visual-gallery .zoom-btn,
 .work-screen[data-screen=result] .visual-gallery .tool-btn,
 .work-screen[data-screen=result] .visual-gallery .zoom-btn,
 .work-screen[data-screen=completion-result] .visual-gallery .tool-btn,
-.work-screen[data-screen=completion-result] .visual-gallery .zoom-btn { background:#101d1d; }
+.work-screen[data-screen=completion-result] .visual-gallery .zoom-btn,
+.video-restore-gallery .visual-gallery .tool-btn,
+.video-restore-gallery .visual-gallery .zoom-btn { background:#101d1d; color:#eaf2ea; }
 .work-screen[data-screen=brush-preview] .visual-gallery .tool-btn:hover,
 .work-screen[data-screen=brush-preview] .visual-gallery .zoom-btn:hover,
 .work-screen[data-screen=result] .visual-gallery .tool-btn:hover,
 .work-screen[data-screen=result] .visual-gallery .zoom-btn:hover,
 .work-screen[data-screen=completion-result] .visual-gallery .tool-btn:hover,
-.work-screen[data-screen=completion-result] .visual-gallery .zoom-btn:hover { background:#294238; }
+.work-screen[data-screen=completion-result] .visual-gallery .zoom-btn:hover,
+.video-restore-gallery .visual-gallery .tool-btn:hover,
+.video-restore-gallery .visual-gallery .zoom-btn:hover { background:#294238; color:#eaf2ea; }
 
 /* Native range input keeps brush sizing precise and keyboard accessible. */
 .brush-size-control { min-width:0; display:grid; gap:6px; }
@@ -522,12 +534,19 @@ html:has(#image-dialog[open]) { overflow:hidden; }
 #video-face-selector .tool-btn,
 .video-image-actions .tool-btn { min-height:44px; color:#eff6ee; border-color:#8da79a; }
 #video-face-selector .tool-btn[aria-pressed=true] { color:#142923; background:#e2eee3; border-color:#e2eee3; }
-.video-restore-gallery .video-comparison { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+#result-video-face-selector { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+#result-video-face-selector.hidden { display:none; }
+#result-video-face-selector .tool-btn { min-height:44px; color:#eff6ee; border-color:#8da79a; background:transparent; }
+#result-video-face-selector .tool-btn:hover { background:#294238; }
+#result-video-face-selector .tool-btn[aria-pressed=true] { color:#142923; background:#e2eee3; border-color:#e2eee3; }
+#result-video-face-selector .tool-btn:focus-visible { outline:3px solid #bf8b1e; outline-offset:2px; }
+.video-restore-gallery .video-comparison { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .video-comparison figure { display:grid; align-content:start; gap:6px; min-width:0; margin:0; }
 .video-batch .video-comparison img { width:100%; height:auto; aspect-ratio:1; max-height:300px; object-fit:contain; background:#101d1d; }
 .video-comparison figcaption { font-weight:700; }
 .video-image-actions { display:flex; flex-wrap:wrap; gap:6px; }
-.video-image-actions .tool-btn { min-width:0; max-width:100%; white-space:normal; }
+.video-image-actions .tool-btn,
+.video-image-actions .zoom-btn { min-width:0; max-width:100%; white-space:normal; }
 .video-image-actions .tool-btn:hover { color:#142923; background:#e2eee3; }
 .video-face-details { display:grid; gap:8px; margin-top:10px; font-size:14px; }
 .video-face-details p { margin:0; }
@@ -536,14 +555,30 @@ html:has(#image-dialog[open]) { overflow:hidden; }
 .video-metrics th, .video-metrics td { padding:7px 8px; border:1px solid #607b70; overflow-wrap:anywhere; }
 .video-metrics thead { background:#203e34; }
 .video-metrics th:first-child { width:46%; text-align:left; }
+#picture-result-metrics .reference-metrics th:first-child,
+.reference-metrics th:first-child { width:54%; }
 .video-metrics td { text-align:center; }
 .work-screen .picture-result-visual { justify-content:flex-start; overflow:auto; }
-.picture-results { width:100%; min-width:0; padding:14px; border:1px solid #607b70; border-radius:8px; background:#142923; }
-.picture-before-after { grid-template-columns:repeat(2,minmax(0,1fr)); }
+#completion-result-section { margin-top:0; }
+.picture-results { width:100%; min-width:0; box-sizing:border-box; padding:14px; border:1px solid #607b70; border-radius:8px; background:#142923; }
+#completion-result-section .picture-results, #completion-result-metrics { min-width:0; box-sizing:border-box; }
+#completion-result-section .picture-results .video-image-actions .tool-btn,
+#completion-result-section .picture-results .video-image-actions .zoom-btn,
+#completion-result-metrics input { min-height:44px; }
+.picture-before-after { grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
 .picture-before-after figcaption { font-weight:700; }
+.reference-comparison { display:grid; gap:12px; min-width:0; margin-top:8px; padding-top:12px; border-top:1px solid #607b70; }
+.reference-comparison.hidden { display:none; }
+.reference-before-after { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.reference-before-after figure { display:grid; align-content:start; gap:6px; min-width:0; margin:0; }
+.reference-before-after img { width:100%; height:auto; aspect-ratio:1; max-height:300px; object-fit:contain; background:#101d1d; }
+.reference-before-after figcaption { font-weight:700; }
 .picture-results details { margin-top:12px; }
 .picture-results summary { min-height:44px; padding:12px 0; cursor:pointer; }
 .picture-results details .visual-gallery { max-width:300px; }
+@media (max-width:640px) {
+  .visual-gallery.picture-before-after, .picture-before-after, .video-restore-gallery .video-comparison, .reference-before-after { grid-template-columns:1fr; }
+}
 .video-face-details label { display:grid; gap:5px; }
 .video-face-details input { min-width:0; width:100%; min-height:44px; font:inherit; }
 #capture-controls #capture-queue-all[aria-pressed=true] { color:#fff; background:var(--input-accent); }
@@ -551,8 +586,9 @@ html:has(#image-dialog[open]) { overflow:hidden; }
   .video-batch .work-screen[data-screen=run] { grid-template-rows:auto auto; align-content:start; overflow-y:auto; }
   .video-batch .work-screen[data-screen=run] .work-controls,
   .video-batch .work-screen[data-screen=run] .restoration-visual { overflow:visible; }
-  .work-screen[data-screen=result] { grid-template-rows:max-content max-content; align-content:start; overflow-y:auto; }
+  .work-screen[data-screen=result], .work-screen[data-screen=completion-result] { grid-template-rows:max-content max-content; align-content:start; overflow-y:auto; }
   .work-screen[data-screen=result] .work-controls,
+  .work-screen[data-screen=completion-result] .work-controls,
   .work-screen .picture-result-visual { overflow:visible; }
 }
 
