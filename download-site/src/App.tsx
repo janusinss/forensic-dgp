@@ -24,6 +24,7 @@ const alignedReference = newerMinor || (minor === 2 && patch >= 10)
 const safeLifecycle = newerMinor || (minor === 2 && patch >= 11)
 const inAppUpdater = newerMinor || (minor === 2 && patch >= 12)
 const v0213Features = newerMinor || (minor === 2 && patch >= 13)
+const v0214Features = newerMinor || (minor === 2 && patch >= 14)
 
 function DownloadIcon() {
   return (
@@ -136,26 +137,30 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">01</span>
                   <div>
                     <h3>Choose the faces</h3>
-                    <p>{v0213Features
-                      ? 'Upload a picture or follow the unified Video Steps 1–5 flow to capture a frame and select detected faces (or Add all up to 12). Picture selects Face 1 automatically or lets you draw a Manual crop.'
-                      : manualCrop
-                        ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically or lets you draw a Manual crop; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
-                        : solverSuite
-                          ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
-                          : 'Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.'}</p>
+                    <p>{v0214Features
+                      ? 'Upload a picture or follow the unified Video Steps 1–5 flow to capture a frame and select detected faces (or Add all up to 12). Calibrated Step 1 auto-crop preserves full head crown and natural proportions automatically, or lets you draw a Manual crop.'
+                      : v0213Features
+                        ? 'Upload a picture or follow the unified Video Steps 1–5 flow to capture a frame and select detected faces (or Add all up to 12). Picture selects Face 1 automatically or lets you draw a Manual crop.'
+                        : manualCrop
+                          ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically or lets you draw a Manual crop; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
+                          : solverSuite
+                            ? 'Upload a picture or freeze a video frame. Picture selects Face 1 automatically; on video, select one detected face or use Add all to select up to 12 faces from the frame.'
+                            : 'Upload a picture or freeze a video frame. Select one detected face or use Add all to select up to 12 faces from the frame.'}</p>
                   </div>
                 </li>
                 <li>
                   <span className="step-number" aria-hidden="true">02</span>
                   <div>
                     <h3>Restore with Auto</h3>
-                    <p>{v0213Features
-                      ? 'Auto detects and treats mosaics, scanlines, macroblocks, blur, noise, haze, ringing, banding, aliasing and color bleeding, with automatic face covering detection and BiSeNet + XSeg ONNX segmentation (including hollow clear-glasses frame extraction) across Steps 4–5.'
-                      : solverSuite
-                        ? 'Auto handles regular, tilted, perspective and irregular mosaics, scanlines, 8 × 8 / 16 × 16 macroblocks, localized blur, noise, color cast or haze, ringing, banding, aliasing and color bleeding before restoring each face.'
-                        : updateCheck
-                          ? 'Auto handles regular, tilted and irregular mosaics, scanlines, JPEG blocking and localized blur. When it finds separate evidence for overlapping artifacts, it can combine treatments before restoring each face.'
-                          : 'Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.'}</p>
+                    <p>{v0214Features
+                      ? 'Hardened Auto detects and treats degraded face patches (coarse mosaic, posterized chroma blotches, block noise, and shadow/haze veils), macroblocks up to 768px for heavy JPEGs, scanlines, blur, and noise with zero warm-portrait false positives, plus BiSeNet + XSeg ONNX covering segmentation in Steps 4–5.'
+                      : v0213Features
+                        ? 'Auto detects and treats mosaics, scanlines, macroblocks, blur, noise, haze, ringing, banding, aliasing and color bleeding, with automatic face covering detection and BiSeNet + XSeg ONNX segmentation (including hollow clear-glasses frame extraction) across Steps 4–5.'
+                        : solverSuite
+                          ? 'Auto handles regular, tilted, perspective and irregular mosaics, scanlines, 8 × 8 / 16 × 16 macroblocks, localized blur, noise, color cast or haze, ringing, banding, aliasing and color bleeding before restoring each face.'
+                          : updateCheck
+                            ? 'Auto handles regular, tilted and irregular mosaics, scanlines, JPEG blocking and localized blur. When it finds separate evidence for overlapping artifacts, it can combine treatments before restoring each face.'
+                            : 'Auto checks for pixelation, scanlines and localized blur. It estimates the smoothing strength where applicable. The app restores the selected crops one at a time.'}</p>
                   </div>
                 </li>
                 <li>

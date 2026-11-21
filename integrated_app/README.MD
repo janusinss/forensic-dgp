@@ -2,16 +2,15 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.13
+## Windows installer 0.2.14
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.2.13 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.13)
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.2.14 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.14)
 
-### What changed in 0.2.13
+### What changed in 0.2.14
 
-- **Adviser UI & metrics**: Displays a 3-panel comparison gallery alongside explicit units and **Accuracy (%)** summaries for edge variation, estimated noise, MAE, and PSNR.
-- **Unified Video Steps 1–5 flow**: Connects frozen-frame selection, shared preparation, and multi-face restoration into a single continuous Steps 1–5 workflow.
-- **7-step Ground Truth alignment & MP4 extraction**: Adds 7-step GT pose/crop alignment, MP4 frame extraction, and side-by-side Ground Truth comparison.
-- **Step 4–5 automatic covering detection**: Combines Lab/YCrCb multi-family detection with optional BiSeNet + XSeg ONNX occlusion segmentation, including hollow clear-glasses frame extraction.
+- **Degraded face-patch restoration (Step 2)**: Fixes false DCT stripping of coarse mosaic, posterized, and block-noise face patches; adds masked multi-pixel block-noise smoothing, wide-scale posterized chroma-blotch homogenization, exterior-referenced shadow/haze veil removal, and straight-row mid-forehead paste-seam detection while preserving `>=512px` JPEG DCT and clean-color privacy mosaics.
+- **Calibrated Step 1 auto-crop (`AUTO_CROP_MARGIN_RATIO = 0.32`)**: Preserves full head crown and natural FFHQ proportions across Picture and Video Step 1 auto-crops (`-15%` calibrated framing) without shrinking coarse mosaics.
+- **Hardened Auto button**: Eliminates warm clean-portrait color-cast and Q95+ `macroblock_hevc` false positives (`CAST_D_MIN = 26.5`, `dc <= 10` guard), catches heavy milky haze veils, enables FBCNN up to `768px` for heavy JPEGs (`dc >= 45`), and adds explicit Auto UI summary labels (`implementation.js?v=46`, `capture.js?v=21`).
 
 ## Developer batch installation
 

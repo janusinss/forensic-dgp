@@ -79,6 +79,15 @@
             if (decision.strength_basis === 'default_weak_evidence') {
                 return `Auto used the ${radius} px default for ${area} because the signal was too weak to estimate a different strength.`;
             }
+            if (decision.strength_basis === 'multipixel_block_noise') {
+                return 'Auto smoothed suspected multi-pixel block noise before restoration.';
+            }
+            if (decision.strength_basis === 'posterized_block_patch') {
+                return 'Auto conditioned a suspected posterized or blocked face region before restoration.';
+            }
+            if (decision.strength_basis === 'pasted_fine_grain') {
+                return 'Auto smoothed a suspected fine-grain degraded face patch before restoration.';
+            }
             return `Auto applied ${radius} px smoothing to ${area} before restoration.`;
         }
         if (decision) return decision.route === 'protect_auto'

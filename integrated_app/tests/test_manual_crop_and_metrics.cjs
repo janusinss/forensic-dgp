@@ -1379,3 +1379,35 @@ test('completion.js + viewport-workbench.js automatically chain Step 4 -> comple
   assert.equal(byId('completion-error').classList.contains('hidden'), false);
   assert.equal(byId('completion-error').textContent, 'Service temporarily unavailable.');
 });
+
+test('preparationSummary renders explicit copy for degraded_patch_conditioning strength_basis regimes', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'static', 'implementation.js'), 'utf8');
+  const match = src.match(/const preparationSummary = metadata => \{([\s\S]*?)\n    \};/);
+  assert.ok(match, 'preparationSummary definition not found in implementation.js');
+  const preparationSummary = vm.runInNewContext('(metadata => {' + match[1] + '\n})');
+
+  const cases = [
+    [
+      'multipixel_block_noise',
+      'Auto smoothed suspected multi-pixel block noise before restoration.',
+    ],
+    [
+      'posterized_block_patch',
+      'Auto conditioned a suspected posterized or blocked face region before restoration.',
+    ],
+    [
+      'pasted_fine_grain',
+      'Auto smoothed a suspected fine-grain degraded face patch before restoration.',
+    ],
+  ];
+  for (const [basis, expected] of cases) {
+    const out = preparationSummary({
+      automatic_preparation: {
+        route: 'picture_region_gaussian',
+        Gaussian_radius_at256: 3.0,
+        strength_basis: basis,
+      },
+    });
+    assert.equal(out, expected);
+  }
+});

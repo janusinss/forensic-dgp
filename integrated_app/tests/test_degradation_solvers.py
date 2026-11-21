@@ -762,6 +762,111 @@ class DegradationSolverUnitTests(unittest.TestCase):
         self.assertIsNone(detect_aliasing(src))
         self.assertEqual(prepare_antialiasing(src), (None, None, {}))
 
+    def test_is_dct_macroblocking_patch_rejects_coarse_mosaic_and_multipixel_block_noise(self):
+        """Coarse mosaics, posterized block grids, and multi-pixel block noise must never be classified as DCT."""
+        from implementation.macroblock_deblocking import (
+            is_dct_macroblocking_patch,
+            is_multipixel_block_noise,
+            is_posterized_block_patch,
+        )
+
+        rng = np.random.default_rng(101)
+        # 1) Multi-pixel 8x8 RGB confetti block noise on a 320x320 patch
+        blocks = rng.integers(30, 225, (40, 40, 3), dtype=np.uint8)
+        confetti = np.asarray(Image.fromarray(blocks).resize((320, 320), Image.Resampling.NEAREST))
+        self.assertTrue(is_multipixel_block_noise(confetti))
+        self.assertFalse(is_dct_macroblocking_patch(confetti))
+
+        # 2) Portrait-scale posterized coarse block grid (<= 12 quantized colors)
+        clean_big = _make_clean_portrait(320, 320, seed=102)
+        poster_small = (clean_big[::8, ::8] // 64) * 64 + 32
+        poster_grid = np.asarray(Image.fromarray(poster_small.astype(np.uint8)).resize((320, 320), Image.Resampling.NEAREST))
+        self.assertTrue(is_posterized_block_patch(poster_grid))
+        self.assertFalse(is_dct_macroblocking_patch(poster_grid))
+
+        # 3) Non-rectangular region_mask in is_multipixel_block_noise respects mask interior (ignores outside confetti)
+        canvas_nr = _make_clean_portrait(384, 384, seed=104)
+        confetti_full = np.asarray(
+            Image.fromarray(rng.integers(30, 225, (48, 48, 3), dtype=np.uint8)).resize((384, 384), Image.Resampling.NEAREST)
+        )
+        yy_nr, xx_nr = np.ogrid[:384, :384]
+        circle = ((yy_nr - 192) ** 2 + (xx_nr - 192) ** 2) <= (150 ** 2)
+        mixed_nr = confetti_full.copy()
+        mixed_nr[circle] = canvas_nr[circle]
+        self.assertFalse(is_multipixel_block_noise(mixed_nr, region_mask=circle))
+        mixed_inv = canvas_nr.copy()
+        mixed_inv[circle] = confetti_full[circle]
+        self.assertTrue(is_multipixel_block_noise(mixed_inv, region_mask=circle))
+
+        # 4) Genuine 8x8 and 16x16 DCT macroblocking on textured carrier still detect cleanly
+        carrier = _make_macroblock_carrier_base(160, 160, seed=103)
+        for period in (8, 16):
+            dct_img = _make_block_dct_macroblocked(carrier, period=period)
+            self.assertFalse(is_multipixel_block_noise(dct_img))
+            self.assertFalse(is_posterized_block_patch(dct_img))
+            self.assertTrue(is_dct_macroblocking_patch(dct_img))
+
+        # 5) >=512px real-portrait JPEG Q=8 & Q=12 positive DCT controls stay genuine DCT
+        from PIL import ImageOps
+
+        for subj in range(1, 6):
+            clean_path = _TEST_IMAGES_DIR / f'face {subj} - default.jpg'
+            if not clean_path.exists():
+                continue
+            im = ImageOps.exif_transpose(Image.open(clean_path)).convert('RGB').resize((512, 512), Image.Resampling.LANCZOS)
+            for quality in (8, 12):
+                buf = io.BytesIO()
+                im.save(buf, format='JPEG', quality=quality)
+                jrgb = np.asarray(Image.open(buf).convert('RGB'))
+                with self.subTest(portrait=clean_path.name, quality=quality):
+                    self.assertFalse(is_multipixel_block_noise(jrgb))
+                    self.assertFalse(is_posterized_block_patch(jrgb))
+                    self.assertTrue(is_dct_macroblocking_patch(jrgb))
+
+    def test_auto_button_hardening_clean_portrait_cast_haze_q95_and_highres_jpeg(self):
+        """Regression tests for warm clean portraits, heavy milky haze, Q95+ JPEG guard, and high-res JPEG Q10."""
+        from implementation.jpeg_deblocking import jpeg_luma_dc, prepare_jpeg
+        from implementation.macroblock_deblocking import prepare_macroblock_deblocking
+
+        face1_path = _TEST_IMAGES_DIR / 'face 1 - default.jpg'
+        face5_path = _TEST_IMAGES_DIR / 'face 5 - default.jpg'
+        if not face1_path.exists() or not face5_path.exists():
+            self.skipTest('Clean reference portraits not available')
+
+        face1_bytes = face1_path.read_bytes()
+        face1_im = Image.open(io.BytesIO(face1_bytes)).convert('RGB')
+        face1_rgb = np.asarray(face1_im)
+        face5_rgb = np.asarray(Image.open(face5_path).convert('RGB'))
+
+        # 1) Clean warm portrait (face 1, cast_D ~ 22.64) must NOT false-trigger color_cast_balance
+        self.assertIsNone(detect_cast_dehaze(face1_rgb))
+        self.assertIsNone(detect_cast_dehaze(face5_rgb))
+
+        # 2) Heavy milky haze veil on warm portrait (dc ~ 0.55, sat ~ 48.4) MUST trigger haze_dehaze
+        haze_veil = np.clip(np.round(face1_rgb.astype(np.float32) * 0.58 + 232.0 * 0.42), 0, 255).astype(np.uint8)
+        haze_det = detect_cast_dehaze(haze_veil)
+        self.assertIsNotNone(haze_det)
+        self.assertEqual(haze_det['route'], 'haze_dehaze')
+
+        # 3) Clean Q95+ JPEG (dc == 3) must NOT false-trigger macroblock_hevc
+        dc1 = jpeg_luma_dc(face1_bytes)
+        self.assertIsNotNone(dc1)
+        self.assertLessEqual(dc1, 10)
+        mb_out, mb_rep, _ = prepare_macroblock_deblocking(face1_rgb, origin=(0, 0), allow_fbcnn=True, dc=dc1)
+        self.assertIsNone(mb_out)
+        self.assertIsNone(mb_rep)
+
+        # 4) Genuine high-res (541x680) JPEG Q=10 (dc >= 45) must trigger FBCNN prepare_jpeg
+        q10_buf = io.BytesIO()
+        face1_im.save(q10_buf, format='JPEG', quality=10, subsampling=2)
+        q10_bytes = q10_buf.getvalue()
+        q10_rgb = np.asarray(Image.open(io.BytesIO(q10_bytes)).convert('RGB'))
+        deblocked, jrep = prepare_jpeg(q10_bytes, q10_rgb, None)
+        self.assertIsNotNone(deblocked)
+        self.assertIsNotNone(jrep)
+        self.assertGreaterEqual(jrep['jpeg_luma_dc_quantization'], 45)
+        self.assertEqual(jrep['preparation_model'], 'FBCNN RGB')
+
 
 def _make_blurred_face_collar_highlight_portrait() -> np.ndarray:
     """Create a 384x384 portrait with a blurred center face, crisp surroundings, and a ~200 px chroma collar bleed."""
@@ -1363,16 +1468,7 @@ class RealTestImagesE2ETests(_E2ERouteTestBase):
                 if filename == 'synthetic_data_6.png':
                     self.assertEqual(auto['applied_stages'][0], 'noise_denoise')
 
-    def test_synthetic_data_real_routes_step5(self):
-        """Verify Step 5 winners route #2, #7, #9, #10 cleanly without #1/#4 cast false triggers."""
-        checks = (
-            ('synthetic_data_1.png', 'macroblock_fbcnn', None, {'color_cast_balance', 'haze_dehaze', 'cast_dehaze'}),
-            ('synthetic_data_2.png', 'compound_artifact_preparation', ('color_cast_balance', 'macroblock_fbcnn'), set()),
-            ('synthetic_data_4.png', 'macroblock_hevc', None, {'color_cast_balance', 'haze_dehaze', 'cast_dehaze'}),
-            ('synthetic_data_7.png', 'compound_artifact_preparation', ('macroblock_hevc',), {'picture_region_gaussian'}),
-            ('synthetic_data_9.png', 'noise_denoise', ('noise_denoise',), set()),
-            ('synthetic_data_10.png', 'compound_artifact_preparation', ('haze_dehaze', 'macroblock_fbcnn'), set()),
-        )
+    def _run_synthetic_step5_checks(self, checks):
         for filename, expected_route, required_stages, forbidden_names in checks:
             path = _TEST_IMAGES_DIR / filename
             if not path.exists():
@@ -1396,6 +1492,22 @@ class RealTestImagesE2ETests(_E2ERouteTestBase):
                 if filename in ('synthetic_data_2.png', 'synthetic_data_10.png'):
                     zip_entries = _decode_zip_from_data_url(body['bundle'])
                     self.assertIn('cast-dehaze-mask.png', zip_entries)
+
+    def test_synthetic_data_real_routes_step5_part1(self):
+        """Verify Step 5 winners route #1, #2, #4 cleanly without #1/#4 cast false triggers."""
+        self._run_synthetic_step5_checks((
+            ('synthetic_data_1.png', 'macroblock_fbcnn', None, {'color_cast_balance', 'haze_dehaze', 'cast_dehaze'}),
+            ('synthetic_data_2.png', 'compound_artifact_preparation', ('color_cast_balance', 'macroblock_fbcnn'), set()),
+            ('synthetic_data_4.png', 'macroblock_hevc', None, {'color_cast_balance', 'haze_dehaze', 'cast_dehaze'}),
+        ))
+
+    def test_synthetic_data_real_routes_step5_part2(self):
+        """Verify Step 5 winners route #7, #9, #10 cleanly."""
+        self._run_synthetic_step5_checks((
+            ('synthetic_data_7.png', 'compound_artifact_preparation', ('macroblock_hevc',), {'picture_region_gaussian'}),
+            ('synthetic_data_9.png', 'noise_denoise', ('noise_denoise',), set()),
+            ('synthetic_data_10.png', 'compound_artifact_preparation', ('haze_dehaze', 'macroblock_fbcnn'), set()),
+        ))
 
 
 class UIAndImplementationHygieneTests(unittest.TestCase):

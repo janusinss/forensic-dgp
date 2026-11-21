@@ -108,12 +108,13 @@
     $('capture-crop-size').textContent = validRect() ? `${rect.width} x ${rect.height} pixels. Drag to move or resize.` : 'Keep the crop inside the frame, 16-1600 pixels per side.';
     draw(); update();
   }
+  const AUTO_CROP_MARGIN_RATIO = 0.32;
   function faceRectangle([x,y,width,height], index) {
     const precomputed = Number.isInteger(index) ? faceCrops?.[index] : null;
     if (isCropRect(precomputed)) {
       return {x: precomputed[0], y: precomputed[1], width: precomputed[2], height: precomputed[3]};
     }
-    const margin=Math.round(Math.max(width,height)*.20);
+    const margin=Math.round(Math.max(width,height)*AUTO_CROP_MARGIN_RATIO);
     const left=Math.max(0,x-margin), top=Math.max(0,y-margin);
     const right=Math.min(clean.width,x+width+margin), bottom=Math.min(clean.height,y+height+margin);
     return {x:left,y:top,width:Math.min(1600,right-left),height:Math.min(1600,bottom-top)};

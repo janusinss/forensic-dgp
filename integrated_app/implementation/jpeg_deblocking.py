@@ -19,7 +19,8 @@ CHECKPOINT = 'fbcnn_color.pth'
 CHECKPOINT_BYTES = 287755111
 CHECKPOINT_SHA256 = '8b0e4ef23d59cf7ac934a342cb31a17619e4fa4a0b3374a9d78c5174312387e8'
 MAX_SIDE = 384
-MAX_PNG_BYTES = 512 * 1024
+JPEG_MAX_SIDE = 768
+MAX_PNG_BYTES = 2 * 1024 * 1024
 LOGGER = logging.getLogger(__name__)
 
 
@@ -70,7 +71,7 @@ def run_deblock(crop):
 def prepare_jpeg(contents, crop, rectangle):
     """Deblock one small native crop when JPEG metadata and pixel seams agree."""
     height, width = crop.shape[:2]
-    if min(width, height) < 96 or max(width, height) > MAX_SIDE:
+    if min(width, height) < 96 or max(width, height) > JPEG_MAX_SIDE:
         return None, None
     dc = jpeg_luma_dc(contents)
     if dc is None or dc < 45:
@@ -285,7 +286,7 @@ def main():
     if len(contents) > MAX_PNG_BYTES or not contents.startswith(b'\x89PNG\r\n\x1a\n'):
         raise ValueError('JPEG preparation requires a bounded native PNG crop.')
     with Image.open(io.BytesIO(contents)) as image:
-        if min(image.size) < 96 or max(image.size) > MAX_SIDE:
+        if min(image.size) < 96 or max(image.size) > JPEG_MAX_SIDE:
             raise ValueError('JPEG preparation crop dimensions exceed bounds.')
     crop = decode_original(contents)
     path = ordinary_file(checkpoint_path())

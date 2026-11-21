@@ -2,6 +2,7 @@
 
 import io
 
+import cv2
 import numpy as np
 from PIL import Image, ImageFilter
 from scipy.ndimage import (
@@ -26,6 +27,8 @@ from .irregular_mosaic import irregular_mosaic_mask
 from .macroblock_deblocking import (
     detect_macroblocking,
     is_dct_macroblocking_patch,
+    is_multipixel_block_noise,
+    is_posterized_block_patch,
     prepare_macroblock_deblocking,
 )
 from .noise_denoise import prepare_noise_denoise
@@ -297,6 +300,8 @@ def _det_passes_macroblock_gate(source, det, origin=(0, 0), region_mask=None):
     """Verify non-flat DCT detection actually deblocks cleanly, allowing small DCT patches."""
     if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
         return False
+    if is_multipixel_block_noise(source, region_mask) or is_posterized_block_patch(source, region_mask):
+        return False
     if is_dct_macroblocking_patch(source, region_mask=region_mask, origin=origin):
         return True
     if det.get('regional') and float(det.get('mask_fraction', 0.0)) < 0.25:
@@ -308,6 +313,8 @@ def _det_passes_macroblock_gate(source, det, origin=(0, 0), region_mask=None):
 def _is_genuine_dct_macroblocking(source, origin=(0, 0)):
     """Return True when source shows non-flat 8x8/16x16 DCT macroblocking."""
     if min(source.shape[:2]) < 32:
+        return False
+    if is_multipixel_block_noise(source) or is_posterized_block_patch(source):
         return False
     if is_dct_macroblocking_patch(source, origin=origin):
         return True
@@ -325,7 +332,7 @@ def _strip_dct_macroblocking_components(source, mask):
     comps, num = label(mask)
     if num == 0:
         return mask
-    det_full = detect_macroblocking(source)
+    det_full = None
     full_mask = None
     full_checked = False
     cleaned_mask = mask.copy()
@@ -333,6 +340,8 @@ def _strip_dct_macroblocking_components(source, mask):
         if sl is None:
             continue
         comp_mask = comps == cid
+        if is_multipixel_block_noise(source, comp_mask) or is_posterized_block_patch(source, comp_mask):
+            continue
         if is_dct_macroblocking_patch(source, region_mask=comp_mask):
             cleaned_mask[comp_mask] = False
             continue
@@ -347,6 +356,7 @@ def _strip_dct_macroblocking_components(source, mask):
         else:
             if not full_checked:
                 full_checked = True
+                det_full = detect_macroblocking(source)
                 if _det_passes_macroblock_gate(source, det_full):
                     full_mask = det_full.get('mask')
             if full_mask is not None and float(full_mask[comp_mask].mean()) >= 0.5:
@@ -469,32 +479,302 @@ def picture_pixelation(source, check_macroblocking=True):
     return apply_pixelation_mask(source, mask, analysis.shape[:2][::-1], recovered_gaps)
 
 
-def apply_pixelation_mask(source, mask, analysis_size, recovered_gaps, angle=None, tiny_period=None,
-                          geometric_pattern=None):
-    image = Image.fromarray(source)
-    if geometric_pattern or angle is not None or tiny_period is not None:
-        basis = geometric_pattern or ('rotated_mosaic_pilot' if angle is not None else 'tiny_mosaic_pilot')
-        strength = {'basis': basis, 'selected_radius_at256': PIXELATION_RADIUS_AT256}
+def _top_horizontal_paste_seam(rgb: np.ndarray) -> tuple[int, float, float, np.ndarray]:
+    """Locate strongest straight horizontal row discontinuity in the upper 4%-26% portrait band."""
+    height, width = rgb.shape[:2]
+    f = rgb.astype(np.float32)
+    dy = np.abs(f[1:] - f[:-1]).max(axis=2)
+    d2 = np.abs(f[2:] - 2.0 * f[1:-1] + f[:-2]).max(axis=2)
+    cx0, cx1 = int(width * 0.20), int(width * 0.80)
+    row_prof = dy[:, cx0:cx1].mean(axis=1)
+    row_surr = 0.5 * (np.roll(row_prof, 1) + np.roll(row_prof, -1))
+    row_excess = row_prof - row_surr
+    ty_lo, ty_hi = max(2, int(height * 0.04)), min(dy.shape[0] - 2, int(height * 0.26))
+    if ty_hi <= ty_lo:
+        return ty_lo, 0.0, 0.0, d2
+    ty_seam = ty_lo + int(np.argmax(row_excess[ty_lo:ty_hi]))
+    ty_excess_val = float(row_excess[ty_seam])
+    r_cur = dy[ty_seam, cx0:cx1]
+    r_nbr = 0.5 * (dy[ty_seam - 1, cx0:cx1] + dy[ty_seam + 1, cx0:cx1])
+    col_frac = float(((r_cur - r_nbr) >= 4.0).mean())
+    return ty_seam, ty_excess_val, col_frac, d2
+
+
+def detect_pasted_degraded_face_patch(source: np.ndarray) -> np.ndarray | None:
+    """Detect a pasted fine-grain/washed-out rectangular face patch via straight-row top paste seam.
+
+    Requires BOTH true straight horizontal row continuity across the exact seam row (`col_frac >= 0.55`)
+    AND a sharp second-derivative grain discontinuity below vs clean photograph above so curved
+    hairlines, hats, and clean portraits produce zero false positives.
+    """
+    if not isinstance(source, np.ndarray) or source.ndim != 3 or source.shape[2] != 3 or source.dtype != np.uint8:
+        return None
+    height, width = source.shape[:2]
+    if min(height, width) < 256:
+        return None
+    ty_seam, ty_excess_val, col_frac, d2 = _top_horizontal_paste_seam(source)
+    if ty_excess_val < 10.0 or col_frac < 0.55:
+        return None
+    cx0, cx1 = int(width * 0.20), int(width * 0.80)
+    d2_above = float(d2[max(0, ty_seam - 40):max(4, ty_seam - 2), cx0:cx1].mean())
+    d2_below = float(d2[ty_seam + 2:min(height - 2, ty_seam + 180), cx0:cx1].mean())
+    if d2_above > 8.0 or d2_below < 6.0 or d2_below < 2.2 * max(0.5, d2_above):
+        return None
+    d2_map = uniform_filter(d2.astype(np.float32), size=15)
+    col_act = d2_map[ty_seam:int(height * 0.85), :].mean(axis=0) >= 1.8 * max(0.8, d2_above)
+    xx = np.flatnonzero(col_act)
+    lx = int(xx[0]) if xx.size else int(width * 0.05)
+    rx = int(xx[-1]) if xx.size else int(width * 0.95)
+    mask = np.zeros((height, width), dtype=bool)
+    mask[ty_seam + 1:int(height * 0.985), lx:rx + 1] = True
+    if int(mask.sum()) < int(0.25 * height * width):
+        return None
+    return mask
+
+
+def _condition_degraded_face_patch(
+    source: np.ndarray,
+    raw_mask: np.ndarray,
+    *,
+    is_fine_grain_paste: bool = False,
+) -> tuple[np.ndarray, np.ndarray, dict] | None:
+    """Condition portrait-scale degraded face patches (posterized, fine-grain paste, or block noise).
+
+    Returns `(prepared_rgb, final_mask, metadata)` only when forensic evidence confirms a
+    portrait-scale degraded face patch (`is_blk_noise`, `is_posterized`, or `is_fine_grain_paste`);
+    returns `None` for normal clean-color privacy mosaics so standard Gaussian smoothing runs unchanged.
+    """
+    if not isinstance(source, np.ndarray) or source.ndim != 3 or source.shape[2] != 3 or source.dtype != np.uint8:
+        return None
+    height, width = source.shape[:2]
+    if min(height, width) < 256:
+        return None
+    if not isinstance(raw_mask, np.ndarray) or raw_mask.shape != (height, width):
+        return None
+    raw_mask_bool = raw_mask.astype(bool, copy=False)
+    if not raw_mask_bool.any():
+        return None
+    yy, xx = np.nonzero(raw_mask_bool)
+    x0, y0, x1, y1 = int(xx.min()), int(yy.min()), int(xx.max()), int(yy.max())
+    box_area = (x1 - x0 + 1) * (y1 - y0 + 1)
+    fill = float(raw_mask_bool[y0:y1 + 1, x0:x1 + 1].mean())
+    if box_area < 0.25 * height * width or fill < 0.45:
+        return None
+
+    is_blk_noise = is_multipixel_block_noise(source, raw_mask_bool)
+    is_posterized = (not is_blk_noise) and (is_posterized_block_patch(source, raw_mask_bool) or is_fine_grain_paste)
+    if not (is_blk_noise or is_posterized or is_fine_grain_paste):
+        return None
+
+    ty_seam, ty_excess_val, col_frac, d2 = _top_horizontal_paste_seam(source)
+    cx0, cx1 = int(width * 0.20), int(width * 0.80)
+
+    # A2: Expand partial rectangular face-patch mask to full pasted rectangle
+    if ty_seam > y0 + 8 and (ty_seam + 1) < y1 and (y1 - (ty_seam + 1)) >= 32 and ty_excess_val >= 10.0 and col_frac >= 0.55:
+        ab_slice = source[max(0, ty_seam - 45):max(4, ty_seam - 2), cx0:cx1].astype(np.int16)
+        if ab_slice.shape[0] > 2 and ab_slice.shape[1] > 2:
+            dh_ab = np.abs(np.diff(ab_slice, axis=1)).max(-1)
+            dv_ab = np.abs(np.diff(ab_slice, axis=0)).max(-1)
+            flat0_above = float(((dh_ab[:-1, :] == 0) & (dv_ab[:, :-1] == 0)).mean())
+        else:
+            flat0_above = 1.0
+        d2_above = float(d2[max(0, ty_seam - 45):max(4, ty_seam - 2), cx0:cx1].mean())
+        if d2_above < 2.5 and flat0_above < 0.12:
+            y0 = ty_seam + 1
+    if y1 >= int(height * 0.84):
+        y1 = max(y1, min(height - 1, int(height * 0.985)))
+    if x0 <= int(width * 0.12):
+        x0 = min(x0, int(width * 0.045))
+    if x1 >= int(width * 0.86):
+        x1 = max(x1, min(width - 1, int(width * 0.955)))
+    if y0 >= y1 or x0 >= x1:
+        return None
+    mask = np.zeros((height, width), dtype=bool)
+    mask[y0:y1 + 1, x0:x1 + 1] = True
+    if not mask.any():
+        return None
+
+    ph, pw = y1 - y0 + 1, x1 - x0 + 1
+    side = max(height, width)
+    ycrcb = cv2.cvtColor(source, cv2.COLOR_RGB2YCrCb).astype(np.float32)
+    Y, Cr, Cb = ycrcb[..., 0].copy(), ycrcb[..., 1].copy(), ycrcb[..., 2].copy()
+
+    top_dY = top_dCr = top_dCb = 0.0
+    has_top_skin_ref = False
+    strip_w0, strip_w1 = max(x0, int(width * 0.22)), min(x1, int(width * 0.78))
+    if y0 >= 14 and strip_w1 > strip_w0 + 16:
+        ab_Y = Y[max(0, y0 - 14):y0 - 1, strip_w0:strip_w1]
+        bl_Y = Y[y0 + 1:min(height, y0 + 15), strip_w0:strip_w1]
+        ab_Cr = Cr[max(0, y0 - 14):y0 - 1, strip_w0:strip_w1]
+        bl_Cr = Cr[y0 + 1:min(height, y0 + 15), strip_w0:strip_w1]
+        ab_Cb = Cb[max(0, y0 - 14):y0 - 1, strip_w0:strip_w1]
+        bl_Cb = Cb[y0 + 1:min(height, y0 + 15), strip_w0:strip_w1]
+        top_dY = float(np.median(bl_Y) - np.median(ab_Y))
+        top_dCr = float(np.median(bl_Cr) - np.median(ab_Cr))
+        top_dCb = float(np.median(bl_Cb) - np.median(ab_Cb))
+        if float(np.median(ab_Y)) >= 130.0 and float(np.median(ab_Cr)) >= 145.0 and y0 >= int(height * 0.12):
+            has_top_skin_ref = True
+
+    # C1: Exterior-referenced black-floor & milky-haze removal on Y
+    shadow_lift = 0.0
+    if not is_blk_noise and (is_posterized or is_fine_grain_paste):
+        in_Y = Y[mask]
+        p5_in, p10_in, p50_in = np.percentile(in_Y, [5, 10, 50])
+        out_mask = ~mask
+        if int(out_mask.sum()) >= 512:
+            p5_out, p50_out = np.percentile(Y[out_mask], [5, 50])
+        else:
+            p5_out, p50_out = p5_in, p50_in
+
+        if has_top_skin_ref and top_dY >= 6.0:
+            shadow_lift = min(24.0, 0.90 * top_dY)
+        elif p50_in - p50_out >= 34.0 and p5_in >= 7.0:
+            p15_in = float(np.percentile(in_Y, 15))
+            p15_out = float(np.percentile(Y[out_mask], 15)) if int(out_mask.sum()) >= 512 else p15_in
+            shadow_lift = min(46.0, max(0.0, 0.55 * (p50_in - p50_out), 0.70 * (p15_in - p15_out)))
+        elif p5_out <= 30.0 and p10_in >= 44.0 and (p10_in - p5_out) >= 20.0 and (p50_in - p50_out) >= 16.0:
+            shadow_lift = min(28.0, 0.65 * (p10_in - p5_out))
+
+        if shadow_lift >= 5.0:
+            p95_in = max(p50_in + 20.0, float(np.percentile(in_Y, 95)))
+            t_hi = np.clip((Y - p5_in) / max(30.0, p95_in - p5_in), 0.0, 1.0)
+            Y_dehazed = np.clip(Y - shadow_lift * (1.0 - 0.30 * t_hi), 0.0, 255.0)
+            Y[mask] = Y_dehazed[mask]
+
+    # B: Regime-matched luma smoothing + wide-clamped chroma homogenization
+    if is_blk_noise:
+        r_y_256, r_c_256 = 3.5, 14.0
+        regime = 'multipixel_block_noise'
+    elif is_fine_grain_paste:
+        r_y_256, r_c_256 = 2.5, 14.0
+        regime = 'pasted_fine_grain'
     else:
-        strength = choose_pixelation_radius(image, mask)
-    radius_at256 = strength['selected_radius_at256']
-    radius = radius_at256 * max(image.size) / 256
-    if geometric_pattern:
-        filtered = gaussian_filter(source.astype(np.float32), sigma=(radius, radius, 0)).round().astype(np.uint8)
-    else:
-        filtered = np.asarray(image.filter(ImageFilter.GaussianBlur(radius)))
-    prepared = source.copy()
+        r_y_256, r_c_256 = 3.0, 18.0
+        regime = 'posterized_block_patch'
+
+    r_y = r_y_256 * side / 256.0
+    r_c = r_c_256 * side / 256.0
+    Y_blur = gaussian_filter(Y, sigma=r_y, mode='reflect')
+
+    m_float = mask.astype(np.float32)
+    sig_wide = 24.0 * side / 256.0
+    den_wide = np.maximum(1e-4, gaussian_filter(m_float, sigma=sig_wide, mode='reflect'))
+    Cr_wide = gaussian_filter(Cr * m_float, sigma=sig_wide, mode='reflect') / den_wide
+    Cb_wide = gaussian_filter(Cb * m_float, sigma=sig_wide, mode='reflect') / den_wide
+
+    Cr_clamped = Cr_wide + 3.0 * np.tanh((Cr - Cr_wide) / 3.0)
+    Cb_clamped = Cb_wide + 3.0 * np.tanh((Cb - Cb_wide) / 3.0)
+    Cr_blur = gaussian_filter(Cr_clamped, sigma=r_c, mode='reflect')
+    Cb_blur = gaussian_filter(Cb_clamped, sigma=r_c, mode='reflect')
+
+    # C2: Skin chroma restoration (strictly gated on posterized/paste evidence + skin presence)
+    dCr_corr = 0.0
+    dCb_corr = 0.0
+    if not is_blk_noise and (is_posterized or is_fine_grain_paste):
+        sy0, sy1 = y0 + int(ph * 0.18), y0 + int(ph * 0.80)
+        sx0, sx1 = x0 + int(pw * 0.20), x0 + int(pw * 0.80)
+        oval_Cr = Cr[sy0:sy1, sx0:sx1]
+        oval_Cb = Cb[sy0:sy1, sx0:sx1]
+        warmth = oval_Cr - oval_Cb
+        med_warmth = float(np.median(warmth))
+        p85_warmth = float(np.percentile(warmth, 85))
+        p85_cr = float(np.percentile(oval_Cr, 85))
+
+        if has_top_skin_ref and top_dCr <= -2.0:
+            dCr_corr = -0.95 * top_dCr
+            dCb_corr = -0.95 * top_dCb
+        elif med_warmth < 32.0 and p85_warmth >= 18.0 and p85_cr >= 132.0:
+            target_warmth = max(38.5, min(43.0, p85_warmth + 3.5))
+            need_w = target_warmth - med_warmth
+            if need_w > 0.0:
+                dCr_corr = 0.52 * need_w
+                dCb_corr = -0.48 * need_w
+
+        if dCr_corr != 0.0 or dCb_corr != 0.0:
+            Cr_blur = np.clip(Cr_blur + dCr_corr, 90.0, 175.0)
+            Cb_blur = np.clip(Cb_blur + dCb_corr, 95.0, 155.0)
+        else:
+            Cr_blur = np.clip(Cr_blur, 0.0, 255.0)
+            Cb_blur = np.clip(Cb_blur, 0.0, 255.0)
+
+    # C3: Seamless top-edge ramp across forehead seam
+    if has_top_skin_ref:
+        ab_row_Y = Y[max(0, y0 - 8):y0, :].mean(axis=0)
+        bl_row_Y = Y_blur[y0:min(height, y0 + 8), :].mean(axis=0)
+        ab_row_Cr = Cr[max(0, y0 - 8):y0, :].mean(axis=0)
+        bl_row_Cr = Cr_blur[y0:min(height, y0 + 8), :].mean(axis=0)
+        ab_row_Cb = Cb[max(0, y0 - 8):y0, :].mean(axis=0)
+        bl_row_Cb = Cb_blur[y0:min(height, y0 + 8), :].mean(axis=0)
+        rem_dY = gaussian_filter(ab_row_Y - bl_row_Y, sigma=18.0)
+        rem_dCr = gaussian_filter(ab_row_Cr - bl_row_Cr, sigma=24.0)
+        rem_dCb = gaussian_filter(ab_row_Cb - bl_row_Cb, sigma=24.0)
+        ramp_len = max(48.0, 0.24 * ph)
+        yy_grid = np.arange(height, dtype=np.float32)[:, None]
+        w_top = np.clip(1.0 - np.maximum(0.0, yy_grid - y0) / ramp_len, 0.0, 1.0) ** 1.5
+        Y_blur = np.clip(Y_blur + w_top * rem_dY[None, :], 0.0, 255.0)
+        Cr_blur = np.clip(Cr_blur + w_top * rem_dCr[None, :], 0.0, 255.0)
+        Cb_blur = np.clip(Cb_blur + w_top * rem_dCb[None, :], 0.0, 255.0)
+
     dist_in = distance_transform_edt(mask)
-    max_dist = float(dist_in.max())
-    if tiny_period is not None or max_dist < 2.:
-        prepared[mask] = filtered[mask]
-    else:
-        # Strictly inward smoothstep feathering preserves ~mask 100% bit-exact.
-        feather_px = min(max(1., 3.5 * max(image.size) / 256), max(1., max_dist * .5))
-        alpha = np.clip(dist_in[mask] / feather_px, 0., 1.).astype(np.float32)
-        alpha = alpha * alpha * (3. - 2. * alpha)
-        blended = source[mask].astype(np.float32) * (1. - alpha[:, None]) + filtered[mask].astype(np.float32) * alpha[:, None]
-        prepared[mask] = np.clip(np.rint(blended), 0, 255).astype(np.uint8)
+    feather_px = min(max(2.0, 5.0 * side / 256.0), max(2.0, float(dist_in.max()) * 0.25))
+    alpha = np.clip(dist_in / feather_px, 0.0, 1.0).astype(np.float32)
+    alpha = alpha * alpha * (3.0 - 2.0 * alpha)
+
+    Y_out = Y * (1.0 - alpha) + Y_blur * alpha
+    Cr_out = Cr * (1.0 - alpha) + Cr_blur * alpha
+    Cb_out = Cb * (1.0 - alpha) + Cb_blur * alpha
+    prepared = cv2.cvtColor(
+        np.clip(np.rint(np.stack([Y_out, Cr_out, Cb_out], axis=-1)), 0, 255).astype(np.uint8),
+        cv2.COLOR_YCrCb2RGB,
+    )
+    prepared[~mask] = source[~mask]
+    meta = {
+        'regime': regime,
+        'luma_radius_at256': r_y_256,
+        'chroma_radius_at256': r_c_256,
+        'shadow_lift': round(float(shadow_lift), 2),
+        'dCr_correction': round(float(dCr_corr), 2),
+        'dCb_correction': round(float(dCb_corr), 2),
+        'has_top_skin_ref': bool(has_top_skin_ref),
+    }
+    return prepared, mask, meta
+
+
+def apply_pixelation_mask(source, mask, analysis_size, recovered_gaps, angle=None, tiny_period=None,
+                          geometric_pattern=None, is_fine_grain_paste=False):
+    image = Image.fromarray(source)
+    cond_meta = None
+    if not geometric_pattern and angle is None and tiny_period is None:
+        conditioned = _condition_degraded_face_patch(source, mask, is_fine_grain_paste=is_fine_grain_paste)
+        if conditioned is not None:
+            prepared, mask, cond_meta = conditioned
+            radius_at256 = cond_meta['luma_radius_at256']
+            radius = radius_at256 * max(image.size) / 256
+            strength = {'basis': cond_meta['regime'], 'selected_radius_at256': radius_at256}
+    if cond_meta is None:
+        if geometric_pattern or angle is not None or tiny_period is not None:
+            basis = geometric_pattern or ('rotated_mosaic_pilot' if angle is not None else 'tiny_mosaic_pilot')
+            strength = {'basis': basis, 'selected_radius_at256': PIXELATION_RADIUS_AT256}
+        else:
+            strength = choose_pixelation_radius(image, mask)
+        radius_at256 = strength['selected_radius_at256']
+        radius = radius_at256 * max(image.size) / 256
+        if geometric_pattern:
+            filtered = gaussian_filter(source.astype(np.float32), sigma=(radius, radius, 0)).round().astype(np.uint8)
+        else:
+            filtered = np.asarray(image.filter(ImageFilter.GaussianBlur(radius)))
+        prepared = source.copy()
+        dist_in = distance_transform_edt(mask)
+        max_dist = float(dist_in.max())
+        if tiny_period is not None or max_dist < 2.:
+            prepared[mask] = filtered[mask]
+        else:
+            # Strictly inward smoothstep feathering preserves ~mask 100% bit-exact.
+            feather_px = min(max(1., 3.5 * max(image.size) / 256), max(1., max_dist * .5))
+            alpha = np.clip(dist_in[mask] / feather_px, 0., 1.).astype(np.float32)
+            alpha = alpha * alpha * (3. - 2. * alpha)
+            blended = source[mask].astype(np.float32) * (1. - alpha[:, None]) + filtered[mask].astype(np.float32) * alpha[:, None]
+            prepared[mask] = np.clip(np.rint(blended), 0, 255).astype(np.uint8)
     changed = np.any(prepared != source, axis=2)
     if not changed.any():
         return None, None, {}
@@ -511,6 +791,8 @@ def apply_pixelation_mask(source, mask, analysis_size, recovered_gaps, angle=Non
               'recovered_gap_analysis_pixels': recovered_gaps,
               'masked_native_pixels': int(mask.sum()), 'changed_native_pixels': int(changed.sum()),
               'full_image_sha256': sha(full_png), 'mask_sha256': sha(mask_png)}
+    if cond_meta is not None:
+        report['degraded_patch_conditioning'] = cond_meta
     if angle is not None:
         report['rotation_correction_degrees'] = angle
     if tiny_period is not None:
@@ -591,6 +873,10 @@ def prepare_mosaics(source):
     if regular[0] is None and not _is_genuine_dct_macroblocking(source):
         regular = rotated_pixelation(source)
     height, width = source.shape[:2]
+    if regular[0] is None:
+        paste_mask = detect_pasted_degraded_face_patch(source)
+        if paste_mask is not None:
+            regular = apply_pixelation_mask(source, paste_mask, (width, height), 0, is_fine_grain_paste=True)
     existing_area = regular[1].get('masked_native_pixels', width * height) if regular[0] is not None else 0
     size = tuple(round(side * min(1., 256 / max(width, height))) for side in (width, height))
     if min(width, height) < 128 or min(size) < 96:

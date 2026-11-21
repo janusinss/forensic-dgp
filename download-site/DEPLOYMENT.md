@@ -1,6 +1,30 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.13 offline preview
+## Current 0.2.14 offline preview
+
+Published November 22, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment be20c866](https://be20c866.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.14)
+references `ForensicDGP_Setup-0.2.14.exe` from build source
+`f9eb937ca6fe0bc31009e148e792a7ab2c79632f` (`1,314,137,477` bytes, SHA-256
+`061c07519528adb88f40821b886ac77f2f3068a28bc392ac3849e67e6dc9c625`). GitHub confirmed
+`Content-Range: bytes 0-15/1314137477` (`HTTP 206`) and exact `.sha256` match, and
+Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) reported zero threats. This
+release ships Step 2 degraded face-patch restoration (fixing false DCT stripping of
+coarse mosaic/posterized/block-noise patches, adding masked block-noise smoothing,
+posterized chroma-blotch homogenization, exterior-referenced shadow/haze veil removal,
+and mid-forehead paste-seam detection while preserving `>=512px` JPEG DCT and
+clean-color privacy mosaics), calibrated `-15%` Step 1 auto-crop (`AUTO_CROP_MARGIN_RATIO = 0.32`),
+and a hardened Auto button (`CAST_D_MIN = 26.5`, `dc <= 10` macroblock guard,
+FBCNN up to `768px` for heavy JPEGs, and explicit Auto UI summaries). All 19 site
+tests, `tsc --noEmit`, Vite production build, and live Playwright audits across
+375px, 768px, and 1280px passed with zero overflow, console, or network errors.
+Published versions remain immutable: future updates must use a new version, build,
+and release rather than replacing `0.2.14`.
+
+## Historical 0.2.13 offline preview
 
 Published November 18, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs

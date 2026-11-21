@@ -9,7 +9,7 @@ import numpy as np
 
 POLICY = "damped-sog-face-safe-dcp-tight-v1"
 MIN_SIDE = 16
-CAST_D_MIN = 22.0
+CAST_D_MIN = 26.5
 CAST_K_MIN = 1.50
 HAZE_DC_MIN = 0.35
 HAZE_SAT_MAX = 45.0
@@ -176,7 +176,13 @@ def _face_safe_dcp(
 
 def _evaluate_gates(pm: dict[str, float]) -> tuple[bool, bool]:
     cast_fire = (pm["cast_D"] >= CAST_D_MIN) and (pm["cast_factor"] >= CAST_K_MIN)
-    haze_fire = (pm["dark_channel_mean"] / 255.0 >= HAZE_DC_MIN) and (pm["sat_mean"] < HAZE_SAT_MAX)
+    dc = pm["dark_channel_mean"] / 255.0
+    sat_cap = HAZE_SAT_MAX + max(0.0, (dc - HAZE_DC_MIN) * 90.0)
+    haze_fire = (
+        (dc >= HAZE_DC_MIN)
+        and (pm["sat_mean"] < sat_cap)
+        and (pm["clip_shadow_pct"] < 1.0)
+    )
     return bool(cast_fire), bool(haze_fire)
 
 
