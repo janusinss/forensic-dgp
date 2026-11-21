@@ -157,7 +157,7 @@ class ControllerTests(unittest.TestCase):
     def test_picture_face_scan_and_crop_preserve_the_original_upload(self):
         with patch.object(capture_api, 'detect_faces', return_value=[[42, 24, 30, 40]]):
             inspection = asyncio.run(controller.inspect(self.upload(self.contents), scan_faces=True))
-        rectangle = [34, 16, 46, 56]
+        rectangle = [29, 11, 56, 66]
         self.assertEqual(inspection['face_crops'], [rectangle])
         self.assertEqual(inspection['face_boxes'], [[42, 24, 30, 40]])
         self.assertEqual(inspection['neural_calls'], 0)
@@ -166,7 +166,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(result['metadata']['picture_crop'], rectangle)
         with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
             self.assertEqual(archive.read('uploaded-original.bin'), self.contents)
-            self.assertEqual(archive.read('original-native.png'), png(self.rgb[16:72, 34:80]))
+            self.assertEqual(archive.read('original-native.png'), png(self.rgb[11:77, 29:85]))
 
     def test_picture_crop_validation_and_detector_fallback(self):
         with patch.object(capture_api, 'detect_faces', side_effect=RuntimeError):
@@ -192,12 +192,13 @@ class ControllerTests(unittest.TestCase):
         self.assertFalse(inspection['face_scan_unavailable'])
 
     @unittest.skipUnless(
-        all((Path(__file__).resolve().parents[2] / 'test_images' / name).exists() for name in ('wild3.png', 'wild4.png')),
-        'wild3/wild4 fixtures missing',
+        all((Path(__file__).resolve().parents[2] / 'test_images' / name).exists() for name in ('wild3.png', 'wild4.png', 'wild5.png')),
+        'wild3/wild4/wild5 fixtures missing',
     )
-    def test_inspect_real_wild3_and_wild4_produce_previous_twenty_percent_crop_zoom(self):
+    def test_inspect_real_wild3_wild4_wild5_produce_auto_crop_margin(self):
+        from implementation.capture_worker import AUTO_CROP_MARGIN_RATIO
         test_dir = Path(__file__).resolve().parents[2] / 'test_images'
-        for name in ('wild3.png', 'wild4.png'):
+        for name in ('wild3.png', 'wild4.png', 'wild5.png'):
             with self.subTest(image=name):
                 raw = (test_dir / name).read_bytes()
                 inspection = asyncio.run(controller.inspect(self.upload(raw, filename=name), scan_faces=True))
@@ -206,9 +207,10 @@ class ControllerTests(unittest.TestCase):
                 self.assertEqual(len(inspection['face_crops']), 1)
                 cx, cy, cw, ch = inspection['face_crops'][0]
                 bx, by, bw, bh = inspection['face_boxes'][0]
-                margin = int(max(bw, bh) * .20 + .5)
+                margin = int(max(bw, bh) * AUTO_CROP_MARGIN_RATIO + .5)
                 expected_left, expected_top = max(0, bx - margin), max(0, by - margin)
                 self.assertGreaterEqual(bw, 200)
+                self.assertEqual(cy, 0)
                 self.assertEqual([cx, cy, cw, ch], [
                     expected_left, expected_top,
                     min(inspection['width'], bx + bw + margin) - expected_left,

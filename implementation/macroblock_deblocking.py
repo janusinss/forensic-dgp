@@ -1,11 +1,13 @@
 """Conservative CPU detection and adaptive deblocking for 8x8/16x16 macroblocking."""
 from __future__ import annotations
 
+import cv2
 import numpy as np
 from scipy.ndimage import binary_fill_holes, distance_transform_edt, label
 
 from .jpeg_deblocking import MAX_SIDE as FBCNN_MAX_SIDE, prepare_fbcnn_deblocking
 from .preparation import png
+from .quality import native_ycrcb_noise_sigma
 
 MIN_CROP_SIDE = 32
 FBCNN_MIN_SIDE = 96
@@ -485,8 +487,10 @@ def detect_macroblocking(source: np.ndarray, origin: tuple[int, int] = (0, 0)) -
 
     cell_p = 8 if 8 in periods else 16
     flat_frac, ex_zero, ex_flat, ex_cnt = _flat_cell_metrics(gray, cell_p, ox % cell_p, oy % cell_p, eval_mask)
+    is_blk_noise = is_multipixel_block_noise(source, eval_mask)
     is_flat_mosaic = bool(
-        (flat_frac >= 0.90 and max(ry['interior'], rx['interior']) <= 0.35)
+        is_blk_noise
+        or (flat_frac >= 0.90 and max(ry['interior'], rx['interior']) <= 0.35)
         or (ex_cnt >= 12 and ex_zero >= 0.70 and ex_flat >= 0.72)
     )
 
@@ -764,12 +768,151 @@ def _padded_box_for_region(
     return y0, y1, x0, x1
 
 
+def _crop_for_region_mask(
+    rgb: np.ndarray,
+    region_mask: np.ndarray | None,
+) -> tuple[np.ndarray, np.ndarray | None]:
+    """Slice `rgb` and optional boolean `region_mask` to the mask bounding box."""
+    if region_mask is None:
+        return rgb, None
+    mask_bool = np.asarray(region_mask, dtype=bool)
+    if mask_bool.shape != rgb.shape[:2] or not np.any(mask_bool):
+        return rgb, None
+    yy, xx = np.nonzero(mask_bool)
+    y0, y1 = int(yy.min()), int(yy.max()) + 1
+    x0, x1 = int(xx.min()), int(xx.max()) + 1
+    return rgb[y0:y1, x0:x1], mask_bool[y0:y1, x0:x1]
+
+
+def _masked_immerkaer_ycrcb_sigma(
+    rgb: np.ndarray,
+    mask: np.ndarray | None = None,
+) -> tuple[float, float, float]:
+    """Compute Immerkaer 3x3 MAD noise sigma for (Y, Cr, Cb), optionally restricted to `mask`."""
+    if mask is None or bool(np.all(mask)):
+        return native_ycrcb_noise_sigma(rgb)
+    ycrcb = cv2.cvtColor(rgb, cv2.COLOR_RGB2YCrCb).astype(np.float32)
+    kernel = np.array([[1.0, -2.0, 1.0], [-2.0, 4.0, -2.0], [1.0, -2.0, 1.0]], dtype=np.float32)
+    # Require full 3x3 neighborhood inside mask so boundary steps never bias noise estimates
+    eroded = cv2.erode(mask.astype(np.uint8), np.ones((3, 3), dtype=np.uint8)) > 0
+    if int(eroded.sum()) < 64:
+        return (0.0, 0.0, 0.0)
+    scale = float(np.sqrt(np.pi / 2.0) / 6.0)
+    sigmas: list[float] = []
+    for ch in range(3):
+        resp = np.abs(cv2.filter2D(ycrcb[..., ch], cv2.CV_32F, kernel, borderType=cv2.BORDER_REFLECT))
+        vals = resp[eroded]
+        sigmas.append(float(np.median(vals) * scale * 1.4826))
+    return (sigmas[0], sigmas[1], sigmas[2])
+
+
+def is_multipixel_block_noise(
+    rgb: np.ndarray,
+    region_mask: np.ndarray | None = None,
+) -> bool:
+    """Return True for portrait-scale multi-pixel (~6-8px) RGB block noise, never genuine DCT.
+
+    Genuine 4:2:0 JPEG DCT crushes chroma at 8x downsample (immB_Cr/Cb ~ 0.0), whereas
+    multi-pixel RGB confetti noise exhibits both strong luma (immB_Y >= 3.5) and chroma
+    (max(immB_Cr, immB_Cb) >= 1.4) noise at 8x downsample with near-zero native 1px noise.
+    """
+    if not isinstance(rgb, np.ndarray) or rgb.ndim != 3 or rgb.shape[2] != 3 or rgb.dtype != np.uint8:
+        return False
+    patch, sub_mask = _crop_for_region_mask(rgb, region_mask)
+    ph, pw = patch.shape[:2]
+    if min(ph, pw) < 256:
+        return False
+    sig_nat = _masked_immerkaer_ycrcb_sigma(patch, sub_mask)
+    if sig_nat[0] >= 2.0:
+        return False
+    sw8, sh8 = max(16, pw // 8), max(16, ph // 8)
+    small8 = cv2.resize(patch, (sw8, sh8), interpolation=cv2.INTER_AREA)
+    m8 = None
+    if sub_mask is not None and not bool(np.all(sub_mask)):
+        m8 = cv2.resize(sub_mask.astype(np.float32), (sw8, sh8), interpolation=cv2.INTER_AREA) >= 0.75
+        if int(m8.sum()) < 64:
+            return False
+    sig_blk = _masked_immerkaer_ycrcb_sigma(small8, m8)
+    return bool(sig_blk[0] >= 3.5 and max(sig_blk[1], sig_blk[2]) >= 1.4)
+
+
+def _chroma_block_and_gradient_metrics(
+    rgb: np.ndarray,
+    region_mask: np.ndarray | None = None,
+) -> tuple[float, float, float]:
+    """Return (min_axis_8px_chroma_seam_excess, min_axis_8px_luma_seam_excess, p95_chroma_gradient)."""
+    patch, sub_mask = _crop_for_region_mask(rgb, region_mask)
+    ycrcb = cv2.cvtColor(patch, cv2.COLOR_RGB2YCrCb).astype(np.float32)
+    Y, Cr, Cb = ycrcb[..., 0], ycrcb[..., 1], ycrcb[..., 2]
+    dc_y = np.abs(np.diff(Cr, axis=0)) + np.abs(np.diff(Cb, axis=0))
+    dc_x = np.abs(np.diff(Cr, axis=1)) + np.abs(np.diff(Cb, axis=1))
+    dy_l = np.abs(np.diff(Y, axis=0))
+    dx_l = np.abs(np.diff(Y, axis=1))
+
+    if sub_mask is not None and not bool(np.all(sub_mask)):
+        py_c = _axis_diff_profile(dc_y, 0, sub_mask)
+        px_c = _axis_diff_profile(dc_x, 1, sub_mask)
+        py_l = _axis_diff_profile(dy_l, 0, sub_mask)
+        px_l = _axis_diff_profile(dx_l, 1, sub_mask)
+    else:
+        py_c, px_c = dc_y.mean(axis=1), dc_x.mean(axis=0)
+        py_l, px_l = dy_l.mean(axis=1), dx_l.mean(axis=0)
+
+    def _best8_excess(prof: np.ndarray | None) -> float:
+        if prof is None:
+            return 0.0
+        valid = np.isfinite(prof)
+        if int(valid.sum()) < 24:
+            return 0.0
+        mean_all = float(prof[valid].mean())
+        idx = np.arange(prof.size)
+        best = 0.0
+        for off in range(8):
+            sel = ((idx % 8) == off) & valid
+            if np.any(sel):
+                best = max(best, float(prof[sel].mean()) - mean_all)
+        return best
+
+    s8c = min(_best8_excess(py_c), _best8_excess(px_c))
+    s8y = min(_best8_excess(py_l), _best8_excess(px_l))
+    comb = dc_y[:, :-1] + dc_x[:-1, :]
+    if sub_mask is not None and not bool(np.all(sub_mask)):
+        inner = sub_mask[:-1, :-1] & sub_mask[1:, :-1] & sub_mask[:-1, 1:]
+        if int(inner.sum()) < 256:
+            return s8c, s8y, 0.0
+        c_grad95 = float(np.percentile(comb[inner], 95))
+    else:
+        c_grad95 = float(np.percentile(comb, 95))
+    return s8c, s8y, c_grad95
+
+
+def is_posterized_block_patch(
+    rgb: np.ndarray,
+    region_mask: np.ndarray | None = None,
+) -> bool:
+    """Return True when a portrait-scale region has RGB-posterized/chroma-blotched block seams.
+
+    Genuine 4:2:0 JPEG Q=8..15 portraits (s8c <= 0.97, s8c/s8y <= 0.27, cG95 <= 6.0) and
+    clean-color 24x24/32x32 privacy mosaics (s8c <= 0.15, cG95 <= 3.0) stay well below both gates.
+    """
+    if not isinstance(rgb, np.ndarray) or rgb.ndim != 3 or rgb.shape[2] != 3 or rgb.dtype != np.uint8:
+        return False
+    patch, sub_mask = _crop_for_region_mask(rgb, region_mask)
+    ph, pw = patch.shape[:2]
+    if min(ph, pw) < 256:
+        return False
+    s8c, s8y, c_grad95 = _chroma_block_and_gradient_metrics(patch, sub_mask)
+    return bool((s8c >= 0.90 and (s8c / max(s8y, 1.0)) >= 0.35) or c_grad95 >= 12.0)
+
+
 def _wang_bovik_dct_check(
     crop: np.ndarray,
     det: dict,
     eval_mask: np.ndarray | None,
 ) -> bool:
     """Verify Wang-Bovik periodic seam Z-score and non-flat intra-cell texture."""
+    if is_multipixel_block_noise(crop, eval_mask) or is_posterized_block_patch(crop, eval_mask):
+        return False
     gray = _bt601_luma(crop)
     ox, oy = int(det['offset_x']), int(det['offset_y'])
     dy = np.abs(np.diff(gray, axis=0))
@@ -812,9 +955,9 @@ def is_dct_macroblocking_patch(
 ) -> bool:
     """Return True when `rgb` (optionally scoped to `region_mask`) shows genuine DCT macroblocking.
 
-    Distinguishes genuine 8x8/16x16 DCT macroblocking from flat-cell privacy mosaics
-    using Wang-Bovik periodic seam Z-scores, intra-cell flatness metrics, and
-    deblocking gate verification without rejecting small regional DCT patches.
+    Distinguishes genuine 8x8/16x16 DCT macroblocking from flat-cell privacy mosaics,
+    posterized chroma-blotched block grids, and multi-pixel block noise using Wang-Bovik
+    periodic seam Z-scores, chroma-seam physics, intra-cell flatness, and deblocking gates.
     """
     if not isinstance(rgb, np.ndarray) or rgb.ndim != 3 or rgb.shape[2] != 3 or rgb.dtype != np.uint8:
         return False
@@ -844,6 +987,8 @@ def is_dct_macroblocking_patch(
         sub_mask = None
 
     if min(crop.shape[:2]) < MIN_CROP_SIDE:
+        return False
+    if is_multipixel_block_noise(crop, sub_mask) or is_posterized_block_patch(crop, sub_mask):
         return False
 
     det = detect_macroblocking(crop, origin=sub_origin)
@@ -960,6 +1105,10 @@ def prepare_macroblock_deblocking(
 
     if det is None or not det['suspected'] or det['is_flat_privacy_mosaic']:
         return None, None, {}
+    if dc is not None and dc <= 10:
+        seam_ex = det.get('seam_excess') or (0.0, 0.0)
+        if max(float(v) for v in seam_ex) < 3.0:
+            return None, None, {}
 
     if caller_mask is not None and det['regional']:
         active_mask = caller_mask & det['mask']

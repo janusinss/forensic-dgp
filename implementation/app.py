@@ -451,10 +451,11 @@ async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form
                 result['face_crops'] = [rec['crop'] for rec in sorted_recs]
                 result['face_boxes'] = [rec['box'] for rec in sorted_recs]
             else:
+                from .capture_worker import AUTO_CROP_MARGIN_RATIO
                 sorted_faces = sorted(faces, key=lambda box: (box[0], box[1]))
                 result['face_crops'] = []
                 for x, y, w, h in sorted_faces:
-                    margin = int(max(w, h) * .20 + .5)
+                    margin = int(max(w, h) * AUTO_CROP_MARGIN_RATIO + .5)
                     left, top = max(0, x - margin), max(0, y - margin)
                     right, bottom = min(width, x + w + margin), min(height, y + h + margin)
                     result['face_crops'].append([left, top, right - left, bottom - top])
