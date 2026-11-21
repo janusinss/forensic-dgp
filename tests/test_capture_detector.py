@@ -1,4 +1,4 @@
-"""Offline and regression tests for face detection, landmark sanity, and +20% padded auto-crops."""
+"""Offline and regression tests for face detection, landmark sanity, and +32% padded auto-crops."""
 import json
 import subprocess
 import sys
@@ -10,6 +10,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from implementation.capture_worker import (
+    AUTO_CROP_MARGIN_RATIO,
     _padded_face_crop,
     _valid_face_landmarks,
     native_face_boxes,
@@ -91,10 +92,19 @@ class FaceLandmarkAndCropTests(unittest.TestCase):
                 self.assertFalse(_valid_face_landmarks(row, 100.0, 120.0))
         self.assertFalse(_valid_face_landmarks(self.valid_row, 0.0, 120.0))
 
-    def test_padded_face_crop_applies_twenty_percent_margin_and_clamps(self):
-        self.assertEqual(_padded_face_crop([100, 80, 100, 120], 400, 400), [76, 56, 148, 168])
-        # Edge-clamped crop matching previous auto crop on wild3 geometry.
-        self.assertEqual(_padded_face_crop([55, 88, 289, 382], 460, 578), [0, 12, 420, 534])
+    def test_padded_face_crop_applies_thirty_two_percent_margin_and_clamps(self):
+        self.assertAlmostEqual(AUTO_CROP_MARGIN_RATIO, 0.32)
+        self.assertEqual(_padded_face_crop([100, 80, 100, 120], 400, 400), [62, 42, 176, 196])
+        # Edge-clamped crops preserve full head crown (top == 0) on wild3 and wild5 geometry.
+        self.assertEqual(_padded_face_crop([55, 88, 289, 382], 460, 578), [0, 0, 460, 578])
+        self.assertEqual(_padded_face_crop([87, 110, 278, 355], 455, 523), [0, 0, 455, 523])
+        # Tiny corner box clamps safely within image bounds without negative coords or overflow.
+        cx, cy, cw, ch = _padded_face_crop([0, 0, 16, 16], 40, 40)
+        self.assertEqual((cx, cy, cw, ch), (0, 0, 21, 21))
+        self.assertGreaterEqual(cx, 0)
+        self.assertGreaterEqual(cy, 0)
+        self.assertLessEqual(cx + cw, 40)
+        self.assertLessEqual(cy + ch, 40)
 
     def test_padded_face_crop_caps_side_at_1600(self):
         cx, cy, cw, ch = _padded_face_crop([100, 100, 1500, 1500], 2400, 2400)
@@ -130,7 +140,7 @@ class MultiPassFaceScanTests(unittest.TestCase):
         all((TEST_IMAGES_DIR / n).exists() for n in ('wild3.png', 'wild4.png', 'wild5.png')),
         'wild test images missing',
     )
-    def test_wild3_and_wild4_detect_single_mosaic_face_with_previous_auto_zoom(self):
+    def test_wild3_and_wild4_detect_single_mosaic_face_with_auto_crop_margin(self):
         for name in ('wild3.png', 'wild4.png'):
             with self.subTest(image=name):
                 img = cv2.imread(str(TEST_IMAGES_DIR / name))
@@ -143,14 +153,18 @@ class MultiPassFaceScanTests(unittest.TestCase):
                 # Must detect the main central mosaic face, not a tiny corner hair ghost.
                 self.assertGreaterEqual(bw, 200)
                 self.assertGreaterEqual(bh, 250)
-                margin = int(max(bw, bh) * 0.20 + 0.5)
+                margin = int(max(bw, bh) * AUTO_CROP_MARGIN_RATIO + 0.5)
                 self.assertEqual(records[0]['crop'], [max(0, bx - margin), max(0, by - margin),
                                                       min(w, bx + bw + margin) - max(0, bx - margin),
                                                       min(h, by + bh + margin) - max(0, by - margin)])
+                self.assertEqual(cy, 0)
                 self.assertGreaterEqual(cx, 0)
-                self.assertGreaterEqual(cy, 0)
                 self.assertLessEqual(cx + cw, w)
                 self.assertLessEqual(cy + ch, h)
+                if name == 'wild4.png':
+                    # Balanced framing preserves crown without over-zooming out into mosaic degradation.
+                    self.assertGreaterEqual(cw, 500)
+                    self.assertLessEqual(cw, 580)
 
     @unittest.skipUnless((TEST_IMAGES_DIR / 'wild5.png').exists(), 'wild5.png missing')
     def test_heavy_gaussian_and_motion_blurred_faces_detected_accurately(self):
@@ -158,6 +172,8 @@ class MultiPassFaceScanTests(unittest.TestCase):
         ref = scan_face_records(base)
         self.assertEqual(len(ref), 1)
         ref_box = ref[0]['box']
+        # Wild5 auto-crop must preserve top head crown (no top clipping).
+        self.assertEqual(ref[0]['crop'][1], 0)
 
         motion_kernel = np.eye(15, dtype=np.float32) / 15.0
         degraded = {
@@ -172,7 +188,7 @@ class MultiPassFaceScanTests(unittest.TestCase):
                 self.assertGreaterEqual(self._box_iou(recs[0]['box'], ref_box), 0.50)
                 bx, by, bw, bh = recs[0]['box']
                 cx, cy, cw, ch = recs[0]['crop']
-                margin = int(max(bw, bh) * 0.20 + 0.5)
+                margin = int(max(bw, bh) * AUTO_CROP_MARGIN_RATIO + 0.5)
                 expected_left, expected_top = max(0, bx - margin), max(0, by - margin)
                 self.assertEqual([cx, cy, cw, ch], [
                     expected_left, expected_top,

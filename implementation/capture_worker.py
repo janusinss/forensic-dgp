@@ -11,6 +11,7 @@ import time
 YUNET_MODEL = Path(__file__).with_name('assets') / 'face_detection_yunet_2023mar.onnx'
 YUNET_SHA256 = '8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4'
 MAX_SCAN_SIDE = 1600
+AUTO_CROP_MARGIN_RATIO = 0.32
 
 def main():
     os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;tcp|protocol_whitelist;rtsp,rtp,tcp|timeout;5000000'
@@ -109,10 +110,10 @@ def _valid_face_landmarks(row_scaled, bw, bh):
 
 
 def _padded_face_crop(box, img_w, img_h, max_side=1600):
-    """Compute the +20% margin face crop rectangle bounded inside the image."""
+    """Compute the +32% margin (-15% zoom-out) face crop rectangle bounded inside the image."""
     x, y, w, h = map(int, box)
     img_w, img_h = int(img_w), int(img_h)
-    margin = int(max(w, h) * 0.20 + 0.5)
+    margin = int(max(w, h) * AUTO_CROP_MARGIN_RATIO + 0.5)
     left = max(0, x - margin)
     top = max(0, y - margin)
     right = min(img_w, x + w + margin)
@@ -180,7 +181,7 @@ def _collect_records(detector, frame, original_size, threshold, pass_bias):
 
 
 def scan_face_records(image):
-    """Multi-pass YuNet face detection returning validated boxes, +20% padded crops, and scores."""
+    """Multi-pass YuNet face detection returning validated boxes, +32% padded crops, and scores."""
     import cv2
 
     if image is None or getattr(image, 'ndim', 0) != 3 or image.shape[2] != 3:
