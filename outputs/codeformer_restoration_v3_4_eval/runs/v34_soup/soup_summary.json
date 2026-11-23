@@ -1,0 +1,140 @@
+{
+  "best_alpha": 1.0,
+  "best_score": 8.601799131170146,
+  "v3_modules_ema_npz": "/home/janusdominic0/forensic-dgp/v3_restoration/runs/v34_soup/v3_modules_ema.npz",
+  "v3_state_sha": "cc679bd6ffd919a21a92a2f07de0c2f1f2602d9449a4c714e3ec82cd5dce61bd",
+  "candidates": [
+    {
+      "alpha": 0.0,
+      "score": 7.720570474500783,
+      "overall": {
+        "count": 240,
+        "mae": 0.05224539538614111,
+        "psnr_db": 25.058521247773314,
+        "psnr_infinite_count": 11,
+        "accuracy_pct": 94.77546046138589,
+        "ssim7": 0.795733599301979,
+        "lpips": 0.19697342894020645,
+        "arcface_cos": 0.810676220121483,
+        "central_laplacian": 0.13790069081566728,
+        "central_laplacian_ratio": 0.9164443201119802,
+        "noise_sigma": 0.0059994028498476255,
+        "catastrophic_id_flips": 0,
+        "unobserved_exact_all": true,
+        "cpu_latency_s_mean": 0.11641194540449457
+      },
+      "native_same_id_arc": 0.6303994109233221,
+      "native_central_laplacian": 0.08309776945625254
+    },
+    {
+      "alpha": 0.2,
+      "score": 7.943169987368016,
+      "overall": {
+        "count": 240,
+        "mae": 0.052206881986464296,
+        "psnr_db": 25.058442417769516,
+        "psnr_infinite_count": 11,
+        "accuracy_pct": 94.77931180135356,
+        "ssim7": 0.7957819831277324,
+        "lpips": 0.19686712477123364,
+        "arcface_cos": 0.8106153295685847,
+        "central_laplacian": 0.13789986373353955,
+        "central_laplacian_ratio": 0.9163496219834594,
+        "noise_sigma": 0.005994401565914232,
+        "catastrophic_id_flips": 0,
+        "unobserved_exact_all": true,
+        "cpu_latency_s_mean": 0.11321054953465742
+      },
+      "native_same_id_arc": 0.6335712671279907,
+      "native_central_laplacian": 0.08301905632733779
+    },
+    {
+      "alpha": 0.4,
+      "score": 8.167824944977166,
+      "overall": {
+        "count": 240,
+        "mae": 0.05216078373861208,
+        "psnr_db": 25.058544394794414,
+        "psnr_infinite_count": 11,
+        "accuracy_pct": 94.78392162613879,
+        "ssim7": 0.7957705005093729,
+        "lpips": 0.196863180451813,
+        "arcface_cos": 0.810700319459041,
+        "central_laplacian": 0.1379089960120152,
+        "central_laplacian_ratio": 0.9164660776586263,
+        "noise_sigma": 0.006004689990649085,
+        "catastrophic_id_flips": 0,
+        "unobserved_exact_all": true,
+        "cpu_latency_s_mean": 0.11315071638067214
+      },
+      "native_same_id_arc": 0.6368959868947665,
+      "native_central_laplacian": 0.08312375519840459
+    },
+    {
+      "alpha": 0.6,
+      "score": 8.29778109303744,
+      "overall": {
+        "count": 240,
+        "mae": 0.052101007931112976,
+        "psnr_db": 25.063771489523994,
+        "psnr_infinite_count": 11,
+        "accuracy_pct": 94.7898992068887,
+        "ssim7": 0.7956983617668214,
+        "lpips": 0.1968600126390811,
+        "arcface_cos": 0.8105928824593623,
+        "central_laplacian": 0.1379000111942998,
+        "central_laplacian_ratio": 0.9164556196514198,
+        "noise_sigma": 0.006008775563598303,
+        "catastrophic_id_flips": 0,
+        "unobserved_exact_all": true,
+        "cpu_latency_s_mean": 0.11297577474833816
+      },
+      "native_same_id_arc": 0.6384176264206568,
+      "native_central_laplacian": 0.08573014127001351
+    },
+    {
+      "alpha": 0.8,
+      "score": 8.428889905546878,
+      "overall": {
+        "count": 240,
+        "mae": 0.05201573905861715,
+        "psnr_db": 24.94987533193501,
+        "psnr_infinite_count": 12,
+        "accuracy_pct": 94.79842609413828,
+        "ssim7": 0.7956997824070717,
+        "lpips": 0.19671727579746706,
+        "arcface_cos": 0.8104430325329304,
+        "central_laplacian": 0.1379053610958634,
+        "central_laplacian_ratio": 0.9166516159255179,
+        "noise_sigma": 0.006014639263167583,
+        "catastrophic_id_flips": 0,
+        "unobserved_exact_all": true,
+        "cpu_latency_s_mean": 0.11296744415036906
+      },
+      "native_same_id_arc": 0.6407372603813807,
+      "native_central_laplacian": 0.08406073875410625
+    },
+    {
+      "alpha": 1.0,
+      "score": 8.601799131170146,
+      "overall": {
+        "count": 240,
+        "mae": 0.05196203252588741,
+        "psnr_db": 24.94909825497901,
+        "psnr_infinite_count": 12,
+        "accuracy_pct": 94.80379674741127,
+        "ssim7": 0.7956729671631577,
+        "lpips": 0.19657466864252152,
+        "arcface_cos": 0.810142761344711,
+        "central_laplacian": 0.1378844773055598,
+        "central_laplacian_ratio": 0.9164528225618561,
+        "noise_sigma": 0.006013998507730247,
+        "catastrophic_id_flips": 0,
+        "unobserved_exact_all": true,
+        "cpu_latency_s_mean": 0.11292775183270957
+      },
+      "native_same_id_arc": 0.6431761582692465,
+      "native_central_laplacian": 0.08359093308880265
+    }
+  ]
+}
