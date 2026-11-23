@@ -1,6 +1,5 @@
-"""Frozen CPU inference for the Conditioned SFT V2 (p2_u0224) restoration model.
+"""Frozen CPU inference for Pre-Conditioned Frozen CodeFormer V3.4.
 
-Numerics are preserved from the Conditioned SFT V2 return-audited implementation.
 CodeFormer remains attributed to S-Lab in third_party/codeformer, including its license.
 This module imports no research service, training helper, or historical output.
 Importing it constructs no model and performs no network or device discovery.
@@ -19,24 +18,23 @@ import threading
 import weakref
 import zipfile
 
-from . import conditioning_v2 as cond_v2
 from .model_store import model_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = model_directory(ROOT, 'implementation')
 SITES = ("32", "64", "128", "256")
-CHANNELS = {"32": 256, "64": 256, "128": 128, "256": 128}
-WIDTH = 32
 MAX_IMAGE_BYTES = 10 * 1024**2
 MAX_IMAGE_SIDE = 1600
-R2_FILE = {"bytes": 376609465, "sha256": "d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896"}
-U96_FILE = {"bytes": 212827, "sha256": "958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0"}
-HEAD_FILE = {"bytes": 685818, "sha256": "77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17"}
-V2_FILE = {"bytes": 3831362, "sha256": "1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f"}
-R2_STATE = "a3b0986c793cb7c937ca82efde6c9e23e70557d76b93406e0f53e51b938f9e7f"
-U96_STATE = "fbfaa9d01c5ab04d2c4383485ba4e1eebb3d9f43cdab427773447248d14a586a"
-HEAD_STATE = "6629d8414321b0d2ba3a9cc476e415d31911fd4bd1fa121a1a8db9097ce235be"
-V2_STATE = "3faa78e15c2fb50bfaa523b5dc7ee64fa4c19a13c490760a7401ea43ab0269d7"
+CODEFORMER_BASE_FILE = {
+    "bytes": 376637898,
+    "sha256": "1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7",
+}
+V34_FILE = {
+    "bytes": 9065704,
+    "sha256": "65541ac31b50becafec3db34cca8936ab92c5958b0afd75244d85ecd0e0e88b1",
+}
+CODEFORMER_BASE_STATE = "6cb93cee937f67814edcf4625a68bae4bf8f1c2351f7306864ceefa63d4803bd"
+V34_STATE = "cc679bd6ffd919a21a92a2f07de0c2f1f2602d9449a4c714e3ec82cd5dce61bd"
 ARCHITECTURE_SOURCES = {
     "third_party.codeformer.codeformer_arch": {
         "path": "third_party/codeformer/codeformer_arch.py",
@@ -49,6 +47,10 @@ ARCHITECTURE_SOURCES = {
     "third_party.codeformer.registry": {
         "path": "third_party/codeformer/registry.py",
         "sha256": "21c23bd3bf727eb2decd99035120fc47316db92486d73116cca18e9fa8b6c854",
+    },
+    "implementation.architecture_v34": {
+        "path": "implementation/architecture_v34.py",
+        "sha256": "d243bb8abb8d9379c5f9d95bdb786909235b0269194688a8d62182d9c1a28cf2",
     },
 }
 _OWNER_ATTRIBUTE = "_portable_codeformer_exclusive_owner"
@@ -109,77 +111,106 @@ def architecture_file_sha256(path):
     return architecture_source_sha256(raw)
 
 
-def adapter_shapes():
-    return {
-        "adapters." + site + "." + name: shape
-        for site, channels in CHANNELS.items()
-        for name, shape in {
-            "down.weight": (32, channels, 1, 1), "down.bias": (32,),
-            "depthwise.weight": (32, 1, 3, 3), "depthwise.bias": (32,),
-            "up.weight": (channels, 32, 1, 1), "up.bias": (channels,),
-        }.items()
-    }
+def _add_mbconv_shapes(shapes, prefix, in_ch, out_ch):
+    mid = in_ch * 2
+    shapes[prefix + "pw1.weight"] = (mid, in_ch, 1, 1)
+    shapes[prefix + "gn1.weight"] = (mid,)
+    shapes[prefix + "gn1.bias"] = (mid,)
+    shapes[prefix + "dw.weight"] = (mid, 1, 3, 3)
+    shapes[prefix + "gn2.weight"] = (mid,)
+    shapes[prefix + "gn2.bias"] = (mid,)
+    shapes[prefix + "pw2.weight"] = (out_ch, mid, 1, 1)
+    shapes[prefix + "gn3.weight"] = (out_ch,)
+    shapes[prefix + "gn3.bias"] = (out_ch,)
 
 
-def head_shapes():
-    return {
-        "heads." + site + "." + name: shape
-        for site, channels in CHANNELS.items()
-        for name, shape in {
-            "encoder.weight": (32, channels, 1, 1), "encoder.bias": (32,),
-            "decoder.weight": (32, channels, 1, 1), "fused.weight": (32, channels, 1, 1),
-            "coarse.weight": (32, 256, 1, 1), "spatial.weight": (32, 32, 3, 3),
-            "spatial.bias": (32,), "output.weight": (channels, 32, 1, 1),
-            "output.bias": (channels,),
-        }.items()
-    }
+def _add_naf_shapes(shapes, prefix, c):
+    dw_ch = c * 2
+    ffn_ch = c * 2
+    shapes[prefix + "norm1.weight"] = (1, c, 1, 1)
+    shapes[prefix + "norm1.bias"] = (1, c, 1, 1)
+    shapes[prefix + "conv1.weight"] = (dw_ch, c, 1, 1)
+    shapes[prefix + "conv1.bias"] = (dw_ch,)
+    shapes[prefix + "conv2.weight"] = (dw_ch, 1, 3, 3)
+    shapes[prefix + "conv2.bias"] = (dw_ch,)
+    shapes[prefix + "sca.weight"] = (c, c, 1, 1)
+    shapes[prefix + "sca.bias"] = (c,)
+    shapes[prefix + "conv3.weight"] = (c, c, 1, 1)
+    shapes[prefix + "conv3.bias"] = (c,)
+    shapes[prefix + "norm2.weight"] = (1, c, 1, 1)
+    shapes[prefix + "norm2.bias"] = (1, c, 1, 1)
+    shapes[prefix + "conv4.weight"] = (ffn_ch, c, 1, 1)
+    shapes[prefix + "conv4.bias"] = (ffn_ch,)
+    shapes[prefix + "conv5.weight"] = (c, c, 1, 1)
+    shapes[prefix + "conv5.bias"] = (c,)
+    shapes[prefix + "beta"] = (1, c, 1, 1)
+    shapes[prefix + "gamma"] = (1, c, 1, 1)
 
 
-def v2_shapes():
+def v34_shapes():
+    """Pure-Python exact tensor shape census for V3.4 front-end modules (344 tensors)."""
     shapes = {}
-    for site, ch in CHANNELS.items():
-        in_ch = ch + 1 + (96 if site != "32" else 0)
-        p = f"pyramid.stages.{site}."
-        shapes[p + "in_proj.weight"] = (96, in_ch, 1, 1)
-        shapes[p + "in_proj.bias"] = (96,)
-        shapes[p + "out_proj.weight"] = (ch, 96, 1, 1)
-        shapes[p + "out_proj.bias"] = (ch,)
-        for blk in ("block1", "block2"):
-            b = f"{p}{blk}."
-            for dw in ("dw1", "dw2", "dw4"):
-                shapes[b + dw + ".weight"] = (32, 1, 3, 3)
-                shapes[b + dw + ".bias"] = (32,)
-            shapes[b + "pw.weight"] = (96, 96, 1, 1)
-            shapes[b + "pw.bias"] = (96,)
-            shapes[b + "se1.weight"] = (24, 96, 1, 1)
-            shapes[b + "se1.bias"] = (24,)
-            shapes[b + "se2.weight"] = (96, 24, 1, 1)
-            shapes[b + "se2.bias"] = (96,)
-        d = f"dark_refiner.stages.{site}."
-        shapes[d + "in_proj.weight"] = (48, ch, 1, 1)
-        shapes[d + "in_proj.bias"] = (48,)
-        for dw in ("dw1", "dw2"):
-            shapes[d + dw + ".weight"] = (48, 1, 3, 3)
-            shapes[d + dw + ".bias"] = (48,)
-        shapes[d + "pw.weight"] = (48, 96, 1, 1)
-        shapes[d + "pw.bias"] = (48,)
-        shapes[d + "out_proj.weight"] = (ch, 48, 1, 1)
-        shapes[d + "out_proj.bias"] = (ch,)
-        h = f"head_v2.{site}."
-        shapes[h + "freq_gate.weight"] = (ch, 2 * ch, 1, 1)
-        shapes[h + "freq_gate.bias"] = (ch,)
-        shapes[h + "enc_p.weight"] = (48, ch, 1, 1)
-        shapes[h + "enc_p.bias"] = (48,)
-        shapes[h + "dec_p.weight"] = (48, ch, 1, 1)
-        shapes[h + "fus_p.weight"] = (48, ch, 1, 1)
-        shapes[h + "coa_p.weight"] = (48, 256, 1, 1)
-        for dw in ("dw1", "dw2"):
-            shapes[h + dw + ".weight"] = (48, 1, 3, 3)
-            shapes[h + dw + ".bias"] = (48,)
-        shapes[h + "pw.weight"] = (48, 96, 1, 1)
-        shapes[h + "pw.bias"] = (48,)
-        shapes[h + "out_proj.weight"] = (ch, 48, 1, 1)
-        shapes[h + "out_proj.bias"] = (ch,)
+    # 1. deg_encoder
+    p = "deg_encoder."
+    shapes[p + "stem.0.weight"] = (24, 7, 3, 3)
+    shapes[p + "stem.1.weight"] = (24,)
+    shapes[p + "stem.1.bias"] = (24,)
+    for idx, (in_c, out_c) in enumerate(((24, 40), (40, 56), (56, 80), (80, 112)), start=1):
+        _add_mbconv_shapes(shapes, f"{p}stage{idx}.0.", in_c, out_c)
+        _add_mbconv_shapes(shapes, f"{p}stage{idx}.1.", out_c, out_c)
+    shapes[p + "z_proj.0.weight"] = (128, 224)
+    shapes[p + "z_proj.0.bias"] = (128,)
+    shapes[p + "z_proj.1.weight"] = (128,)
+    shapes[p + "z_proj.1.bias"] = (128,)
+    shapes[p + "z_proj.3.weight"] = (128, 128)
+    shapes[p + "z_proj.3.bias"] = (128,)
+    shapes[p + "deg_head.0.weight"] = (64, 128)
+    shapes[p + "deg_head.0.bias"] = (64,)
+    shapes[p + "deg_head.2.weight"] = (4, 64)
+    shapes[p + "deg_head.2.bias"] = (4,)
+    for head in ("g_photo_head", "g_pre_head", "w_head", "clean_head"):
+        shapes[f"{p}{head}.0.weight"] = (32, 128)
+        shapes[f"{p}{head}.0.bias"] = (32,)
+        shapes[f"{p}{head}.2.weight"] = (1, 32)
+        shapes[f"{p}{head}.2.bias"] = (1,)
+
+    # 2. photo_net
+    p = "photo_net."
+    shapes[p + "z_proj.weight"] = (32, 128)
+    shapes[p + "z_proj.bias"] = (32,)
+    shapes[p + "conv.0.weight"] = (24, 144, 3, 3)
+    shapes[p + "conv.1.weight"] = (24,)
+    shapes[p + "conv.1.bias"] = (24,)
+    shapes[p + "conv.3.weight"] = (24, 24, 3, 3)
+    shapes[p + "conv.4.weight"] = (24,)
+    shapes[p + "conv.4.bias"] = (24,)
+    shapes[p + "param_head.weight"] = (5, 24, 1, 1)
+    shapes[p + "param_head.bias"] = (5,)
+    shapes[p + "wb_head.weight"] = (3, 128)
+    shapes[p + "wb_head.bias"] = (3,)
+
+    # 3. pre_net
+    p = "pre_net."
+    shapes[p + "intro.weight"] = (32, 6, 3, 3)
+    shapes[p + "intro.bias"] = (32,)
+    ch = 32
+    for level, n_blk in enumerate((1, 2, 2)):
+        for b in range(n_blk):
+            _add_naf_shapes(shapes, f"{p}encoders.{level}.{b}.", ch)
+        shapes[f"{p}downs.{level}.weight"] = (ch * 2, ch, 2, 2)
+        shapes[f"{p}downs.{level}.bias"] = (ch * 2,)
+        ch *= 2
+    for b in range(2):
+        _add_naf_shapes(shapes, f"{p}middle.{b}.", ch)
+    shapes[p + "mid_film.weight"] = (ch * 2, 128)
+    shapes[p + "mid_film.bias"] = (ch * 2,)
+    for level, n_blk in enumerate((2, 2, 1)):
+        shapes[f"{p}ups.{level}.0.weight"] = (ch * 2, ch, 1, 1)
+        ch //= 2
+        for b in range(n_blk):
+            _add_naf_shapes(shapes, f"{p}decoders.{level}.{b}.", ch)
+    shapes[p + "out_conv.weight"] = (3, 32, 3, 3)
+    shapes[p + "out_conv.bias"] = (3,)
     return shapes
 
 
@@ -214,14 +245,9 @@ def _inspect_npz_schema(raw, shapes, *, max_bytes, label):
             return result
 
 
-def inspect_head_npz(raw):
-    """Validate exact bounded float32 array headers before NumPy allocation."""
-    return _inspect_npz_schema(raw, head_shapes(), max_bytes=1024**2, label="head")
-
-
-def inspect_v2_npz(raw):
-    """Validate exact bounded float32 V2 p2_u0224 array headers before NumPy allocation."""
-    return _inspect_npz_schema(raw, v2_shapes(), max_bytes=8 * 1024**2, label="V2")
+def inspect_v34_npz(raw):
+    """Validate exact bounded float32 V3.4 pre-conditioning array headers before NumPy allocation."""
+    return _inspect_npz_schema(raw, v34_shapes(), max_bytes=16 * 1024**2, label="V3.4")
 
 
 def numpy_state_sha(state):
@@ -235,43 +261,39 @@ def numpy_state_sha(state):
     return digest.hexdigest()
 
 
-def model_contract(model="v2"):
-    need(model == "v2", "Only the V2 (p2_u0224) model is supported.")
+def model_contract(model="v3"):
+    need(model == "v3", "Only the V3.4 (preconditioned_v34_codeformer) model is supported.")
     assets = {
-        "codeformer_r2.pth": dict(R2_FILE),
-        "codeformer_u96_adapter.pth": dict(U96_FILE),
-        "terminal_u0064_heads.npz": dict(HEAD_FILE),
-        "v2_p2_u0224_heads.npz": dict(V2_FILE),
+        "codeformer.pth": dict(CODEFORMER_BASE_FILE),
+        "v34_precond_modules.npz": dict(V34_FILE),
     }
     states = {
-        "R2_515": R2_STATE,
-        "U96_24": U96_STATE,
-        "terminal_heads_36": HEAD_STATE,
-        "V2_p2_u0224_212": V2_STATE,
+        "codeformer_base_515": CODEFORMER_BASE_STATE,
+        "v34_precond_modules_344": V34_STATE,
     }
     return {
-        "model": "v2",
+        "model": "v3",
+        "arch_variant": "v34",
+        "v34_state_sha": V34_STATE,
         "assets": assets,
         "canonical_states": states,
-        "frozen_tensors": 787,
-        "policy": "CPU FP32 singleton512, w1, detach16, AdaIN, Conditioned SFT V2 (p2_u0224), torch.no_grad",
+        "frozen_tensors": 859,
+        "policy": "CPU FP32 singleton512, adaptive w_pred, MaskedAdaIN, Pre-Conditioned Frozen CodeFormer V3.4, torch.no_grad",
         "architecture": (
-            "CodeFormer by S-Lab; U96 encoder adapters; terminal-u64 spatial heads; "
-            "Conditioned SFT V2 top-down dilated pyramid and frequency-selective VQGAN heads (p2_u0224)"
+            "Official frozen CodeFormer by S-Lab (515 tensors) with V3.4 pre-conditioning front-end "
+            "(V34DegradationEncoder, V34PhotoCorrectNet, V34NAFPreConditionNet; 344 tensors, 2,241,395 params)"
         ),
         "license": "S-Lab License 1.0; third_party/codeformer/LICENSE",
         "internal_resolution": 512,
         "output_resolution": 256,
-        "fidelity": 1.0,
         "adain": True,
-        "detach_16": True,
         "inference_only": True,
         "model_qualified": False,
     }
 
 
-def load_frozen_cpu_restorer(model="v2", model_dir=None):
-    """Construct an exclusive V2 (p2_u0224) restorer after verifying every fixed artifact."""
+def load_frozen_cpu_restorer(model="v3", model_dir=None):
+    """Construct an exclusive V3.4 restorer after verifying every fixed artifact."""
     contract = model_contract(model)
     directory = MODEL_DIR if model_dir is None else Path(model_dir)
     if directory == MODEL_DIR:
@@ -284,31 +306,26 @@ def load_frozen_cpu_restorer(model="v2", model_dir=None):
         need(file_pin(paths[name]) == expected, "Exact retained model bytes required: " + name)
     for binding in ARCHITECTURE_SOURCES.values():
         need(architecture_file_sha256(ROOT / binding["path"]) == binding["sha256"],
-             "Retained CodeFormer architecture differs.")
-    arrays_u64 = inspect_head_npz(paths["terminal_u0064_heads.npz"].read_bytes())
-    need(numpy_state_sha(arrays_u64) == HEAD_STATE, "Original terminal-u64 head values required.")
-    arrays_v2 = inspect_v2_npz(paths["v2_p2_u0224_heads.npz"].read_bytes())
-    need(numpy_state_sha(arrays_v2) == V2_STATE, "Exact V2 (p2_u0224) head values required.")
+             "Retained CodeFormer/V3.4 architecture differs.")
+    arrays_v34 = inspect_v34_npz(paths["v34_precond_modules.npz"].read_bytes())
+    need(numpy_state_sha(arrays_v34) == V34_STATE, "Exact V3.4 pre-conditioning module values required.")
 
     import numpy as np
     import torch
     from torch.nn import functional as F
-    from third_party.codeformer.codeformer_arch import CodeFormer, adaptive_instance_normalization
+    from . import architecture_v34 as arch_v34
+    from third_party.codeformer.codeformer_arch import CodeFormer
     need(torch.get_default_dtype() == torch.float32, "FP32 default dtype required.")
     for name, binding in ARCHITECTURE_SOURCES.items():
         loaded = sys.modules.get(name)
         need(loaded is not None and getattr(loaded, "__file__", None)
              and Path(loaded.__file__).resolve() == (ROOT / binding["path"]).resolve()
              and architecture_file_sha256(loaded.__file__) == binding["sha256"],
-             "Exact loaded CodeFormer architecture origin required.")
-    saved_r2 = torch.load(paths["codeformer_r2.pth"], map_location="cpu", weights_only=True, mmap=True)
-    saved_u96 = torch.load(paths["codeformer_u96_adapter.pth"], map_location="cpu", weights_only=True, mmap=True)
-    need(type(saved_r2) is dict and set(saved_r2) == {"params_ema"}, "Exact R2 inference format required.")
-    need(type(saved_u96) is dict and set(saved_u96) == {"format", "adapter_state"}
-         and saved_u96["format"] == "codeformer-spatial-adapter-inference-v1", "Exact U96 inference format required.")
-    r2, u96 = saved_r2["params_ema"], saved_u96["adapter_state"]
-    need(isinstance(r2, dict) and len(r2) == 515 and type(u96) is dict and set(u96) == set(adapter_shapes()),
-         "Exact 515/24 tensor census required.")
+             "Exact loaded CodeFormer/V3.4 architecture origin required.")
+    saved_cf = torch.load(paths["codeformer.pth"], map_location="cpu", weights_only=True, mmap=True)
+    need(type(saved_cf) is dict and set(saved_cf) == {"params_ema"}, "Exact official CodeFormer inference format required.")
+    cf_sd = saved_cf["params_ema"]
+    need(isinstance(cf_sd, dict) and len(cf_sd) == 515, "Exact 515-tensor CodeFormer backbone census required.")
 
     def state_sha(state):
         need(isinstance(state, dict) and all(
@@ -318,80 +335,29 @@ def load_frozen_cpu_restorer(model="v2", model_dir=None):
             "Detached finite CPU FP32 state required.")
         return numpy_state_sha({name: value.detach().contiguous().numpy() for name, value in state.items()})
 
-    need(state_sha(r2) == R2_STATE and state_sha(u96) == U96_STATE
-         and all(tuple(value.shape) == adapter_shapes()[name] for name, value in u96.items()),
-         "Exact retained canonical model values/schema required.")
-
-    class ResidualSkipAdapter(torch.nn.Module):
-        def __init__(self, channels):
-            super().__init__()
-            options = {"device": "cpu", "dtype": torch.float32}
-            self.down = torch.nn.Conv2d(channels, 32, 1, bias=True, **options)
-            self.depthwise = torch.nn.Conv2d(32, 32, 3, padding=1, groups=32, bias=True, **options)
-            self.up = torch.nn.Conv2d(32, channels, 1, bias=True, **options)
-            self.activation = torch.nn.SiLU(inplace=False)
-
-        def forward(self, observed):
-            return observed + self.up(self.activation(self.depthwise(self.activation(self.down(observed)))))
-
-    class SpatialHead(torch.nn.Module):
-        def __init__(self, channels):
-            super().__init__()
-            options = {"device": "cpu", "dtype": torch.float32}
-            self.encoder = torch.nn.Conv2d(channels, WIDTH, 1, bias=True, **options)
-            self.decoder = torch.nn.Conv2d(channels, WIDTH, 1, bias=False, **options)
-            self.fused = torch.nn.Conv2d(channels, WIDTH, 1, bias=False, **options)
-            self.coarse = torch.nn.Conv2d(256, WIDTH, 1, bias=False, **options)
-            self.spatial = torch.nn.Conv2d(WIDTH, WIDTH, 3, padding=1, bias=True, **options)
-            self.output = torch.nn.Conv2d(WIDTH, channels, 1, bias=True, **options)
-            self.activation = torch.nn.GELU()
-
-        def forward(self, used, decoder, fused, coarse):
-            context = self.coarse(coarse.detach())
-            context = F.interpolate(context, size=used.shape[-2:], mode="bilinear", align_corners=False)
-            mixed = (self.encoder(used.detach()) + self.decoder(decoder) + self.fused(fused) + context) / 2.0
-            logits = self.output(self.activation(self.spatial(self.activation(mixed))))
-            return fused + torch.tanh(logits) * (fused - decoder)
-
-    yy, xx = torch.meshgrid(
-        torch.linspace(-1.0, 1.0, 256, dtype=torch.float32),
-        torch.linspace(-1.0, 1.0, 256, dtype=torch.float32),
-        indexing="ij",
-    )
-    r2_grid = (xx / 0.64) ** 2 + ((yy - 0.08) / 0.70) ** 2
-    face_raw = torch.clamp(1.28 - r2_grid, 0.0, 1.0)[None, None]
-    for _ in range(2):
-        face_raw = F.avg_pool2d(F.pad(face_raw, (7, 7, 7, 7), mode="reflect"), kernel_size=15, stride=1)
-    fmask_np = face_raw[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-
-    def _gauss_blur(z, k):
-        p = k // 2
-        out = F.avg_pool2d(F.pad(z, (p, p, p, p), mode="reflect"), kernel_size=k, stride=1)
-        out = F.avg_pool2d(F.pad(out, (p, p, p, p), mode="reflect"), kernel_size=k, stride=1)
-        return out
+    need(state_sha(cf_sd) == CODEFORMER_BASE_STATE, "Exact official CodeFormer canonical state required.")
 
     class FrozenCPURestorer(torch.nn.Module):
         def __init__(self):
             super().__init__()
-            self.base = CodeFormer(dim_embd=512, codebook_size=1024, n_head=8, n_layers=9, connect_list=list(SITES))
-            self.base.load_state_dict(r2, strict=True)
-            self.adapters = torch.nn.ModuleDict({site: ResidualSkipAdapter(CHANNELS[site]) for site in SITES})
-            self.adapters.load_state_dict({name.removeprefix("adapters."): value for name, value in u96.items()}, strict=True)
-            self.heads = torch.nn.ModuleDict({site: SpatialHead(CHANNELS[site]) for site in SITES})
-            self.heads.load_state_dict({name.removeprefix("heads."): torch.from_numpy(value.copy())
-                                       for name, value in arrays_u64.items()}, strict=True)
-            self.v2_bundle = cond_v2.build_v2_trainable_modules(torch=torch)
-            self.v2_bundle.load_state_dict({name: torch.from_numpy(value.copy())
-                                           for name, value in arrays_v2.items()}, strict=True)
-            self.v2_gamma = 1.0
-            self._out_list = set(self.base.fuse_encoder_block[s] for s in self.base.connect_list)
-            self._fuse_map = {self.base.fuse_generator_block[s]: s for s in self.base.connect_list}
+            base = CodeFormer(dim_embd=512, codebook_size=1024, n_head=8, n_layers=9, connect_list=list(SITES), fix_modules=None)
+            base.load_state_dict(cf_sd, strict=True)
+            self.v34 = arch_v34.PreConditionedCodeFormerV34(base=base)
+            self.v34.v3.load_state_dict(
+                {name: torch.from_numpy(value.copy()) for name, value in arrays_v34.items()},
+                strict=True,
+            )
             self._forward_lock = threading.Lock()
             self.last_forward_sites = ()
             self.last_base_calls = 0
+            self.last_telemetry = {}
             self.eval()
             self.requires_grad_(False)
             setattr(self.base, _OWNER_ATTRIBUTE, weakref.ref(self))
+
+        @property
+        def base(self):
+            return self.v34.base
 
         def train(self, mode=True):
             need(mode is False, "Training mode is unavailable in this frozen runtime.")
@@ -402,139 +368,72 @@ def load_frozen_cpu_restorer(model="v2", model_dir=None):
             need(len(named) == len(state) == contract["frozen_tensors"] and len(self.base.state_dict()) == 515
                  and self.base.connect_list == list(SITES) and set(self.base.fuse_convs_dict) == set(SITES)
                  and self.base.fuse_generator_block == {"16": 6, "32": 9, "64": 12, "128": 15, "256": 18, "512": 21},
-                 "Exact tensor census/four-site architecture required.")
+                 "Exact 859-tensor V3.4 census and four-site CodeFormer architecture required.")
             need(all(not module.training for module in self.modules())
                  and all(value.device.type == "cpu" and value.dtype == torch.float32 and not value.requires_grad
                          and value.grad is None and torch.isfinite(value).all().item() for value in named.values()),
                  "All tensors must remain finite frozen/eval CPU FP32 with no gradients.")
-            adapters = {"adapters." + name: value for name, value in self.adapters.state_dict().items()}
-            heads = {"heads." + name: value for name, value in self.heads.state_dict().items()}
-            v2_sd = dict(self.v2_bundle.state_dict().items())
-            need(set(adapters) == set(adapter_shapes())
-                 and all(tuple(value.shape) == adapter_shapes()[name] for name, value in adapters.items())
-                 and state_sha(self.base.state_dict()) == R2_STATE and state_sha(adapters) == U96_STATE,
-                 "Frozen base/adapter canonical state changed.")
-            need(set(heads) == set(head_shapes())
-                 and all(tuple(value.shape) == head_shapes()[name] for name, value in heads.items())
-                 and state_sha(heads) == HEAD_STATE, "Frozen terminal-u64 canonical state changed.")
-            need(set(v2_sd) == set(v2_shapes())
-                 and all(tuple(value.shape) == v2_shapes()[name] for name, value in v2_sd.items())
-                 and state_sha(v2_sd) == V2_STATE, "Frozen V2 (p2_u0224) canonical state changed.")
+            v34_sd = dict(self.v34.v3.state_dict().items())
+            need(state_sha(self.base.state_dict()) == CODEFORMER_BASE_STATE,
+                 "Frozen CodeFormer base canonical state changed.")
+            need(set(v34_sd) == set(v34_shapes())
+                 and all(tuple(value.shape) == v34_shapes()[name] for name, value in v34_sd.items())
+                 and state_sha(v34_sd) == V34_STATE,
+                 "Frozen V3.4 pre-conditioning canonical state changed.")
             owner = getattr(self.base, _OWNER_ATTRIBUTE, None)
             need(isinstance(owner, weakref.ReferenceType) and owner() is self, "Exclusive owned base required.")
-            return {"pass": True, "frozen_tensors": contract["frozen_tensors"], "model": "v2"}
+            return {"pass": True, "frozen_tensors": contract["frozen_tensors"], "model": "v3"}
 
-        def _encode_and_quantize(self, sample_512):
-            enc_feat_dict = {}
-            x = sample_512
-            for i, block in enumerate(self.base.encoder.blocks):
-                x = block(x)
-                if i in self._out_list:
-                    enc_feat_dict[str(x.shape[-1])] = x.clone()
-            lq_feat = x
-            pos_emb = self.base.position_emb.unsqueeze(1).repeat(1, x.shape[0], 1)
-            query_emb = self.base.feat_emb(lq_feat.flatten(2).permute(2, 0, 1))
-            for layer in self.base.ft_layers:
-                query_emb = layer(query_emb, query_pos=pos_emb)
-            logits = self.base.idx_pred_layer(query_emb).permute(1, 0, 2)
-            soft_one_hot = F.softmax(logits, dim=2)
-            _, top_idx = torch.topk(soft_one_hot, 1, dim=2)
-            quant_feat = self.base.quantize.get_codebook_feat(top_idx, shape=[x.shape[0], 16, 16, 256]).detach()
-            quant_feat = adaptive_instance_normalization(quant_feat, lq_feat)
-            return quant_feat, enc_feat_dict, logits, lq_feat
-
-        def _decode_sft(self, quant_feat, used_dict, *, cond_t=None, use_head_v2=False, w_by_site=None):
-            x = quant_feat
-            coarse = used_dict["32"].detach()
-            for i, block in enumerate(self.base.generator.blocks):
-                x = block(x)
-                if i in self._fuse_map:
-                    s = self._fuse_map[i]
-                    used = used_dict[s]
-                    dec = x
-                    w_eff = 1.0 if w_by_site is None else w_by_site[s]
-                    fused = self.base.fuse_convs_dict[s](used, dec, w_eff)
-                    post = self.heads[s](used, dec, fused, coarse)
-                    if use_head_v2 and cond_t is not None:
-                        post = self.v2_bundle.refine_post_sft(s, post, used, dec, fused, coarse, cond_t)
-                    x = post
-            norm = (x + 1.0) / 2.0
-            return F.interpolate(norm.clamp(0.0, 1.0), (256, 256), mode="bilinear", align_corners=False)
-
-        def restore_canvas(self, canvas):
-            """Run one frozen Conditioned SFT V2 (p2_u0224) restoration on a 256x256 RGB8 canvas."""
+        def restore_canvas(self, canvas, observed=None):
+            """Run one frozen Pre-Conditioned CodeFormer V3.4 restoration on a 256x256 RGB8 canvas."""
             need(not torch.is_grad_enabled() and not torch.is_inference_mode_enabled(),
                  "Use torch.no_grad; gradient/inference_mode runtime refused.")
             need(isinstance(canvas, np.ndarray) and canvas.shape == (256, 256, 3) and canvas.dtype == np.uint8,
                  "256x256 uint8 RGB canvas required.")
+            if observed is None:
+                obs_np = np.ones((256, 256), dtype=bool)
+            else:
+                need(isinstance(observed, np.ndarray) and observed.shape == (256, 256) and observed.dtype == bool,
+                     "256x256 bool observed mask required.")
+                obs_np = observed
             need(self._forward_lock.acquire(blocking=False), "Nested/concurrent forward refused.")
-            self.last_forward_sites, self.last_base_calls = (), 0
+            self.last_forward_sites, self.last_base_calls, self.last_telemetry = (), 0, {}
             try:
                 self.validate_invariants()
                 with torch.autocast(device_type="cpu", enabled=False):
-                    inp_f32 = canvas.astype(np.float32) / np.float32(255.0)
                     inp_t = torch.from_numpy(canvas.transpose(2, 0, 1).copy()).to(dtype=torch.float32)[None] / 255.0
-                    sample_512 = F.interpolate(inp_t, (512, 512), mode="bilinear", align_corners=False) * 2.0 - 1.0
-                    quant_feat, enc_feat_dict, _, _ = self._encode_and_quantize(sample_512)
-                    u96_dict = {s: self.adapters[s](enc_feat_dict[s].detach()) for s in SITES}
-                    u64_raw = self._decode_sft(quant_feat, u96_dict)[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-                    cond_t = cond_v2.compute_v2_conditioning_torch(inp_t, torch=torch)
-                    used_p2 = self.v2_bundle.refine_sft_features(u96_dict, cond_t)
-                    p2_t = self._decode_sft(quant_feat, used_p2, cond_t=cond_t, use_head_v2=True)
-                    p2_raw = p2_t[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-                    p2_c, cond_info = cond_v2.condition_output_v2_numpy(
-                        p2_raw, inp_f32, np=np, baseline_rgb=u64_raw,
-                        beta=cond_v2.DEFAULT_ANCHOR_BETA, gamma=self.v2_gamma, dark_drift_align=True,
-                    )
-                    m256 = cond_t["site_maps"]["256"]
-                    out_iso = cond_info["outer_ring_laplacian"]
-                    w_global = min(1.0, max(0.0, (0.0130 - out_iso) / 0.0025))
-                    if float(m256.max().item()) > 0.0 and w_global > 0.0:
-                        g_dark = cond_info["g_dark"]
-                        g_blur = cond_info["g_blur"]
-                        p2_lap = cond_v2.central_laplacian_sharpness_numpy(p2_c, np=np)
-                        s_in = min(1.0, max(0.0, (0.0052 - cond_info["min_directional_laplacian"]) / 0.0020))
-                        s_out = min(1.0, max(0.0, (0.0155 - p2_lap) / 0.0045))
-                        sev = max(s_in, s_out) if g_dark == 0.0 else min(1.0, max(0.0, (g_blur - 0.15) / 0.35))
-                        a_usm = float(self.v2_gamma) * w_global * (0.05 + sev * (0.90 - 0.05))
-                        a_vq = float(self.v2_gamma) * w_global * (0.08 + sev * (1.15 - 0.08))
-                        vq_seed = u96_dict if g_dark > 0.0 else used_p2
-                        vq_t = self._decode_sft(
-                            quant_feat, vq_seed,
-                            w_by_site={"32": 0.50, "64": 0.30, "128": 0.08, "256": 0.04},
-                        )
-                        p2_c_t = torch.from_numpy(p2_c.transpose(2, 0, 1).copy()).to(dtype=torch.float32)[None]
-                        hp3_p2 = (p2_c_t - _gauss_blur(p2_c_t, 3))[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-                        hp7_diff = ((vq_t - _gauss_blur(vq_t, 7)) - (p2_c_t - _gauss_blur(p2_c_t, 7)))[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-                        m_np = m256[0].detach().cpu().numpy().transpose(1, 2, 0).copy()
-                        v2_raw = np.clip(p2_c + m_np * (a_usm * hp3_p2 + a_vq * fmask_np * hp7_diff), 0.0, 1.0).astype(np.float32)
-                        if g_dark > 0.0:
-                            f64 = v2_raw.astype(np.float64)
-                            b64 = u64_raw.astype(np.float64)
-                            v2_raw = np.clip(f64 - g_dark * cond_v2.smooth_coarse_256_numpy(f64 - b64, np=np), 0.0, 1.0).astype(np.float32)
-                    else:
-                        v2_raw = p2_c
-                need(v2_raw.shape == (256, 256, 3) and v2_raw.dtype == np.float32
-                     and np.isfinite(v2_raw).all() and 0.0 <= float(v2_raw.min()) <= float(v2_raw.max()) <= 1.0,
-                     "Invalid V2 output schema.")
-                self.last_forward_sites, self.last_base_calls = SITES, 1
+                    obs_t = torch.from_numpy(obs_np.astype(np.float32))[None, None]
+                    out = self.v34(inp_t, obs_t)
+                    v34_raw = out["y_256"][0].detach().cpu().numpy().transpose(1, 2, 0).astype(np.float32, copy=True)
+                    telemetry = {
+                        "arch_variant": "v34",
+                        "w_pred": float(out["w_pred"].detach().cpu().item()),
+                        "g_photo": float(out["g_photo"].detach().cpu().item()),
+                        "g_pre": float(out["g_pre"].detach().cpu().item()),
+                        "alpha_clean": float(out["alpha_clean"].detach().cpu().item()),
+                        "v34_state_sha": V34_STATE,
+                    }
+                need(v34_raw.shape == (256, 256, 3) and v34_raw.dtype == np.float32
+                     and np.isfinite(v34_raw).all() and 0.0 <= float(v34_raw.min()) <= float(v34_raw.max()) <= 1.0,
+                     "Invalid V3.4 output schema.")
+                self.last_forward_sites, self.last_base_calls, self.last_telemetry = SITES, 1, telemetry
                 self.validate_invariants()
-                return v2_raw
+                return v34_raw
             finally:
                 self._forward_lock.release()
 
-        def forward(self, sample, *, w=1.0, detach_16=True, adain=True):
+        def forward(self, sample, *, adain=True):
             need(not torch.is_grad_enabled() and not torch.is_inference_mode_enabled(),
                  "Use torch.no_grad; gradient/inference_mode runtime refused.")
-            need(w == 1.0 and detach_16 is True and adain is True, "Fixed w1/detach16/AdaIN policy required.")
+            need(adain is True, "Fixed MaskedAdaIN policy required.")
             need(isinstance(sample, torch.Tensor) and tuple(sample.shape) == (1, 3, 512, 512)
                  and sample.dtype == torch.float32 and sample.device.type == "cpu" and not sample.requires_grad
                  and torch.isfinite(sample).all().item() and sample.min().item() >= -1.0 and sample.max().item() <= 1.0,
                  "Finite singleton CPU FP32 prepared512 input in [-1,1] required.")
             inp_256 = F.interpolate(((sample + 1.0) / 2.0).clamp(0.0, 1.0), (256, 256), mode="bilinear", align_corners=False)
             canvas_u8 = np.floor(inp_256[0].permute(1, 2, 0).contiguous().numpy() * np.float32(255.0)).astype(np.uint8)
-            v2_raw = self.restore_canvas(canvas_u8)
-            out_256 = torch.from_numpy(v2_raw.transpose(2, 0, 1).copy()).to(dtype=torch.float32)[None]
+            v34_raw = self.restore_canvas(canvas_u8)
+            out_256 = torch.from_numpy(v34_raw.transpose(2, 0, 1).copy()).to(dtype=torch.float32)[None]
             out_512 = F.interpolate(out_256, (512, 512), mode="bilinear", align_corners=False) * 2.0 - 1.0
             return (
                 out_512,
@@ -546,7 +445,7 @@ def load_frozen_cpu_restorer(model="v2", model_dir=None):
         torch.random.default_generator.manual_seed(20261021)
         net = FrozenCPURestorer()
     net.validate_invariants()
-    need(all(value.untyped_storage().data_ptr() != r2[name].untyped_storage().data_ptr()
+    need(all(value.untyped_storage().data_ptr() != cf_sd[name].untyped_storage().data_ptr()
              for name, value in net.base.state_dict().items()), "Base must own independent tensor storage.")
     for name, expected in contract["assets"].items():
         need(file_pin(paths[name]) == expected, "Model changed during loading: " + name)

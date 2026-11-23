@@ -95,7 +95,7 @@
     <section class="work-screen" data-screen="options" aria-labelledby="restoration-mode-heading">
       <div class="work-controls">
         <div class="work-heading"><span class="work-kicker">RESTORATION / 02</span><h1 id="restoration-mode-heading">Choose restoration</h1><p>Choose whether to improve the picture and prepare it first.</p></div>
-        <input id="brush-model" type="hidden" value="v2">
+        <input id="brush-model" type="hidden" value="v3">
         <fieldset class="choice-group"><legend>Improve the face</legend><select id="brush-restoration" hidden><option value="auto" selected>Auto</option><option value="on">Manual</option><option value="off">Off</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="auto" data-select="brush-restoration" checked><span class="choice-content">Auto</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-restoration-choice" value="off" data-select="brush-restoration"><span class="choice-content">Off</span></label></div><p class="field-hint">Auto checks for scanlines, privacy mosaics, macroblocking, ringing, banding, aliasing, color bleeding, and localized blur before restoring. Off keeps the resized original.</p></fieldset>
         <fieldset id="picture-preparation" class="choice-group hidden"><legend>Prepare the picture</legend><select id="brush-preparation" hidden><option value="bypass">Bypass</option><option value="manual">Choose areas to protect or blur</option></select><div class="choice-list two"><label class="choice-option"><input class="choice-input" type="radio" name="brush-preparation-choice" value="bypass" data-select="brush-preparation" checked><span class="choice-content">Bypass</span></label><label class="choice-option"><input class="choice-input" type="radio" name="brush-preparation-choice" value="manual" data-select="brush-preparation"><span class="choice-content">Choose areas to protect or blur</span></label></div><p class="field-hint">Bypass uses the original picture. Choose areas to protect or blur when improving it. If Off is selected, preparation is skipped.</p></fieldset>
         <div class="feedback-slot"></div>
@@ -233,8 +233,8 @@
 <dialog id="image-dialog" class="work-dialog" aria-labelledby="image-dialog-title"><div class="image-dialog-header"><h2 id="image-dialog-title">Image detail</h2><button class="tool-btn" type="button" data-close-dialog>Close</button></div><img id="image-dialog-view" alt=""></dialog>
 <script src="/static/restoration_queue.js?v=3"></script>
 <script src="/static/capture_geometry.js?v=2"></script>
-<script src="/static/implementation.js?v=46"></script>
-<script src="/static/completion.js?v=13"></script>
+<script src="/static/implementation.js?v=47"></script>
+<script src="/static/completion.js?v=14"></script>
 <script src="/static/viewport-workbench.js?v=24"></script>
 <script src="/static/capture_playback.js?v=3"></script>
 <script src="/static/capture.js?v=21"></script>

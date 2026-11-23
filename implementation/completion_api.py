@@ -109,7 +109,7 @@ def admit_restoration(body):
     """Record actual successful server output, not a client-asserted model label."""
     result = json.loads(body)
     metadata = result['metadata']
-    need(metadata['model'] == 'v2' and metadata['selection'] == 'conditioned_sft_v2_p2_u0224',
+    need(metadata['model'] == 'v3' and metadata['selection'] == 'preconditioned_v34_codeformer',
          'Unexpected restoration model.')
     key = metadata_key(metadata)
     images = {name: from_url(result[field], 'data:image/png;base64,', MAX_PNG)

@@ -30,10 +30,8 @@ RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/impl
 CHUNK_SIZE = 1024 * 1024
 COMPONENT_LABELS = {
     "fbcnn_color.pth": "JPEG Deblocking",
-    "codeformer_r2.pth": "Base Model",
-    "codeformer_u96_adapter.pth": "U96 Adaptation",
-    "terminal_u0064_heads.npz": "Spatial Head",
-    "v2_p2_u0224_heads.npz": "V2 Components",
+    "codeformer.pth": "CodeFormer Base Model",
+    "v34_precond_modules.npz": "V3.4 Pre-Conditioning Modules",
 }
 
 
@@ -46,15 +44,13 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
         manifest = json.loads(path.read_text(encoding="utf-8"))
         if manifest.get("schema_version") != 1:
             raise ValueError("unsupported schema_version")
-        if manifest.get("default_model") != "v2":
-            raise ValueError("default_model must be v2")
+        if manifest.get("default_model") != "v3":
+            raise ValueError("default_model must be v3")
         assets = manifest["assets"]
         if set(assets) != {
-            "codeformer_r2",
-            "codeformer_u96_adapter",
-            "terminal_u0064_heads",
-            "v2_p2_u0224_heads",
             "fbcnn_color",
+            "codeformer_base",
+            "v34_precond_modules",
         }:
             raise ValueError("unexpected asset list")
         filenames = set()
@@ -74,6 +70,11 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
                         or asset['sha256'] != '8b0e4ef23d59cf7ac934a342cb31a17619e4fa4a0b3374a9d78c5174312387e8'
                         or asset['url'] != 'https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth'):
                     raise ValueError('unexpected FBCNN model metadata')
+            elif key == 'codeformer_base':
+                if (name != 'codeformer.pth' or asset['size'] != 376637898
+                        or asset['sha256'] != '1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7'
+                        or asset['url'] != 'https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth'):
+                    raise ValueError('unexpected CodeFormer base model metadata')
             elif asset["url"] != RELEASE_BASE + urllib.parse.quote(name):
                 raise ValueError("asset URL must use the published GitHub release")
         return manifest
@@ -262,7 +263,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest = load_manifest()
         if args.verify_only:
             verify_models(manifest)
-            print("All 4 model files passed size and SHA-256 verification.")
+            print(f"All {len(manifest['assets'])} model files passed size and SHA-256 verification.")
         else:
             for asset in manifest["assets"].values():
                 download_asset(asset)

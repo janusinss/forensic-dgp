@@ -298,7 +298,7 @@ function createImplementationHarness({ inspectResponse, restoreResponse, referen
             maximum_restore_forwards: 1,
             maximum_off_forwards: 0,
             automatic_preparation: false,
-            controller: { selection: 'conditioned_sft_v2_p2_u0224' },
+            controller: { selection: 'preconditioned_v34_codeformer' },
           }),
         };
       }
@@ -447,7 +447,7 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
       metadata: {
         neural_forward_returns: 1,
         neural_forward_attempts: 1,
-        selection: 'conditioned_sft_v2_p2_u0224',
+        selection: 'preconditioned_v34_codeformer',
         restoration_applied: true,
         preparation_applied: false,
         seconds: 1.2,
@@ -497,7 +497,7 @@ test('restorationMetrics renders 2-column and 3-column diagnostics, native noise
     metadata: {
       neural_forward_returns: 1,
       neural_forward_attempts: 1,
-      selection: 'conditioned_sft_v2_p2_u0224',
+      selection: 'preconditioned_v34_codeformer',
       restoration_applied: true,
       preparation_applied: true,
       seconds: 1.4,
@@ -593,7 +593,7 @@ test('Step 2 manual blur stays hidden, side-by-side [Before — Auto output — 
       metadata: {
         neural_forward_returns: 1,
         neural_forward_attempts: 1,
-        selection: 'conditioned_sft_v2_p2_u0224',
+        selection: 'preconditioned_v34_codeformer',
         restoration_applied: true,
         preparation_applied: true,
         automatic_preparation: true,
@@ -801,7 +801,7 @@ test('restoreVideo() unifies Step 4 Review, preserves non-enumerable full frame,
     metadata: {
       neural_forward_returns: 1,
       neural_forward_attempts: 1,
-      selection: 'conditioned_sft_v2_p2_u0224',
+      selection: 'preconditioned_v34_codeformer',
       restoration_applied: true,
       preparation_applied: true,
       automatic_preparation: { route: 'direct' },
@@ -994,7 +994,7 @@ test('appendResultMetrics supports afterLabel, autoReferenceFile, and getLastRef
       metadata: {
         neural_forward_returns: 1,
         neural_forward_attempts: 1,
-        selection: 'conditioned_sft_v2_p2_u0224',
+        selection: 'preconditioned_v34_codeformer',
         restoration_applied: true,
         preparation_applied: false,
         seconds: 1.0,
@@ -1331,7 +1331,7 @@ test('completion.js + viewport-workbench.js automatically chain Step 4 -> comple
       original_input: PNG_INPUT,
       result: PNG_RESTORED,
       metadata: {
-        selection: 'conditioned_sft_v2_p2_u0224',
+        selection: 'preconditioned_v34_codeformer',
         geometry: { observed_bounds_256: [0, 0, 256, 256] },
         picture_crop: [10, 20, 100, 100],
         source_size: [200, 200],

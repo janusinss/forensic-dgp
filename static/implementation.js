@@ -349,7 +349,7 @@
                 problem.restartRequired = true;
                 throw problem;
             }
-            if (/model|\bv2\b|conditioned_sft/i.test(detail)) throw new Error('The restoration service is not ready. Check service or restart the app.');
+            if (/model|\bv3\b|preconditioned_v34/i.test(detail)) throw new Error('The restoration service is not ready. Check service or restart the app.');
             if (/mask/i.test(detail)) throw new Error('The app could not use the marked areas. Review your selections or choose Bypass.');
             throw new Error(detail || 'The request stopped. Check the picture and service status.');
         }
@@ -722,7 +722,7 @@
     async function restoreRequest(data, headers) {
         const result = await post('/restore', data, headers);
         const metadata = result.metadata;
-        if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The app could not verify the result. Check the service before trying again.');
+        if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'preconditioned_v34_codeformer') throw new Error('The app could not verify the result. Check the service before trying again.');
         await Promise.all([result.original_input, result.prepared_input, result.result].map(async url => {
             const image = new Image(); image.src = validPNG(url); await image.decode();
             if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The service returned an invalid result size.');
@@ -1305,7 +1305,7 @@
             if (!response.ok) throw new Error('The restoration service is unavailable. Start the app and try again.');
             const result = await response.json();
             if (!current(token, version)) return;
-            available = result.available === true && result.maximum_restore_forwards === 1 && result.maximum_off_forwards === 0 && result.automatic_preparation === false && result.controller?.selection === 'conditioned_sft_v2_p2_u0224';
+            available = result.available === true && result.maximum_restore_forwards === 1 && result.maximum_off_forwards === 0 && result.automatic_preparation === false && result.controller?.selection === 'preconditioned_v34_codeformer';
             if (!available) throw new Error('The restoration service is not ready. Restart the app or run installation again.');
             error(''); byId('brush-service-status').textContent = 'SERVICE READY'; byId('brush-status-indicator').classList.add('online');
             progress('Ready. Check your picture before continuing.');

@@ -66,7 +66,7 @@ def _execute_request(request, contract, output, counters):
     with torch.no_grad():
         counters["forward_attempts"] = 1
         _write_status(output, "forward_entered", counters)
-        raw = net.restore_canvas(canvas)
+        raw = net.restore_canvas(canvas, observed=observed)
         counters["forward_returns"] = 1
         _write_status(output, "forward_returned", counters)
     raw, pixels = delivered_views(raw, canvas, observed)
@@ -76,7 +76,7 @@ def _execute_request(request, contract, output, counters):
     with png_path.open("xb") as stream:
         Image.fromarray(pixels).save(stream, format="PNG")
     metadata = {
-        **contract, "geometry": geometry, "device": "cpu", "precision": "float32",
+        **contract, **net.last_telemetry, "geometry": geometry, "device": "cpu", "precision": "float32",
         "uploaded_bytes_sha256": hashlib.sha256(contents).hexdigest(),
         "raw_rgb_sha256": hashlib.sha256(raw.tobytes()).hexdigest(),
         "PNG_RGB8_sha256": hashlib.sha256(pixels.tobytes()).hexdigest(),
@@ -84,7 +84,7 @@ def _execute_request(request, contract, output, counters):
         "forward_sites": list(net.last_forward_sites), "base_calls": net.last_base_calls,
         **counters,
         "outside_observed_support_RAW_and_PNG_match_input_exact": True,
-        "RAW_float_definition": "Conditioned SFT V2 (p2_u0224) RGB clipped to [0,1] at 256x256; before RGB8 floor quantization.",
+        "RAW_float_definition": "Pre-Conditioned Frozen CodeFormer V3.4 RGB clipped to [0,1] at 256x256; before RGB8 floor quantization.",
         "seconds": time.monotonic() - started,
     }
     _write_status(output, "complete", counters)
