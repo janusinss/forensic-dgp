@@ -1,5 +1,17 @@
 # Forensic DGP project handoff
 
+## 23 November 2026 — Version 0.3.1 release (Smart Auto Blur overhaul and Auto button routing fixes)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`ba60acb`](https://github.com/janusinss/forensic-dgp/commit/ba60acbe0e7020d71e41a0cbab123e8b2282d861) |
+| Offline installer build, `codex/r2-installer-release` | [`717f62d`](https://github.com/janusinss/forensic-dgp/commit/717f62d3821c5394a39155db5b17e485f0b2c4dd) (site sync [`dfabd4b`](https://github.com/janusinss/forensic-dgp/commit/dfabd4bca3684f39c9c6ba75ec716db6028e9d11)) |
+| Public download page | [Forensic DGP 0.3.1 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `fa61361e`](https://fa61361e.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.3.1`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.1) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.3.1.exe` (`1,322,950,572` bytes, SHA-256 `fc75a083dfe9e792cc0fcf44105f4f8c3dcdee7fa6c8e6fee402477bc3c8787d`) on GitHub Releases (`v0.3.1`, verified `HTTP 206` `Content-Range: bytes 0-15/1322950572`) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) and 19/19 download-site tests passing.
+- Ships the **Smart Auto Blur overhaul & Auto button routing fixes** across `integrated_app/`, `IMPLEMENTATION`, and `codex/r2-installer-release`: adaptive heavy/partial localized blur matching up to `12px`, mugshot height-chart & comb guards, Auto Blur composition after non-mosaic stages, blur-island fallback & relaxed heavy-blur face detection, while preserving Pre-Conditioned Frozen CodeFormer V3.4, Step 1 calibrated `-15%` auto-crop, Step 2 degraded face-patch restoration, and BiSeNet + XSeg ONNX occlusion segmentation (Completion R2).
+
 ## 23 November 2026 — Version 0.3.0 release (Pre-Conditioned Frozen CodeFormer V3.4 restoration model)
 
 | Component | Verified revision or version |

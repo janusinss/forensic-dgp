@@ -362,3 +362,113 @@ class DegradedFacePatchRoutingTests(unittest.TestCase):
 
     def test_subject_5c_degraded_face_patches_route_with_high_g_blur(self):
         self._run_subjects((5,), conds=('raw sensor',))
+
+
+class AutoBlurOverhaulTests(unittest.TestCase):
+    @staticmethod
+    def _make_sharp_grid_with_face(size=320, face_blur_sigma=0.0, uniform_blur_sigma=0.0, partial_eye_bar=False):
+        rng = np.random.default_rng(4242)
+        yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+        # Sharp background height-chart grid + crisp texture
+        bg = np.full((size, size, 3), 215.0, dtype=np.float32)
+        bg[(yy.astype(int) % 16) < 2] = 65.0
+        bg[(xx.astype(int) % 24) < 2] = 90.0
+        bg += rng.normal(0.0, 12.0, bg.shape)
+        # Synthetic face with sharp eyes, brows, nose, mouth inside [100:220, 90:230]
+        face = [100, 90, 120, 140]
+        fx, fy, fw, fh = face
+        cx, cy = fx + fw / 2.0, fy + fh / 2.0
+        oval = ((xx - cx) / (fw * 0.48)) ** 2 + ((yy - cy) / (fh * 0.48)) ** 2 <= 1.0
+        skin = np.stack([
+            195.0 - 25.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+            152.0 - 20.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+            128.0 - 16.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+        ], axis=-1)
+        img = bg.copy()
+        img[oval] = skin[oval]
+        # Sharp facial features (eyes, brows, mouth)
+        img[fy + 38:fy + 50, fx + 24:fx + 48] = [30, 28, 32]
+        img[fy + 38:fy + 50, fx + 72:fx + 96] = [30, 28, 32]
+        img[fy + 28:fy + 33, fx + 20:fx + 52] = [45, 35, 30]
+        img[fy + 28:fy + 33, fx + 68:fx + 100] = [45, 35, 30]
+        img[fy + 96:fy + 108, fx + 36:fx + 84] = [125, 55, 55]
+        if partial_eye_bar:
+            # Keep the face box corners filled with textured skin + organic curved features
+            img[fy:fy + fh, fx:fx + fw] = skin[fy:fy + fh, fx:fx + fw] + rng.normal(0.0, 4.0, (fh, fw, 3))
+            le = ((xx - (fx + 36)) / 11.0) ** 2 + ((yy - (fy + 44)) / 6.0) ** 2 <= 1.0
+            re = ((xx - (fx + 84)) / 11.0) ** 2 + ((yy - (fy + 44)) / 6.0) ** 2 <= 1.0
+            mo = ((xx - (fx + 60)) / 22.0) ** 2 + ((yy - (fy + 102)) / 7.0) ** 2 <= 1.0
+            img[le | re] = [30, 28, 32]
+            img[mo] = [125, 55, 55]
+        img = np.clip(np.rint(img), 0, 255).astype(np.uint8)
+        if face_blur_sigma > 0:
+            blurred = np.asarray(Image.fromarray(img).filter(ImageFilter.GaussianBlur(face_blur_sigma)))
+            zone = ((xx >= fx - 6) & (xx < fx + fw + 6) & (yy >= fy - 6) & (yy < fy + fh + 6))
+            img[zone] = blurred[zone]
+        elif partial_eye_bar:
+            blurred = np.asarray(Image.fromarray(img).filter(ImageFilter.GaussianBlur(10.0)))
+            bar = ((xx >= fx + 6) & (xx < fx + fw - 6) & (yy >= fy + 22) & (yy < fy + 76))
+            img[bar] = blurred[bar]
+        if uniform_blur_sigma > 0:
+            img = np.asarray(Image.fromarray(img).filter(ImageFilter.GaussianBlur(uniform_blur_sigma)))
+        return img, face
+
+    def test_heavy_gaussian_face_blur_triggers_protect_auto_and_empirical_surround_match(self):
+        img, face = self._make_sharp_grid_with_face(face_blur_sigma=12.0)
+        decision = automatic.decide(img, face)
+        self.assertEqual(decision['route'], 'protect_auto')
+        self.assertIn('hf_deficit', decision)
+        self.assertTrue(decision['hf_deficit']['clear'])
+
+        cand, meta, ev, report = automatic.prepare(img, img, face, None)
+        self.assertIsNotNone(cand)
+        self.assertEqual(report['route'], 'protect_auto')
+        bm = meta['algorithm']['blur_matching']
+        self.assertEqual(bm['status'], 'estimated')
+        self.assertGreaterEqual(bm['target_radius_at256'], 2.5)
+        self.assertTrue(meta['every_protected_native_RGB_exact'])
+        pmask = np.asarray(Image.open(io.BytesIO(ev['effective-Protect-native.png']))) > 0
+        derived = np.asarray(Image.open(io.BytesIO(cand)))
+        np.testing.assert_array_equal(derived[pmask], img[pmask])
+        self.assertGreater(int(np.any(derived[~pmask] != img[~pmask], axis=1).sum()), 0)
+
+    def test_partial_eye_bar_blur_triggers_protect_auto(self):
+        img, face = self._make_sharp_grid_with_face(partial_eye_bar=True)
+        decision = automatic.decide(img, face)
+        self.assertEqual(decision['route'], 'protect_auto')
+
+    def test_clean_sharp_face_and_uniformly_blurred_face_never_trigger_auto_blur(self):
+        clean, face = self._make_sharp_grid_with_face(face_blur_sigma=0.0)
+        self.assertEqual(automatic.decide(clean, face)['route'], 'direct')
+
+        uniform, face_u = self._make_sharp_grid_with_face(face_blur_sigma=0.0, uniform_blur_sigma=6.0)
+        self.assertEqual(automatic.decide(uniform, face_u)['route'], 'direct')
+
+    def test_background_grid_guard_distinguishes_blurred_face_from_pixelated_face(self):
+        img, face = self._make_sharp_grid_with_face(face_blur_sigma=12.0)
+        fx, fy, fw, fh = face
+        bg_mask = np.ones(img.shape[:2], dtype=bool)
+        bg_mask[fy:fy + fh, fx:fx + fw] = False
+        self.assertTrue(automatic.is_background_grid_with_blurred_face(img, bg_mask, face))
+
+        # Real pixelated face inside face box must NOT be bypassed by the background grid guard
+        rng = np.random.default_rng(19)
+        mosaic_img = img.copy()
+        blk = rng.integers(20, 235, (10, 10, 3), dtype=np.uint8)
+        mosaic_img[fy:fy + fh, fx:fx + fw] = np.asarray(Image.fromarray(blk).resize((fw, fh), Image.Resampling.NEAREST))
+        face_mask = np.zeros(img.shape[:2], dtype=bool)
+        face_mask[fy:fy + fh, fx:fx + fw] = True
+        self.assertFalse(automatic.is_background_grid_with_blurred_face(mosaic_img, face_mask, face))
+
+    def test_blur_island_fallback_locates_heavy_blur_and_rejects_uniform_images(self):
+        img, face = self._make_sharp_grid_with_face(face_blur_sigma=12.0)
+        island = automatic.detect_blur_island_face_box(img)
+        self.assertIsNotNone(island)
+        ix, iy, iw, ih = island
+        fx, fy, fw, fh = face
+        # Island center should fall inside the true blurred face box
+        self.assertTrue(fx <= ix + iw / 2.0 <= fx + fw)
+        self.assertTrue(fy <= iy + ih / 2.0 <= fy + fh)
+
+        uniform, _ = self._make_sharp_grid_with_face(uniform_blur_sigma=6.0)
+        self.assertIsNone(automatic.detect_blur_island_face_box(uniform))

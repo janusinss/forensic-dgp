@@ -64,30 +64,30 @@ class AppUpdaterTests(unittest.TestCase):
 
         install_dir = self.root / "install"
         install_dir.mkdir()
-        (install_dir / "release.json").write_text(json.dumps({"version": "0.3.1"}), encoding="utf-8")
+        (install_dir / "release.json").write_text(json.dumps({"version": "0.3.2"}), encoding="utf-8")
         os.environ["DGP_INSTALL_ROOT"] = str(install_dir)
-        self.assertEqual(updater.get_current_version(), "0.3.1")
-
-        version_file = self.root / "version.json"
-        version_file.write_text(json.dumps({"version": "0.3.2"}), encoding="utf-8")
-        os.environ["DGP_VERSION_FILE"] = str(version_file)
         self.assertEqual(updater.get_current_version(), "0.3.2")
 
-        os.environ["DGP_APP_VERSION"] = "0.3.3"
+        version_file = self.root / "version.json"
+        version_file.write_text(json.dumps({"version": "0.3.3"}), encoding="utf-8")
+        os.environ["DGP_VERSION_FILE"] = str(version_file)
+        self.assertEqual(updater.get_current_version(), "0.3.3")
+
+        os.environ["DGP_APP_VERSION"] = "0.3.4"
         status, body = asyncio.run(asgi_request(controller.app, "GET", "/app/version"))
         self.assertEqual(status, 200)
-        self.assertEqual(json.loads(body), {"version": "0.3.3"})
+        self.assertEqual(json.loads(body), {"version": "0.3.4"})
 
     def test_check_update_up_to_date_and_available_via_file_manifest(self):
         package_bytes = b"dummy-installer-payload"
-        package_path = self.root / "ForensicDGP_Setup-0.3.1.exe"
+        package_path = self.root / "ForensicDGP_Setup-0.3.2.exe"
         package_path.write_bytes(package_bytes)
 
         manifest_path = self.root / "release.json"
         manifest_path.write_text(
             json.dumps({
                 "schema": 1,
-                "version": "0.3.0",
+                "version": "0.3.1",
                 "bytes": len(package_bytes),
                 "sha256": _sha256_bytes(package_bytes),
                 "downloadUrl": package_path.as_uri(),
@@ -101,14 +101,14 @@ class AppUpdaterTests(unittest.TestCase):
         data = json.loads(body)
         self.assertEqual(data["status"], "up_to_date")
         self.assertFalse(data["update_available"])
-        self.assertEqual(data["current_version"], "0.3.0")
-        self.assertEqual(data["latest_version"], "0.3.0")
+        self.assertEqual(data["current_version"], "0.3.1")
+        self.assertEqual(data["latest_version"], "0.3.1")
         self.assertEqual(data["message"], "Up to date")
 
         manifest_path.write_text(
             json.dumps({
                 "schema": 1,
-                "version": "0.3.1",
+                "version": "0.3.2",
                 "bytes": len(package_bytes),
                 "sha256": _sha256_bytes(package_bytes),
                 "downloadUrl": package_path.as_uri(),
@@ -120,20 +120,20 @@ class AppUpdaterTests(unittest.TestCase):
         data = json.loads(body)
         self.assertEqual(data["status"], "update_available")
         self.assertTrue(data["update_available"])
-        self.assertEqual(data["latest_version"], "0.3.1")
+        self.assertEqual(data["latest_version"], "0.3.2")
         self.assertEqual(data["sha256"], _sha256_bytes(package_bytes))
         self.assertEqual(data["bytes"], len(package_bytes))
-        self.assertEqual(data["message"], "Update 0.3.1 available")
+        self.assertEqual(data["message"], "Update 0.3.2 available")
 
     def test_check_update_rejects_untrusted_download_host(self):
         manifest_path = self.root / "release.json"
         manifest_path.write_text(
             json.dumps({
                 "schema": 1,
-                "version": "0.3.1",
+                "version": "0.3.2",
                 "bytes": 100,
                 "sha256": "a" * 64,
-                "downloadUrl": "https://evil.example.com/ForensicDGP_Setup-0.3.1.exe",
+                "downloadUrl": "https://evil.example.com/ForensicDGP_Setup-0.3.2.exe",
             }),
             encoding="utf-8",
         )
@@ -144,13 +144,13 @@ class AppUpdaterTests(unittest.TestCase):
         self.assertIn("Untrusted", json.loads(body)["detail"])
 
     def test_install_update_rejects_sha256_mismatch(self):
-        package_path = self.root / "ForensicDGP_Setup-0.3.1.exe"
+        package_path = self.root / "ForensicDGP_Setup-0.3.2.exe"
         package_path.write_bytes(b"tampered-payload")
         manifest_path = self.root / "release.json"
         manifest_path.write_text(
             json.dumps({
                 "schema": 1,
-                "version": "0.3.1",
+                "version": "0.3.2",
                 "bytes": len(b"tampered-payload"),
                 "sha256": "0" * 64,
                 "downloadUrl": package_path.as_uri(),
@@ -164,9 +164,9 @@ class AppUpdaterTests(unittest.TestCase):
         self.assertIn("SHA-256", json.loads(body)["detail"])
 
     def test_install_update_reload_mode_via_loopback_http_server(self):
-        zip_path = self.root / "update-0.3.1.zip"
+        zip_path = self.root / "update-0.3.2.zip"
         with zipfile.ZipFile(zip_path, "w") as zf:
-            zf.writestr("VERSION.txt", "0.3.1\n")
+            zf.writestr("VERSION.txt", "0.3.2\n")
         zip_bytes = zip_path.read_bytes()
         zip_sha = _sha256_bytes(zip_bytes)
 
@@ -183,7 +183,7 @@ class AppUpdaterTests(unittest.TestCase):
                     self.send_header("Content-Type", "application/json")
                     self.end_headers()
                     self.wfile.write(payload)
-                elif self.path == "/update-0.3.1.zip":
+                elif self.path == "/update-0.3.2.zip":
                     self.send_response(200)
                     self.send_header("Content-Type", "application/zip")
                     self.end_headers()
@@ -196,16 +196,16 @@ class AppUpdaterTests(unittest.TestCase):
         port = server.server_address[1]
         manifest_holder["manifest"] = {
             "schema": 1,
-            "version": "0.3.1",
+            "version": "0.3.2",
             "bytes": len(zip_bytes),
             "sha256": zip_sha,
-            "downloadUrl": f"http://127.0.0.1:{port}/update-0.3.1.zip",
+            "downloadUrl": f"http://127.0.0.1:{port}/update-0.3.2.zip",
         }
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
             version_file = self.root / "active_release.json"
-            version_file.write_text(json.dumps({"version": "0.3.0"}), encoding="utf-8")
+            version_file.write_text(json.dumps({"version": "0.3.1"}), encoding="utf-8")
             target_root = self.root / "extracted"
             os.environ["DGP_VERSION_FILE"] = str(version_file)
             os.environ["DGP_UPDATE_MANIFEST_URL"] = f"http://127.0.0.1:{port}/release.json"
@@ -217,15 +217,15 @@ class AppUpdaterTests(unittest.TestCase):
             self.assertEqual(status, 200, body)
             data = json.loads(body)
             self.assertEqual(data["status"], "updating")
-            self.assertEqual(data["target_version"], "0.3.1")
+            self.assertEqual(data["target_version"], "0.3.2")
             self.assertTrue(data["restart"])
             self.assertTrue(data["restart_scheduled"])
             mock_restart.assert_called_once()
-            self.assertEqual((target_root / "VERSION.txt").read_text(encoding="utf-8"), "0.3.1\n")
+            self.assertEqual((target_root / "VERSION.txt").read_text(encoding="utf-8"), "0.3.2\n")
 
             status, version_body = asyncio.run(asgi_request(controller.app, "GET", "/app/version"))
             self.assertEqual(status, 200)
-            self.assertEqual(json.loads(version_body), {"version": "0.3.1"})
+            self.assertEqual(json.loads(version_body), {"version": "0.3.2"})
         finally:
             server.shutdown()
             server.server_close()
@@ -234,18 +234,18 @@ class AppUpdaterTests(unittest.TestCase):
         install_root = self.root / "Forensic DGP"
         install_root.mkdir()
         (install_root / "ForensicDGP.exe").write_bytes(b"MZ-stub")
-        (install_root / "release.json").write_text(json.dumps({"version": "0.3.0"}), encoding="utf-8")
+        (install_root / "release.json").write_text(json.dumps({"version": "0.3.1"}), encoding="utf-8")
 
-        installer_bytes = b"MZ-new-installer-0.3.1"
-        installer_src = self.root / "ForensicDGP_Setup-0.3.1.exe"
+        installer_bytes = b"MZ-new-installer-0.3.2"
+        installer_src = self.root / "ForensicDGP_Setup-0.3.2.exe"
         installer_src.write_bytes(installer_bytes)
 
         manifest_path = self.root / "manifest.json"
         manifest_path.write_text(
             json.dumps({
                 "schema": 1,
-                "version": "0.3.1",
-                "filename": "ForensicDGP_Setup-0.3.1.exe",
+                "version": "0.3.2",
+                "filename": "ForensicDGP_Setup-0.3.2.exe",
                 "bytes": len(installer_bytes),
                 "sha256": _sha256_bytes(installer_bytes),
                 "downloadUrl": installer_src.as_uri(),
@@ -270,7 +270,7 @@ class AppUpdaterTests(unittest.TestCase):
         self.assertEqual(status, 200, body)
         data = json.loads(body)
         self.assertEqual(data["status"], "updating")
-        self.assertEqual(data["target_version"], "0.3.1")
+        self.assertEqual(data["target_version"], "0.3.2")
         self.assertTrue(data["restart"])
         self.assertEqual(data["mode"], "desktop_installer")
 

@@ -26,6 +26,7 @@ const inAppUpdater = newerMinor || (minor === 2 && patch >= 12)
 const v0213Features = newerMinor || (minor === 2 && patch >= 13)
 const v0214Features = newerMinor || (minor === 2 && patch >= 14)
 const v030Features = major > 0 || minor >= 3
+const v031Features = major > 0 || minor > 3 || (minor === 3 && patch >= 1)
 
 function DownloadIcon() {
   return (
@@ -153,8 +154,10 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">02</span>
                   <div>
                     <h3>Restore with Auto</h3>
-                    <p>{v030Features
-                      ? 'Pre-Conditioned Frozen CodeFormer V3.4 restores faces 2.9× faster on CPU using an 8.65 MiB zero-pickle pre-conditioning module with zero post-decoder blur, confetti, or glare—paired with hardened Auto (degraded face patches, macroblocks up to 768px, scanlines, blur, and noise) and BiSeNet + XSeg ONNX covering segmentation in Steps 4–5.'
+                    <p>{v031Features
+                      ? 'Pre-Conditioned Frozen CodeFormer V3.4 (2.9× faster on CPU, zero post-decoder blur, confetti, or glare) paired with the Smart Auto Blur overhaul: adaptive heavy/partial localized blur matching up to 12px, mugshot height-chart & comb guards, Auto Blur composition after non-mosaic stages, blur-island fallback & relaxed heavy-blur face detection, alongside Step 1 calibrated auto-crop, Step 2 degraded face-patch restoration, and BiSeNet + XSeg ONNX covering segmentation in Steps 4–5.'
+                      : v030Features
+                        ? 'Pre-Conditioned Frozen CodeFormer V3.4 restores faces 2.9× faster on CPU using an 8.65 MiB zero-pickle pre-conditioning module with zero post-decoder blur, confetti, or glare—paired with hardened Auto (degraded face patches, macroblocks up to 768px, scanlines, blur, and noise) and BiSeNet + XSeg ONNX covering segmentation in Steps 4–5.'
                       : v0214Features
                         ? 'Hardened Auto detects and treats degraded face patches (coarse mosaic, posterized chroma blotches, block noise, and shadow/haze veils), macroblocks up to 768px for heavy JPEGs, scanlines, blur, and noise with zero warm-portrait false positives, plus BiSeNet + XSeg ONNX covering segmentation in Steps 4–5.'
                       : v0213Features
