@@ -135,7 +135,7 @@ def _box_iou(a, b):
     return inter / union if union > 0 else 0.0
 
 
-def _collect_records(detector, frame, original_size, threshold, pass_bias):
+def _collect_records(detector, frame, original_size, threshold, pass_bias, relaxed_landmarks=False):
     det_height, det_width = frame.shape[:2]
     detector.setInputSize((int(det_width), int(det_height)))
     detector.setScoreThreshold(float(threshold))
@@ -168,7 +168,9 @@ def _collect_records(detector, frame, original_size, threshold, pass_bias):
             row_scaled.extend((lx, ly))
             landmarks.append((lx, ly))
         if not _valid_face_landmarks(row_scaled, row_scaled[2], row_scaled[3]):
-            continue
+            aspect = bw_i / max(1.0, float(bh_i))
+            if not (relaxed_landmarks and raw_score >= 0.42 and 0.55 <= aspect <= 1.45):
+                continue
         box = [left, top, bw_i, bh_i]
         crop = _padded_face_crop(box, width, height)
         records.append({
@@ -234,9 +236,11 @@ def scan_face_records(image):
 
     # Pass 2: downscales + LAB-L CLAHE + dual unsharp filters for heavy defocus/motion/low-contrast blur.
     if not candidates or max_raw_score < 0.72:
+        had_prior_candidates = bool(candidates)
         clahe = cv2.createCLAHE(clipLimit=2.3, tileGridSize=(4, 4))
         seen_p2 = set()
-        for side in (320, 200, 128, 96):
+        scales_p2 = (320, 200, 128, 96) if had_prior_candidates else (320, 200, 128, 96, 64)
+        for side in scales_p2:
             sc = min(1.0, side / max_scan)
             tw, th = max(1, round(scan_width * sc)), max(1, round(scan_height * sc))
             if (tw, th) in seen_p2:
@@ -249,7 +253,16 @@ def scan_face_records(image):
             for sigma_u, amount_u, thresh_u in ((1.8, 1.5, 0.44), (2.6, 1.8, 0.40)):
                 blurred = cv2.GaussianBlur(clahe_bgr, (0, 0), sigmaX=sigma_u, sigmaY=sigma_u)
                 sharpened = cv2.addWeighted(clahe_bgr, 1.0 + amount_u, blurred, -amount_u, 0)
-                candidates.extend(_collect_records(detector, sharpened, original_size, thresh_u, pass_bias=-0.04))
+                candidates.extend(
+                    _collect_records(
+                        detector,
+                        sharpened,
+                        original_size,
+                        thresh_u,
+                        pass_bias=-0.04,
+                        relaxed_landmarks=(not had_prior_candidates),
+                    )
+                )
 
     candidates.sort(key=lambda c: (c['_priority'], c['score'], c['box'][2] * c['box'][3]), reverse=True)
     kept = []

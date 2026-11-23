@@ -13,6 +13,7 @@ from scipy.ndimage import (
     find_objects,
     gaussian_filter,
     label,
+    laplace,
     uniform_filter,
     uniform_filter1d,
 )
@@ -418,8 +419,200 @@ def _blur_stats_from_tiles(tiles, image_size, face):
         return int(face_samples.size), int(outside_samples.size), None, None, False
     face_blur = float(np.median(face_samples))
     background_blur = float(np.median(outside_samples))
-    clear = face_blur >= max(background_blur * 1.5, background_blur + .75)
+    clear = (
+        face_blur >= 1.8
+        and background_blur <= 3.5
+        and face_blur >= max(background_blur * 1.5, background_blur + .75)
+    )
     return int(face_samples.size), int(outside_samples.size), face_blur, background_blur, clear
+
+
+def _hf_deficit_stats(source, face):
+    """Multi-scale 256px Laplacian/HF-deficit detector for heavy & partial privacy blur."""
+    image = source if isinstance(source, Image.Image) else Image.fromarray(source)
+    img_w, img_h = image.size
+    longest = max(img_w, img_h)
+    if min(img_w, img_h) < 24 or longest < 32:
+        return None
+    scale = min(1.0, 256.0 / longest)
+    w256 = max(1, round(img_w * scale))
+    h256 = max(1, round(img_h * scale))
+    luma = np.asarray(image.convert('L').resize((w256, h256), Image.Resampling.LANCZOS), dtype=np.float32)
+    sx, sy = w256 / img_w, h256 / img_h
+    fx, fy, fw, fh = face[0] * sx, face[1] * sy, face[2] * sx, face[3] * sy
+    if fw < 6.0 or fh < 6.0:
+        return None
+
+    yy, xx = np.indices((h256, w256), dtype=np.float32)
+    border = (xx >= 2) & (xx < w256 - 2) & (yy >= 2) & (yy < h256 - 2)
+    face_core = (
+        (xx >= fx + 0.15 * fw) & (xx < fx + 0.85 * fw) &
+        (yy >= fy + 0.15 * fh) & (yy < fy + 0.85 * fh) & border
+    )
+    face_features = (
+        (xx >= fx + 0.12 * fw) & (xx < fx + 0.88 * fw) &
+        (yy >= fy + 0.18 * fh) & (yy < fy + 0.78 * fh) & border
+    )
+    eye_band = (
+        (xx >= fx + 0.12 * fw) & (xx < fx + 0.88 * fw) &
+        (yy >= fy + 0.18 * fh) & (yy < fy + 0.52 * fh) & border
+    )
+    head_expanded = (
+        (xx >= fx - 0.15 * fw) & (xx < fx + 1.15 * fw) &
+        (yy >= fy - 0.22 * fh) & (yy < fy + 1.12 * fh)
+    )
+    ext_ring = (
+        (~head_expanded) & border &
+        (xx >= fx - 1.2 * fw) & (xx < fx + 2.2 * fw) &
+        (yy >= fy - 1.0 * fh) & (yy < fy + 2.0 * fh)
+    )
+    if int(ext_ring.sum()) < 64:
+        ext_ring = (~head_expanded) & border
+    if int(face_core.sum()) < 16 or int(face_features.sum()) < 16 or int(ext_ring.sum()) < 32:
+        return None
+
+    lap = laplace(luma)
+    abs_lap = np.abs(lap)
+    local_hf = np.sqrt(gaussian_filter(lap * lap, sigma=2.0))
+
+    core_lap_var = float(np.var(lap[face_core]))
+    ext_lap_var = float(np.var(lap[ext_ring]))
+    core_p90_hf = float(np.percentile(abs_lap[face_features], 90))
+    ext_p90_hf = float(np.percentile(abs_lap[ext_ring], 90))
+    ext_p75_hf = float(np.percentile(local_hf[ext_ring], 75))
+    core_p50_hf = float(np.percentile(local_hf[face_features], 50))
+    core_p85_hf = float(np.percentile(local_hf[face_features], 85))
+
+    ratio = ext_lap_var / max(0.5, core_lap_var)
+    heavy_full_clear = (
+        (
+            ext_lap_var >= 14.0
+            and core_lap_var <= 18.0
+            and ratio >= 3.5
+            and core_p90_hf <= 9.0
+            and core_p90_hf <= 0.48 * max(1.0, ext_p90_hf)
+        )
+        or (
+            ext_lap_var >= 80.0
+            and core_lap_var <= 45.0
+            and ratio >= 8.0
+            and core_p90_hf <= 12.0
+            and core_p90_hf <= 0.42 * max(1.0, ext_p90_hf)
+        )
+    )
+
+    partial_clear = False
+    eye_p85_hf = None
+    if not heavy_full_clear and ext_lap_var >= 18.0 and ext_p75_hf >= 5.0 and int(eye_band.sum()) >= 12:
+        eye_p85_hf = float(np.percentile(local_hf[eye_band], 85))
+        low_thresh = max(1.8, 0.22 * ext_p75_hf)
+        low_eye = (local_hf <= low_thresh) & eye_band
+        if eye_p85_hf <= 5.5 and eye_p85_hf <= 0.48 * ext_p75_hf:
+            comps, _ = label(low_eye)
+            max_blob = int(np.bincount(comps.ravel())[1:].max()) if comps.max() > 0 else 0
+            if max_blob >= max(8, int(0.35 * int(eye_band.sum()))):
+                partial_clear = True
+        if not partial_clear and core_lap_var <= 25.0 and core_p50_hf <= 0.30 * ext_p75_hf and core_p85_hf <= 0.55 * ext_p75_hf:
+            partial_clear = True
+
+    return {
+        'clear': bool(heavy_full_clear or partial_clear),
+        'mode': 'heavy_full' if heavy_full_clear else ('partial_face' if partial_clear else 'none'),
+        'core_lap_var': round(core_lap_var, 2),
+        'ext_lap_var': round(ext_lap_var, 2),
+        'lap_var_ratio': round(ratio, 2),
+        'core_p90_hf': round(core_p90_hf, 2),
+        'ext_p90_hf': round(ext_p90_hf, 2),
+        'eye_p85_hf': round(eye_p85_hf, 2) if eye_p85_hf is not None else None,
+    }
+
+
+def detect_blur_island_face_box(source, selected_rectangle=None):
+    """Fallback ROI detector when YuNet misses an extreme-blur face inside a sharp surround."""
+    height, width = source.shape[:2]
+    if selected_rectangle is not None:
+        rx, ry, rw, rh = [int(v) for v in selected_rectangle]
+        rx, ry = max(0, rx), max(0, ry)
+        rw, rh = min(width - rx, rw), min(height - ry, rh)
+        if min(rw, rh) < 32:
+            return None
+        roi = source[ry:ry + rh, rx:rx + rw]
+    else:
+        rx, ry, rw, rh = 0, 0, width, height
+        roi = source
+    if min(rw, rh) < 32:
+        return None
+
+    scale = min(1.0, 256.0 / max(rw, rh))
+    w256 = max(1, round(rw * scale))
+    h256 = max(1, round(rh * scale))
+    luma = np.asarray(
+        Image.fromarray(roi).convert('L').resize((w256, h256), Image.Resampling.LANCZOS),
+        dtype=np.float32,
+    )
+    lap = laplace(luma)
+    local_hf = np.sqrt(gaussian_filter(lap * lap, sigma=2.0))
+    border = np.ones((h256, w256), dtype=bool)
+    border[:2, :] = border[-2:, :] = border[:, :2] = border[:, -2:] = False
+    p75_hf = float(np.percentile(local_hf[border], 75))
+    if p75_hf < 4.5:
+        return None
+
+    low_hf = (local_hf <= max(1.4, 0.24 * p75_hf)) & border
+    low_hf = binary_closing(low_hf, iterations=2)
+    comps, num = label(low_hf)
+    if num == 0:
+        return None
+
+    total_area = float(h256 * w256)
+    cx_img, cy_img = w256 * 0.5, h256 * 0.5
+    best_score = -1.0
+    best_box = None
+    for cid, sl in enumerate(find_objects(comps), start=1):
+        if sl is None:
+            continue
+        y0, y1 = sl[0].start, sl[0].stop
+        x0, x1 = sl[1].start, sl[1].stop
+        bw, bh = x1 - x0, y1 - y0
+        comp_mask = comps == cid
+        area = int(comp_mask.sum())
+        area_frac = area / total_area
+        if not (0.03 <= area_frac <= 0.65):
+            continue
+        aspect = bw / max(1.0, float(bh))
+        if not (0.45 <= aspect <= 2.2):
+            continue
+        # Reject background walls touching >= 3 borders
+        touches = int(x0 <= 3) + int(x1 >= w256 - 3) + int(y0 <= 3) + int(y1 >= h256 - 3)
+        if touches >= 3:
+            continue
+        ext_mask = (~binary_dilation(comp_mask, iterations=3)) & border
+        if int(ext_mask.sum()) < 32:
+            continue
+        core_lv = float(np.var(lap[comp_mask]))
+        ext_lv = float(np.var(lap[ext_mask]))
+        if core_lv > 16.0 or ext_lv < 14.0 or ext_lv < 3.5 * max(0.5, core_lv):
+            continue
+        # Reject flat synthetic solids/gradients lacking low-frequency facial shading contour
+        if float(np.std(gaussian_filter(luma, 3.0)[comp_mask])) < 6.0:
+            continue
+        dist = np.hypot((x0 + x1) * 0.5 - cx_img, (y0 + y1) * 0.5 - cy_img) / max(1.0, np.hypot(cx_img, cy_img))
+        score = (ext_lv / max(0.5, core_lv)) * area_frac * (1.2 - 0.5 * dist)
+        if score > best_score:
+            best_score = score
+            nx = rx + int(round(x0 / scale))
+            ny = ry + int(round(y0 / scale))
+            nw = max(16, int(round(bw / scale)))
+            nh = max(16, int(round(bh / scale)))
+            bx = max(0, min(width - 16, nx))
+            by = max(0, min(height - 16, ny))
+            best_box = [
+                bx,
+                by,
+                max(16, min(width - bx, nw)),
+                max(16, min(height - by, nh)),
+            ]
+    return best_box
 
 
 def picture_pixelation(source, check_macroblocking=True):
@@ -1035,6 +1228,32 @@ def softened_pixelation_evidence(source):
     return None, report, {'softened-mosaic-mask.png': contents}
 
 
+def is_background_grid_with_blurred_face(source, mosaic_mask, face):
+    """Return True when a mosaic mask hits a sharp background grid while the face is Gaussian-blurred."""
+    if mosaic_mask is None or face is None or not mosaic_mask.any():
+        return False
+    x, y, width, height = [int(v) for v in face]
+    h_img, w_img = source.shape[:2]
+    x0, y0 = max(0, x), max(0, y)
+    x1, y1 = min(w_img, x + width), min(h_img, y + height)
+    if x1 <= x0 + 8 or y1 <= y0 + 8:
+        return False
+    # If the face itself has a periodic pixelation grid, it is a real face mosaic.
+    if pixelation_signal(source, face)['suspected']:
+        return False
+    # Check overlap on the inner facial core (20%..80% of face box)
+    cx0 = max(0, x + int(width * 0.20))
+    cy0 = max(0, y + int(height * 0.20))
+    cx1 = min(w_img, x + int(width * 0.80))
+    cy1 = min(h_img, y + int(height * 0.80))
+    core_overlap = float(mosaic_mask[cy0:cy1, cx0:cx1].mean()) if (cy1 > cy0 and cx1 > cx0) else 0.0
+    if core_overlap >= 0.35:
+        return False
+    # Confirm the face is genuinely Gaussian-blurred against sharp surroundings
+    decision = decide(source, face)
+    return decision.get('route') == 'protect_auto'
+
+
 def decide(source, face):
     block = pixelation_signal(source, face)
     if block['suspected']:
@@ -1054,22 +1273,36 @@ def decide(source, face):
     luma = np.asarray(image.convert('L').resize(size, Image.Resampling.LANCZOS), dtype=np.float32)
     tiles = estimate_tiles(luma) / (scale * longest / 256)
     in_n, out_n, face_blur, background_blur, clear = _blur_stats_from_tiles(tiles, image.size, face)
-    if longest > 256 and (in_n < 8 or not clear):
+    # Do not let a noisy 256px measurement override a clearly sharp, well-sampled 512px face.
+    clearly_sharp_512 = (in_n >= 6 and out_n >= 6 and face_blur is not None and face_blur < 1.5)
+    if longest > 256 and not clearly_sharp_512 and (in_n < 8 or not clear):
         tiles_256, _ = estimate_tiles_normalized(image, max_longest=256)
         in_256, out_256, face_256, bg_256, clear_256 = _blur_stats_from_tiles(tiles_256, image.size, face)
         if clear_256:
             in_n, out_n, face_blur, background_blur, clear = in_256, out_256, face_256, bg_256, True
         elif not clear and in_256 >= 3 and out_256 >= 3 and in_n < 3:
             in_n, out_n, face_blur, background_blur = in_256, out_256, face_256, bg_256
+
+    hf = _hf_deficit_stats(image, face)
+    if clear and hf is not None and hf['ext_lap_var'] < 10.0:
+        # Uniformly blurry image (exterior is also low-HF) -> never trigger Auto Blur.
+        clear = False
+
     report = {'policy': 'face-versus-surroundings-v1', 'route': 'direct',
               'reason': 'insufficient_edges', 'face_tiles': in_n,
               'outside_tiles': out_n, 'degradation': block}
-    if face_blur is None or background_blur is None:
-        return report
-    report.update(face_radius_at256=face_blur, outside_radius_at256=background_blur)
+    if hf is not None:
+        report['hf_deficit'] = hf
+    if face_blur is not None and background_blur is not None:
+        report.update(face_radius_at256=face_blur, outside_radius_at256=background_blur)
+
     if clear:
         report.update(route='protect_auto', reason='face_blur_exceeds_surroundings')
-    else:
+        return report
+    if hf is not None and hf['clear']:
+        report.update(route='protect_auto', reason='face_blur_exceeds_surroundings')
+        return report
+    if face_blur is not None and background_blur is not None:
         report['reason'] = 'no_clear_blur_gap'
     return report
 
@@ -1101,31 +1334,60 @@ def prepare(native, source, face, rectangle):
         decision.update(Gaussian_radius_at256=radius, strength_selection=strength,
                         strength_basis=strength['basis'], smoothing_is_experimental=True)
         return finish(response, evidence, decision, automatic_protection=False)
-    # A detector box is a search region, not a protection mask. Within a
-    # bounded facial region, retain the low-detail component supported by the
-    # blurred face. Sharp hair/clothing and disconnected smooth background
-    # stay outside Protect. This is a heuristic, not semantic segmentation.
-    # Work on the full source so selecting a crop cannot change the mask.
+    # A detector box is a search region, not a protection mask. Within an
+    # expanded head/blur-zone ROI, retain the adaptive low-detail components
+    # supported by the blurred face while keeping sharp exterior hair, glasses,
+    # clothing, and background outside Protect. Work on the full source so
+    # selecting a crop cannot change the mask.
     gray = np.asarray(Image.fromarray(source).convert('L'), dtype=np.float32)
-    scale = max(source.shape[:2]) / 512
+    scale = max(source.shape[:2]) / 512.0
     residual = gray - gaussian_filter(gray, max(.5, scale))
-    detail = np.sqrt(gaussian_filter(residual ** 2, max(1, 3 * scale)))
+    detail = np.sqrt(gaussian_filter(residual ** 2, max(1.0, 3.0 * scale)))
     yy, xx = np.indices(gray.shape)
-    region = ((xx >= x) & (xx < x + width) &
-              (yy >= y - height * .09) & (yy < y + height * .88))
-    components, _ = label((detail < 1.2) & region)
+    face_area_frac = (width * height) / max(1.0, float(gray.shape[0] * gray.shape[1]))
+    if face_area_frac < 0.25:
+        rx0, rx1 = x - width * .15, x + width * 1.15
+        ry0, ry1 = y - height * .18, y + height * 1.08
+    else:
+        rx0, rx1 = float(x), float(x + width)
+        ry0, ry1 = y - height * .09, y + height * .88
+    region = ((xx >= rx0) & (xx < rx1) & (yy >= ry0) & (yy < ry1))
     core = ((xx >= x + width * .2) & (xx < x + width * .8) &
             (yy >= y + height * .2) & (yy < y + height * .65))
+    ext_detail = detail[~region]
+    ext_p75 = float(np.percentile(ext_detail, 75)) if ext_detail.size >= 64 else 4.0
+    core_p50 = float(np.median(detail[core])) if core.any() else 1.2
+    detail_thresh = float(np.clip(max(1.2, min(0.38 * ext_p75, max(2.2, core_p50 * 2.2))), 1.2, 6.0))
+    components, _ = label((detail < detail_thresh) & region)
     counts = np.bincount(components[core].ravel(), minlength=1)
     counts[0] = 0
     if not counts.any():
         decision.update(route='direct', reason='no_supported_blurred_protection_region')
         return None, None, {}, decision
-    protected = components == int(counts.argmax())
+    core_area = max(1, int(core.sum()))
+    min_support = max(16, int(0.08 * core_area))
+    keep_ids = np.flatnonzero(counts >= min_support)
+    if not keep_ids.size:
+        keep_ids = np.array([int(counts.argmax())])
+    protected = np.isin(components, keep_ids)
+    # Fill interior facial-feature holes (eyes/brows/mouth) that are still blurred
+    # relative to the sharp exterior, without swallowing genuinely sharp patches.
+    filled = binary_fill_holes(protected)
+    holes = filled & ~protected
+    if holes.any():
+        hole_labels, _ = label(holes)
+        hole_cap = min(4.5, max(2.5, 0.35 * ext_p75))
+        max_hole_area = max(32, int(0.06 * int(protected.sum())))
+        for hid, sl in enumerate(find_objects(hole_labels), start=1):
+            if sl is None:
+                continue
+            hmask = hole_labels[sl] == hid
+            if int(hmask.sum()) <= max_hole_area and float(np.median(detail[sl][hmask])) < hole_cap:
+                protected[sl] |= hmask
     mask = protected[offset_y:offset_y + native.shape[0], offset_x:offset_x + native.shape[1]].astype(np.uint8) * 255
     decision['protection_shape'] = 'blur-supported-component-v1'
-    decision['protection_search_bounds'] = [x, y - height * .09, width, height * .97]
-    decision['protection_detail_threshold'] = 1.2
+    decision['protection_search_bounds'] = [rx0, ry0, rx1 - rx0, ry1 - ry0]
+    decision['protection_detail_threshold'] = round(detail_thresh, 3)
     decision['protection_is_approximate'] = True
     if not mask.any() or mask.all():
         decision.update(route='direct', reason='no_surroundings_in_selected_crop')

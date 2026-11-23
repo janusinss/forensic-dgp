@@ -49,6 +49,7 @@
             gradient_debanding: 'gradient debanding',
             tangent_antialiasing: 'tangent anti-aliasing',
             chroma_debleeding: 'chroma debleeding',
+            protect_auto: 'Protect + Auto-match',
         };
         if (decision?.route === 'compound_artifact_preparation') {
             const stages = Array.isArray(decision.stages) && decision.stages.length
@@ -90,9 +91,33 @@
             }
             return `Auto applied ${radius} px smoothing to ${area} before restoration.`;
         }
-        if (decision) return decision.route === 'protect_auto'
-            ? 'Auto used Protect + Auto-match before restoration.'
-            : 'Auto used direct restoration.';
+        if (decision?.route === 'protect_auto') {
+            const composed = Array.isArray(decision.composed_stages) && decision.composed_stages.length
+                ? decision.composed_stages
+                : (Array.isArray(decision.applied_stages) ? decision.applied_stages : []);
+            const prior = composed.filter(stage => stage !== 'protect_auto');
+            if (prior.length) {
+                const names = prior.map(stage => stageLabels[stage] || String(stage).replaceAll('_', ' '));
+                return `Auto applied ${names.join(', ')} and Protect + Auto-match before restoration.`;
+            }
+            return 'Auto used Protect + Auto-match before restoration.';
+        }
+        if (decision?.route === 'direct') {
+            const directReasons = {
+                face_detection_uncertain: 'no single face box confirmed',
+                no_clear_blur_gap: 'no localized face blur gap detected',
+                insufficient_edges: 'insufficient edge detail to estimate blur',
+                no_supported_blurred_protection_region: 'no contiguous blurred face region found',
+                no_surroundings_in_selected_crop: 'no sharp surroundings inside selected crop',
+                no_additional_blur_needed: 'surroundings already matched',
+                face_outside_selected_crop: 'detected face lies outside selected crop',
+            };
+            const detail = directReasons[decision.reason];
+            return detail
+                ? `Auto used direct restoration (${detail}).`
+                : 'Auto used direct restoration.';
+        }
+        if (decision) return 'Auto used direct restoration.';
         return metadata.preparation_applied ? 'Your reviewed preparation was used.' : 'No preparation was applied.';
     };
     const manual = () => byId('brush-preparation').value === 'manual';

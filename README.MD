@@ -2,9 +2,13 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.3.0
+## Windows installer 0.3.1
 
-Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.3.0](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.0).
+Download the [offline Windows installer](https://forensic-dgp.pages.dev/). It includes Python, packages and the admitted models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. Exact release details and checksums are in [v0.3.1](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.1).
+
+### What changed in 0.3.1
+
+- **Smart Auto Blur overhaul & Auto button routing fixes**: Upgrades automatic face-blur detection and surrounding-blur matching (`blur_match.py`, `automatic_preparation.py`, `scanline_cleanup.py`) and fixes Auto button routing, crop handling, and preparation UI reporting across Picture and Video flows (`app.py`, `capture_worker.py`, `implementation.js`, `implementation.html`).
 
 ### What changed in 0.3.0
 
