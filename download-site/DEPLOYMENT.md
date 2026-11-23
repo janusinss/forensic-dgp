@@ -1,6 +1,28 @@
 # Cloudflare Pages deployment
 
-## Current 0.2.14 offline preview
+## Current 0.3.0 offline preview
+
+Published November 23, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment c006b03b](https://c006b03b.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.0)
+references `ForensicDGP_Setup-0.3.0.exe` from build source
+`3375f8c8e0d0f291d594671a5c4fb1a0bec7454f` (`1,322,940,834` bytes, SHA-256
+`c42dfdd5efef2cf98ab9180ef005e29b8a30370fd2ca0e9e43a6e2e509f6cc67`). GitHub confirmed
+`Content-Range: bytes 0-15/1322940834` (`HTTP 206`) and exact `.sha256` match, and
+Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) reported zero threats. This
+release promotes Pre-Conditioned Frozen CodeFormer V3.4 (`preconditioned_v34_codeformer`,
+frozen official `codeformer.pth` + `8.65 MiB` zero-pickle `v34_precond_modules.npz`,
+`~2.9×` faster CPU inference at `~6.46s/crop`, zero post-decoder blur/confetti/glare,
+bit-exact neutral-128 preservation) while retaining `0.2.14` Step 1 calibrated
+`-15%` auto-crop, Step 2 degraded face-patch restoration, hardened Auto button
+routing, and BiSeNet + XSeg ONNX occlusion segmentation (Completion R2). All 19
+site tests, `tsc --noEmit`, and Vite production build passed. Published versions
+remain immutable: future updates must use a new version, build, and release rather
+than replacing `0.3.0`.
+
+## Historical 0.2.14 offline preview
 
 Published November 22, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs
