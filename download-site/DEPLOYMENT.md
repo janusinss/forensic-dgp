@@ -1,6 +1,27 @@
 # Cloudflare Pages deployment
 
-## Current 0.3.0 offline preview
+## Current 0.3.1 offline preview
+
+Published November 23, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment fa61361e](https://fa61361e.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.1)
+references `ForensicDGP_Setup-0.3.1.exe` from build source
+`717f62d3821c5394a39155db5b17e485f0b2c4dd` (`1,322,950,572` bytes, SHA-256
+`fc75a083dfe9e792cc0fcf44105f4f8c3dcdee7fa6c8e6fee402477bc3c8787d`). GitHub confirmed
+`Content-Range: bytes 0-15/1322950572` (`HTTP 206`) and exact `.sha256` match, and
+Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) reported zero threats. This
+release ships the Smart Auto Blur overhaul (adaptive heavy/partial localized blur
+matching up to `12px`, mugshot height-chart & comb guards, Auto Blur composition
+after non-mosaic stages, blur-island fallback & relaxed heavy-blur face detection)
+while preserving Pre-Conditioned Frozen CodeFormer V3.4, Step 1 calibrated `-15%`
+auto-crop, Step 2 degraded face-patch restoration, and BiSeNet + XSeg ONNX
+occlusion segmentation (Completion R2). All 19 site tests, `tsc --noEmit`, and
+Vite production build passed. Published versions remain immutable: future updates
+must use a new version, build, and release rather than replacing `0.3.1`.
+
+## Historical 0.3.0 offline preview
 
 Published November 23, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs
