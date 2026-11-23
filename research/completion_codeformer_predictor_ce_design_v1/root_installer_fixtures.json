@@ -1,0 +1,145 @@
+{
+  "format": "root-predictor-CE-exact-installer-toy-fixtures-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T15:51:59.033966+00:00",
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\check_completion_predictor_installer_root.py",
+    "bytes": 4700,
+    "sha256": "c93762c8b908a64df4d9d7c65bb509d91f6a4d02c326fc50b4910f2ff9b8f981"
+  },
+  "builder_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_predictor_ce_v1.py",
+    "bytes": 31091,
+    "sha256": "86ad2c30b370b413a6dbbdcc284a3e8b5ec6c7b3b4e54b424c65d17919ca4a95"
+  },
+  "installer_literal_sha256": "5e851c5bfe26b94b70c4adcd89f96671423a5e5f157959719fd6cd7fe7fbfb4b",
+  "Python310_parse": true,
+  "fixtures": [
+    {
+      "fixture": "valid",
+      "expected_accept": true,
+      "accepted": true,
+      "error": null,
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\valid\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 364,
+        "sha256": "6d70d64d035695dfd9b735f45255cf3a87cf554f07c90d75302dcf73f1348c1f"
+      }
+    },
+    {
+      "fixture": "already_installed",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Preserve any existing experiment; do not reinstall')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\already_installed\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 364,
+        "sha256": "6d70d64d035695dfd9b735f45255cf3a87cf554f07c90d75302dcf73f1348c1f"
+      }
+    },
+    {
+      "fixture": "wrong_protocol_SHA",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Protocol SHA differs')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\wrong_protocol_SHA\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 364,
+        "sha256": "6d70d64d035695dfd9b735f45255cf3a87cf554f07c90d75302dcf73f1348c1f"
+      }
+    },
+    {
+      "fixture": "missing_payload",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Missing payload members')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\missing_payload\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 323,
+        "sha256": "1f509e3a3c0c055ff54de093bb22a813c53c951fb3e527455e5cb22149568675"
+      }
+    },
+    {
+      "fixture": "payload_hash_drift",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Member SHA differs')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\payload_hash_drift\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 349,
+        "sha256": "1e1503730cd00baa9f334df5d1909daa8b56ebc78a02c9fb24607a67ebb24843"
+      }
+    },
+    {
+      "fixture": "duplicate_payload",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\duplicate_payload\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 368,
+        "sha256": "8284cdc48084c1409ac63ffddfe6abfe6109bdea3db9046ea4b70826ebc4dd4f"
+      }
+    },
+    {
+      "fixture": "symlink_payload",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\symlink_payload\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 351,
+        "sha256": "775025382a886ad85e65754b8f694fa18347b51e1fa28456a191289a3d8c50d0"
+      }
+    },
+    {
+      "fixture": "unsafe_member",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\unsafe_member\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 391,
+        "sha256": "77505c4162d435f681a84cf0e624438728c31511e77f0557e2e091297d2efa09"
+      }
+    },
+    {
+      "fixture": "insufficient_payload_plus8GiB",
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Need8GiB plus installation payload free')",
+      "source_archive_unchanged": true,
+      "target_preservation_or_closed_failure_pass": true,
+      "archive": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330\\insufficient_payload_plus8GiB\\cctv-completion-codeformer-predictor-ce-v1-execution.tar.gz",
+        "bytes": 364,
+        "sha256": "cbaae62bde8885c884ba74183661967ab929cdc31c5e36ae019bca55f0ed342b"
+      }
+    }
+  ],
+  "all9_expected_verdicts": true,
+  "fixture_home_and_disk_usage_patched_only_in_own_test_process": true,
+  "fixture_namespace": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_installer_root_fixture_39d4b88df33c45c8a3fc5ddcbf21e330",
+  "actual_VM_or_gcloud_calls": 0,
+  "scientific_imports": 0,
+  "NN_calls": 0,
+  "optimizer_objects": 0,
+  "real_model_or_protocol_execution": false,
+  "runtime_or_packet_admitted": false
+}

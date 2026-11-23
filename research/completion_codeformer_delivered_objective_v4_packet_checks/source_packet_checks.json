@@ -1,0 +1,42 @@
+{
+  "format": "completion-delivered-objective-v4-source-packet-checks-v1",
+  "complete": true,
+  "same_author_not_independent": true,
+  "checks": [
+    "all846payload_hashes_and_closed_namespace",
+    "fixed_schedule_and_all48_historical_compatibility_references",
+    "no_large_checkpoint_copies_or_stale_V3_runtime_members",
+    "Python3_10_source_and_installer_parse",
+    "current_instruction_snapshot_pins",
+    "scientific_model_imports_blocked_for_preparation",
+    "archive_refuses_unreleased_root_receipt_before_publication",
+    "repeated_stage_preserves_existing_protocol"
+  ],
+  "count": 8,
+  "seconds": 7.914006400000289,
+  "protocol_sha256": "8bbb3dd611e95cfbce76e7e6426ffdadb31ce23dadb1dfdcd0246e501213069d",
+  "payload_files": 846,
+  "payload_bytes_including_protocol": 93051126,
+  "source_pins": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_delivered_objective_v4.py",
+      "bytes": 40700,
+      "sha256": "64b11911a2ca41df0279f744ca52d016369ce508f1f2a5344c46f1de9fc01df7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_delivered_objective_v4.py",
+      "bytes": 10993,
+      "sha256": "d7dacf578b925bb0adb4a8c8f59a6b049adb648a4f62bb23b06b324c182e4de5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\run_completion_codeformer_delivered_objective_v4.sh",
+      "bytes": 815,
+      "sha256": "8bac19df60341df57736b2346f01cebdc688bfd906b8a1222aa867e63df303d0"
+    }
+  ],
+  "no_archive_created": true,
+  "local_model_checkpoint_reads": 0,
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "optimizer_updates": 0
+}

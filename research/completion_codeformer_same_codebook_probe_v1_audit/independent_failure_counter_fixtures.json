@@ -1,0 +1,37 @@
+{
+  "format": "independent-same-codebook-failure-state-and-counter-fixtures-v1",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T13:55:55.000358+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_same_codebook_probe_v1_audit\\audit_failure_counters.py",
+    "bytes": 4543,
+    "sha256": "2430690c1a3705da1288d60dda8a162898f5b53b6af2fe08cd95db6df078c6b1"
+  },
+  "worker": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_same_codebook_probe_v1_development\\cctv_completion_codeformer_same_codebook_probe_v1_vm.py",
+    "bytes": 33558,
+    "sha256": "7036fe80d6b942a22f7eb5bf2c662ec49a9e5e99d4b347ccb2a7b9eaa374b2f6"
+  },
+  "checks": [
+    "All497 finite tinyCPU state witness",
+    "Nonfinite failed state still retains all497 hashes/flags",
+    "Actual failed bytes affect state fingerprints",
+    "All496 unaffected tensor records remain exact",
+    "At220 hardcap refuses before callback/increments",
+    "At219 exactly one callback reaches220",
+    "Worker stable through fixtures"
+  ],
+  "checks_passed": 7,
+  "actual_extracted_state_helper_AST_sha256": "0deac6181cf995b82b445ae091a54a35f24e0727e63a6edf4be435b86ecac1f9",
+  "actual_extracted_call_helper_AST_sha256": "dad3e8f4e24bc8c4935bdfea92cb4773ed79c1233693d19aea10bae3e49fafcf",
+  "local_actions": {
+    "plain_tinyCPU_tensor_count": 497,
+    "full_neural_forward": 0,
+    "model_or_optimizer_objects": 0,
+    "gradients": 0,
+    "VM_calls": 0
+  },
+  "runtime_or_packet_admitted": false,
+  "model_qualified": false
+}

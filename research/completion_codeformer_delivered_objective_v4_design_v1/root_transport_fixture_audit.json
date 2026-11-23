@@ -1,0 +1,103 @@
+{
+  "format": "root-delivered-objective-v4-transport-fixtures-v1",
+  "complete": true,
+  "installer_source_sha256": "64b11911a2ca41df0279f744ca52d016369ce508f1f2a5344c46f1de9fc01df7",
+  "INSTALL_CODE_sha256": "93966fb97e6d35c0aea4d993f1669ca50673b6fdb05c726bd7db43ee950323de",
+  "exporter_source_sha256": "d7dacf578b925bb0adb4a8c8f59a6b049adb648a4f62bb23b06b324c182e4de5",
+  "checks_passed": 28,
+  "checks": [
+    "actual installer literal extracted",
+    "installer safety not disabled by python optimization",
+    "installer exact closed namespace publishes successfully",
+    "installer missing refuses without publication",
+    "installer extra refuses without publication",
+    "installer duplicate refuses without publication",
+    "installer traversal refuses without publication",
+    "installer symlink refuses without publication",
+    "installer hash refuses without publication",
+    "installer existing target refuses overwrite",
+    "export failed-work receipt is not qualified state",
+    "export closed regular unique return namespace",
+    "export member exact protocol.json",
+    "export member exact supervisor.json",
+    "export member exact trainer.log",
+    "export member exact outputs/failure.json",
+    "export member exact outputs/terminal_training_state.pth.partial",
+    "export archive receipt exact",
+    "export checksum LF exact",
+    "failed checkpoint partial retained",
+    "existing export refuses overwrite",
+    "export exit0_no_state refuses",
+    "export exit2_no_state refuses",
+    "export source_drift refuses",
+    "export empty_source refuses",
+    "export enforces 2GiB floor",
+    "export enforces 900s cooperative deadline",
+    "export counted byte cap rejects before write",
+    "fresh receipt namespace"
+  ],
+  "installer_cases": [
+    {
+      "case": "exact",
+      "refused": false,
+      "error": null,
+      "staging_retained": []
+    },
+    {
+      "case": "missing",
+      "refused": true,
+      "error": "Missing payload members",
+      "staging_retained": [
+        "cctv_completion_codeformer_delivered_objective_v4_vm.installing-ea0cbbb6d1974c23a4e21563ba842f0f"
+      ]
+    },
+    {
+      "case": "extra",
+      "refused": true,
+      "error": "Unlisted/duplicate/nonregular member",
+      "staging_retained": [
+        "cctv_completion_codeformer_delivered_objective_v4_vm.installing-564d92d07d1c4103aed6970cd5cbccfe"
+      ]
+    },
+    {
+      "case": "duplicate",
+      "refused": true,
+      "error": "Unlisted/duplicate/nonregular member",
+      "staging_retained": [
+        "cctv_completion_codeformer_delivered_objective_v4_vm.installing-844fa50471d04464a9bb655d7eb7fe52"
+      ]
+    },
+    {
+      "case": "traversal",
+      "refused": true,
+      "error": "Unsafe member path",
+      "staging_retained": []
+    },
+    {
+      "case": "symlink",
+      "refused": true,
+      "error": "Unlisted/duplicate/nonregular member",
+      "staging_retained": [
+        "cctv_completion_codeformer_delivered_objective_v4_vm.installing-f2745df9918f4f3498156eac861bcb33"
+      ]
+    },
+    {
+      "case": "hash",
+      "refused": true,
+      "error": "Member SHA differs",
+      "staging_retained": [
+        "cctv_completion_codeformer_delivered_objective_v4_vm.installing-6151c62c6ea64dfe9bf5a47f87ee1624"
+      ]
+    },
+    {
+      "case": "existing",
+      "refused": true,
+      "error": "Preserve any existing experiment; do not reinstall",
+      "staging_retained": []
+    }
+  ],
+  "fixture_root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\v4_root_transport_fixtures_95858e887ea847aa97919161e8600ccc",
+  "fixture_only_toy_bytes": true,
+  "actual_NN_gradient_optimizer_VM_calls": 0,
+  "source_or_packet_modified": false
+}

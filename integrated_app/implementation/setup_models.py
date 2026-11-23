@@ -18,12 +18,19 @@ import urllib.parse
 import urllib.request
 import uuid
 
+from .managed_paths import data_path
+
 ROOT = Path(__file__).resolve().parents[1]
-MODEL_DIR = ROOT / "models" / "implementation"
+MODEL_DIR = data_path(ROOT, 'models', 'implementation')
 BUNDLED_DIR = ROOT / "implementation" / "assets"
 MANIFEST_PATH = Path(__file__).with_name("models.json")
 RELEASE_BASE = "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/"
 CHUNK_SIZE = 1024 * 1024
+COMPONENT_LABELS = {
+    "fbcnn_color.pth": "JPEG Deblocking",
+    "codeformer.pth": "CodeFormer Base Model",
+    "v34_precond_modules.npz": "V3.4 Pre-Conditioning Modules",
+}
 
 
 class ModelSetupError(RuntimeError):
@@ -35,18 +42,17 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
         manifest = json.loads(path.read_text(encoding="utf-8"))
         if manifest.get("schema_version") != 1:
             raise ValueError("unsupported schema_version")
-        if manifest.get("default_model") != "v2":
-            raise ValueError("default_model must be v2")
+        if manifest.get("default_model") != "v3":
+            raise ValueError("default_model must be v3")
         assets = manifest["assets"]
         if set(assets) != {
-            "codeformer_r2",
-            "codeformer_u96_adapter",
-            "terminal_u0064_heads",
-            "v2_p2_u0224_heads",
+            "fbcnn_color",
+            "codeformer_base",
+            "v34_precond_modules",
         }:
             raise ValueError("unexpected asset list")
         filenames = set()
-        for asset in assets.values():
+        for key, asset in assets.items():
             name = asset["filename"]
             if not isinstance(name, str) or Path(name).name != name or "/" in name or "\\" in name:
                 raise ValueError("asset filename must be a plain filename")
@@ -57,7 +63,17 @@ def load_manifest(path: Path = MANIFEST_PATH) -> dict:
                 raise ValueError("asset size must be a positive integer")
             if not re.fullmatch(r"[0-9a-f]{64}", asset["sha256"]):
                 raise ValueError("asset sha256 must contain 64 lowercase hexadecimal characters")
-            if asset["url"] != RELEASE_BASE + urllib.parse.quote(name):
+            if key == 'fbcnn_color':
+                if (name != 'fbcnn_color.pth' or asset['size'] != 287755111
+                        or asset['sha256'] != '8b0e4ef23d59cf7ac934a342cb31a17619e4fa4a0b3374a9d78c5174312387e8'
+                        or asset['url'] != 'https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth'):
+                    raise ValueError('unexpected FBCNN model metadata')
+            elif key == 'codeformer_base':
+                if (name != 'codeformer.pth' or asset['size'] != 376637898
+                        or asset['sha256'] != '1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7'
+                        or asset['url'] != 'https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth'):
+                    raise ValueError('unexpected CodeFormer base model metadata')
+            elif asset["url"] != RELEASE_BASE + urllib.parse.quote(name):
                 raise ValueError("asset URL must use the published GitHub release")
         return manifest
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
@@ -126,9 +142,11 @@ def _publish_without_overwrite(partial: Path, destination: Path) -> None:
 def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     _stage_bundled_asset_if_needed(asset, model_dir)
     destination = model_dir / asset["filename"]
+    label = COMPONENT_LABELS.get(destination.name)
+    display = f"{label} ({destination.name})" if label else destination.name
     if destination.exists() or destination.is_symlink():
         if verify_asset(destination, asset):
-            print(f"Verified {destination.name}", flush=True)
+            print(f"Verified {display}", flush=True)
             return destination
         raise ModelSetupError(
             f"Existing file failed its size/SHA-256 check and was preserved: {destination}. "
@@ -141,7 +159,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
     next_progress = 0
     request = urllib.request.Request(asset["url"], headers={"User-Agent": "Forensic-DGP-Implementation/1"})
     opener = urllib.request.build_opener(_HTTPSRedirectHandler())
-    print(f"Downloading {destination.name} ({asset['size'] / 1048576:.1f} MiB)...", flush=True)
+    print(f"Downloading {display} ({asset['size'] / 1048576:.1f} MiB)...", flush=True)
     try:
         with opener.open(request, timeout=30) as response, partial.open("xb") as stream:
             content_length = response.headers.get("Content-Length")
@@ -161,7 +179,7 @@ def download_asset(asset: dict, model_dir: Path = MODEL_DIR) -> Path:
         if downloaded != asset["size"] or digest.hexdigest() != asset["sha256"]:
             raise ModelSetupError(f"Download failed its complete size/SHA-256 check for {destination.name}.")
         _publish_without_overwrite(partial, destination)
-        print(f"Verified and saved {destination.name}", flush=True)
+        print(f"Verified and saved {display}", flush=True)
         return destination
     except urllib.error.HTTPError as exc:
         raise ModelSetupError(
@@ -182,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
         manifest = load_manifest()
         if args.verify_only:
             verify_models(manifest)
-            print("All 4 model files passed size and SHA-256 verification.")
+            print(f"All {len(manifest['assets'])} model files passed size and SHA-256 verification.")
         else:
             for asset in manifest["assets"].values():
                 download_asset(asset)

@@ -3,54 +3,219 @@
 (() => {
     'use strict';
     const api = '/face/restoration', byId = id => document.getElementById(id);
+    const { makeView, pointerToSource, isValidCropRect } = window.captureGeometry;
+    let videoBatch, videoRunMode, videoToken, pictureMode, selectedVideoId;
+    let videoRetryBlocked = false;
     const canvas = byId('brush-editor'), context = canvas.getContext('2d');
-    let sourceFile, originalPixels, width = 0, height = 0, planes, undo = [];
+    const cropCanvas = byId('picture-crop-canvas'), cropCtx = cropCanvas.getContext('2d');
+    const protectColor = [45, 185, 90], applyColor = [55, 125, 220];
+    let sourceFile, captureId, originalPixels, width = 0, height = 0, planes, undo = [];
+    let pictureImage, pictureCrops = [], pictureCrop, pictureLabel;
+    let manualCropRect, manualDraftRect, manualCropMode = false, manualDrawing = false, manualGesture;
     let available = false, busy = false, revision = 0, operation = 0;
-    let previewId, masks, drawing = false, previous;
+    let previewId, confirmedPreviewId, masks, drawing = false, previous, cursorX = 0, cursorY = 0;
+    let overlayPixels, dirty, renderFrame = 0, protectCount = 0, applyCount = 0;
+    let lastReferenceFile = null;
     const error = message => {
         byId('brush-error').textContent = message;
         byId('brush-error').classList.toggle('hidden', !message);
     };
     const progress = message => { byId('brush-progress').textContent = message; };
+    const preparationSummary = metadata => {
+        const decision = metadata.automatic_preparation;
+        if (decision?.route === 'jpeg_mosaic_coordinated') return 'Auto lightly smoothed the detected mosaic and reduced JPEG seams in the surrounding image before face restoration.';
+        if (decision?.route === 'mosaic_regions_coordinated') return 'Auto applied separate preparation to distinct mosaic regions before face restoration.';
+        if (decision?.route === 'scanline_mosaic_coordinated') return 'Auto reduced horizontal scanlines and smoothed a separately detected mosaic before face restoration.';
+        if (decision?.route === 'perspective_mosaic_gaussian') return 'Auto smoothed a suspected perspective-warped mosaic before face restoration.';
+        if (decision?.route === 'irregular_mosaic_gaussian') return 'Auto smoothed a suspected irregular mosaic before face restoration.';
+        if (decision?.route === 'jpeg_deblocking') return 'Auto reduced strong JPEG block seams with FBCNN before face restoration.';
+        if (decision?.route === 'rotated_mosaic_gaussian') return 'Auto found a tilted mosaic and smoothed the detected region before restoration.';
+        if (decision?.route === 'tiny_mosaic_gaussian') return 'Auto smoothed a strong block grid in this small crop before face restoration.';
+        if (decision?.route === 'direct' && metadata.softened_mosaic_detection?.crop_intersects) {
+            return 'Auto flagged a possible softened mosaic and used direct restoration.';
+        }
+        if (decision?.route === 'scanline_cleanup') return 'Auto reduced repeating horizontal scanlines and cleaned residual comb edges before restoration.';
+        const stageLabels = {
+            scanline_cleanup: 'scanline cleanup',
+            noise_denoise: 'noise denoising',
+            cast_dehaze: 'color cast and haze correction',
+            color_cast_balance: 'color cast balancing',
+            haze_dehaze: 'haze dehazing',
+            spatial_comb: 'spatial comb cleanup',
+            jpeg_deblocking: 'JPEG deblocking',
+            macroblock_fbcnn: 'FBCNN macroblock deblocking',
+            macroblock_hevc: 'adaptive macroblock deblocking',
+            edge_deringing: 'edge deringing',
+            gradient_debanding: 'gradient debanding',
+            tangent_antialiasing: 'tangent anti-aliasing',
+            chroma_debleeding: 'chroma debleeding',
+            protect_auto: 'Protect + Auto-match',
+        };
+        if (decision?.route === 'compound_artifact_preparation') {
+            const stages = Array.isArray(decision.stages) && decision.stages.length
+                ? decision.stages
+                : (Array.isArray(decision.applied_stages) ? decision.applied_stages : []);
+            const names = stages.map(stage => stageLabels[stage] || String(stage).replaceAll('_', ' '));
+            return names.length
+                ? `Auto applied ${names.join(', ')} before face restoration.`
+                : 'Auto applied multi-stage artifact preparation before face restoration.';
+        }
+        if (decision?.route === 'noise_denoise') return 'Auto reduced additive and chroma noise before face restoration.';
+        if (decision?.route === 'cast_dehaze') return 'Auto balanced color cast and dehazed low-contrast regions before face restoration.';
+        if (decision?.route === 'color_cast_balance') return 'Auto balanced residual color cast before face restoration.';
+        if (decision?.route === 'haze_dehaze') return 'Auto reduced atmospheric haze and restored local contrast before face restoration.';
+        if (decision?.route === 'spatial_comb') return 'Auto cleaned residual spatial interlacing comb artifacts before face restoration.';
+        if (decision?.route === 'macroblock_fbcnn') return 'Auto reduced compression macroblocking with FBCNN before face restoration.';
+        if (decision?.route === 'macroblock_hevc') return 'Auto smoothed DCT macroblock boundaries with adaptive boundary deblocking before face restoration.';
+        if (decision?.route === 'edge_deringing') return 'Auto suppressed ringing halos near sharp edges before face restoration.';
+        if (decision?.route === 'gradient_debanding') return 'Auto smoothed quantized gradient banding with subtle dither before face restoration.';
+        if (decision?.route === 'tangent_antialiasing') return 'Auto smoothed jagged diagonal contours along the edge tangent before face restoration.';
+        if (decision?.route === 'chroma_debleeding') return 'Auto reduced chromatic bleeding across luma boundaries before face restoration.';
+        if (['picture_region_gaussian', 'frame_region_gaussian', 'face_gaussian'].includes(decision?.route)) {
+            const area = decision.route === 'face_gaussian' ? 'the detected face' : 'flagged regions';
+            const radius = decision.Gaussian_radius_at256.toFixed(1);
+            if (decision.strength_basis === 'measured_artifact_detail_tradeoff') {
+                return `Auto chose ${radius} px smoothing for ${area} based on remaining block edges and retained detail.`;
+            }
+            if (decision.strength_basis === 'default_weak_evidence') {
+                return `Auto used the ${radius} px default for ${area} because the signal was too weak to estimate a different strength.`;
+            }
+            if (decision.strength_basis === 'multipixel_block_noise') {
+                return 'Auto smoothed suspected multi-pixel block noise before restoration.';
+            }
+            if (decision.strength_basis === 'posterized_block_patch') {
+                return 'Auto conditioned a suspected posterized or blocked face region before restoration.';
+            }
+            if (decision.strength_basis === 'pasted_fine_grain') {
+                return 'Auto smoothed a suspected fine-grain degraded face patch before restoration.';
+            }
+            return `Auto applied ${radius} px smoothing to ${area} before restoration.`;
+        }
+        if (decision?.route === 'protect_auto') {
+            const composed = Array.isArray(decision.composed_stages) && decision.composed_stages.length
+                ? decision.composed_stages
+                : (Array.isArray(decision.applied_stages) ? decision.applied_stages : []);
+            const prior = composed.filter(stage => stage !== 'protect_auto');
+            if (prior.length) {
+                const names = prior.map(stage => stageLabels[stage] || String(stage).replaceAll('_', ' '));
+                return `Auto applied ${names.join(', ')} and Protect + Auto-match before restoration.`;
+            }
+            return 'Auto used Protect + Auto-match before restoration.';
+        }
+        if (decision?.route === 'direct') {
+            const directReasons = {
+                face_detection_uncertain: 'no single face box confirmed',
+                no_clear_blur_gap: 'no localized face blur gap detected',
+                insufficient_edges: 'insufficient edge detail to estimate blur',
+                no_supported_blurred_protection_region: 'no contiguous blurred face region found',
+                no_surroundings_in_selected_crop: 'no sharp surroundings inside selected crop',
+                no_additional_blur_needed: 'surroundings already matched',
+                face_outside_selected_crop: 'detected face lies outside selected crop',
+            };
+            const detail = directReasons[decision.reason];
+            return detail
+                ? `Auto used direct restoration (${detail}).`
+                : 'Auto used direct restoration.';
+        }
+        if (decision) return 'Auto used direct restoration.';
+        return metadata.preparation_applied ? 'Your reviewed preparation was used.' : 'No preparation was applied.';
+    };
     const manual = () => byId('brush-preparation').value === 'manual';
     const off = () => byId('brush-restoration').value === 'off';
-    const modelName = () => 'V2';
+    const automatic = () => byId('brush-restoration').value === 'auto';
+    const matchBlur = () => byId('brush-match-blur').checked;
+    const updateBlurStrength = () => {
+        byId('brush-radius').disabled = busy || (matchBlur() && protectCount > 0 && applyCount === 0);
+    };
+    const preparationConfirmed = () => Boolean(previewId && masks && confirmedPreviewId === previewId);
     const clearResults = () => {
         byId('brush-results').classList.add('hidden');
+        byId('picture-result-metrics').replaceChildren();
+        const resultSelector = byId('result-video-face-selector');
+        if (resultSelector) {
+            resultSelector.replaceChildren();
+            resultSelector.classList.add('hidden');
+        }
         byId('brush-result-summary').classList.add('hidden');
         byId('brush-result-downloads').classList.add('hidden');
+        byId('brush-full-picture-result').classList.add('hidden');
         byId('brush-standby').classList.remove('hidden');
-        for (const id of ['brush-download-input', 'brush-download-prepared', 'brush-download-output', 'brush-result-bundle']) byId(id).removeAttribute('href');
+        for (const id of ['brush-download-input', 'brush-download-prepared', 'brush-download-output', 'brush-result-bundle', 'brush-download-full-picture']) byId(id).removeAttribute('href');
         for (const id of ['brush-result-input', 'brush-result-prepared', 'brush-result-output']) byId(id).removeAttribute('src');
     };
+    const updateManualCropSize = () => {
+        const label = byId('picture-manual-size');
+        if (!manualCropMode || !pictureImage) {
+            label.textContent = 'Drag on the picture to select an area, or press Enter.';
+            return;
+        }
+        if (!manualDraftRect) {
+            label.textContent = pictureImage.naturalWidth < 16 || pictureImage.naturalHeight < 16
+                ? 'Image must be at least 16 × 16 px to crop.'
+                : 'Drag on the picture to select an area, or press Enter.';
+            return;
+        }
+        const { x, y, width: w, height: h } = manualDraftRect;
+        const valid = isValidCropRect(manualDraftRect, pictureImage.naturalWidth, pictureImage.naturalHeight, 16, 1600);
+        label.textContent = valid
+            ? `${w} × ${h} px at (${x}, ${y})`
+            : `${w} × ${h} px at (${x}, ${y}) — choose 16–1600 px per side inside the picture.`;
+    };
+    const updateManualCropUI = () => {
+        const pictureActive = Boolean(pictureImage && !captureId);
+        const valid = pictureActive && manualCropMode && isValidCropRect(
+            manualDraftRect, pictureImage.naturalWidth, pictureImage.naturalHeight, 16, 1600
+        );
+        byId('picture-manual-bar').classList.toggle('hidden', !pictureActive || manualCropMode);
+        byId('picture-manual-controls').classList.toggle('hidden', !pictureActive || !manualCropMode);
+        byId('picture-manual-crop').disabled = busy || !pictureActive || manualCropMode;
+        byId('picture-manual-apply').disabled = busy || !valid;
+        byId('picture-manual-cancel').disabled = busy || !pictureActive || !manualCropMode;
+        updateManualCropSize();
+    };
     const update = () => {
-        document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => { item.disabled = busy; });
-        const readable = byId('brush-review').value === 'usable';
-        const confirmed = Boolean(previewId && masks && byId('brush-confirm').checked);
-        byId('brush-preview').disabled = busy || !available || !planes || !readable || !manual();
-        byId('brush-run').disabled = busy || !available || !sourceFile || !planes || !readable || (manual() && !off() && !confirmed);
+        document.querySelectorAll('#brush-form input, #brush-form select, #brush-form button').forEach(item => {
+            if (!item.closest('[data-capture-controls], .capture-visual, #video-face-selector') && !item.matches('.video-comparison [data-zoom], .reference-comparison [data-zoom]')) item.disabled = busy;
+        });
+        byId('brush-continue').disabled = busy || !sourceFile || !planes;
+        byId('brush-preview').disabled = busy || !available || !planes || !manual();
+        byId('brush-preview-continue').disabled = busy || !previewId || !masks;
+        updateBlurStrength();
+        byId('brush-run').disabled = busy || !available || (videoBatch ? videoRetryBlocked || !videoBatch.items.some(item => item.status !== 'completed') && videoRunMode === byId('brush-restoration').value
+            : !sourceFile || !planes || (manual() && !off() && !automatic() && !preparationConfirmed()));
+        byId('picture-preparation').classList.add('hidden');
+        byId('picture-preparation-details').classList.add('hidden');
+        updateManualCropUI();
         byId('brush-undo').disabled = busy || !undo.length;
-        byId('brush-confirm').disabled = busy || !previewId || !manual();
-        byId('brush-edit-section').classList.toggle('hidden', !planes || !manual());
+        byId('brush-edit-section').classList.add('hidden');
         canvas.setAttribute('aria-disabled', String(busy));
+        window.dispatchEvent(new CustomEvent('restoration:busy', {detail:{busy}}));
     };
     const invalidate = () => {
-        revision++; previewId = undefined; masks = undefined;
-        byId('brush-confirm').checked = false;
+        revision++; previewId = confirmedPreviewId = masks = undefined;
         byId('brush-preview-section').classList.add('hidden');
-        for (const id of ['brush-prepared-download', 'brush-preview-download']) byId(id).removeAttribute('href');
         for (const id of ['brush-original', 'brush-overlay', 'brush-derived']) byId(id).removeAttribute('src');
         clearResults(); update();
     };
     const begin = () => { busy = true; const token = ++operation; update(); return token; };
     const finish = token => { if (token === operation) { busy = false; update(); } };
     const current = (token, version) => token === operation && version === revision;
+    const restorationLoading = active => {
+        if (videoBatch) {
+            byId('restoration-idle').classList.add('hidden');
+            byId('video-restore-gallery')?.classList.toggle('hidden', active);
+        } else {
+            byId('restoration-idle').classList.toggle('hidden', active);
+        }
+        byId('restoration-loading').classList.toggle('hidden', !active);
+        byId('restoration-loading').closest('.work-screen').classList.toggle('is-loading', active);
+    };
     const validPNG = value => {
         if (typeof value !== 'string' || !value.startsWith('data:image/png;base64,')) throw new Error('The service returned an invalid image.');
         return value;
     };
     const validZIP = value => {
-        if (typeof value !== 'string' || !value.startsWith('data:application/zip;base64,')) throw new Error('The service returned an invalid evidence bundle.');
+        if (typeof value !== 'string' || !value.startsWith('data:application/zip;base64,')) throw new Error('The download could not be prepared. Please try again.');
         return value;
     };
     const checkpoint = () => {
@@ -62,34 +227,77 @@
         return [Math.max(0, Math.min(width - 1, Math.floor((event.clientX - rect.left) * width / rect.width))),
             Math.max(0, Math.min(height - 1, Math.floor((event.clientY - rect.top) * height / rect.height)))];
     };
+    const brushMode = () => byId('brush-action').value === 'erase' ? 'Erasing green and blue marks' : byId('brush-plane').value === 'protect' ? 'Painting green protection' : 'Painting blue blur';
+    const cursorStatus = () => {
+        const caption = byId('brush-cursor');
+        const label = `${brushMode()} · ${cursorX}, ${cursorY}`;
+        const title = `${label}. ${protectCount.toLocaleString()} protected pixels; ${applyCount.toLocaleString()} selected for blur. Green protection takes priority.`;
+        if (caption.textContent !== label) caption.textContent = label;
+        if (caption.title !== title) caption.title = title;
+    };
     const cursor = (x, y) => {
-        byId('brush-x').value = x; byId('brush-y').value = y;
-        byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; native cursor ${x}, ${y}.`;
+        cursorX = x; cursorY = y;
+        render();
     };
+    const markDirty = (left, top, right, bottom) => {
+        if (!dirty) dirty = [left, top, right, bottom];
+        else { dirty[0] = Math.min(dirty[0], left); dirty[1] = Math.min(dirty[1], top); dirty[2] = Math.max(dirty[2], right); dirty[3] = Math.max(dirty[3], bottom); }
+    };
+    // Update masks immediately, but paint only touched pixels once per frame.
     const render = () => {
-        if (!planes) return;
-        const pixels = new Uint8ClampedArray(originalPixels.data);
-        for (let i = 0; i < width * height; i++) {
-            const color = planes.protect[i] ? [45, 185, 90] : (planes.apply[i] ? [55, 125, 220] : null);
-            if (color) for (let c = 0; c < 3; c++) pixels[i * 4 + c] = Math.round(pixels[i * 4 + c] * .6 + color[c] * .4);
+        if (!planes || !overlayPixels || renderFrame) return;
+        renderFrame = requestAnimationFrame(() => {
+            renderFrame = 0;
+            if (!planes || !overlayPixels || !originalPixels) return;
+            if (dirty) {
+                const [left, top, right, bottom] = dirty;
+                dirty = undefined;
+                const original = originalPixels.data, pixels = overlayPixels.data;
+                for (let y = top; y <= bottom; y++) for (let x = left; x <= right; x++) {
+                    const i = y * width + x, offset = i * 4;
+                    const color = planes.protect[i] ? protectColor : (planes.apply[i] ? applyColor : null);
+                    for (let channel = 0; channel < 3; channel++) pixels[offset + channel] = color ? Math.round(original[offset + channel] * .6 + color[channel] * .4) : original[offset + channel];
+                }
+                context.putImageData(overlayPixels, 0, 0, left, top, right - left + 1, bottom - top + 1);
+            }
+            cursorStatus();
+        });
+    };
+    const repaintAll = () => {
+        protectCount = 0; applyCount = 0;
+        for (let i = 0; i < planes.protect.length; i++) {
+            if (planes.protect[i]) protectCount++;
+            if (planes.apply[i]) applyCount++;
         }
-        context.putImageData(new ImageData(pixels, width, height), 0, 0);
-        byId('brush-cursor').textContent = `${byId('brush-plane').value}, ${byId('brush-action').value}; native cursor ${byId('brush-x').value}, ${byId('brush-y').value}. ${planes.protect.reduce((n, v) => n + (v > 0), 0)} Protect pixels; ${planes.apply.reduce((n, v) => n + (v > 0), 0)} Apply pixels. Protect wins overlap.`;
+        markDirty(0, 0, width - 1, height - 1);
+        render();
     };
-    const coordinate = (id, max) => {
-        const value = Number(byId(id).value);
-        if (byId(id).value.trim() === '' || !Number.isInteger(value) || value < 0 || value > max) throw new Error('Choose whole-pixel coordinates inside the uploaded crop.');
-        return value;
-    };
-    const disk = (x, y) => {
+    const brushSettings = () => {
         const size = Number(byId('brush-size').value);
-        if (!Number.isInteger(size) || size < 1 || size > 160) throw new Error('Use a brush diameter from 1 to 160 native pixels.');
-        const radius = (size - 1) / 2, plane = planes[byId('brush-plane').value], value = byId('brush-action').value === 'erase' ? 0 : 255;
-        for (let yy = Math.max(0, Math.ceil(y - radius)); yy <= Math.min(height - 1, Math.floor(y + radius)); yy++) {
-            for (let xx = Math.max(0, Math.ceil(x - radius)); xx <= Math.min(width - 1, Math.floor(x + radius)); xx++) {
-                if ((xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) plane[yy * width + xx] = value;
+        if (!Number.isInteger(size) || size < 1 || size > 100) throw new Error('Choose a brush size from 1 to 100 pixels.');
+        return { radius: (size - 1) / 2, erase: byId('brush-action').value === 'erase', planeName: byId('brush-plane').value };
+    };
+    const disk = (x, y, { radius, erase, planeName } = brushSettings()) => {
+        const plane = planes[planeName];
+        const left = Math.max(0, Math.ceil(x - radius)), right = Math.min(width - 1, Math.floor(x + radius));
+        const top = Math.max(0, Math.ceil(y - radius)), bottom = Math.min(height - 1, Math.floor(y + radius));
+        let changed = false;
+        for (let yy = top; yy <= bottom; yy++) {
+            for (let xx = left; xx <= right; xx++) {
+                if ((xx - x) ** 2 + (yy - y) ** 2 <= radius ** 2) {
+                    const index = yy * width + xx;
+                    if (erase) {
+                        if (planes.protect[index]) { protectCount--; changed = true; }
+                        if (planes.apply[index]) { applyCount--; changed = true; }
+                        planes.protect[index] = 0; planes.apply[index] = 0;
+                    } else if (!plane[index]) {
+                        plane[index] = 255; changed = true;
+                        if (planeName === 'protect') protectCount++; else applyCount++;
+                    }
+                }
             }
         }
+        if (changed) markDirty(left, top, right, bottom);
         cursor(x, y);
     };
     const edit = callback => {
@@ -108,34 +316,33 @@
         if (!drawing || busy) return;
         const next = point(event), count = Math.max(Math.abs(next[0] - previous[0]), Math.abs(next[1] - previous[1]), 1);
         try {
-            for (let i = 1; i <= count; i++) disk(Math.round(previous[0] + (next[0] - previous[0]) * i / count), Math.round(previous[1] + (next[1] - previous[1]) * i / count));
+            const brush = brushSettings();
+            for (let i = 1; i <= count; i++) disk(Math.round(previous[0] + (next[0] - previous[0]) * i / count), Math.round(previous[1] + (next[1] - previous[1]) * i / count), brush);
             previous = next; render();
         } catch (problem) { drawing = false; error(problem.message); }
     });
-    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, () => { drawing = false; });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) canvas.addEventListener(name, () => {
+        drawing = false;
+        updateBlurStrength();
+    });
     canvas.addEventListener('keydown', event => {
         if (busy || !planes || !manual()) return;
-        let x, y;
-        try { x = coordinate('brush-x', width - 1); y = coordinate('brush-y', height - 1); }
-        catch (problem) { error(problem.message); return; }
+        const x = cursorX, y = cursorY;
         const moves = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
         if (moves[event.key]) { event.preventDefault(); cursor(Math.max(0, Math.min(width - 1, x + moves[event.key][0])), Math.max(0, Math.min(height - 1, y + moves[event.key][1]))); }
         if (event.key === ' ') { event.preventDefault(); edit(() => disk(x, y)); }
     });
-    byId('brush-stamp').addEventListener('click', () => edit(() => disk(coordinate('brush-x', width - 1), coordinate('brush-y', height - 1))));
-    byId('brush-fill').addEventListener('click', () => edit(() => { for (let i = 0; i < planes.apply.length; i++) planes.apply[i] = planes.protect[i] ? 0 : 255; }));
-    byId('brush-clear').addEventListener('click', () => edit(() => planes[byId('brush-plane').value].fill(0)));
-    byId('brush-reset').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); }));
-    byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); invalidate(); render(); });
-    byId('brush-rectangle').addEventListener('click', () => edit(() => {
-        const left = coordinate('brush-left', width - 1), top = coordinate('brush-top', height - 1);
-        const right = coordinate('brush-right', width - 1), bottom = coordinate('brush-bottom', height - 1);
-        if (right < left || bottom < top) throw new Error('Right/bottom must follow left/top.');
-        for (let y = top; y <= bottom; y++) planes.protect.fill(255, y * width + left, y * width + right + 1);
-    }));
+    byId('brush-clear').addEventListener('click', () => edit(() => { planes.protect.fill(0); planes.apply.fill(0); protectCount = 0; applyCount = 0; markDirty(0, 0, width - 1, height - 1); }));
+    byId('brush-undo').addEventListener('click', () => { if (busy || !undo.length) return; planes = undo.pop(); repaintAll(); invalidate(); });
+    byId('brush-size').addEventListener('input', event => { byId('brush-size-value').textContent = `${event.target.value} px`; });
+    byId('brush-radius').addEventListener('input', event => { byId('brush-radius-value').textContent = `${event.target.value} px`; });
+    const updateBrushMode = () => {
+        byId('brush-mode-summary').textContent = brushMode();
+        if (planes) render();
+    };
+    for (const id of ['brush-plane', 'brush-action']) byId(id).addEventListener('change', updateBrushMode);
     for (const id of ['brush-radius', 'brush-size']) byId(id).addEventListener('input', invalidate);
-    for (const id of ['brush-plane', 'brush-action', 'brush-review', 'brush-restoration', 'brush-preparation']) byId(id).addEventListener('change', () => { drawing = false; invalidate(); });
-    byId('brush-confirm').addEventListener('change', () => { revision++; clearResults(); update(); });
+    for (const id of ['brush-plane', 'brush-action', 'brush-restoration', 'brush-preparation', 'brush-match-blur']) byId(id).addEventListener('change', () => { drawing = false; invalidate(); });
     byId('brush-include-bundle').addEventListener('change', () => { revision++; clearResults(); update(); });
 
     // Exact grayscale8 binary mask PNG, retained from the reviewed brush UI.
@@ -147,7 +354,7 @@
         view.setUint32(bytes.length + 8, (crc ^ 0xffffffff) >>> 0); return result;
     };
     const grayPNG = async (values, nativeWidth, nativeHeight) => {
-        if (typeof CompressionStream !== 'function') throw new Error('This browser cannot export exact masks. Use the current Chrome or Edge browser.');
+        if (typeof CompressionStream !== 'function') throw new Error('This browser cannot save the selected areas. Use an up-to-date Chrome or Edge browser.');
         const rows = new Uint8Array((nativeWidth + 1) * nativeHeight);
         for (let y = 0; y < nativeHeight; y++) rows.set(values.subarray(y * nativeWidth, (y + 1) * nativeWidth), y * (nativeWidth + 1) + 1);
         const compressed = new Uint8Array(await new Response(new Blob([rows]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
@@ -155,133 +362,1104 @@
         view.setUint32(0, nativeWidth); view.setUint32(4, nativeHeight); header[8] = 8;
         return new Blob([new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', header), chunk('IDAT', compressed), chunk('IEND', new Uint8Array())], { type: 'image/png' });
     };
-    const post = async (route, data) => {
-        const response = await fetch(api + route, { method: 'POST', body: data });
+    const post = async (route, data, headers) => {
+        const response = await fetch(api + route, { method: 'POST', body: data, headers });
         let answer;
         try { answer = await response.json(); }
-        catch { throw new Error('The reviewed restoration service did not return a valid response. Check service before retrying.'); }
-        if (!response.ok) throw new Error(typeof answer.detail === 'string' ? answer.detail : 'The request stopped. Review the current input and service status.');
+        catch { throw new Error('The app could not get a valid response. Select Check service before trying again.'); }
+        if (!response.ok) {
+            const detail = typeof answer.detail === 'string' ? answer.detail : '';
+            if (/could not be confirmed stopped|do not retry|previous worker stopped unexpectedly/i.test(detail)) {
+                const problem = new Error('Check the saved request and restart the app before restoring another face.');
+                problem.restartRequired = true;
+                throw problem;
+            }
+            if (/model|\bv3\b|preconditioned_v34/i.test(detail)) throw new Error('The restoration service is not ready. Check service or restart the app.');
+            if (/mask/i.test(detail)) throw new Error('The app could not use the marked areas. Review your selections or choose Bypass.');
+            throw new Error(detail || 'The request stopped. Check the picture and service status.');
+        }
         return answer;
     };
     const form = file => { const data = new FormData(); data.append('file', file); return data; };
+    const pictureForm = data => {
+        data.append('input_review', 'picture_upload');
+        if (pictureCrop) data.append('picture_crop', JSON.stringify(pictureCrop));
+        return data;
+    };
     const maskedForm = (file, savedMasks, radius) => {
         const data = form(file);
         data.append('protect_mask', savedMasks.protect, 'Protect.png'); data.append('apply_mask', savedMasks.apply, 'Apply.png');
-        data.append('radius', radius); return data;
+        data.append('radius', radius);
+        data.append('match_blur', String(matchBlur()));
+        return data;
     };
-    const resetInput = () => {
-        sourceFile = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
-        canvas.width = 0; canvas.height = 0;
-        byId('upload-preview').removeAttribute('src'); byId('upload-preview').classList.add('hidden');
-        byId('brush-review').value = ''; invalidate();
+    const renderManualCropCanvas = () => {
+        if (!manualCropMode || !pictureImage) return;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        if (cropCanvas.width !== imgW || cropCanvas.height !== imgH) {
+            cropCanvas.width = imgW;
+            cropCanvas.height = imgH;
+        }
+        cropCtx.clearRect(0, 0, imgW, imgH);
+        cropCtx.drawImage(pictureImage, 0, 0, imgW, imgH);
+        if (!manualDraftRect) return;
+        const { x, y, width: w, height: h } = manualDraftRect;
+        cropCtx.save();
+        cropCtx.fillStyle = 'rgba(10, 20, 18, 0.55)';
+        cropCtx.beginPath();
+        cropCtx.rect(0, 0, imgW, imgH);
+        cropCtx.rect(x, y, w, h);
+        cropCtx.fill('evenodd');
+        if (w > 0 && h > 0) {
+            const unit = Math.max(1, Math.max(imgW, imgH) / 300);
+            cropCtx.strokeStyle = '#dbec87';
+            cropCtx.lineWidth = unit * 1.5;
+            cropCtx.strokeRect(x, y, w, h);
+            const handle = Math.max(2, Math.min(unit * 6, w, h));
+            cropCtx.fillStyle = '#dbec87';
+            cropCtx.fillRect(x + w - handle, y + h - handle, handle, handle);
+        }
+        cropCtx.restore();
     };
-    byId('brush-file').addEventListener('change', async () => {
-        const file = byId('brush-file').files[0];
-        resetInput(); error('');
-        if (busy) { error('Wait for the current request to stop, then choose the crop again.'); return; }
-        if (!file) return;
-        if (file.size === 0 || file.size > 10 * 1024 ** 2 || !['image/png', 'image/jpeg'].includes(file.type)) { error('Upload a PNG or JPEG face crop up to 10 MiB.'); return; }
-        const token = begin(), version = revision;
-        progress('Inspecting the original crop. No model runs.');
-        try {
-            const result = await post('/inspect', form(file));
-            if (!current(token, version)) return;
-            if (!Number.isInteger(result.width) || !Number.isInteger(result.height) || result.width < 1 || result.height < 1 || result.width > 1600 || result.height > 1600 || result.width * result.height > 2560000 || result.neural_calls !== 0) throw new Error('The service returned invalid native image dimensions.');
-            const image = new Image(); image.src = validPNG(result.source); await image.decode();
-            if (!current(token, version)) return;
-            if (image.naturalWidth !== result.width || image.naturalHeight !== result.height) throw new Error('The oriented image and coordinate dimensions differ.');
-            sourceFile = file; width = result.width; height = result.height; canvas.width = width; canvas.height = height;
-            context.drawImage(image, 0, 0); originalPixels = context.getImageData(0, 0, width, height);
-            planes = { protect: new Uint8Array(width * height), apply: new Uint8Array(width * height) };
-            byId('upload-preview').src = image.src; byId('upload-preview').classList.remove('hidden');
-            byId('brush-dimensions').textContent = `${width} × ${height} oriented native pixels. Protect and Apply start empty.`;
-            for (const id of ['brush-x', 'brush-left', 'brush-right']) byId(id).max = width - 1;
-            for (const id of ['brush-y', 'brush-top', 'brush-bottom']) byId(id).max = height - 1;
-            for (const id of ['brush-x', 'brush-y', 'brush-left', 'brush-top', 'brush-right', 'brush-bottom']) byId(id).value = 0;
-            render(); progress('Inspect visible facial structure before continuing. Preparation is optional.');
-        } catch (problem) { if (current(token, version)) { resetInput(); error(problem.message); progress('Input inspection stopped. Choose a readable crop.'); } }
-        finally { finish(token); }
+    const setManualDraftRect = next => {
+        manualDraftRect = next;
+        renderManualCropCanvas();
+        updateManualCropUI();
+    };
+    const exitManualCrop = () => {
+        manualCropMode = false;
+        manualDrawing = false;
+        manualGesture = undefined;
+        manualDraftRect = undefined;
+        byId('picture-preview').classList.remove('is-manual-crop');
+        cropCanvas.classList.add('hidden');
+        cropCanvas.width = 0;
+        cropCanvas.height = 0;
+        updateManualCropSize();
+    };
+    const enterManualCrop = () => {
+        if (busy || !pictureImage || captureId || manualCropMode) return;
+        manualCropMode = true;
+        manualDrawing = false;
+        manualGesture = undefined;
+        manualDraftRect = Array.isArray(pictureCrop)
+            ? { x: pictureCrop[0], y: pictureCrop[1], width: pictureCrop[2], height: pictureCrop[3] }
+            : undefined;
+        byId('picture-preview').classList.add('is-manual-crop');
+        cropCanvas.classList.remove('hidden');
+        renderManualCropCanvas();
+        update();
+        cropCanvas.focus({ preventScroll: true });
+    };
+    const applyManualCrop = () => {
+        if (busy || !pictureImage || captureId || !manualCropMode) return false;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        if (!isValidCropRect(manualDraftRect, imgW, imgH, 16, 1600)) return false;
+        const { x, y, width: w, height: h } = manualDraftRect;
+        manualCropRect = [x, y, w, h];
+        const choices = byId('picture-face');
+        let manualOption = choices.querySelector('option[value="manual"]');
+        if (!manualOption) {
+            manualOption = new Option('Manual crop', 'manual');
+            const fullOption = choices.querySelector('option[value="-1"]');
+            choices.add(manualOption, fullOption || null);
+        }
+        choices.value = 'manual';
+        byId('picture-face-field').classList.remove('hidden');
+        const status = byId('picture-face-status');
+        status.textContent = `Using manual crop (${w} × ${h} px).`;
+        status.classList.remove('hidden');
+        exitManualCrop();
+        selectPictureCrop(manualCropRect, 'Manual crop');
+        return true;
+    };
+    const manualPoint = event => {
+        const view = makeView(pictureImage.naturalWidth, pictureImage.naturalHeight);
+        return pointerToSource(event.clientX, event.clientY, cropCanvas.getBoundingClientRect(), view);
+    };
+    cropCanvas.addEventListener('pointerdown', event => {
+        if (busy || !manualCropMode || !pictureImage || captureId) return;
+        if (event.button && event.button !== 0) return;
+        event.preventDefault();
+        cropCanvas.focus({ preventScroll: true });
+        const p = manualPoint(event);
+        const resize = manualDraftRect && Math.abs(p.x - manualDraftRect.x - manualDraftRect.width) < 20 / p.scale
+            && Math.abs(p.y - manualDraftRect.y - manualDraftRect.height) < 20 / p.scale;
+        const move = manualDraftRect && p.x >= manualDraftRect.x && p.x <= manualDraftRect.x + manualDraftRect.width
+            && p.y >= manualDraftRect.y && p.y <= manualDraftRect.y + manualDraftRect.height;
+        manualGesture = {
+            start: p,
+            rect: manualDraftRect ? { ...manualDraftRect } : undefined,
+            mode: resize ? 'resize' : move ? 'move' : 'draw',
+        };
+        manualDrawing = true;
+        cropCanvas.setPointerCapture(event.pointerId);
+        if (manualGesture.mode === 'draw') setManualDraftRect({ x: p.x, y: p.y, width: 0, height: 0 });
     });
+    cropCanvas.addEventListener('pointermove', event => {
+        if (!manualDrawing || !manualGesture || !manualCropMode || busy || !pictureImage) return;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        const p = manualPoint(event), s = manualGesture.start, r = manualGesture.rect;
+        if (manualGesture.mode === 'move') {
+            setManualDraftRect({
+                ...r,
+                x: Math.max(0, Math.min(imgW - r.width, r.x + p.x - s.x)),
+                y: Math.max(0, Math.min(imgH - r.height, r.y + p.y - s.y)),
+            });
+        } else if (manualGesture.mode === 'resize') {
+            const maxW = Math.min(1600, imgW - r.x);
+            const maxH = Math.min(1600, imgH - r.y);
+            setManualDraftRect({
+                ...r,
+                width: Math.max(Math.min(16, maxW), Math.min(maxW, p.x - r.x)),
+                height: Math.max(Math.min(16, maxH), Math.min(maxH, p.y - r.y)),
+            });
+        } else {
+            const left = p.x >= s.x ? s.x : Math.max(s.x - 1600, p.x);
+            const top = p.y >= s.y ? s.y : Math.max(s.y - 1600, p.y);
+            const right = p.x >= s.x ? Math.min(s.x + 1600, p.x) : s.x;
+            const bottom = p.y >= s.y ? Math.min(s.y + 1600, p.y) : s.y;
+            setManualDraftRect({ x: left, y: top, width: right - left, height: bottom - top });
+        }
+    });
+    for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+        cropCanvas.addEventListener(name, () => {
+            if (!manualDrawing) return;
+            manualDrawing = false;
+            const gestureMode = manualGesture?.mode;
+            manualGesture = undefined;
+            if (gestureMode === 'draw' && manualDraftRect && (manualDraftRect.width === 0 || manualDraftRect.height === 0)) {
+                setManualDraftRect(undefined);
+            } else {
+                update();
+            }
+        });
+    }
+    cropCanvas.addEventListener('keydown', event => {
+        if (busy || !manualCropMode || !pictureImage || captureId) return;
+        const imgW = pictureImage.naturalWidth, imgH = pictureImage.naturalHeight;
+        if (event.key === 'Enter' && !manualDraftRect) {
+            event.preventDefault();
+            if (imgW < 16 || imgH < 16) { updateManualCropSize(); return; }
+            const w = Math.min(imgW, 1600, Math.max(16, Math.round(imgW / 2)));
+            const h = Math.min(imgH, 1600, Math.max(16, Math.round(imgH / 2)));
+            setManualDraftRect({ x: Math.floor((imgW - w) / 2), y: Math.floor((imgH - h) / 2), width: w, height: h });
+            return;
+        }
+        if (!manualDraftRect || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const next = { ...manualDraftRect };
+        const dx = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+        const dy = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+        if (event.shiftKey) {
+            const maxW = Math.min(1600, imgW - next.x);
+            const maxH = Math.min(1600, imgH - next.y);
+            next.width = Math.max(Math.min(16, maxW), Math.min(maxW, next.width + dx));
+            next.height = Math.max(Math.min(16, maxH), Math.min(maxH, next.height + dy));
+        } else {
+            next.x = Math.max(0, Math.min(imgW - next.width, next.x + dx));
+            next.y = Math.max(0, Math.min(imgH - next.height, next.y + dy));
+        }
+        setManualDraftRect(next);
+    });
+    byId('picture-manual-crop').addEventListener('click', enterManualCrop);
+    byId('picture-manual-apply').addEventListener('click', () => {
+        if (applyManualCrop()) byId('picture-manual-crop').focus({ preventScroll: true });
+    });
+    byId('picture-manual-cancel').addEventListener('click', () => {
+        if (busy || !manualCropMode) return;
+        exitManualCrop();
+        update();
+        byId('picture-manual-crop').focus({ preventScroll: true });
+    });
+    byId('brush-continue').addEventListener('click', () => {
+        if (busy || !manualCropMode) return;
+        if (!applyManualCrop()) {
+            exitManualCrop();
+            update();
+        }
+    });
+    const resetInput = () => {
+        lastReferenceFile = null;
+        if (renderFrame) cancelAnimationFrame(renderFrame);
+        renderFrame = 0; overlayPixels = undefined; dirty = undefined; protectCount = 0; applyCount = 0;
+        sourceFile = undefined; captureId = undefined; originalPixels = undefined; planes = undefined; undo = []; width = 0; height = 0; drawing = false;
+        pictureImage = pictureCrop = undefined; pictureCrops = [];
+        manualCropRect = undefined;
+        exitManualCrop();
+        byId('picture-face').replaceChildren();
+        byId('picture-face-field').classList.add('hidden');
+        byId('picture-face-status').classList.add('hidden');
+        canvas.width = 0; canvas.height = 0;
+        byId('input-picture').classList.add('hidden');
+        byId('upload-preview').removeAttribute('src'); byId('upload-preview').classList.add('hidden');
+        const mainPreview = byId('picture-main-preview');
+        if (mainPreview) {
+            mainPreview.removeAttribute('src');
+            mainPreview.classList.add('hidden');
+        }
+        byId('picture-empty')?.classList.remove('hidden');
+        invalidate();
+    };
+    function selectPictureCrop(rectangle, label) {
+        pictureCrop = rectangle;
+        const [x, y, w, h] = rectangle || [0, 0, pictureImage.naturalWidth, pictureImage.naturalHeight];
+        width = canvas.width = w;
+        height = canvas.height = h;
+        context.drawImage(pictureImage, x, y, w, h, 0, 0, w, h);
+        originalPixels = context.getImageData(0, 0, w, h);
+        const preview = rectangle ? canvas.toDataURL('image/png') : pictureImage.src;
+        overlayPixels = new ImageData(new Uint8ClampedArray(originalPixels.data), w, h);
+        planes = { protect: new Uint8Array(w * h), apply: new Uint8Array(w * h) };
+        undo = []; dirty = undefined; protectCount = applyCount = 0;
+        cursorX = cursorY = 0;
+        byId('input-picture').classList.remove('hidden');
+        byId('input-picture-label').textContent = byId('upload-preview').alt = label;
+        byId('upload-preview').src = preview;
+        byId('upload-preview').classList.remove('hidden');
+        const mainPreview = byId('picture-main-preview');
+        if (mainPreview) {
+            mainPreview.alt = label;
+            mainPreview.width = w;
+            mainPreview.height = h;
+            mainPreview.src = preview;
+            mainPreview.classList.remove('hidden');
+        }
+        byId('picture-empty')?.classList.add('hidden');
+        byId('brush-dimensions').textContent = `Picture size: ${w} × ${h} pixels. No areas are marked yet.`;
+        invalidate(); render();
+    }
+    byId('picture-face').addEventListener('change', event => {
+        if (busy || !pictureImage || captureId) return;
+        if (manualCropMode) exitManualCrop();
+        const value = event.target.value;
+        if (value === 'manual') {
+            if (!manualCropRect) return;
+            selectPictureCrop(manualCropRect, 'Manual crop');
+            byId('picture-face-status').textContent = `Using manual crop (${manualCropRect[2]} × ${manualCropRect[3]} px).`;
+            byId('picture-face-status').classList.remove('hidden');
+            return;
+        }
+        const index = Number(value);
+        const selected = Number.isInteger(index) && index >= 0 ? pictureCrops[index] : undefined;
+        if (!selected) {
+            selectPictureCrop(undefined, pictureLabel);
+            byId('picture-face-status').textContent = 'Using the full picture.';
+            return;
+        }
+        selectPictureCrop(selected, `Face ${index + 1} crop`);
+        byId('picture-face-status').textContent = `Using the crop for Face ${index + 1}.`;
+    });
+    const usePicture = async (file, options = {}) => {
+        if (busy) { error('Wait for the current task to finish, then choose the picture again.'); return false; }
+        clearVideoBatch();
+        resetInput(); error('');
+        if (!file) return;
+        if (file.size === 0 || file.size > 10 * 1024 ** 2 || !['image/png', 'image/jpeg'].includes(file.type)) { error('Choose a PNG or JPEG face picture smaller than 10 MB.'); return; }
+        const token = begin(), version = revision;
+        progress('Checking your picture.');
+        try {
+            const data = form(file);
+            if (!options.captureId) data.append('scan_faces', 'true');
+            const result = await post('/inspect', data);
+            if (!current(token, version) || (options.isCurrent && !options.isCurrent())) return false;
+            if (!Number.isInteger(result.width) || !Number.isInteger(result.height) || result.width < 1 || result.height < 1 || result.width > 1600 || result.height > 1600 || result.width * result.height > 2560000 || result.neural_calls !== 0) throw new Error('The app could not read the picture size. Please choose another image.');
+            const image = new Image(); image.src = validPNG(result.source); await image.decode();
+            if (!current(token, version) || (options.isCurrent && !options.isCurrent())) return false;
+            if (image.naturalWidth !== result.width || image.naturalHeight !== result.height) throw new Error('The picture could not be prepared correctly. Please choose it again.');
+            sourceFile = file; captureId = options.captureId; pictureImage = image;
+            pictureLabel = options.label || 'Full uploaded picture';
+            pictureCrops = Array.isArray(result.face_crops) ? result.face_crops : [];
+            const first = pictureCrops[0];
+            selectPictureCrop(first, first ? 'Face 1 crop' : pictureLabel);
+            if (!captureId) {
+                const choices = byId('picture-face');
+                choices.replaceChildren();
+                pictureCrops.forEach((_, index) => choices.add(new Option(`Face ${index + 1}`, String(index))));
+                choices.add(new Option('Full picture', '-1'));
+                choices.value = first ? '0' : '-1';
+                byId('picture-face-field').classList.toggle('hidden', !pictureCrops.length);
+                const status = byId('picture-face-status');
+                status.textContent = result.face_scan_unavailable ? 'Face scanning is unavailable. Use the full picture or upload a close-up.'
+                    : !first ? 'No face detected. Use the full picture or upload a close-up.'
+                    : pictureCrops.length > 1 ? 'Face 1 is selected. Faces are numbered from left to right.'
+                    : 'One face detected. Its crop is selected.';
+                status.classList.remove('hidden');
+            }
+            progress('Picture ready. Select Continue.');
+            window.dispatchEvent(new CustomEvent('picture:changed', {detail:{captured:!!captureId,file}}));
+            return true;
+        } catch (problem) { if (current(token, version)) { resetInput(); error(problem.message); progress('The picture could not be checked. Choose a clear face picture.'); } }
+        finally { finish(token); }
+    };
+    function confirmPreparation() {
+        if (busy || !previewId || !masks || !manual() || off()) return false;
+        confirmedPreviewId = previewId;
+        update();
+        return true;
+    }
+    window.restorationInput = {use:usePicture, useVideo, clearVideoBatch, confirmPreparation, get video() {return Boolean(videoBatch);}, get busy() {return busy;}};
+    window.appendResultMetrics = appendResultMetrics;
+    window.getLastReferenceFile = () => lastReferenceFile;
+    byId('brush-file').addEventListener('change', () => usePicture(byId('brush-file').files[0]));
     byId('brush-preview').addEventListener('click', async () => {
-        if (busy || !planes || !sourceFile || !manual() || byId('brush-review').value !== 'usable') return;
+        if (busy || !planes || !sourceFile || !manual()) return;
         const radius = byId('brush-radius').value;
-        if (radius.trim() === '' || !Number.isFinite(Number(radius)) || Number(radius) < 0 || Number(radius) > 12 || Number(radius) * 2 % 1 !== 0) { error('Choose a radius from 0 to 12 in half-pixel steps.'); return; }
+        if (radius.trim() === '' || !Number.isFinite(Number(radius)) || Number(radius) < 0 || Number(radius) > 12 || Number(radius) * 2 % 1 !== 0) { error('Choose a blur radius from 0 to 12 in steps of 0.5.'); return; }
         invalidate(); error(''); const token = begin(), version = revision;
         const file = sourceFile, nativeWidth = width, nativeHeight = height;
         const savedPlanes = { protect: planes.protect.slice(), apply: planes.apply.slice() };
-        progress('Rebuilding preparation from the original upload. No model runs.');
+        progress('Preparing a preview from your original picture.');
         try {
             const savedMasks = { protect: await grayPNG(savedPlanes.protect, nativeWidth, nativeHeight), apply: await grayPNG(savedPlanes.apply, nativeWidth, nativeHeight) };
             if (!current(token, version)) return;
-            const data = maskedForm(file, savedMasks, radius); data.append('input_review', 'usable');
+            const data = pictureForm(maskedForm(file, savedMasks, radius));
             const result = await post('/preview', data);
             if (!current(token, version)) return;
-            if (!/^[a-f0-9]{64}$/.test(result.preview_id) || result.neural_calls !== 0 || result.metadata?.every_protected_native_RGB_exact !== true || result.metadata?.every_outside_Apply_native_RGB_exact !== true) throw new Error('The preparation preservation receipt is invalid. Keep preparation bypassed.');
-            const original = validPNG(result.original), overlay = validPNG(result.protection_overlay), prepared = validPNG(result.prepared_input), bundle = validZIP(result.bundle);
+            if (!/^[a-f0-9]{64}$/.test(result.preview_id) || result.neural_calls !== 0 || result.metadata?.every_protected_native_RGB_exact !== true || result.metadata?.every_outside_Apply_native_RGB_exact !== true) throw new Error('The app could not verify that protected areas stayed unchanged. Use Bypass instead.');
+            const original = validPNG(result.original), overlay = validPNG(result.protection_overlay), prepared = validPNG(result.prepared_input);
             previewId = result.preview_id; masks = savedMasks;
             byId('brush-original').src = original; byId('brush-overlay').src = overlay; byId('brush-derived').src = prepared;
-            byId('brush-prepared-download').href = prepared; byId('brush-preview-download').href = bundle;
-            byId('brush-preservation').textContent = `Every protected native pixel and every pixel outside Apply stayed exact. ${result.metadata.changed_native_pixels} native pixels changed. ${result.metadata.no_effect ? 'This preparation has no effect; bypass is available.' : 'Review the actual input and transition before confirming.'} Generation can still change facial appearance.`;
+            let explanation;
+            const matching = result.metadata.algorithm.blur_matching;
+            if (matching?.status === 'insufficient_edges') {
+                explanation = 'Auto found too few reliable edges to estimate blur. No blur was added. Turn off Auto to set a strength manually.';
+            } else if (matching) {
+                const target = matching.target_radius_at256;
+                const added = matching.maximum_added_radius_at256;
+                explanation = result.metadata.no_effect ? `Auto estimated a ${target} px target. No visible blur was added.`
+                    : `Auto estimated a ${target} px target and added up to ${added} px to sharper areas.`;
+            } else if (result.metadata.no_effect) {
+                if (Number(radius) === 0) explanation = 'Blur strength is 0, so the picture did not change. Increase the strength to add blur.';
+                else if (result.metadata.resolved_Apply_native_pixels === 0 && !savedPlanes.protect.some(Boolean)) explanation = 'Paint green to blur the surroundings, or blue to blur a specific area.';
+                else if (result.metadata.effective_Apply_native_pixels === 0) explanation = 'Green protects the entire blur area. Erase some green to allow blur.';
+                else explanation = 'The selected pixels did not visibly change. Try a higher blur strength.';
+            } else {
+                const area = result.metadata.Apply_selection_mode === 'automatic_surroundings' ? 'Surrounding blur' : 'Painted blur';
+                explanation = `${area} at ${radius} px. ${result.metadata.changed_native_pixels.toLocaleString()} pixels changed.`;
+            }
+            byId('brush-preservation').textContent = `${explanation} Protected areas stay unchanged during preparation; restoration can still change facial appearance.`;
             byId('brush-preview-section').classList.remove('hidden');
-            progress('Preview ready. Review it and confirm before using manual preparation. No model ran.');
-        } catch (problem) { if (current(token, version)) { invalidate(); error(problem.message); progress('Preparation stopped. Review the areas or bypass preparation.'); } }
+            progress('Review the preview. Select Continue to use it.');
+        } catch (problem) { if (current(token, version)) { invalidate(); error(problem.message); progress('Could not prepare the picture. Review the selected areas or choose Bypass.'); } }
         finally { finish(token); }
     });
+    async function restoreRequest(data, headers) {
+        const result = await post('/restore', data, headers);
+        const metadata = result.metadata;
+        if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'preconditioned_v34_codeformer') throw new Error('The app could not verify the result. Check the service before trying again.');
+        await Promise.all([result.original_input, result.prepared_input, result.result].map(async url => {
+            const image = new Image(); image.src = validPNG(url); await image.decode();
+            if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The service returned an invalid result size.');
+        }));
+        const fullImage = result.scanline_cleaned_full_image || result.smoothed_full_picture || result.smoothed_full_frame;
+        if (fullImage) {
+            const image = new Image();
+            image.src = validPNG(fullImage);
+            await image.decode();
+            const [width, height] = (metadata.scanline_cleanup || metadata.picture_pixelation || metadata.frame_pixelation).native_size;
+            if (image.naturalWidth !== width || image.naturalHeight !== height) throw new Error('The full image has an invalid size.');
+        }
+        if (data.get('include_bundle') === 'true') validZIP(result.bundle);
+        return result;
+    }
+    function displayResult(result, originalFile) {
+        const metadata = result.metadata;
+        byId('brush-result-input').src = result.original_input;
+        byId('brush-result-prepared').src = result.prepared_input;
+        byId('brush-result-output').src = result.result;
+        byId('brush-download-input').href = result.original_input;
+        byId('brush-download-prepared').href = result.prepared_input;
+        byId('brush-download-output').href = result.result;
+        const prepared = byId('brush-prepared-details');
+        prepared.open = false;
+        prepared.classList.add('hidden');
+        if (byId('brush-prepared-heading')) byId('brush-prepared-heading').textContent = 'Auto output';
+        byId('brush-output-heading').textContent = metadata.restoration_applied ? 'Restored' : 'Restored (resized original)';
+        byId('brush-result-downloads').classList.toggle('hidden', !result.bundle);
+        if (result.bundle) byId('brush-result-bundle').href = result.bundle;
+        const fullPictureDownload = byId('brush-download-full-picture');
+        const fullPicture = result.scanline_cleaned_full_image || result.smoothed_full_picture || result._videoFullFrame;
+        byId('brush-full-picture-result').classList.toggle('hidden', !fullPicture);
+        if (fullPicture) {
+            const scanlines = Boolean(result.scanline_cleaned_full_image || result._videoFullFrameScanlines);
+            const isVideoFrame = Boolean(result._videoFullFrame);
+            fullPictureDownload.href = fullPicture;
+            fullPictureDownload.download = scanlines
+                ? (isVideoFrame ? 'scanline-cleaned-frame.png' : 'scanline-cleaned-picture.png')
+                : (isVideoFrame ? 'frozen-frame-smoothed.png' : 'full-image-smoothed.png');
+            fullPictureDownload.textContent = scanlines
+                ? (isVideoFrame ? 'Download scanline-cleaned frame (PNG)' : 'Download scanline-cleaned picture (PNG)')
+                : (isVideoFrame ? 'Download smoothed full frame (PNG)' : 'Download smoothed full picture (PNG)');
+            byId('brush-full-picture-note').textContent = scanlines
+                ? 'Original framing with repeating horizontal lines reduced.'
+                : 'Original framing with Gaussian smoothing in the regions Auto flagged.';
+        }
+        else fullPictureDownload.removeAttribute('href');
+        byId('brush-results').classList.remove('hidden');
+        byId('brush-standby').classList.add('hidden');
+        const seconds = Number.isFinite(metadata.seconds) ? `${metadata.seconds.toFixed(1)} seconds. ` : '';
+        const summary = `${seconds}${preparationSummary(metadata)}`;
+        const summaryPrefix = (metadata.picture_crop || metadata.capture_crop) ? 'Before and After show the selected face crop. ' : '';
+        byId('brush-result-summary').textContent = `${summaryPrefix}${summary}`;
+        byId('brush-result-summary').classList.remove('hidden');
+        progress('Result ready to review.');
+        const pictureMetrics = byId('picture-result-metrics');
+        pictureMetrics.replaceChildren();
+        appendResultMetrics(pictureMetrics, 'Picture metrics', result);
+        const resultSelector = byId('result-video-face-selector');
+        if (resultSelector) {
+            const completedItems = videoBatch ? videoBatch.items.filter(item => item.result) : [];
+            if (completedItems.length > 1) {
+                const existingIds = [...resultSelector.children].map(btn => btn.dataset?.faceId);
+                const nextIds = completedItems.map(item => String(item.id));
+                const matches = existingIds.length === nextIds.length && existingIds.every((id, i) => id === nextIds[i]);
+                if (!matches) {
+                    resultSelector.replaceChildren();
+                    for (const item of completedItems) {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'tool-btn';
+                        button.textContent = `Face ${item.faceNumber}`;
+                        button.dataset.faceId = String(item.id);
+                        button.setAttribute('aria-pressed', String(item.id === selectedVideoId));
+                        button.addEventListener('click', () => selectVideoFace(item.id));
+                        resultSelector.append(button);
+                    }
+                } else {
+                    for (const button of resultSelector.children) {
+                        button.setAttribute('aria-pressed', String(button.dataset?.faceId === String(selectedVideoId)));
+                    }
+                }
+                resultSelector.classList.remove('hidden');
+            } else {
+                resultSelector.replaceChildren();
+                resultSelector.classList.add('hidden');
+            }
+        }
+        const eventFile = typeof File !== 'undefined' && originalFile instanceof File
+            ? originalFile
+            : (typeof Blob !== 'undefined' && typeof File !== 'undefined' && originalFile instanceof Blob
+                ? new File([originalFile], 'captured-face.png', { type: originalFile.type || 'image/png' })
+                : originalFile);
+        window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile: eventFile } }));
+    }
     byId('brush-form').addEventListener('submit', async event => {
         event.preventDefault();
-        if (busy || !sourceFile || !planes || !available || byId('brush-review').value !== 'usable') return;
+        if (videoBatch) { await restoreVideo(); return; }
+        if (busy || !sourceFile || !planes || !available) return;
         const restoration = byId('brush-restoration').value;
-        const mode = restoration === 'off' ? 'bypass' : byId('brush-preparation').value;
-        if (mode === 'manual' && (!previewId || !masks || !byId('brush-confirm').checked)) { error('Preview and confirm the current Protect and Apply areas first.'); return; }
-        const data = mode === 'manual' ? maskedForm(sourceFile, masks, byId('brush-radius').value) : form(sourceFile);
-        data.append('input_review', 'usable'); data.append('restoration', restoration); data.append('preparation_mode', mode);
+        const mode = restoration === 'auto' ? 'automatic' : restoration === 'off' ? 'bypass' : byId('brush-preparation').value;
+        if (mode === 'manual' && !preparationConfirmed()) { error('Review the marked areas and select Continue.'); return; }
+        const data = pictureForm(mode === 'manual' ? maskedForm(sourceFile, masks, byId('brush-radius').value) : form(sourceFile));
+        data.append('restoration', restoration); data.append('preparation_mode', mode);
         data.append('model', byId('brush-model').value);
+        if (captureId) data.append('capture_id', captureId);
         const includeBundle = byId('brush-include-bundle').checked;
         data.append('include_bundle', includeBundle ? 'true' : 'false');
         if (mode === 'manual') { data.append('preview_id', previewId); data.append('confirmed', 'true'); }
         error(''); clearResults(); const token = begin(), version = revision;
-        progress(restoration === 'off' ? 'Keeping the original resized input. No model runs.' : `Restoring the selected input with at most one ${modelName()} call. Auto can keep the original.`);
+        restorationLoading(true);
+        progress(restoration === 'off' ? 'Keeping your original picture and resizing it.' : 'Restoring your picture.');
         try {
-            const result = await post('/restore', data);
+            const result = await restoreRequest(data);
             if (!current(token, version)) return;
-            const metadata = result.metadata;
-            if (!metadata || ![0, 1].includes(metadata.neural_forward_returns) || metadata.neural_forward_attempts !== metadata.neural_forward_returns || metadata.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The selected-restoration receipt is invalid. Review service status before retrying.');
-            const original = validPNG(result.original_input), prepared = validPNG(result.prepared_input), output = validPNG(result.result);
-            const bundle = includeBundle ? validZIP(result.bundle) : undefined;
-            byId('brush-result-input').src = original; byId('brush-result-prepared').src = prepared; byId('brush-result-output').src = output;
-            byId('brush-download-input').href = original; byId('brush-download-prepared').href = prepared; byId('brush-download-output').href = output;
-            byId('brush-download-output').download = modelName() + '-restoration.png';
-            byId('brush-result-bundle').download = modelName() + '-restoration-evidence.zip';
-            byId('brush-result-output').alt = `Selected ${modelName()} restoration result, or original resized input when restoration is off`;
-            byId('brush-selected-heading').textContent = metadata.preparation_applied ? 'REVIEWED PREPARATION' : 'ORIGINAL BYPASS';
-            byId('brush-output-heading').textContent = metadata.restoration_applied ? modelName() + ' RESULT' : 'ORIGINAL / RESTORATION OFF';
-            if (bundle) { byId('brush-result-bundle').href = bundle; byId('brush-result-downloads').classList.remove('hidden'); }
-            byId('brush-results').classList.remove('hidden'); byId('brush-standby').classList.add('hidden');
-            const seconds = Number.isFinite(metadata.seconds) ? `${metadata.seconds.toFixed(1)} seconds. ` : '';
-            const bypass = metadata.preparation_applied ? 'Reviewed manual preparation was used.' : metadata.preparation_bypass_reason === 'Auto_did_not_suggest_restoration' ? 'Auto kept the original resized input; preparation was bypassed.' : 'The original upload was used; preparation was bypassed.';
-            const summary = `${seconds}${metadata.neural_forward_returns} ${modelName()} model call${metadata.neural_forward_returns === 1 ? '' : 's'}. ${bypass} Experimental result; visible appearance and identity need review.`;
-            byId('brush-result-summary').textContent = summary; byId('brush-result-summary').classList.remove('hidden'); progress(summary);
-            window.dispatchEvent(new CustomEvent('restoration:completed', { detail: { result, originalFile: sourceFile } }));
-        } catch (problem) { if (current(token, version)) { clearResults(); error(problem.message); progress('The request stopped. Review the message before another request. No automatic retry was made.'); } }
-        finally { finish(token); }
+            displayResult(result, sourceFile);
+        } catch (problem) { if (current(token, version)) { restorationLoading(false); clearResults(); error(problem.message); progress('The request stopped. Read the message before trying again.'); } }
+        finally { if (token === operation) restorationLoading(false); finish(token); }
     });
+    function videoVisibility(active) {
+        for (const id of ['video-settings-gallery', 'video-restore-gallery']) byId(id).classList.toggle('hidden', !active);
+        for (const id of ['options-preview', 'options-preview-caption', 'restoration-idle', 'picture-restore-note']) {
+            byId(id).classList.toggle('hidden', active);
+        }
+        byId('picture-preparation').classList.add('hidden');
+        byId('picture-preparation-details').classList.add('hidden');
+        byId('brush-form').classList.toggle('video-batch', active);
+    }
+    function clearVideoBatch() {
+        if (!videoBatch || busy) return;
+        lastReferenceFile = null;
+        for (const item of videoBatch.items) URL.revokeObjectURL(item.url);
+        videoBatch = videoRunMode = videoToken = selectedVideoId = undefined;
+        byId('video-settings-gallery').replaceChildren();
+        byId('video-face-selector').replaceChildren();
+        byId('video-face-panels').replaceChildren();
+        setFrameDownload();
+        byId('brush-run').textContent = 'Restore selected input';
+        byId('brush-restoration').value = pictureMode;
+        byId('brush-restoration').dispatchEvent(new Event('change', { bubbles: true }));
+        videoVisibility(false);
+        update();
+    }
+    function setFrameDownload(source, scanlines = false) {
+        const link = byId('video-download-smoothed-frame');
+        link.parentElement.classList.toggle('hidden', !source);
+        if (source) {
+            link.href = source;
+            link.download = scanlines ? 'scanline-cleaned-frame.png' : 'frozen-frame-smoothed.png';
+            link.textContent = scanlines ? 'Download scanline-cleaned frame (PNG)' : 'Download smoothed full frame (PNG)';
+        }
+        else link.removeAttribute('href');
+    }
+    function useVideo(crops, options) {
+        if (busy || !options.isCurrent() || !options.token || !crops.length || crops.length > window.restorationQueueLimit) return false;
+        clearVideoBatch();
+        pictureMode = byId('brush-restoration').value;
+        error('');
+        clearResults();
+        videoBatch = window.createRestorationQueue();
+        videoToken = options.token;
+        videoBatch.addMany(crops.map(crop => ({ ...crop, url: URL.createObjectURL(crop.file) })));
+        const items = videoBatch.items;
+        for (const item of items) {
+            byId('video-settings-gallery').append(videoCard(item, false));
+            byId('video-face-panels').append(videoCard(item, true));
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'tool-btn';
+            button.textContent = `Face ${item.faceNumber}`;
+            button.setAttribute('aria-controls', `video-face-${item.id}`);
+            button.addEventListener('click', () => selectVideoFace(item.id));
+            byId('video-face-selector').append(button);
+        }
+        selectVideoFace(items[0].id);
+        byId('brush-restoration').value = 'auto';
+        byId('brush-restoration').dispatchEvent(new Event('change', { bubbles: true }));
+        videoVisibility(true);
+        byId('brush-run').textContent = crops.length === 1 ? 'Restore face' : 'Restore faces';
+        progress('Choose one restoration setting for the selected faces.');
+        update();
+        return true;
+    }
+    function selectVideoFace(id) {
+        selectedVideoId = id;
+        const panel = `video-face-${id}`;
+        for (const button of byId('video-face-selector').children) {
+            button.setAttribute('aria-pressed', String(button.getAttribute('aria-controls') === panel));
+        }
+        const resultSelector = byId('result-video-face-selector');
+        if (resultSelector) {
+            for (const button of resultSelector.children) {
+                button.setAttribute('aria-pressed', String(button.dataset?.faceId === String(id)));
+            }
+        }
+        for (const card of byId('video-face-panels').children) card.hidden = card.id !== panel;
+        const item = videoBatch?.items.find(entry => entry.id === id);
+        if (item?.result) displayResult(item.result, item.file);
+    }
+    function videoImage(src, alt) {
+        const image = new Image();
+        image.src = src;
+        image.alt = alt;
+        return image;
+    }
+    function videoCard(item, showResult) {
+        const card = document.createElement('article');
+        card.className = 'video-face-card';
+        const name = `Face ${item.faceNumber}`;
+        const title = document.createElement('h2');
+        title.textContent = name;
+        const images = document.createElement('div');
+        images.className = 'video-face-images';
+        card.append(title, images);
+        if (!showResult) {
+            images.append(videoImage(item.url, `${name} original crop`));
+            return card;
+        }
+        card.id = `video-face-${item.id}`;
+        card.setAttribute('aria-label', `${name} comparison`);
+        images.classList.add('video-comparison');
+        const details = document.createElement('div');
+        details.className = 'video-face-details';
+        card.append(details);
+        showVideoResult(item, card);
+        return card;
+    }
+    function videoComparisonImage(item, stage, source, bundle) {
+        const slug = stage.toLowerCase().replace(/\s+/g, '-');
+        const id = `video-face-${item.id}-${slug}`;
+        const name = `Face ${item.faceNumber}`;
+        const figure = document.createElement('figure');
+        const image = videoImage(source, `${name} ${stage.toLowerCase()} restoration`);
+        image.id = id;
+        const caption = document.createElement('figcaption');
+        caption.textContent = stage;
+        figure.append(image, caption);
+        const download = document.createElement('a');
+        download.className = 'tool-btn';
+        download.href = source;
+        download.download = `face-${item.faceNumber}-${slug}.png`;
+        download.textContent = 'Download PNG';
+        download.setAttribute('aria-label', `Download PNG for ${name} ${stage.toLowerCase()}`);
+        const enlarge = document.createElement('button');
+        enlarge.type = 'button';
+        enlarge.className = 'tool-btn';
+        enlarge.dataset.zoom = id;
+        enlarge.textContent = 'Enlarge';
+        enlarge.setAttribute('aria-label', `Enlarge ${name} ${stage.toLowerCase()}`);
+        const actions = document.createElement('div');
+        actions.className = 'video-image-actions';
+        actions.append(download, enlarge);
+        if (bundle) {
+            const zip = document.createElement('a');
+            zip.className = 'tool-btn';
+            zip.href = bundle;
+            zip.download = `face-${item.faceNumber}-review-files.zip`;
+            zip.textContent = 'Download ZIP';
+            actions.append(zip);
+        }
+        figure.append(actions);
+        return figure;
+    }
+    let referenceComparisonSeq = 0;
+    function formatAccuracy(score) {
+        if (typeof score?.accuracy === 'string' && score.accuracy) return score.accuracy;
+        const m = Number(score?.mae);
+        return score?.mae != null && score.mae !== '' && Number.isFinite(m)
+            ? `${((1 - m / 255) * 100).toFixed(2)}%`
+            : '—';
+    }
+    function restorationMetrics(caption, diagnostics) {
+        const hasPrepared = Boolean(diagnostics?.prepared && typeof diagnostics.prepared === 'object');
+        const table = document.createElement('table');
+        table.className = 'video-metrics';
+        table.createCaption().textContent = caption;
+        const header = table.createTHead().insertRow();
+        const columns = hasPrepared ? ['Metric', 'Before', 'Prepared', 'After'] : ['Metric', 'Before', 'After'];
+        for (const title of columns) {
+            const cell = document.createElement('th');
+            cell.scope = 'col';
+            cell.textContent = title;
+            header.append(cell);
+        }
+        const body = table.createTBody();
+        function metric(label, before, prepared, after) {
+            const row = body.insertRow();
+            const name = document.createElement('th');
+            name.scope = 'row';
+            name.textContent = label;
+            row.append(name);
+            const values = hasPrepared ? [before, prepared, after] : [before, after];
+            return values.map(cellValue => {
+                const cell = row.insertCell();
+                cell.textContent = cellValue;
+                return cell;
+            });
+        }
+        const value = n => Number.isFinite(n) ? n.toFixed(2) : 'Unavailable';
+        const formatNoise = entry => {
+            const base = value(entry?.noise_sigma_255);
+            if (Number.isFinite(entry?.noise_sigma_native) && Number.isFinite(entry?.noise_sigma_255)
+                && Math.abs(entry.noise_sigma_native - entry.noise_sigma_255) >= 0.5) {
+                return `${base} (native ${entry.noise_sigma_native.toFixed(2)})`;
+            }
+            return base;
+        };
+        metric(
+            'Sharpness (px² variance)',
+            value(diagnostics?.before?.blur_variance),
+            value(diagnostics?.prepared?.blur_variance),
+            value(diagnostics?.after?.blur_variance)
+        );
+        metric(
+            'Noise estimate (σ, RGB levels)',
+            formatNoise(diagnostics?.before),
+            value(diagnostics?.prepared?.noise_sigma_255),
+            value(diagnostics?.after?.noise_sigma_255)
+        );
+        const mae = metric('MAE (RGB levels)', '—', '—', '—');
+        const psnr = metric('PSNR (dB)', '—', '—', '—');
+        const accuracy = metric('Accuracy (%)', '—', '—', '—');
+        return {
+            table,
+            setReference(scores) {
+                const columns = hasPrepared
+                    ? [[0, scores?.before], [1, scores?.prepared], [2, scores?.after]]
+                    : [[0, scores?.before], [1, scores?.after]];
+                columns.forEach(([col, score]) => {
+                    mae[col].textContent = score?.mae ?? '—';
+                    psnr[col].textContent = score?.psnr ?? '—';
+                    accuracy[col].textContent = '—';
+                });
+                accuracy[hasPrepared ? 2 : 1].textContent = formatAccuracy(scores?.after);
+            }
+        };
+    }
+    function showVideoResult(item, card = byId(`video-face-${item.id}`), failure = '') {
+        const images = card.querySelector('.video-face-images');
+        const details = card.querySelector('.video-face-details');
+        images.replaceChildren(videoComparisonImage(item, 'Before', item.result?.original_input || item.url));
+        details.replaceChildren();
+        const status = document.createElement('p');
+        status.textContent = failure || (item.status === 'running' ? 'Processing…' : 'Waiting to restore.');
+        status.setAttribute('role', 'status');
+        details.append(status);
+        if (!item.result) return;
+        const { result } = item;
+        images.append(
+            videoComparisonImage(item, 'Auto output', result.prepared_input || result.original_input),
+            videoComparisonImage(item, 'Restored', result.result, result.bundle)
+        );
+        status.textContent = result.metadata.automatic_preparation ? preparationSummary(result.metadata)
+            : result.metadata.restoration_applied ? 'Original and restored result' : 'Original and resized result';
+        appendResultMetrics(details, `Face ${item.faceNumber} metrics`, result);
+    }
+    function createReferenceFigure({ id, alt, captionText, downloadName, zoomLabel }) {
+        const figure = document.createElement('figure');
+        const img = document.createElement('img');
+        img.id = id;
+        img.width = 256;
+        img.height = 256;
+        img.alt = alt;
+        const figcaption = document.createElement('figcaption');
+        figcaption.textContent = captionText;
+        const actions = document.createElement('div');
+        actions.className = 'video-image-actions';
+        const download = document.createElement('a');
+        download.className = 'tool-btn';
+        download.download = downloadName;
+        download.textContent = 'Download PNG';
+        const enlarge = document.createElement('button');
+        enlarge.type = 'button';
+        enlarge.className = 'zoom-btn';
+        enlarge.dataset.wizardNav = '';
+        enlarge.dataset.zoom = id;
+        enlarge.setAttribute('data-wizard-nav', '');
+        enlarge.setAttribute('data-zoom', id);
+        enlarge.setAttribute('aria-label', zoomLabel);
+        enlarge.textContent = 'Enlarge';
+        actions.append(download, enlarge);
+        figure.append(img, figcaption, actions);
+        return { figure, img, download };
+    }
+    function isValidReferenceFile(file) {
+        if (!file || typeof file !== 'object') return false;
+        if (typeof File !== 'undefined' && file instanceof File) return file.size > 0;
+        return typeof file.name === 'string' && file.name.length > 0 && Number.isFinite(file.size) && file.size > 0;
+    }
+    function appendResultMetrics(container, caption, result, options = {}) {
+        const compId = ++referenceComparisonSeq;
+        const afterLabel = typeof options?.afterLabel === 'string' && options.afterLabel.trim()
+            ? options.afterLabel.trim()
+            : 'Restored';
+        const afterSlug = afterLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'restored';
+        const metrics = restorationMetrics(caption, result.metadata?.output_diagnostics);
+        const score = document.createElement('p');
+        score.textContent = 'Ground truth unavailable.';
+        score.setAttribute('role', 'status');
+        const reference = document.createElement('input');
+        reference.type = 'file';
+        reference.accept = 'image/png,image/jpeg,video/mp4,video/webm,video/quicktime';
+        const label = document.createElement('label');
+        label.append('Add clean reference', reference);
+        const hint = document.createElement('p');
+        hint.textContent = 'Upload the full original photo, a cropped face reference, a 256 × 256 padded frame, or a reference video. Scores measure pixel agreement.';
+
+        const comparison = document.createElement('div');
+        comparison.className = 'reference-comparison hidden';
+        const gallery = document.createElement('div');
+        gallery.className = 'visual-gallery reference-before-after';
+        gallery.setAttribute('aria-label', `Ground truth and ${afterLabel}`);
+        const gtPanel = createReferenceFigure({
+            id: `reference-gt-img-${compId}`,
+            alt: 'Ground truth reference, aligned',
+            captionText: 'Ground truth',
+            downloadName: 'ground-truth-256.png',
+            zoomLabel: 'Enlarge ground truth image',
+        });
+        const restoredPanel = createReferenceFigure({
+            id: `reference-restored-img-${compId}`,
+            alt: `${afterLabel} picture`,
+            captionText: afterLabel,
+            downloadName: `${afterSlug}-256.png`,
+            zoomLabel: `Enlarge ${afterLabel.toLowerCase()} comparison image`,
+        });
+        gallery.append(gtPanel.figure, restoredPanel.figure);
+
+        const compTable = document.createElement('table');
+        compTable.className = 'video-metrics reference-metrics';
+        compTable.createCaption().textContent = `Ground truth vs. ${afterLabel}`;
+        const compHeadRow = compTable.createTHead().insertRow();
+        for (const title of ['Metric', `${afterLabel} vs. Ground truth`]) {
+            const cell = document.createElement('th');
+            cell.scope = 'col';
+            cell.textContent = title;
+            compHeadRow.append(cell);
+        }
+        const compBody = compTable.createTBody();
+        const addCompRow = rowLabel => {
+            const row = compBody.insertRow();
+            const th = document.createElement('th');
+            th.scope = 'row';
+            th.textContent = rowLabel;
+            row.append(th);
+            const td = row.insertCell();
+            td.textContent = '—';
+            return td;
+        };
+        const compMae = addCompRow('MAE (RGB levels)');
+        const compPsnr = addCompRow('PSNR (dB)');
+        const compAccuracy = addCompRow('Accuracy (%)');
+        comparison.append(gallery, compTable);
+
+        const resetComparison = () => {
+            comparison.classList.add('hidden');
+            gtPanel.img.removeAttribute('src');
+            gtPanel.download.removeAttribute('href');
+            restoredPanel.img.removeAttribute('src');
+            restoredPanel.download.removeAttribute('href');
+            compMae.textContent = '—';
+            compPsnr.textContent = '—';
+            compAccuracy.textContent = '—';
+        };
+
+        let referenceRevision = 0;
+        const runReference = async file => {
+            const version = ++referenceRevision;
+            metrics.setReference();
+            resetComparison();
+            score.textContent = file ? 'Comparing reference…' : 'Ground truth unavailable.';
+            if (!file) return;
+            try {
+                const scores = await window.scoreVideoReference(file, result);
+                if (version === referenceRevision) {
+                    metrics.setReference(scores);
+                    const gtSrc = scores?.reference_256 || '';
+                    if (gtSrc) {
+                        gtPanel.img.src = gtSrc;
+                        gtPanel.download.href = gtSrc;
+                    }
+                    restoredPanel.img.src = result.result;
+                    restoredPanel.download.href = result.result;
+                    compMae.textContent = scores?.after?.mae ?? '—';
+                    compPsnr.textContent = scores?.after?.psnr ?? '—';
+                    compAccuracy.textContent = formatAccuracy(scores?.after);
+                    comparison.classList.remove('hidden');
+                    score.textContent = 'MAE, PSNR, and Accuracy (%) compare the images with your supplied reference. Padding is excluded.';
+                }
+            } catch (problem) {
+                if (version === referenceRevision) {
+                    resetComparison();
+                    score.textContent = `Ground truth unavailable. ${problem.message}`;
+                }
+            }
+        };
+
+        reference.addEventListener('change', async () => {
+            const file = reference.files[0] || null;
+            lastReferenceFile = file;
+            await runReference(file);
+        });
+        container.append(metrics.table, score, label, hint, comparison);
+        if (isValidReferenceFile(options?.autoReferenceFile)) {
+            runReference(options.autoReferenceFile);
+        }
+    }
+    async function restoreVideo() {
+        if (busy || !available || !videoBatch || videoRetryBlocked) return;
+        const mode = byId('brush-restoration').value;
+        const includeBundle = byId('brush-include-bundle').checked;
+        if (videoRunMode && videoRunMode !== mode) {
+            setFrameDownload();
+            for (const item of videoBatch.items) {
+                videoBatch.review(item.id);
+                showVideoResult({ ...item, status: 'pending', result: undefined });
+            }
+        }
+        videoRunMode = mode;
+        for (const item of videoBatch.items) {
+            if (item.status === 'completed') continue;
+            const data = form(item.file);
+            data.append('capture_id', item.captureId);
+            data.append('input_review', 'video_capture');
+            data.append('restoration', mode);
+            data.append('preparation_mode', mode === 'auto' ? 'automatic' : 'bypass');
+            data.append('model', byId('brush-model').value);
+            data.append('include_bundle', String(includeBundle));
+            videoBatch.approve(item.id, data);
+            showVideoResult({ ...item, status: 'pending' });
+        }
+        const token = begin();
+        let activeId;
+        error('');
+        progress('Processing the selected faces one at a time.');
+        restorationLoading(true);
+        try {
+            await videoBatch.run(async (request, item) => {
+                activeId = item.id;
+                showVideoResult(item);
+                request.set('include_smoothed_frame', String(!byId('video-download-smoothed-frame').hasAttribute('href')));
+                const result = await restoreRequest(request, { 'X-Capture-Token': videoToken });
+                const fullFrame = result.scanline_cleaned_full_image || result.smoothed_full_frame;
+                if (fullFrame) {
+                    const scanlines = Boolean(result.scanline_cleaned_full_image);
+                    setFrameDownload(fullFrame, scanlines);
+                    Object.defineProperty(result, '_videoFullFrame', { value: fullFrame, configurable: true });
+                    Object.defineProperty(result, '_videoFullFrameScanlines', { value: scanlines, configurable: true });
+                    delete result.scanline_cleaned_full_image;
+                    delete result.smoothed_full_frame;
+                }
+                showVideoResult({ ...item, result });
+                return result;
+            });
+            progress('All selected faces are ready to inspect.');
+            const completedItem = videoBatch.items.find(i => i.id === selectedVideoId && i.result)
+                || videoBatch.items.find(i => i.result);
+            if (completedItem) {
+                selectedVideoId = completedItem.id;
+                selectVideoFace(completedItem.id);
+            }
+        } catch (problem) {
+            videoRetryBlocked = Boolean(problem.restartRequired);
+            const failed = videoBatch.items.find(item => item.id === activeId);
+            if (failed) showVideoResult(failed, undefined, `Processing stopped. ${problem.message}`);
+            error(videoRetryBlocked ? problem.message : 'The queue paused. Select Retry remaining faces to continue.');
+        } finally {
+            restorationLoading(false);
+            byId('brush-run').textContent = videoRetryBlocked ? 'Restart required' : videoBatch.items.some(item => item.status === 'failed') ? 'Retry remaining faces'
+                : videoBatch.items.length === 1 ? 'Restore face' : 'Restore faces';
+            finish(token);
+        }
+    }
     const checkService = async () => {
         if (busy) return;
         const token = begin(), version = revision;
         try {
             const response = await fetch(api + '/status');
-            if (!response.ok) throw new Error('The reviewed V2 service is unavailable or not mounted.');
+            if (!response.ok) throw new Error('The restoration service is unavailable. Start the app and try again.');
             const result = await response.json();
             if (!current(token, version)) return;
-            available = result.available === true && result.maximum_restore_forwards === 1 && result.maximum_off_forwards === 0 && result.automatic_preparation === false && result.controller?.selection === 'conditioned_sft_v2_p2_u0224';
-            if (!available) throw new Error('The selected V2 service contract differs from this workflow.');
-            error(''); byId('brush-service-status').textContent = 'V2 · CONDITIONED SFT'; byId('brush-status-indicator').classList.add('online');
-            progress('V2 (p2_u0224) is available. Inspect the original; choose bypass or optional reviewed preparation.');
+            available = result.available === true && result.maximum_restore_forwards === 1 && result.maximum_off_forwards === 0 && result.automatic_preparation === false && result.controller?.selection === 'preconditioned_v34_codeformer';
+            if (!available) throw new Error('The restoration service is not ready. Restart the app or run installation again.');
+            error(''); byId('brush-service-status').textContent = 'SERVICE READY'; byId('brush-status-indicator').classList.add('online');
+            progress('Ready. Check your picture before continuing.');
         } catch (problem) {
-            if (current(token, version)) { available = false; byId('brush-service-status').textContent = 'SERVICE UNAVAILABLE'; byId('brush-status-indicator').classList.remove('online'); error(problem.message); progress('This workflow is not ready. Check service when the reviewed runtime is available.'); }
+            if (current(token, version)) { available = false; byId('brush-service-status').textContent = 'SERVICE UNAVAILABLE'; byId('brush-status-indicator').classList.remove('online'); error(problem.message); progress('The app is not ready yet. Select Check service after restarting it.'); }
         } finally { finish(token); }
     };
     byId('brush-refresh').addEventListener('click', checkService);
     byId('brush-model').addEventListener('change', () => { clearResults(); update(); });
+
+    const appMenuContainer = byId('app-menu-container');
+    const appMenuButton = byId('app-menu-button');
+    const appMenuDropdown = byId('app-menu-dropdown');
+    const appCheckUpdate = byId('app-check-update');
+    const appUpdateStatus = byId('app-update-status');
+    const appUpdatePrompt = byId('app-update-prompt');
+    const appUpdatePromptText = byId('app-update-prompt-text');
+    const appInstallUpdate = byId('app-install-update');
+    let updateBusy = false;
+
+    const setMenuOpen = open => {
+        if (!appMenuDropdown || !appMenuButton) return;
+        appMenuDropdown.classList.toggle('hidden', !open);
+        appMenuButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    const setUpdateStatus = (message, isError = false) => {
+        if (!appUpdateStatus) return;
+        appUpdateStatus.textContent = message;
+        appUpdateStatus.classList.toggle('is-error', Boolean(isError));
+        appUpdateStatus.classList.toggle('hidden', !message);
+    };
+
+    if (appMenuButton && appMenuDropdown && appCheckUpdate) {
+        appMenuButton.addEventListener('click', event => {
+            event.stopPropagation?.();
+            const isOpen = !appMenuDropdown.classList.contains('hidden');
+            setMenuOpen(!isOpen);
+        });
+
+        if (typeof document.addEventListener === 'function') {
+            document.addEventListener('click', event => {
+                if (appMenuDropdown.classList.contains('hidden')) return;
+                if (appMenuContainer && typeof appMenuContainer.contains === 'function' && appMenuContainer.contains(event.target)) return;
+                setMenuOpen(false);
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !appMenuDropdown.classList.contains('hidden')) {
+                    setMenuOpen(false);
+                    appMenuButton.focus?.();
+                }
+            });
+        }
+
+        appCheckUpdate.addEventListener('click', async () => {
+            if (updateBusy) return;
+            updateBusy = true;
+            appCheckUpdate.disabled = true;
+            setUpdateStatus('Checking...');
+            try {
+                const response = await fetch('/app/update/check', { method: 'POST' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'Could not check for updates.');
+                }
+                if (payload.status === 'update_available' || payload.update_available === true) {
+                    const latest = payload.latest_version || '';
+                    setUpdateStatus(`Update available (${latest})`);
+                    if (appUpdatePromptText) appUpdatePromptText.textContent = `Update ${latest} available`;
+                    if (appUpdatePrompt) appUpdatePrompt.classList.remove('hidden');
+                    if (appInstallUpdate) appInstallUpdate.disabled = false;
+                } else {
+                    setUpdateStatus(payload.message || 'Up to date');
+                    if (appUpdatePrompt) appUpdatePrompt.classList.add('hidden');
+                }
+            } catch (err) {
+                setUpdateStatus(err?.message || 'Update check failed.', true);
+            } finally {
+                updateBusy = false;
+                appCheckUpdate.disabled = false;
+            }
+        });
+    }
+
+    if (appInstallUpdate) {
+        appInstallUpdate.addEventListener('click', async () => {
+            if (updateBusy) return;
+            updateBusy = true;
+            appInstallUpdate.disabled = true;
+            if (appUpdatePromptText) appUpdatePromptText.textContent = 'Installing update and restarting...';
+            try {
+                const response = await fetch('/app/update/install', { method: 'POST' });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(payload.detail || 'Update installation failed.');
+                }
+                const targetVersion = payload.target_version || '';
+                const deadline = Date.now() + 90000;
+                const pollVersion = async () => {
+                    while (Date.now() < deadline) {
+                        try {
+                            const versionResp = await fetch('/app/version', { cache: 'no-store' });
+                            if (versionResp.ok) {
+                                const versionData = await versionResp.json().catch(() => ({}));
+                                if (!targetVersion || versionData.version === targetVersion) {
+                                    if (appUpdatePrompt) appUpdatePrompt.classList.add('hidden');
+                                    setUpdateStatus(`Up to date (${versionData.version || targetVersion})`);
+                                    if (typeof window.location?.reload === 'function') {
+                                        window.location.reload();
+                                    }
+                                    return;
+                                }
+                            }
+                        } catch {
+                            // Server may be restarting; keep polling until deadline.
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                    if (appUpdatePromptText) appUpdatePromptText.textContent = 'Restart pending. Reopen the app if it does not reload.';
+                };
+                await pollVersion();
+            } catch (err) {
+                if (appUpdatePromptText) appUpdatePromptText.textContent = err?.message || 'Update failed.';
+                appInstallUpdate.disabled = false;
+            } finally {
+                updateBusy = false;
+            }
+        });
+    }
+
     update(); checkService();
 })();

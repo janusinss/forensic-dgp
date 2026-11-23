@@ -1,0 +1,10 @@
+{
+  "format": "root-before-V3-release-R1-app-preservation-v1",
+  "complete": true,
+  "R1_admission_sha256": "7370ff282df6570823deb4e45a3afb4fca3c462356f43796f17fe73f2288eb28",
+  "all22_admitted_sources_candidate_manifest_and_checkpoint_exact": true,
+  "verified_files": 22,
+  "new_model_installed": false,
+  "actual_NN_gradient_optimizer_VM_calls": 0,
+  "scope": "Hash preservation, not fresh app-flow or candidate usefulness."
+}

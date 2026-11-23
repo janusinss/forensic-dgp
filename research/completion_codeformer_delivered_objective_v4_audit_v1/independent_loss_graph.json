@@ -1,0 +1,78 @@
+{
+  "format": "independent-delivered-objective-v4-plain-CPU-loss-graph-audit-v1",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T12:03:23.451504+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_delivered_objective_v4_audit_v1\\audit_loss_graph.py",
+    "bytes": 10042,
+    "sha256": "9f55b812a433f54be8063e09d633c2a63bb7a763e0c82a5767cef014a9ab7ba8"
+  },
+  "helper": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_delivered_objective_v4_development\\delivered_loss.py",
+    "bytes": 3509,
+    "sha256": "737e6674c294c0ea1ea02fec6792abb741897d16a91d198d41377e5e3ba09586"
+  },
+  "torch": "2.13.0+cpu",
+  "checks": [
+    "Exact bilinear align_corners=False injected operator",
+    "Independent2x2-average delivery values match",
+    "Outside source pixels exactly preserved",
+    "RGB-hole normalization and once-only /4",
+    "Actual returned loss retains autograd graph",
+    "Exact analytic gradient includes clamp, /2, downsample1/4, RGBpixels and microbatch/4",
+    "No outside-mask output gradients",
+    "Strictly saturated raw channels have zero gradient; no STE",
+    "Finite nonzero interior gradient exists",
+    "Finite-difference gradient (0, 0, 5, 6)",
+    "Finite-difference gradient (0, 0, 5, 7)",
+    "Finite-difference gradient (0, 1, 0, 2)",
+    "Finite-difference gradient (0, 0, 0, 0)",
+    "Finite-difference gradient (0, 2, 7, 7)",
+    "Target outside support excluded",
+    "Interpolation receives already-clamped RGB",
+    "Empty bypass returns exact source clone without raw/interpolation",
+    "Mixed batch preserves inactive source and uses compact active raw",
+    "Actual512/256FP32 output bitexact to sealed V3 delivery operator",
+    "Actual geometry finite nonzero loss gradient",
+    "Detached clipping fractions correct on support only",
+    "Clipping metadata neither changes graph nor tensor values",
+    "Zero divisor refused",
+    "Wrong frozen divisor refused",
+    "Boolean divisor refused",
+    "Empty training support refused before optimizer work",
+    "Helper final hash unchanged"
+  ],
+  "checks_passed": 27,
+  "synthetic_shapes": [
+    "1x3x8x8->1x3x4x4 float64",
+    "mixed2source/1active float64",
+    "1x3x512x512->1x3x256x256 float32"
+  ],
+  "analytic_gradient_max_absolute_error": 0.0,
+  "finite_difference_scalar_forward_calls": 10,
+  "plain_tensor_autograd_calls": 2,
+  "loss_graph_training_semantics": "Clamp-before-bilinear; source-composite exact outside; clean256 supplied directly; mean RGB inside fixed support; divide4exactlyonce; no512boundary/PNG/STE/detach on loss path.",
+  "clamp_diagnostic": {
+    "raw512_hole_channel_count": 48,
+    "below0_channel_fraction_hole512": 0.2916666666666667,
+    "above1_channel_fraction_hole512": 0.08333333333333333,
+    "clipped_channel_fraction_hole512": 0.375,
+    "clipped_pixel_fraction_hole512": 1.0,
+    "clamp_zero_gradient_for_strictly_outside_channels": true,
+    "surrogate_gradient_used": false,
+    "scope": "Detached out-of-range fractions, not identity or anatomy quality."
+  },
+  "scope_limit": "Synthetic exact operator tests, not a CodeFormer model forward, learned-model gradient proof, actual VM preflight or usefulness evidence.",
+  "local_actions": {
+    "Torch_imported": true,
+    "neural_model_construction": 0,
+    "checkpoint_loads": 0,
+    "neural_forwards": 0,
+    "optimizer_objects_or_steps": 0,
+    "VM_calls": 0,
+    "actual_training": false
+  },
+  "model_qualified": false,
+  "seconds": 2.5103005999990273
+}

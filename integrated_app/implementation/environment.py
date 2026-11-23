@@ -7,6 +7,7 @@ permission is needed, and existing project venv directories are preserved.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
@@ -14,11 +15,17 @@ from pathlib import Path
 import struct
 import subprocess
 import sys
+import time
 import venv
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_PATH = ROOT / '.implementation-env.json'
+from .managed_paths import managed_root
+
+_MANAGED_ROOT = managed_root()
+CONFIG_PATH = ((_MANAGED_ROOT / 'data' / 'installations' / (ROOT.name + '.json'))
+               if _MANAGED_ROOT else ROOT / '.implementation-env.json')
 SUPPORTED = {(3, 12), (3, 13)}
+UV_VERSION = '0.13.1'
 VERSION_CHECK = "import struct,sys; sys.exit(0 if sys.version_info[:2] in ((3,12),(3,13)) and struct.calcsize('P') == 8 else 1)"
 
 
@@ -26,10 +33,23 @@ class EnvironmentError(RuntimeError):
     """The installation's expected local Python environment is unavailable."""
 
 
+def dependency_identity(root: Path | None = None) -> str:
+    """UI changes reuse the runtime; pinned dependency or Python changes isolate it."""
+    root = ROOT if root is None else root
+    digest = hashlib.sha256()
+    for name in ('requirements.txt', 'implementation/capture_install.py'):
+        digest.update(name.encode() + b'\0' + (root / name).read_bytes().replace(b'\r\n', b'\n'))
+    digest.update(f'{sys.version_info[:2]}:{UV_VERSION}:64'.encode())
+    return digest.hexdigest()[:16]
+
+
 def expected_environment(root: Path = ROOT, local_app_data: str | None = None) -> Path:
     local = local_app_data if local_app_data is not None else os.environ.get('LOCALAPPDATA', '')
     if not local or not Path(local).is_absolute():
         raise EnvironmentError('LOCALAPPDATA must name an absolute user-local directory.')
+    managed = managed_root()
+    if managed:
+        return managed / 'environments' / dependency_identity(root)
     identity = os.path.normcase(str(root.resolve())).encode('utf-8')
     checkout_id = hashlib.sha256(identity).hexdigest()[:12]
     return Path(local) / 'DGP' / checkout_id
@@ -72,9 +92,9 @@ def check_python(python: Path) -> None:
                                'Move this environment directory aside and run install.bat again.')
 
 
-def run_foreground(command: list[str]) -> int:
+def run_foreground(command: list[str], *, env: dict | None = None) -> int:
     """Keep ownership of the exact child until it exits, including on Ctrl+C."""
-    process = subprocess.Popen(command, cwd=ROOT)
+    process = subprocess.Popen(command, cwd=ROOT, env=env)
     interrupted = False
     while True:
         try:
@@ -91,46 +111,148 @@ def run_foreground(command: list[str]) -> int:
 def write_record(record: dict, config_path: Path = CONFIG_PATH) -> None:
     temporary = config_path.with_name(config_path.name + f'.{os.getpid()}.tmp')
     try:
+        config_path.parent.mkdir(parents=True, exist_ok=True)
         temporary.write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
         temporary.replace(config_path)
     finally:
         temporary.unlink(missing_ok=True)
 
 
-def install() -> int:
-    if sys.version_info[:2] not in SUPPORTED or struct.calcsize('P') != 8:
-        raise EnvironmentError('Setup requires Python 3.12 or 3.13 64-bit.')
-    record = expected_record()
-    environment = Path(record['environment_root'])
-    python = Path(record['python'])
-    print(f'[1/4] Python environment: {environment}', flush=True)
-    if not python.is_file():
-        venv.EnvBuilder(with_pip=True, clear=False, symlinks=False).create(environment)
+def install_dependencies(python: Path) -> int:
+    """Resolve once with CPU-only Torch; satisfied reruns use uv's fast audit."""
+    probe = (
+        "import importlib.metadata as m,sys; "
+        f"sys.exit(0 if m.version('uv') == {UV_VERSION!r} else 1)"
+    )
+    checked = subprocess.run([str(python), '-I', '-c', probe], cwd=ROOT,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                             timeout=15, check=False)
+    if checked.returncode not in (0, 1):
+        return checked.returncode
+    # --no-config excludes files, but uv also accepts environment overrides for
+    # indexes, constraints and insecure hosts. Keep only its cache/TLS settings;
+    # standard HTTPS_PROXY and SSL_CERT_FILE settings remain available.
+    package_env = {key: value for key, value in os.environ.items()
+                   if not key.upper().startswith(('UV_', 'PIP_'))
+                   or key.upper() in ('UV_CACHE_DIR', 'UV_SYSTEM_CERTS')}
+    package_env['PIP_CONFIG_FILE'] = os.devnull
+    bundled_cache = ROOT / 'implementation' / 'uv_cache'
+    if 'UV_CACHE_DIR' not in package_env and (bundled_cache.exists() or bundled_cache.is_symlink()):
+        if not bundled_cache.is_dir() or bundled_cache.is_symlink() or bundled_cache.is_junction():
+            raise EnvironmentError('The bundled uv cache must be an ordinary directory.')
+        package_env['UV_CACHE_DIR'] = str(bundled_cache)
+        print(f'[packages] Reusing bundled uv cache: {bundled_cache}', flush=True)
+    if checked.returncode == 1:
+        print(f'[packages] Installing uv {UV_VERSION} once into this environment...', flush=True)
+        result = run_foreground([
+            str(python), '-I', '-m', 'pip', '--isolated', 'install',
+            '--disable-pip-version-check', '--only-binary', ':all:',
+            '--index-url', 'https://pypi.org/simple', f'uv=={UV_VERSION}',
+        ], env=package_env)
+        if result:
+            return result
+    result = run_foreground([
+        str(python), '-I', '-m', 'uv', '--no-config', '--no-python-downloads',
+        'pip', 'install', '--python', str(python), '--torch-backend', 'cpu',
+        '--default-index', 'https://pypi.org/simple', '--only-binary', ':all:',
+        '--strict', '-r', str(ROOT / 'requirements.txt'),
+    ], env=package_env)
+    if result:
+        return result
+    # --strict prints diagnostics; pip check turns inconsistent dependency
+    # metadata into a nonzero result before installation can report success.
+    return run_foreground([
+        str(python), '-I', '-m', 'uv', '--no-config', '--no-python-downloads',
+        'pip', 'check', '--python', str(python),
+    ], env=package_env)
+
+
+def run_install_tasks(tasks: dict) -> int:
+    """Join every owned task, including failed peers, before returning to cmd."""
+    result = 0
+    with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
+        futures = [(label, executor.submit(task)) for label, task in tasks.items()]
+        for label, future in futures:
+            while True:
+                try:
+                    code = future.result()
+                    if code:
+                        print(f'[ERROR] {label} failed (exit {code}).', file=sys.stderr, flush=True)
+                        result = result or code
+                    break
+                except KeyboardInterrupt:
+                    result = 130
+                    print('Installation interrupted; waiting for owned processes to finish cleanup...', flush=True)
+                    # A task can itself raise KeyboardInterrupt during a console
+                    # interrupt. A completed future must not be awaited forever.
+                    if future.done():
+                        break
+                except Exception as exc:
+                    print(f'[ERROR] {label}: {exc}', file=sys.stderr, flush=True)
+                    result = result or 1
+                    break
+    return result
+
+
+def install_models() -> int:
+    # Both downloaders use only the standard library. Separate child processes
+    # receive Windows console Ctrl+C, unlike network calls inside worker threads.
+    return run_install_tasks({
+        'Restoration models': lambda: run_foreground([
+            sys.executable, '-B', '-m', 'implementation.setup_models']),
+        'Completion models': lambda: run_foreground([
+            sys.executable, '-B', '-m', 'implementation.environment', 'completion-assets']),
+    })
+
+
+def install_capture() -> int:
+    return run_foreground([sys.executable, '-B', '-m', 'implementation.capture_install'])
+
+
+def verify_installation() -> int:
+    python = configured_python()
     check_python(python)
-    print('[2/4] Installing CPU PyTorch and application dependencies...', flush=True)
-    commands = [
-        [str(python), '-m', 'pip', 'install', '--disable-pip-version-check', '--upgrade', 'pip'],
-        [str(python), '-m', 'pip', 'install', '--disable-pip-version-check',
-         '--index-url', 'https://download.pytorch.org/whl/cpu', 'torch==2.13.0'],
-        [str(python), '-m', 'pip', 'install', '--disable-pip-version-check',
-         '--index-url', 'https://pypi.org/simple', '-r', str(ROOT / 'requirements.txt')],
+    checks = [
+        [str(python), '-B', '-m', 'implementation.setup_models', '--verify-only'],
+        [str(python), '-B', '-m', 'implementation.completion_install', '--verify-only'],
+        [str(python), '-B', '-m', 'implementation.capture_install', '--verify-only'],
+        [str(python), '-B', '-c', 'import app,torch,cv2,numpy; print("Application imports verified.")'],
     ]
-    for command in commands:
+    for command in checks:
         result = run_foreground(command)
         if result:
             return result
-    print('[3/4] Downloading or verifying the frozen model files...', flush=True)
-    result = run_foreground([str(python), '-B', '-m', 'implementation.setup_models'])
+    return 0
+
+
+def install() -> int:
+    if sys.version_info[:2] not in SUPPORTED or struct.calcsize('P') != 8:
+        raise EnvironmentError('Setup requires Python 3.12 or 3.13 64-bit.')
+    started = time.monotonic()
+    record = expected_record()
+    environment = Path(record['environment_root'])
+    python = Path(record['python'])
+    print(f'[1/3] Python environment: {environment}', flush=True)
+    if not python.is_file():
+        venv.EnvBuilder(with_pip=True, clear=False, symlinks=False).create(environment)
+    check_python(python)
+    print('[2/3] Installing dependencies and verifying both model families in parallel...', flush=True)
+    result = run_install_tasks({
+        'Application dependencies': lambda: install_dependencies(python),
+        'Model assets': install_models,
+        'Capture runtime': install_capture,
+    })
     if result:
         return result
     write_record(record)
-    print('[4/4] Installation complete. Run start.bat to open the application.', flush=True)
+    print(f'[3/3] Installation complete in {time.monotonic() - started:.1f}s. '
+          'Run start.bat to open the application.', flush=True)
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('install', 'launch', 'python', 'path'))
+    parser.add_argument('command', choices=('install', 'launch', 'python', 'path', 'completion-assets', 'verify'))
     args, launch_args = parser.parse_known_args(argv)
     if args.command != 'launch' and launch_args:
         parser.error('extra arguments are accepted only for launch')
@@ -140,6 +262,19 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == 'install':
             return install()
+        if args.command == 'verify':
+            return verify_installation()
+        if args.command == 'completion-assets':
+            # Trusted installer orchestration only; no model execution or
+            # environment configuration is needed to acquire these exact bytes.
+            from .completion_install import install_assets, CompletionInstallError
+            from .completion_assets import CompletionAssetError
+            try:
+                install_assets()
+            except (CompletionInstallError, CompletionAssetError) as exc:
+                raise EnvironmentError(str(exc)) from exc
+            print('Both completion files passed size and SHA-256 verification.', flush=True)
+            return 0
         python = configured_python()
         check_python(python)
         if args.command == 'python':

@@ -16,7 +16,9 @@ import webbrowser
 from .setup_models import ModelSetupError, ROOT, verify_models
 
 HOST = "127.0.0.1"
-URL_RECORD = ROOT / "scratch" / "implementation_launch.json"
+from .managed_paths import data_path
+
+URL_RECORD = data_path(ROOT, 'scratch') / 'implementation_launch.json'
 
 
 def _open_when_ready(url: str) -> None:

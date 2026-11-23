@@ -1,0 +1,601 @@
+{
+  "format": "completion-optimized-writer-independent-admission-v1",
+  "complete": true,
+  "independent": true,
+  "audited_UTC": "2026-10-25T16:12:07.008299+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\independent_writer_audit.py",
+    "bytes": 14511,
+    "sha256": "601bd0f14c0f1f30d461c0775f2f5a36a6bed1c6eb13b86bf3e558d60b6ff8c2"
+  },
+  "source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\optimized_budget.py",
+    "bytes": 8825,
+    "sha256": "32ff2e9ea4d56325cc0ebbf3f67ff8831b354cd36346862fdea05682f189f5ec"
+  },
+  "immutable_old_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_coverage_v2\\contracts.py",
+    "bytes": 9488,
+    "sha256": "1822d73ebe57b922cd9e79817ba5c961582a93e65935ef442f60ae07576ec442"
+  },
+  "contract_unchanged": true,
+  "old_new_guard_equivalence_checks": [
+    {
+      "case": "ordinary_allowed",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "deadline_normal_before",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "deadline_normal_at",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Finite worker deadline; preserve terminal state"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Finite worker deadline; preserve terminal state"
+        }
+      }
+    },
+    {
+      "case": "deadline_terminal_before",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "deadline_terminal_at",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Finite worker deadline; preserve terminal state"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Finite worker deadline; preserve terminal state"
+        }
+      }
+    },
+    {
+      "case": "deadline_emergency",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "committed_postdeadline_allowed",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "committed_deadline_at",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Finite worker deadline; preserve terminal state"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Finite worker deadline; preserve terminal state"
+        }
+      }
+    },
+    {
+      "case": "teacher_exact_cap",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "teacher_overcap",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Retained teacher cap"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Retained teacher cap"
+        }
+      }
+    },
+    {
+      "case": "terminal_exact_cap",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "terminal_overcap",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Terminal write cap"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Terminal write cap"
+        }
+      }
+    },
+    {
+      "case": "PNG_exact_cap",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "PNG_overcap",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "PNG extent cap"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "PNG extent cap"
+        }
+      }
+    },
+    {
+      "case": "metadata_normal_exact",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "metadata_normal_over",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Metadata write cap with failure receipt reserve"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Metadata write cap with failure receipt reserve"
+        }
+      }
+    },
+    {
+      "case": "metadata_emergency_exact",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "metadata_emergency_over",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Metadata write cap with failure receipt reserve"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Metadata write cap with failure receipt reserve"
+        }
+      }
+    },
+    {
+      "case": "disk_preterminal_floor_exact",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "disk_preterminal_floor_under",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Stop before reserved terminal/free disk is consumed"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Stop before reserved terminal/free disk is consumed"
+        }
+      }
+    },
+    {
+      "case": "disk_terminal_floor_exact",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "disk_terminal_growth_refused",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Preserve2GiBfree while writing"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Preserve2GiBfree while writing"
+        }
+      }
+    },
+    {
+      "case": "whole_output_exact_terminal",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "whole_output_over_terminal",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Whole output cap before write"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Whole output cap before write"
+        }
+      }
+    },
+    {
+      "case": "preterminal_reservation_exact",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "preterminal_reservation_over",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Preserve terminal byte reservation"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Preserve terminal byte reservation"
+        }
+      }
+    },
+    {
+      "case": "postcommit_headroom_exact",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "postcommit_headroom_over",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Preserve final failure receipt headroom"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Preserve final failure receipt headroom"
+        }
+      }
+    },
+    {
+      "case": "external_metadata_normalcap",
+      "expected_allowed": true,
+      "outcomes": {
+        "old": {
+          "allowed": true
+        },
+        "new": {
+          "allowed": true
+        }
+      }
+    },
+    {
+      "case": "external_metadata_overcap",
+      "expected_allowed": false,
+      "outcomes": {
+        "old": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Metadata write cap with failure receipt reserve"
+        },
+        "new": {
+          "allowed": false,
+          "error_type": "ValueError",
+          "message": "Metadata write cap with failure receipt reserve"
+        }
+      }
+    },
+    {
+      "case": "real_seek_overwrite_and_sparseextent",
+      "allowed": true,
+      "bytes": 13,
+      "no_public_fileno": true
+    },
+    {
+      "case": "closed_writer_write_refused",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "I/O operation on closed file"
+      }
+    },
+    {
+      "case": "existing_owned_reopen",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Evidence already owned; refusing overwrite"
+      }
+    },
+    {
+      "case": "unknown_unopened_write",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Only opened evidence may be written"
+      }
+    },
+    {
+      "case": "traversal",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Path traversal refused"
+      }
+    },
+    {
+      "case": "outside_root",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Output writer escaped evidence root"
+      }
+    },
+    {
+      "case": "unknown_suffix",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Unexpected output evidence type"
+      }
+    },
+    {
+      "case": "rename_sametype_extent_exact_crosscategory_refused",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Rename cannot change evidence budget category"
+      }
+    },
+    {
+      "case": "terminal_rename_commits_without_recount",
+      "passed": true
+    },
+    {
+      "case": "symlink_target_refused_mock",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Linked output path refused"
+      },
+      "scope": "Pathlinkflagfixture; noOSsymlinkcreated"
+    },
+    {
+      "case": "symlink_root_flag_refused_mock",
+      "outcome": {
+        "allowed": false,
+        "error_type": "ValueError",
+        "message": "Linked output root or parent refused"
+      },
+      "scope": "Directrootflag fixture; a resolve-target symlinkpath needs separateactualtest"
+    }
+  ],
+  "equivalence_boundary_scenarios": 30,
+  "namespace_constant_operation_proof": [
+    {
+      "virtual_entries": 2,
+      "writechecks": 10,
+      "canonical_paths_added": 0,
+      "path_components_added": 0,
+      "guardcalls_added": 10,
+      "external_stats_added": 0,
+      "allnamespace_iteration_and_pathresolve_forbidden": true
+    },
+    {
+      "virtual_entries": 21,
+      "writechecks": 10,
+      "canonical_paths_added": 0,
+      "path_components_added": 0,
+      "guardcalls_added": 10,
+      "external_stats_added": 0,
+      "allnamespace_iteration_and_pathresolve_forbidden": true
+    },
+    {
+      "virtual_entries": 621,
+      "writechecks": 10,
+      "canonical_paths_added": 0,
+      "path_components_added": 0,
+      "guardcalls_added": 10,
+      "external_stats_added": 0,
+      "allnamespace_iteration_and_pathresolve_forbidden": true
+    }
+  ],
+  "benchmark_evidence": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\namespace_scale_benchmark_v2.json",
+    "bytes": 3356,
+    "sha256": "812fa3dcd961c5a0cddd0586727dff2f68da242a15653cd3be49c651d5a0d702"
+  },
+  "author_policy_test_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\test_optimized_budget.py",
+    "bytes": 11246,
+    "sha256": "7c22337a040731c27795172020eda929429c3a0e085f1752534cc5d507105346"
+  },
+  "author_policy_receipt": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\policy_tests_v2.json",
+    "bytes": 627,
+    "sha256": "3a50fc81b50cf3b9c06b77c087fd0df62f42878d92a21455b7bc6e8e9a37454e"
+  },
+  "author_32MiB_native_serialization_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\tensor_scale_fixture.py",
+    "bytes": 4964,
+    "sha256": "fd80e5531f2fc8f2857dc44b75bbdb942f6e4695c5638e41692db398d13ffd49"
+  },
+  "author_32MiB_native_serialization_receipt": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\tensor_32MiB_scale_fixture.json",
+    "bytes": 1686,
+    "sha256": "af4d451094be8a955488a9d39b1ef72d3fce587fdddedb4e7ea8e4e90c669ce4"
+  },
+  "author_serialization_evidence_not_freshly_rerun_by_independent_auditor": true,
+  "benchmark_local_report_not_GPU_save_guarantee": true,
+  "newsource_pathvalidation_strengthened": true,
+  "no_policy_weakening_observed": true,
+  "integration_status": "Researchhelperonly; not used byhistoricalV2/anytrainingpacket orapp. Runtimewrapping/serializer source must be independently admitted before futuremanualpilot.",
+  "fixture_directory_retained": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\writer_independent_ff0d8e3beb",
+  "limits": [
+    "Opening validatespathbeforeexclusiveownedhandle; writesusecachedEntryandownedhandle. No adversarialexternaldirectoryreplacement race certification.",
+    "Performanceislocalmechanismproof; solecause ofactualVMsave timeoutnotproven.",
+    "Thisadmission doesnot recoverincompleteV2state orqualifycompletionquality."
+  ],
+  "local_execution": {
+    "Torch_imported": false,
+    "model_loads": 0,
+    "neural_calls": 0,
+    "gradients": 0,
+    "optimizer_steps": 0,
+    "VM_calls": 0
+  },
+  "model_qualified": false,
+  "next_training_packet_qualified": false,
+  "seconds": 0.23485790000268025
+}

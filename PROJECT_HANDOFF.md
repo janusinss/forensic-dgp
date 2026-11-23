@@ -1,19 +1,1170 @@
+# Forensic DGP project handoff
+
+## 23 November 2026 — Version 0.3.1 release (Smart Auto Blur overhaul and Auto button routing fixes)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`ba60acb`](https://github.com/janusinss/forensic-dgp/commit/ba60acbe0e7020d71e41a0cbab123e8b2282d861) |
+| Offline installer build, `codex/r2-installer-release` | [`717f62d`](https://github.com/janusinss/forensic-dgp/commit/717f62d3821c5394a39155db5b17e485f0b2c4dd) (site sync [`dfabd4b`](https://github.com/janusinss/forensic-dgp/commit/dfabd4bca3684f39c9c6ba75ec716db6028e9d11)) |
+| Public download page | [Forensic DGP 0.3.1 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `fa61361e`](https://fa61361e.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.3.1`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.1) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.3.1.exe` (`1,322,950,572` bytes, SHA-256 `fc75a083dfe9e792cc0fcf44105f4f8c3dcdee7fa6c8e6fee402477bc3c8787d`) on GitHub Releases (`v0.3.1`, verified `HTTP 206` `Content-Range: bytes 0-15/1322950572`) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) and 19/19 download-site tests passing.
+- Ships the **Smart Auto Blur overhaul & Auto button routing fixes** across `integrated_app/`, `IMPLEMENTATION`, and `codex/r2-installer-release`: adaptive heavy/partial localized blur matching up to `12px`, mugshot height-chart & comb guards, Auto Blur composition after non-mosaic stages, blur-island fallback & relaxed heavy-blur face detection, while preserving Pre-Conditioned Frozen CodeFormer V3.4, Step 1 calibrated `-15%` auto-crop, Step 2 degraded face-patch restoration, and BiSeNet + XSeg ONNX occlusion segmentation (Completion R2).
+
+## 23 November 2026 — Version 0.3.0 release (Pre-Conditioned Frozen CodeFormer V3.4 restoration model)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`7dca0dc`](https://github.com/janusinss/forensic-dgp/commit/7dca0dca92d90afa03fae54d1f318a102c9b53f7) |
+| Offline installer build, `codex/r2-installer-release` | [`3375f8c`](https://github.com/janusinss/forensic-dgp/commit/3375f8c8e0d0f291d594671a5c4fb1a0bec7454f) (site sync [`c784902`](https://github.com/janusinss/forensic-dgp/commit/c784902e0bac4e5c3492fe9850544ba8de301b3e)) |
+| Public download page | [Forensic DGP 0.3.0 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `c006b03b`](https://c006b03b.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.3.0`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.0) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.3.0.exe` (`1,322,940,834` bytes, SHA-256 `c42dfdd5efef2cf98ab9180ef005e29b8a30370fd2ca0e9e43a6e2e509f6cc67`) on GitHub Releases (`v0.3.0`, verified `HTTP 206` `Content-Range: bytes 0-15/1322940834`) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) and 19/19 download-site tests passing.
+- Promotes **Pre-Conditioned Frozen CodeFormer V3.4 (`preconditioned_v34_codeformer`)** across `integrated_app/`, `IMPLEMENTATION`, and `codex/r2-installer-release` (frozen official `codeformer.pth` + `8.65 MiB` zero-pickle `v34_precond_modules.npz`, 859 frozen tensors total, `~2.9×` faster CPU inference at `~6.46s/crop`, adaptive fidelity `w_pred`, photometric correction, NAFNet pre-conditioning, MaskedAdaIN, bit-exact neutral-128 preservation, zero post-decoder blur/confetti/glare, and removal of unused `v2_p2_u0224_heads.npz`), while retaining `0.2.14` Step 1 calibrated `-15%` auto-crop, Step 2 degraded face-patch restoration, hardened Auto button routing, and BiSeNet + XSeg ONNX occlusion segmentation (Completion R2).
+
+## 23 November 2026 — Full-manuscript 13-claim remediation, IEEE paper integration (Appendix I), GCP billing reconciliation (Appendix D), and first-appearance reference renumbering (`154` pp.)
+
+- Updated [docs/THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) (`85,513,691` bytes, SHA-256 `ee50cb348ba25ba2e502bb9e8d75774317e8622d4a18d162f524c6f7fd502d36`, `951` paragraphs, `26` sections, `18` tables, `58` inline drawings) and regenerated [docs/THESIS-MANUSCRIPT-FINAL.pdf](docs/THESIS-MANUSCRIPT-FINAL.pdf) (`6,408,426` bytes, SHA-256 `b0dce8459e76b4f4bbacc9f1e9578510ca333a478b3122c1ef9c7d56e63a52ca`, `154` pages: Cover + Roman `i`–`xi` + Arabic `1`–`142`), plus standalone IEEE paper exports [docs/IEEE-PAPER-FORENSIC-DGP-2026.docx](docs/IEEE-PAPER-FORENSIC-DGP-2026.docx) (`54,055` bytes, SHA-256 `5b161e2f48c0d914a349494498a70070a58a1b55ca6098c12bc334d84cfa6bc8`) and [docs/IEEE-PAPER-FORENSIC-DGP-2026.pdf](docs/IEEE-PAPER-FORENSIC-DGP-2026.pdf) (`224,378` bytes, SHA-256 `8bea90c1bad8e0154f7206a61345eb34222aa14c6ae38421dd985659aa4b5c3d`, `10` pages) via `scratch/remediation-2026-11-23/patch_ch3_and_refs.py`, `scratch/remediation-2026-11-23/patch_appd_and_appi.py`, two-pass Word COM refresh (`scratch/remediation-2026-11-23/refresh_and_export_word.ps1`), and deterministic Cold-Context Skeptic verification (`scratch/remediation-2026-11-23/verify_all_remediation.py` -> `scratch/remediation-2026-11-23/qa_verdict.json`, `verdict: "APPROVE"`).
+- Backed up the pre-remediation manuscript pair in `scratch/remediation-2026-11-23/backup/THESIS-MANUSCRIPT-FINAL.docx` (`85,519,015` bytes, SHA-256 `73be1dfb7c7026eeaa2a47d7788cf7112822771194eacad65083af09d61080a1`) and `scratch/remediation-2026-11-23/backup/THESIS-MANUSCRIPT-FINAL.pdf` (`6,232,014` bytes, SHA-256 `56da697ec55646632071b2a570dc17ca1c3129294599fd8368f7702717d2d8e8`).
+- Completed all 13 internal remediation items while keeping the 5 external administrative placeholders (`Approval Sheet` date/panel lines, `Appendix F`, `Appendix H`, `Appendix K`, `Appendix L`) untouched: (1) suppressed Approval Sheet margin line numbers `55, 56, 57` (`<w:suppressLineNumbers/>` on `P[24..60]`) and shortened `Member` underline bars (`P[45]`, `P[47]`) to 28 underscores; (2) strictly alphabetized all 16 terms in `Table 1.1` (`ArcFace feedback` -> `Training epoch`); (3) renumbered all in-text/table citations and `REFERENCES` (`[1]..[33]`) to strict first-appearance order (`0` out-of-order citations) with true DOCX italics (`<w:i/>`) and standardized IEEE conference proceedings strings; (4) converted Chapter III completed procedures to past tense, added Oct 1–11, 2026 / Nov 2026 dataset acquisition dates and explicit license terms across Chapter III, `Table 3.1`, and `Appendix A` (`Table A.1`), documented GCP `g2-standard-4` NVIDIA L4 (24 GB) and local `i5-11260H` / `CPython 3.13.9` / `PyTorch 2.13.0+cpu` pinned library versions, added Iterative Prototyping SDLC and 4-tier executed test records (`362` `tests/` + `24` `integrated_app/tests/`, `1,521,399`-byte integration parity, `25`-case live `v0.2.13` evaluation), added Statistical Treatment of Data and `Appendices C/F/G/L` cross-references, and embedded inline Guide B step outputs; (5) added `Table D.1` in `Appendix D` reconciling both Google Cloud Free Trial (`$300` USD each) billing accounts (`$281.10 + $1.09 = $282.19` and `$208.53` -> `$490.72` gross usage, `-$490.72` trial credits, `$0.00` net billed, two `-$10.00` Oct 11, 2026 `Visa •••• 8360` prepayments) while keeping both original budget images intact; (6) populated `Appendix I` with the complete 10-page IEEE paper (`Abstract`, `Index Terms`, Sections `I`–`V`, `TABLE I`, `TABLE II`, `References [1]–[33]`) using non-polluting `Normal` internal headers; and (7) synchronized **164/164** `TOC` (`81`), `LOF` (`55`), `LOT` (`16`, including `Table D.1`), and `LOA` (`12/12`, `Appendices A..L` at logical pages `105..141`) entries with `0` mismatches. [Remediation record](docs/THESIS_MANUSCRIPT_REMEDIATION_2026-11-23.md)
+
+## 22 November 2026 — Version 0.2.14 release (degraded face-patch restoration, calibrated Step 1 auto-crop, and hardened Auto button)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`e351a66`](https://github.com/janusinss/forensic-dgp/commit/e351a66d105f565130610aeb74b55799d19e9a14) |
+| Offline installer build, `codex/r2-installer-release` | [`f9eb937`](https://github.com/janusinss/forensic-dgp/commit/f9eb937ca6fe0bc31009e148e792a7ab2c79632f) |
+| Public download page | [Forensic DGP 0.2.14 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `be20c866`](https://be20c866.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.2.14`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.14) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.2.14.exe` (`1,314,137,477` bytes, SHA-256 `061c07519528adb88f40821b886ac77f2f3068a28bc392ac3849e67e6dc9c625`) on GitHub Releases (`v0.2.14`, verified `HTTP 206` `Content-Range: bytes 0-15/1314137477`) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) and clean Playwright audits across 375px, 768px, and 1280px.
+- Ships Step 2 degraded face-patch restoration (preserving `>=512px` JPEG DCT and clean-color privacy mosaics while fixing false DCT stripping and adding masked block-noise smoothing, wide-scale posterized chroma-blotch homogenization, exterior-referenced shadow/haze veil removal, and straight-row mid-forehead paste-seam detection), calibrated `-15%` Step 1 auto-crop (`AUTO_CROP_MARGIN_RATIO = 0.32`), and hardened Auto button routing (`CAST_D_MIN = 26.5`, `dc <= 10` macroblock guard, FBCNN up to `768px` for heavy JPEGs, and explicit Auto UI summary labels `implementation.js?v=46`, `capture.js?v=21`).
+
+## 21 November 2026 (Post-recheck) — Word-edit recovery, hyperlink/figure repair, and final sync (`131` pp.)
+
+- Updated [docs/THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) (`80,661,222` bytes, SHA-256 `33e9448f4e020d3839612738fac6479637038a7cb4d4c0ee937138128cd0b91e`, `26` sections, `14` tables, `57` inline shapes, `58` image binaries, `7` OMML equations) and regenerated [docs/THESIS-MANUSCRIPT-FINAL.pdf](docs/THESIS-MANUSCRIPT-FINAL.pdf) (`5,808,823` bytes, SHA-256 `9f4eeab993802b963f2b785ae3a5edc658c5de4800155f80524be25679de6af5`, `131` pages: Cover + Roman `i`–`xi` + Arabic `1`–`119`) via `scratch/fix_recheck_2026_11_21.py` and two-pass Word COM refresh/export (`scratch/fix_recheck_2026_11_21_word.ps1`).
+- Backed up the pre-recheck-fix Word-edited pair as `docs/THESIS-MANUSCRIPT-FINAL.before-recheck-fix-2026-11-21.docx` (`80,696,639` bytes, SHA-256 `933a6a7a32a2a57f14c95c12e6e528519e4db4b0f73a4c470ce3566b54dff827`) and `docs/THESIS-MANUSCRIPT-FINAL.before-recheck-fix-2026-11-21.pdf` (`5,785,570` bytes, SHA-256 `3a5476a590597f02a5ef48b7613a7ce89e3db4f7b0c021299c73a5feb1bfa544`).
+- Preserved intentional `List Paragraph` splits (Research Questions, Specific Objectives, Chapter IV four conditions), `Significance of the Study` bold lead-ins, uniform `36 pt` `Heading 3` subsection hierarchy (`Heading 2` at `0 pt`), Appendix B (5 pp.) & Appendix J (3 pp.) pairings, and Appendix L header/note/signature splits (with `<w:br/>` line breaks intact); repaired `Figure 4.4`-in-`Figure 4.3` caption (`LOF` clean) and `Figure 4.16`-in-prose separation, restored `2/2` clickable Google Drive `<w:hyperlink>` nodes (Ch. IV `p. 96`, Appendix A `p. 107`) and ~60 prose/em-dash/`unoccluded` edits, clamped all `57` inline shapes `<= 5.85 in` (`Figure 4.16`/`4.17` paired cleanly at `5.25 × 3.85 in`), restored `w:sz="24"` `Times New Roman` on `word/footer4..10.xml`, eliminated `P19`/`P60` trailing widow pages, and verified **161/161** TOC/LOF/LOT/LOA sync (`0` mismatches) with cold-context `PASS` (`#93`). [Layout revision record](docs/THESIS_LAYOUT_REVISION_2026-11-21.md)
+
+## 21 November 2026 — Full-manuscript layout, pagination, and typography polish (150 pp. -> 133 pp.)
+
+- Updated [docs/THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) (`80,687,405` bytes, SHA-256 `ce241883bf9c508be0641e92de984b7e0e334ad5688ad8b444b8edca9dcb37bb`, `878` paragraphs, `26` sections, `14` tables, `57` inline shapes) and regenerated [docs/THESIS-MANUSCRIPT-FINAL.pdf](docs/THESIS-MANUSCRIPT-FINAL.pdf) (`5,785,570` bytes, SHA-256 `3a5476a590597f02a5ef48b7613a7ce89e3db4f7b0c021299c73a5feb1bfa544`, `133` pages: Cover + Roman `i`–`xi` + Arabic `1`–`121`) via `scratch/fix_layout_2026_11_21.py` and two-pass Word COM refresh (`scratch/render_layout_pdf.ps1`).
+- Backed up the preceding 150-page pair as `docs/THESIS-MANUSCRIPT-FINAL.before-layout-fix-2026-11-21.docx` (`451e88161289cb86a310c37625f1e1a7d4d0272660c28a2c1a5f1920b97613f8`) and `docs/THESIS-MANUSCRIPT-FINAL.before-layout-fix-2026-11-21.pdf` (`489b72ebb7079a44ce0fb2b1c83623ea1a5feec798cd03b6b45e342cfe50fdc3`).
+- Eliminated 17 wasted, bloated, or orphaned pages with **zero content mutations** (100% identical body text, 14/14 table contents, 58 image binary blobs, 26/26 line-numbered sections, 7 OMML equations, verbatim Cover/Approval titles, both clickable Google Drive PDF links, and **161/161** TOC/LOF/LOT/LOA entries synchronized): unchained `Objectives`, compacted `Table 1.1`/`2.1`/`3.1`/`4.5`/`A.1`/`C.1` onto balanced pages, rebuilt `Table 4.6` (`6.00 in` fixed width, single-spaced 1-line rows + `9.0 pt` table `Note.`, reducing 4 pages to 1.5), glued `Table 4.8`'s footnote beneath the table, paired `Figure 4.16`/`4.17` (eliminating the Chapter IV 2-line widow page), tightened `REFERENCES` onto 2 full pages, moved `par[669]` ahead of Appendix A's trailing `<w:sectPr>` (eliminating the stranded Google Drive page), standardized Appendix B into 5 balanced paired pages (`B.1`, `B.2+B.3`, `B.4+B.5`, `B.6+B.7`, `B.8+B.9`), and paired Appendix J into 3 full pages. [Layout revision record](docs/THESIS_LAYOUT_REVISION_2026-11-21.md)
+
+## 20 November 2026 — Front-matter Roman pagination, Appendix B/J/K & `v0.2.13` alignment fixes
+
+- Updated [docs/THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) (`80,658,727` bytes, SHA-256 `451e88161289cb86a310c37625f1e1a7d4d0272660c28a2c1a5f1920b97613f8`, `878` paragraphs, `26` sections, `14` tables, `57` inline shapes) and regenerated [docs/THESIS-MANUSCRIPT-FINAL.pdf](docs/THESIS-MANUSCRIPT-FINAL.pdf) (`6,195,683` bytes, SHA-256 `489b72ebb7079a44ce0fb2b1c83623ea1a5feec798cd03b6b45e342cfe50fdc3`, `150` pages: Cover + Roman `i`–`xi` + Arabic `1`–`138`) via two-pass Word COM refresh.
+- Backed up the preceding `B.1`/`B.7`-updated pair as `docs/THESIS-MANUSCRIPT-FINAL.before-frontmatter-fixes-2026-11-20.docx` (`8a96d3acb86bc52fd7b52632bc9f1819e9b40059b27569877fd68c365454a504`) and `docs/THESIS-MANUSCRIPT-FINAL.before-frontmatter-fixes-2026-11-20.pdf` (`66a6102adb50069982cf8f5c736f36a5ff92a6aac1628389d5c578cc70be91af`).
+- Applied five targeted fixes: (1) corrected `Off`-mode prose in Chapter III, Appendix B, and Appendix J §2 to match `app.py` (`Auto` prepares + runs one forward pass; `Off` bypasses both preparation and neural restoration and returns the resized `256 × 256` original crop); (2) configured continuous `lowerRoman` front-matter pagination (`i`–`xi`) with centered dynamic `{ PAGE }` footers and styled `Figure 4.2 (Part 2 of 2)` as `ThesisFigureCaption` (**54/54** LOF entries); (3) labeled `Figure B.5` and `Figure B.6` (captions + prose) as legacy manual-preparation screens hidden in `v0.2.13`, scoped `Figure 2.1`'s introductory prose to the initial baseline formulation, and replaced `Figure B.2` (watermarked) and matching `Figure B.3` with clean `1440×1050` live `v0.2.13` video-mode captures; and (4) pluralized `Appendix K` (*"the researchers"*) and added `Heading 2` `Janus R. Dominic` for symmetric TOC indexing alongside `Roberto “RJ” B. Toribio III`. [Revision record](docs/THESIS_ACADEMIC_PROSE_REVISION_2026-11-20.md)
+
+## 20 November 2026 — Thesis academic prose standardization and Chapter II deduplication
+
+- Standardized formal third-person academic prose (`P0–P3`) across [docs/THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) (`79,347,692` bytes, SHA-256 `3df9bd1b561a74fb697f4fa72ebe2234240fe84e3c1056bc3fcd9035bfb86cd8`, `875` paragraphs, `26` sections, `14` tables, `57` inline shapes, `7` OMML equations) and regenerated [docs/THESIS-MANUSCRIPT-FINAL.pdf](docs/THESIS-MANUSCRIPT-FINAL.pdf) (`6,080,745` bytes, SHA-256 `817ed678e9f3f9592fa55840590e420fa9dae8a1e3890f1d1768beacdf013842`, `149` pages) with Word COM TOC/LOF/LOT/Appendix field refresh (`158/158` entries synced).
+- Backed up the pre-edit v0.2.13 pair as `docs/THESIS-MANUSCRIPT-FINAL.before-academic-prose-2026-11-20.docx` (`a2efd70d2902188a50de1f938b888d83f5aa8675d56abdde44488e725f5ec2fc`) and `docs/THESIS-MANUSCRIPT-FINAL.before-academic-prose-2026-11-20.pdf` (`32391a808d0d4ec1e8f5286707f7150c3807dbc80b5ad95782b87c897340babe`).
+- Applied **248** paragraph replacements, **2** hyperlink-preserving paragraph updates (`par[617]`, `par[694]` keeping both clickable Google Drive links), and **164** table-cell updates across `doc.tables[0..13]`; consolidated 10 two-pass Chapter II subsections by deleting **27** superseded duplicate paragraphs; removed all remaining internal labels (`Phase 3`, `Phase 5`, `untouched`, `p2u0224`, `thumbnails128x128`, 40-char git hashes in References `[17]`/`[32]`, UK spellings, and informal phrases) while verifying **100% numeric identity** across `Table 4.1`–`Table 4.9`. [Academic prose revision record](docs/THESIS_ACADEMIC_PROSE_REVISION_2026-11-20.md)
+
+## 19 November 2026 — Version 0.2.13 release and thesis manuscript synchronization
+
+| Component | Verified revision or version |
+| --- | --- |
+| Research repository and integrated app, `main` | [`91d87f7`](https://github.com/janusinss/forensic-dgp/commit/91d87f73a9163baec2f17908f23bb1b0f9035fb7) |
+| Standalone app, `IMPLEMENTATION` | [`c52b9b6`](https://github.com/janusinss/forensic-dgp/commit/c52b9b69771df38eb036ba059d5deb4bef1f322b) |
+| Offline installer build, `codex/r2-installer-release` | [`5d9652f`](https://github.com/janusinss/forensic-dgp/commit/5d9652fecc8333dbc4094ac86305c1e6e12aab60) |
+| Public download page | [Forensic DGP 0.2.13 preview](https://forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.2.13.exe` (`1,314,126,941` bytes, SHA-256 `f4fbbd598ad33dfa3d88bad40c6793ebc2d4601759b9ab8211a2795faf594ae2`) on [GitHub Releases (`v0.2.13`)](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.13) and [Cloudflare Pages](https://forensic-dgp.pages.dev/release.json), with zero detections under Windows Defender and Avast scans and verified in-place local upgrade at `C:\Users\janus\AppData\Local\Programs\Forensic DGP`.
+- Synchronized [docs/THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) and [docs/THESIS-MANUSCRIPT-FINAL.pdf](docs/THESIS-MANUSCRIPT-FINAL.pdf) with the live `0.2.13` application and [docs/THESIS_REWRITING_STANDARD.md](docs/THESIS_REWRITING_STANDARD.md): updated Chapter III (`pars[438, 442..447]`) and redrew Figure 3.2 for the five-step picture/video workflow; updated Chapter IV (`pars[606, 607, 622]`) for the three-panel `[Before — Auto output — Restored]` gallery, five-row diagnostics with explicit units and restored-only `Accuracy (%) = 100 × (1 − MAE/255)`, seven-step clean-reference spatial alignment with reference-video frame extraction at the recorded source timestamp, side-by-side `[Ground truth — Restored]` comparison, and automatic covering proposals (`Remove covering` with BiSeNet/XSeg occlusion segmentation, hollow clear-glasses frame extraction, Lab/YCrCb fallback, and `256 × 256` visible-support checks); and embedded verified live `0.2.13` screenshots across Appendix B and the Appendix J end-user manual while preserving all 26 sections, all 14 tables (including Table 4.9’s 20-case evaluation), and both clickable Google Drive links. [Version 0.2.13 thesis revision record](docs/THESIS_V0213_REVISION_2026-11-19.md)
+
+## 18 November 2026 — Consultation prototype and thesis revision
+
+- The checkout's release metadata identifies the Windows offline preview as 0.2.12. The other workspace's audit records the later consultation changes as prototype work on top of that release. [Deployment history](download-site/DEPLOYMENT.md)
+- The local source shows multipass YuNet detection, Picture manual cropping, Auto or Off settings, and sequential processing of selected video faces. Auto uses artifact-specific checks before one restoration inference per crop. The audit records the narrower crop trials, rejected preparation candidates, and route-specific regressions as engineering history. [Capture and preparation source](integrated_app/implementation)
+- Result review shows Before, Auto output when available, and Restored. The reference path can match an input subregion or take a corresponding video frame using the saved source time. MAE and PSNR apply to the matched observed area. The restored-only label “Accuracy (%)” is `100 × (1 − MAE/255)`. [Reference scoring](integrated_app/static/restoration_reference.js)
+- The optional completion flow proposes a covering mask, checks the observed support, and shows the mask with the original restoration and the completed estimate. Supplemental BiSeNet and XSeg segmentation depends on the verified assets in the local environment. The audit's fixture results concern the particular tested inputs. The earlier covering-mask and R1/R2 comparisons retain their original protocols. [Automatic covering source](integrated_app/implementation/automatic_covering.py)
+- The updated manuscript describes the prototype, retains the 20-case sample evaluation and Drive link, and marks the earlier UI figures accordingly. [Thesis revision record](docs/THESIS_CROSS_WORKSPACE_REVISION_2026-11-18.md)
+
+## 14 November 2026 — Current checkout and public release
+
+| Component | Verified revision or version |
+| --- | --- |
+| Research repository and integrated app, `main` | [`e4d17b5`](https://github.com/janusinss/forensic-dgp/commit/e4d17b5043b1044ce05fb99a261fa060d09da6dc) |
+| Standalone app, `IMPLEMENTATION` | [`7549a15`](https://github.com/janusinss/forensic-dgp/commit/7549a1579e761d69e9f4a80632aaa8ed3b112468) |
+| Offline installer build, `codex/r2-installer-release` | [`7e78f28`](https://github.com/janusinss/forensic-dgp/commit/7e78f28ae420ddb1e4c5b95668b186fb47bfdf5c) |
+| Public download page | [Forensic DGP 0.2.11 preview](https://forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+
+The live release metadata and GitHub asset agree on the unsigned offline installer `ForensicDGP_Setup-0.2.11.exe`, 1,314,084,061 bytes, SHA-256 `05a4640e302a37c258d4cbd1fa388d854645269a029e7f0101de476c366b1051`. Version 0.2.10 added aligned clean-reference evaluation across native, padded, and manual crops. Version 0.2.11 added automatic shutdown of running Forensic DGP instances during upgrade and uninstall, and long-path cleanup during uninstall. This handoff check verified release metadata and branch heads. [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.11)
+
+## App workflow and evidence
+
+- Picture starts with a detected face when available and supports manual cropping. Video, webcam, and RTSP sources support freezing a frame and selecting up to 12 detected faces with **Add all**. The selected crops share one **Auto**, **Manual**, or **Off** setting and run sequentially.
+- Auto in 0.2.6 introduced adaptive Gaussian smoothing at 2.5, 3.0, or 3.5 px at the 256 px scale, localized Protect + Auto-match, and full-source scanline suppression. Later revisions document additional routes for tilted, perspective-warped, and irregular mosaics, JPEG and macroblock deblocking, and other artifact corrections. Consult the current app documentation for the route conditions and evidence files. [Integrated app guide](integrated_app/README.MD)
+- Result review shows Before and After, separate downloads, and per-face diagnostics. An aligned clean reference enables MAE and PSNR over the observed crop. Report unpaired CCTV by visible artifact changes and visual review. Reviewed covering detection and R1/R2 completion comparisons are distinct evaluations. [Thesis capture and completion revision](docs/THESIS_CAPTURE_COMPLETION_REVISION_2026-11-07.md)
+- The 0.2.6 build remains the user-approved comparison baseline. The exploratory 2 px synthetic grid was read as 4 px, and the 3 px grid used the default 3.0 px radius. That probe measured routing alone. Before claiming a benefit from finer-grid or tiny-face preparation, compare direct restoration, 0.2.6 Auto, and the candidate on matched clean-reference crops and clean controls, with `wild4` and `wild2` as visual regressions. Treat source-video deinterlacing as a separate experiment from scanline suppression on a frozen frame.
+
+## Manuscript
+
+- Edit [THESIS-MANUSCRIPT-FINAL.docx](docs/THESIS-MANUSCRIPT-FINAL.docx) and regenerate the matching [PDF](docs/THESIS-MANUSCRIPT-FINAL.pdf). Follow the [thesis writing standard](docs/THESIS_REWRITING_STANDARD.md). The standard retains the older filename in its introduction.
+- The November 9 revision updated the Chapter III workflow, Chapter IV application evaluation, and Appendices A, B, and J. Chapter IV retained the matched comparisons of the Phase 3 conditional model, untouched CodeFormer, and the proposed conditioned model, with the resized input as a baseline. The revision recorded a 128-page PDF and documents the 0.2.6 workflow. Review it against 0.2.11 before refreshing screenshots or describing later Auto routes and reference handling. [November 9 revision record](docs/THESIS_AUTO_PREPARATION_REVISION_2026-11-09.md)
+
+---
+
+## Historical handoff entries
+
+The dated entries below record the project state at the time of each handoff.
+
+# 2 November 2026: Master All-Folder Handoff Consolidation (`Testing`, `Testing_FACE_MASK_COMPLETION`, `Testing_RESTORATION`, `Testing_INNO_INSTALLER` / `codex/r2-installer-release`, and `IMPLEMENTATION`)
+
+STATUS: ALL_WORKTREE_HANDOFFS_CONSOLIDATED_IN_TESTING_MAIN_AND_PUSHED_TO_ORIGIN.
+
+## 0. Cross-Folder & Branch Consolidation Matrix (2 November 2026)
+
+| Folder / Worktree | Branch | Head / Source Commit | Canonical Status in `C:\xampp\htdocs\YEAR 4\Testing` (`main`) |
+| :--- | :--- | :--- | :--- |
+| `C:\xampp\htdocs\YEAR 4\Testing` | `main` (`origin/main`) | Current `HEAD` | **Canonical master repository**: contains 100% of `RESTORATION`, `FACE_MASK_COMPLETION`, `integrated_app/` (`IMPLEMENTATION` `9fd2d9f`), `packaging/` (`codex/r2-installer-release` `fa88841`), `ORIGINS_FACE_MASK_COMPLETION.md`, `ORIGINS_RESTORATION.md`, and all `22,953` synced gitignored `outputs/` & `scratch/` artifacts (`17,614` completion + `5,339` restoration). |
+| `C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION` | `FACE_MASK_COMPLETION` | Synced to `origin/main` | **100% merged & consolidated into `Testing` (`main`)**: all `557` completion research/test files and all `17,614` gitignored `outputs/`, `scratch/`, and fixture files are in `Testing`. Safe to remove when desired. |
+| `C:\xampp\htdocs\YEAR 4\Testing_RESTORATION` | `RESTORATION` | Synced to `origin/main` | **100% merged & consolidated into `Testing` (`main`)**: all `Conditioned SFT V1/V2` commits and all `5,339` gitignored `outputs/` & `scratch/` files are in `Testing`. Safe to remove when desired. |
+| `C:\xampp\htdocs\YEAR 4\Testing_INNO_INSTALLER` & `Testing/scratch/r2-installer` | `feature/inno-desktop-installer` (`6673f0d`) -> `codex/r2-installer-release` (`fa88841`, `origin/codex/r2-installer-release`) | `fa88841c09c8a56a2c4445746e7f7c95ec45862e` | **100% documented & `packaging/` tracked in `Testing` (`main`)**: `Testing_INNO_INSTALLER` (`6673f0d`) was superseded by `codex/r2-installer-release` (`fa88841`, `v0.2.2` offline installer release). Full `packaging/` directory and handoff history are consolidated in `Testing`. Safe to remove when desired. |
+| `C:\Users\janus\.codex\worktrees\implementation-one-shot\Testing` | `IMPLEMENTATION` (`origin/IMPLEMENTATION`) | `9fd2d9f664d7d4b6924b010f6b8090cd49d36add` | **Mirrored in `Testing/integrated_app/` on `main`** and pushed to `origin/IMPLEMENTATION` (`9fd2d9f`). |
+
+---
+
+## 1. `Testing_FACE_MASK_COMPLETION` (`FACE_MASK_COMPLETION`) Complete Handoff (28 Oct – 2 Nov 2026)
+
+- **Branch & Deployment Consolidation (2 November 2026)**:
+  - **`main` (`C:\xampp\htdocs\YEAR 4\Testing`, pushed to `origin/main`)**: Consolidated 100% of `FACE_MASK_COMPLETION` research commits, documentation, scripts, and tests alongside `RESTORATION`, updated `integrated_app/` on `main` to **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`), and synced all `17,614` gitignored `outputs/`, `scratch/`, and fixture files from `C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION` into `C:\xampp\htdocs\YEAR 4\Testing`.
+  - **`IMPLEMENTATION` (`origin/IMPLEMENTATION` commit `9fd2d9f`, Windows installer `v0.2.2` & release `completion-r2-models-v1`)**: Promoted **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`, `370,773,572` bytes, `497` `params_ema` tensors, SHA-256 `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c`, logical SHA-256 `300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0`) while preserving all 18 protected **Conditioned SFT V2 (`p2_u0224`)** restoration files with zero modifications (`0` diff).
+- **2 November 2026 — Unified CodeFormer Completion R2 (`v3`) Ratified (`60/60` Gates) ([COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md](docs/archive/completion/COMPLETION_CODEFORMER_UNIFIED_R2_V3_RESULTS.md))**:
+  - Sealed execution archive: `outputs/cctv-completion-codeformer-unified-r2-v3-execution.tar.gz` (SHA-256 `80c4b4f992e08fb1e5135ddc7e34c51c90714cd1c0de5625140f29dc57c228af`, protocol SHA-256 `463c1977e9cd74f0a4fd0240df7a784f48b613043ef667714f1ef94adb4cd60a`).
+  - Returned L4 archive: `outputs/cctv-completion-codeformer-unified-r2-v3-results.tar.gz` (`1,456,894,853` bytes, SHA-256 `f2eba0ddbc881c0f0abce7d207c03e22a1633391eaab4255d135aff8e608a199`), audited in `outputs/completion_codeformer_unified_r2_v3_return/independent_return_audit.json`.
+  - Passed **`60/60` numeric ratchet gates** (`2/2` overall + `20/20` clear monitor + `28/28` challenge monitor + `10/10` strict-gray chroma guard):
+    - Clear Monitor (`32` paired cases): `macro.PNG_hole_L1` `0.048641 -> 0.048129` (**`-1.0527%`**), `macro.PNG_boundary_L1` **`-2.5129%`** (`20/20` subgroup metrics improved).
+    - Challenge Monitor (`16` paired cases): `macro.PNG_hole_L1` `0.050733 -> 0.049370` (**`-2.6873%`**), `macro.PNG_boundary_L1` **`-4.7020%`** (`28/28` subgroup metrics improved).
+    - Strict-Gray Chroma Guard (`8` cases): `macro.GRAY_PNG_mean_channel_spread` `4.6712 -> 4.1891` (**`-10.3204%`**; `10/10` metrics improved).
+    - Exact Outside-Support Preservation: `44,001,540 / 44,001,540` exact RGB bytes across all `256` evaluated PNGs (`168` empty-mask bypasses).
+- **2 November 2026 — Covering Proposal Segmenter Audit & Replaceability Report ([COVERING_DETECTOR_AND_R2_REPLACEABILITY_REPORT.md](docs/archive/completion/COVERING_DETECTOR_AND_R2_REPLACEABILITY_REPORT.md))**:
+  - Audited `covering_detector_segmenter_v1.pth` (`2,681,549` bytes, SHA-256 `ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf`) against all 4 historical VM-returned `GatedUNet(3, 1, 24)` checkpoints (`balanced_penalty_ep9`, `balanced_ctrl_ep10`, `replay_ep10`, `consistency_ep10`) on the 9 `Conditioned SFT V2` restored integration canvases (`outputs/completion_codeformer_unified_r2_v3_candidate/nine_case_restored_r1_vs_r2_audit.json`).
+  - All 4 historical VM candidates fail the uncovered control (`08_uncovered_degraded`: `1,251` to `12,525` false-positive mask pixels vs `0` for `v1`) while still missing `05_white_glare_degraded` (`0` px) and `val_362_hair_eye_degraded` (`0` px). Retained `covering_detector_segmenter_v1.pth` as the proposal-only segmenter with mandatory human mask review.
+- **2 November 2026 — Selective Drop-In Integration Verification**:
+  - Nine-case `Conditioned SFT V2` restored-canvas comparison (`outputs/completion_codeformer_unified_r2_v3_candidate/nine_case_restored_r1_vs_r2_comparison.png`): `1,521,399 / 1,521,399` exact outside-mask RGB bytes preserved, `-5.11%` grayscale chroma spread reduction on `val_362_hair_eye_degraded` (`13.2211 -> 12.5458`), and verified live via inline Playwright (`375x667`, `768x1024`, `1280x800`, `0` overflow, `0` console/page errors, `13.42s` E2E browser generation).
+- **1 November 2026 — Unified CodeFormer Completion R2 (`v2`) L4 Return Audited (`59/60` Gates; Rejected at Promotion Gate) ([COMPLETION_CODEFORMER_UNIFIED_R2_V2_RESULTS.md](docs/archive/completion/COMPLETION_CODEFORMER_UNIFIED_R2_V2_RESULTS.md))**:
+  - Returned L4 archive `outputs/cctv-completion-codeformer-unified-r2-v2-results.tar.gz` (`1,456,870,928` bytes, SHA-256 `4c29197252f71c4347a8966b88488ab816d887e91ab72b3b5594c9d346b94592`).
+  - Solved all `30/30` clear and strict-gray gates (including `CLEAR_LOWER_FACE.PNG_hole_L1` `-1.2584%` and `GRAY_PNG_mean_channel_spread` `-7.4793%`), passing `59/60` total gates, but missed a single challenge subgroup metric (`CHALLENGE_LOWER_FACE.PNG_hole_L1` `+0.4789%`, `3/6` cases improved). Re-weighted lower-face hole/chroma scale to `1.15x` and `lambda_chroma = 0.08` to produce the winning `v3` packet.
+- **29 October 2026 — Unified CodeFormer Completion R2 (`v1`) L4 Return Audited (`56/60` Gates; Rejected at Promotion Gate) ([COMPLETION_CODEFORMER_UNIFIED_R2_V1_RESULTS.md](docs/archive/completion/COMPLETION_CODEFORMER_UNIFIED_R2_V1_RESULTS.md) & [FACE_MASK_COMPLETION_HANDOFF_2026-10-29.md](docs/archive/completion/FACE_MASK_COMPLETION_HANDOFF_2026-10-29.md))**:
+  - Returned L4 archive `outputs/cctv-completion-codeformer-unified-r2-v1-results.tar.gz` (`1,456,829,113` bytes, SHA-256 `a668a7303503bfbe14e2214aa9e0b1ef414f5df6cd9ed2a1c44606fa4ba4e72e`).
+  - Jointly unfreezing `332` tensors (`164` encoder + `114` predictor + `54` SFT fusion) broke the `< 1%` ceiling (`challenge macro.PNG_hole_L1` `-1.8253%`, `clear macro.PNG_boundary_L1` `-1.6632%`, `56/60` gates), diagnosing the `0.35` hole-cell weight floor on large lower-face masks that led to `v2` and `v3`.
+- **28–29 October 2026 — Spatial-Code Intervention V1 Audited (`0` Updates, `108` Forwards) ([COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_RESULTS.md](COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_RESULTS.md))**:
+  - Returned L4 archive `outputs/cctv-completion-codeformer-spatial-code-intervention-v1-results.tar.gz` (`19,534,544` bytes, SHA-256 `4422546141a036c6db226c0c98a3b2c6bc4039535069a120ff337906725a70ee`).
+  - Proved `87.31%` of total oracle headroom (`-14.396%` clear / `-14.374%` challenge `PNG_hole_L1`) resides in masked/touching cells (`H`), while visible-only cell replacement (`V`) improves hole L1 by only `-1.364%` / `-1.231%` and degrades boundaries by `+6.161%` / `+5.749%`.
+
+---
+
+## 2. `Testing_RESTORATION` (`RESTORATION`) Complete Handoff (25–27 Oct 2026)
+
+- **Conditioned SFT V1 Feasibility & L4 Return Audit ([CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md))**:
+  - **Stage 1 Feasibility (`outputs/codeformer_conditioned_sft_learning_v1_feasibility/feasibility_receipt_v1.json`)**: `single_pass_input_anchored_B8_beta0p005` passed `56/56` inherited + `40/40` monitor gates at `u8` and `u24/u48` (`-48,923` RGB8 code improvement on clear monitors).
+  - **Returned L4 GPU Run (`outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/`)**: `cctv-codeformer-conditioned-sft-learning-v1-results.tar.gz` (`2,360,962,311` bytes, `3,825` members, `712` full forwards, `18` checkpoints, `16` Adam commits). Arm `B` solved the `clear` PNG regression (`-0.000273`), delivered `5.3x`–`15.9x` larger degraded-role MAE gains, and passed `96/96` coarse `g_dark` exposure drift sign alignment gates (`inh8`, `inh48`, `sup8`, `sup48`).
+- **Conditioned SFT V2 (`p2_u0224`) Ratified & Promoted to Production ([CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md))**:
+  - **Stage 1 Headroom Proof ([CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md))**: Proved `+0.073` to `+0.141` `SSIM7` headroom via Exposure-Matched SFT (`outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`).
+  - **Stage 3 Sealed Manual L4 VM Packet ([CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md))**: `outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz` (`124,224,129` bytes, `849` PAX members, SHA-256 `f373cf3b1eb217a409381ff133c47061f4bf06a4db0bb99b34bc78af3eb01d1d`, Protocol SHA-256 `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0`).
+  - **Stage 4 Live NVIDIA L4 Return Audit (`outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1/return_audit_v2.json`)**: `cctv-codeformer-conditioned-sft-learning-v2-results.tar.gz` (`158,864,004` bytes, `1,020` PAX members, SHA-256 `8b9632c4f85b46deeb061e63cdefb4318aef48da06adbf07dead81e77b006c22`, `2,731.7s`). Winning checkpoint **`p2_u0224`** (`v2_p2_u0224_heads.npz`, `12,188` bytes, SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f` over `787` frozen `u64` base tensors) passed **`56/56` inherited forensic retention checks**, reduced 4-role degraded `MAE` by **`-37.4%`** (`0.04452 -> 0.02785`), raised `SSIM7` by **`+0.02062`** (`0.83276 -> 0.85338`), increased paired degraded `Central Laplacian Sharpness` (`0.01897 -> 0.01985`), and boosted native CCTV (`ChokePoint` & `QMUL-SurvFace`) sharpness by **`+22.1%` to `+47.1%`**.
+  - **Stage 5 Promotion & Branch Consolidation (27 October 2026)**: Promoted **Conditioned SFT V2 (`p2_u0224`)** as the sole production restoration model in `IMPLEMENTATION` (`320ec20`, preserved unchanged through `6059fc3` and `9fd2d9f`) and consolidated 100% of `RESTORATION` commits and `5,339` gitignored `outputs/` & `scratch/` files into `C:\xampp\htdocs\YEAR 4\Testing` (`main`).
+
+---
+
+## 3. `Testing_INNO_INSTALLER` (`feature/inno-desktop-installer`) & `codex/r2-installer-release` (`fa88841`) Complete Desktop Installer Handoff (30 Oct – 2 Nov 2026)
+
+- **Canonical Installer Documentation Tracked in `C:\xampp\htdocs\YEAR 4\Testing\packaging\`**:
+  - [packaging/R2_VERIFICATION.md](packaging/R2_VERIFICATION.md) — Version `0.2.2` Completion R2 offline installer verification & Cloudflare Pages release (`2 Nov 2026`).
+  - [packaging/PAYLOAD_PATH_HOTFIX.md](packaging/PAYLOAD_PATH_HOTFIX.md) — Version `0.2.1` Windows 8.3 short-path `Verify-Payload` hotfix (`1 Nov 2026`).
+  - [packaging/MODEL_UPDATES.md](packaging/MODEL_UPDATES.md) — Content-addressed `runtime/data/models/<family>/<inventory-key>/` model-set isolation (`1 Nov 2026`, `Testing_INNO_INSTALLER` commit `6673f0d`).
+  - [packaging/VERIFICATION.md](packaging/VERIFICATION.md) — Version `0.2.0` full offline bundled installer (`1 Nov 2026`) and historical `0.1.0`/`0.1.1` bootstrap installers (`30–31 Oct 2026`).
+  - [packaging/BUILD.md](packaging/BUILD.md), [packaging/DESKTOP_LIFECYCLE.md](packaging/DESKTOP_LIFECYCLE.md), [packaging/INNO_INSTALLER_PLAN.md](packaging/INNO_INSTALLER_PLAN.md) — Build pipeline, C# desktop launcher (`packaging/launcher/Program.cs`), and Inno Setup (`packaging/installer.iss`) lifecycle specifications.
+- **Release Progression Summary (`v0.1.0 -> v0.1.1 -> v0.2.0 -> v0.2.1 -> v0.2.2`)**:
+  - **`v0.2.2` (2 November 2026 — Current Published Release, `codex/r2-installer-release` commit `fa88841`, build source `453d563bdd6c1c36b92107b869dcc6e6f70e4a8e`, app revision `2c5d8fd7c557b68ecd1eed2c6f29091ac1dcd6d9`)**:
+    - Offline installer `ForensicDGP_Setup-0.2.2.exe`: **`1,045,576,043` bytes**, SHA-256 `bc9952a5e54a3955a06a7e3b636d008f8dee2f227ef470224ee927463d733a25`, offline payload manifest SHA-256 `59a4d99c977e209273fc2ff2e4d08e4b474a224f55184be18e2660467bcde215`.
+    - Combines **Trained CodeFormer Completion R2** (`codeformer_completion_r2.pth`, SHA-256 `ed9f92ba...`), **Conditioned SFT V2 (`p2_u0224`)** restoration, content-addressed model-set isolation (`6673f0d`), and the Windows 8.3 short-path payload verifier fix (`0.2.1`).
+    - Verified native `0.2.1 -> 0.2.2` in-place upgrade under a Windows 8.3 `TEMP/TMP` path (`318.03s`), preserving all 6 prior flat model files and 4 saved-record hashes while populating the 6 namespaced model files.
+    - Regression suites passed: `132` `IMPLEMENTATION` Python tests (`4` skips), `391` integrated installer Python tests (`6` skips), `34/34` JavaScript capture/playback tests, `19/19` download-site tests, and live Edge `375px`/`768px`/`1280px` layout & E2E V2+R2 inference checks.
+    - Published at [v0.2.2 Release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.2), [completion-r2-models-v1](https://github.com/janusinss/forensic-dgp/releases/tag/completion-r2-models-v1), and [forensic-dgp.pages.dev](https://forensic-dgp.pages.dev/) (`ff9edb57.forensic-dgp.pages.dev`).
+  - **`v0.2.1` (1 November 2026 — Windows 8.3 Short-Path Hotfix, build source `6f7cf0b59b7391d154da9ec9be573d6a74f77b90`)**:
+    - Offline installer `ForensicDGP_Setup-0.2.1.exe`: `1,045,722,009` bytes, SHA-256 `431fd74e2f643ccfc7b31407deaabeebaf12e6240e53f7ef8f2b6f35da78a884` ([v0.2.1 Release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.1)). Fixed PowerShell 5.1 `Get-ChildItem` 8.3 short-path expansion mismatch in `Verify-Payload`.
+  - **`v0.2.0` (1 November 2026 — First Full Offline Preview, build source `c8ff04e83bd4a722bc73134f67c0c1b1719ecb36`)**:
+    - Offline installer `ForensicDGP_Setup-0.2.0.exe`: `1,045,716,354` bytes, SHA-256 `4287feb22c96c9abaf5804592938b0c4de2dbfbeecc747cb00a93543a9a5635a` ([v0.2.0 Release](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.0)). Bundled private Python, hashed wheel sets, admitted V2 + R1 models, and receipt-bound relocation.
+  - **`v0.1.0` & `v0.1.1` (30–31 October 2026 — Historical Bootstrap Installers)**:
+    - `ForensicDGP_Setup-0.1.1.exe` (`6,304,374` bytes, SHA-256 `280a1f5ae936f14a42ca7ad9900edacbd82c1ef2122eb706516c394609e317e2`, source `fe7d30a`) and `ForensicDGP_Setup-0.1.0.exe` (`6,300,322` bytes, SHA-256 `9f1df2bc8ff189166086f16d47d2a7bf285fc44ff4eb475714e6b1deff0fb467`, source `7b4f78c`).
+
+---
+
+## 4. `IMPLEMENTATION` (`origin/IMPLEMENTATION` `9fd2d9f` & `Testing/integrated_app/`) Complete Handoff (2 Nov 2026)
+
+- **Repository & Branch**: `https://github.com/janusinss/forensic-dgp/tree/IMPLEMENTATION` at commit `9fd2d9f664d7d4b6924b010f6b8090cd49d36add` (and mirrored in `C:\xampp\htdocs\YEAR 4\Testing\integrated_app\` on `main`, documented in [INTEGRATED_APP_ON_MAIN.md](INTEGRATED_APP_ON_MAIN.md)).
+- **Active Admitted Model Inventory**:
+  1. **Restoration (`implementation/assets.json`)**: **Conditioned SFT V2 (`p2_u0224`)** (`787` frozen tensors across `codeformer_dgp_sft_u64_s42_best.pth`, `vqgan_codebook.pth`, `parsing_parsenet.pth`, `detection_Resnet50_Final.pth`, plus `v2_p2_u0224_heads.npz` SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f`).
+  2. **Reviewed Completion (`implementation/completion_assets.json`)**: **Trained CodeFormer Completion R2 (`v3`)** (`codeformer_completion_r2.pth`, `370,773,572` bytes, SHA-256 `ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c`, logical SHA-256 `300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0`) + proposal-only segmenter (`covering_detector_segmenter_v1.pth`, `2,681,549` bytes, SHA-256 `ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf`).
+- ** Thesis-Style Origins References on `main`**:
+  - [ORIGINS_FACE_MASK_COMPLETION.md](ORIGINS_FACE_MASK_COMPLETION.md) — Complete chronological origins of the Face Mask Detection + Completion pipeline (25 Sep – 2 Nov 2026).
+  - [ORIGINS_RESTORATION.md](ORIGINS_RESTORATION.md) — Complete chronological origins of the CCTV Blind Face Restoration pipeline (Sep – 2 Nov 2026).
+
+---
+
+# 28 October 2026: reviewed R1 integrated into GitHub IMPLEMENTATION
+
+Published and read back: IMPLEMENTATION commit
+6059fc32acbe04800241fc5be15f07549d30b0b9.
+Repository: https://github.com/janusinss/forensic-dgp/tree/IMPLEMENTATION
+Experimental verified model assets:
+https://github.com/janusinss/forensic-dgp/releases/tag/completion-r1-models-v1
+Main remains ee8dcec8d97298be3e28e5a64049a448ac4488dc. No RESTORATION change.
+
+The user selected one guided flow: unchanged Conditioned SFT V2 restoration,
+automatic proposal with editing/confirmation, then trained R1 completion.
+Manual painting/import/erase/undo remains available. Empty reviewed masks skip
+R1. Every pixel outside reviewed support is exact to the restoration result,
+not necessarily the original upload. Original/restoration/mask/result and PNG/
+optional evidence ZIP remain separate. No completion after-loop restoration.
+
+All18 protected restoration source/dependency/vendor files matched the prior
+implementation checkout exactly; published diff changes no restoration core,
+weights, loading, normalization, preparation, selection, inference or quantization.
+Launcher changes only combined ASGI entrypoint; root receipt/editor stages are
+additive. No research-tree merge, original-checkpoint overwrite, training or VM.
+
+Actual bundled inline Playwright passed full flow, mask edit/approval invalidation,
+consumed review, invalid-mask/coverage refusal, upload reset, PNG/ZIP downloads,
+and375/768/1280 layouts.69tests:68pass/1Windows-symlink fixture skip. Nine fixed
+unpaired-photo cases span seven covering families plus two clear controls;
+independent1212checks verify1,521,399 exact outside RGB bytes and all raw/PNG/
+ZIP/receipt/model bindings. All planned outputs and three exact256 sheets reviewed.
+The independent fresh-clone audit passes167checks: models/environment initially
+absent; real public HTTPS assets; six hashes/nlink1; start.bat; real V2 On plus
+R1 generation/downloads; R1=9.90seconds with zero owned children. No research
+runtime paths. Reference i5-11260H/15.69GiB, not minimum-device certification.
+
+Known limits retained: all nine automatic proposals in this degraded-photo set
+were empty, so seven covering cases required assisted masks. Grayscale hair still
+has blue falsecolor/uncertain gaze. Hidden anatomy is one plausible estimate;
+automatic quality, all-family usefulness and independent human FINAL are NOT
+qualified. No native CCTV hidden reference, identity or Zamboanga claim.
+
+Earlier failed HTTP ledgers and completed outputs are retained; completed model
+calls were recovered instead of repeated. User chose actual browser diagnosis,
+which passed. Experimental application integration is delivered; full thesis
+goal remains ACTIVE with automatic usefulness, final human review, full-family
+acceptance and minimum-device evidence still incomplete.
+
+Evidence: outputs/completion_r1_implementation_publication_20261028_v1/.
+Code producing worktree: original Testing/scratch/implementation-r1-integration.
+Clean installation: original Testing/scratch/r1-fresh-install-verification.
+The older local IMPLEMENTATION checkout remains at its previous local commit;
+update there with git pull --ff-only origin IMPLEMENTATION, install.bat, start.bat.
+Do not merge IMPLEMENTATION into the research main checkout for this update.
+
+---
+
+# 27 October 2026: R1 selective IMPLEMENTATION integration in progress
+
+User chose guided V2 restoration -> automatic proposal/edit/confirmation -> R1
+completion, explicitly preserving how restoration works. Development is isolated
+on codex/r1-completion-integration under original Testing/scratch/implementation-r1-integration.
+Existing GitHub IMPLEMENTATION remains320ec205; no app publication or replacement.
+
+18 restoration source/dependency/vendor files match the existing implementation
+checkout exactly; launcher only selects combined ASGI entrypoint. All restoration
+weights/math/preparation/quantization stay unchanged. R1 uses a separate namespace,
+497-tensor inference file7ae248...37e0, reviewed support and zero extra margin.
+The compact detector is proposal-only, with mandatory correction/confirmation.
+
+Actual browser CPU Off->proposal->correctedmask->R1->PNG/ZIP passed; PNG and stages
+match the earlier R1 prototype exactly. Latest69tests:68passed/1Windows-symlink skip.
+Fresh checkout-specific CPU environment installation succeeded using verified
+local models; fresh-clone/public-model download and minimum hardware not proven.
+Four fixed degraded covering cases completed and626817 outsideRGB bytes verify.
+Nine-case run remains incomplete after response-read resets; finished model calls
+were recovered, never duplicated. Saved-response controls isolate transport issues
+from model learning. All partials/sourcepins/bundles/worker receipts retained.
+
+Two verified inference files are staged in UNPUBLISHED draft GitHub release
+completion-r1-models-v1. No training/VM/RESTORATION branch edit or model promotion.
+The user has a pending diagnostic choice: actual browser workflow (recommended)
+versus further automated-transport diagnosis, per AGENTS three-attempt rule.
+Current detailed status: outputs/completion_r1_implementation_integration_20261027_v1/INTEGRATION_STATUS.md.
+
+Remaining: finish fixed families/controls, every-output visual review, full browser
+refusal/confirmation/responsive flow, fresh-clone install and selective accepted
+IMPLEMENTATION publication. Full goal ACTIVE, with independent humanFINAL,
+automatic-assisted quality and all-family usefulness still incomplete. The prior
+spatial-code diagnostic remains prepared/unrun; never automatically launch it.
+
+---
+
+# 27 October 2026: spatial-code diagnostic verified for manual transfer
+
+PREPARED_UNRUN_ZERO_UPDATES_NO_NEW_MODEL. R1 remains selected.
+[Five-step upload/install/tmux/download guide](docs/archive/completion/COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_VM.md).
+[Preparation, verification and limits](docs/archive/completion/COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_PREPARATION.md).
+Files are in original Testing/outputs. No VM diagnostic or training launched.
+
+The closed predictor CE trial below trained correctly but failed quality.
+Next: frozen497R1 masked-cell H versus visible-context V oracle substitution,
+using same48pairedadaptiveTRAIN cases/16existing labels and exact196oldA/C
+controlfiles. Fourordinaryparitypairs+fourCbridges before96H/Vcalls:108forwards,
+zerooptimizer/backward/gradient/teacher. Alloraclesuseunavailablecleancontext,
+notappoutputs orrecoveredidentity. No normalnewcheckpoint ormodelpromotion.
+
+Archive13,610,328B SHA24f480add44e4fe8176a68a3b67321b11b4baee0ebb43d0a3790fefc434549a5.
+Protocolb27617eb4f2a2225e0969d463acc8048a148203488f0fcd5397e5c5f9a0a0123.
+All167members/fullgzipCRC,actualimportblockedtransferCLIexit0,independentsource/
+transport androotguide/installfixtures pass.166payloads+196externalcontrols exact.
+Require6GiBfree+installpayload,2GiBfloor,15minhardworker+separate15minexternal
+exportcutoff.104NPZ/96PNG;1GiBoutputs/1280MiBtar+gzip;384MiBactualfailurestate
+reservationonlyifunexpectedmutation. Quietlogs expected. Allpartialsretained;
+neverautomaticrepeat/resume orunchangedfailedtraining. All22R1pins unchanged.
+
+The nextstep is the user's manualtransfer/run, then independentstate/code/pixel
+andall48/fourconditionvisualreview beforedecidingnewlearning. ActualL4behavior
+andH/Vresults areunverified. FullgoalACTIVE:all-familyusefulness,automatic-assisted
+evaluation,useracceptance,humanFINAL,WindowsCPUminimum/freshinstall and accepted
+selectiveIMPLEMENTATIONport remain incomplete. RESTORATION unchanged. Earlier
+source-unready/preparedtraining entries below are historical; failures retained.
+
+---
+
+# 27 October 2026: predictor-only completion V1 audited; R1 retained
+
+EXECUTED_32_UPDATES_VALID_STATE_FAILED_QUALITY_NO_PROMOTION.
+[Actual results and diagnosis](docs/archive/completion/COMPLETION_CODEFORMER_PREDICTOR_CE_V1_RESULTS.md).
+[All20 sheets /80 cases /256 outputs](outputs/completion_codeformer_predictor_ce_v1_return/review.html).
+
+Manual L4 run completed32newAdam/128backs in240.763s without timeout;worker2
+is quality rejection,not crash.Export complete;835regular/834payloads verified.
+Terminal701,933,925B SHA bc7e1bd5db71ffffc55eff4cc2b4da364aa96b9316c099102cc1523ea010d5db.
+All114predictor tensorschanged,383R1frozen exact;activeAdam32to64,inactive
+encoder164/fusion54unchanged32;fullRNG/sampler/128CE and192codecomparisons pass.
+
+Independent PNGhole gain vsR1:0.307561%clear/0.446027%challenge,below1%,with
+lowerface/boundary andGRAYstyle regressions.14/32clearholes and5/16challenge
+holes worsen.All44,001,540outsideRGBbytes exact.All48historicalR1/fourparity
+pairs pass.Root reviewedall20sheets/496exactcells:no materialconsistent gain;
+expression/softness/inventedframes/falsecolor/scarfcentraldefects persist.
+
+Additional saved-only diagnosis finds65.927%FITCE liesonfullyvisible geometric
+cells;thisdoesnotprovetheircontextirrelevant.Nextselecteddesign distinguishes
+masked-cell versus visible-context oraclecodes atfixedR1,zerooptimizer,using
+the same48pairedadaptiveTRAINcases and auditedcontrols.Prospective108calls;
+NO ready successorpacket orautomaticlaunch.Oraclesareunavailablecleancontext,
+notappoutputs orpromisedgains.Moreepochs/LR orunchangeduniformCE isnotjustified.
+
+Both manualguide copies retired HISTORICAL/DO_NOT_RELAUNCH;all priorbytes,
+originalweights/teacherlabels/splits andfailedterminal evidence retained.All22
+R1app/modelpins unchanged.NoRESTORATION/IMPLEMENTATION changes.FullgoalACTIVE:
+all-familyusefulness,automatic-assisted evaluation,useracceptance,humanFINAL,
+WindowsCPUminimum/freshinstall/selectiveacceptedport remain incomplete.
+Earlier prepared/unrun entries below are historical.
+
+---
+
+# 27 October 2026: predictor-only completion pilot verified for manual transfer
+
+PREPARED_UNRUN_MANUAL_L4_PILOT_NO_NEW_MODEL. R1 remains selected.
+[Five-step upload/install/tmux/download guide](docs/archive/completion/COMPLETION_CODEFORMER_PREDICTOR_CE_V1_VM.md).
+[Preparation, evidence and limits](docs/archive/completion/COMPLETION_CODEFORMER_PREDICTOR_CE_V1_PREPARATION.md).
+Verified files are in original Testing/outputs. No actual VM training launched.
+
+Distinct next test:114 predictor tensors learn CE while383 R1 encoder/fusion/
+original-prior tensors stay fixed. ExactR1 Adam moments/RNG, balanced128 retained
+FIT observations across32 photograph reference IDs/64FIT labels,32 new updates/
+128backs maximum. All16 monitor labels stay out of optimization. This is not
+an epoch over all256 cases or proof of human/pretraining identity separation.
+
+All48 paired cases at0/8/16/32 and32 public unpaired cases at0/final;256 outputs,
+128FIT logits and4parity arrays plus80 exactteacher copies.384 planned calls,
+168empty bypasses, no teacherNN/oracle evaluation. Final32-only old hole/boundary
+gates plus newgray-style guard; intermediate8/16 onlysafety. Oracle16%gain from
+the closed probe is not a new trained gain or promised result of this pilot.
+
+Require8GiB free plus installation payload,2GiB floor.30min hard/28min work,
+120s save reserve,20GiBCUDA,1GiBterminal/2.5GiBoutput/2.75GiBtar+gzip,15minexport.
+Preserve all actual failed-state/optimizer/RNG/sampler/partial evidence; no auto
+retry/resume, epochappend, historical recipe rerun, checkpoint rescue or promotion.
+
+Independent2036semantic/2839source-data/3398archive-guide checks, actual guarded
+transferCLIexit0 and root full671member archive/hash/CRC/guide checks pass.
+Archive73,748,641B SHA1052d09627cdd69f5e652a6996cee9909e5498ba516cb2b5900981b066a458c3.
+Protocol15aa3e1478a67c120b2fcb6af50ecae58d0558eb4e65cef473d0339572bf084b.
+R1app/model22pins exact. NoRESTORATION/IMPLEMENTATION changes. Manual user launch
+and full independent returned evidence/all-case review precede any candidate.
+Full goal ACTIVE:all-familyusefulness,automatic-assisted evaluation,useracceptance,
+humanFINAL,WindowsCPUinstallation and acceptedselectiveport remain incomplete.
+Earlier runtime-not-ready and probe-unrun entries below are historical.
+
+---
+
+# 26 October 2026: same-codebook probe audited; predictor-learning design follows
+
+EXECUTED_ZERO_UPDATE_DIAGNOSTIC_NO_NEW_MODEL. R1 remains selected.
+[Actual results](docs/archive/completion/COMPLETION_CODEFORMER_SAME_CODEBOOK_PROBE_V1_RESULTS.md).
+[All 12 sheets and independent audits](outputs/completion_codeformer_same_codebook_probe_v1_return/review.html).
+
+Manual L4 diagnosis finished 200 forwards in 106.579 seconds without timeout,
+with zero gradients, backwards or optimizer updates. All 497 R1 state tensors,
+192 saved outputs, 196 NPZs, four fresh parity pairs and 48 historical R1 cases
+verify. All 33,551,076 outside-mask RGB bytes and 22 R1 app/model pins are exact.
+Root reviewed all 12 sheets / 48 cases / 192 outputs at original cell detail.
+
+Clean-context SAME-codebook ORACLE codes with R1 fusion reduced paired PNG hole
+error 16.488% clear / 16.364% challenge, with all declared aggregate subgroups
+nonworse. These use unavailable clean information, NOT deployable app outputs,
+training gains, restoration structure scores, hidden identity or native CCTV.
+Three individual holes and ten boundaries worsen; softness and gray false color
+remain. Turning fusion off with actual predictions worsens all 48 cases, so
+retain R1 fusion at w=1. The oracle without fusion fails boundary requirements.
+
+Next: prepare an isolated predictor-only CE test from exact R1, freezing encoder,
+fusion and original prior (383 tensors) and learning only 114 predictor tensors.
+A deterministic balanced 128-observation subset of the retained 256-case FIT
+pool uses all 32 FIT identities and 64 FIT label sets; monitor identities/labels
+never optimize. Review maximum 32 steps / 128 backwards; final step32 quality
+endpoint, earlier checks safety-only. Runtime preparation is IN PROGRESS, not a
+ready upload packet or actual training. All training remains manual on the L4.
+Oracle improvement is not a promised achievable gain; all quality gates remain.
+
+Both old probe launch guides are HISTORICAL / DO NOT RELAUNCH with their original
+bytes preserved. All original checkpoints, failures, splits, sources and returns
+remain. No app, RESTORATION or IMPLEMENTATION changes. Full goal ACTIVE: real
+covering-family usefulness, automatic-versus-assisted evaluation, user acceptance,
+blinded human FINAL, Windows CPU/fresh installation and accepted selective port
+remain incomplete. Earlier prepared/unrun entries below are historical.
+
+---
+
+# 26October2026: zero-update same-codebook diagnostic ready for manual transfer
+
+PREPARED_UNRUN_DIAGNOSTIC_ONLY_NO_NEW_MODEL.
+[Five-step upload/install/tmux/download guide](docs/archive/completion/COMPLETION_CODEFORMER_SAME_CODEBOOK_PROBE_V1_VM.md).
+[Full preparation and limits](docs/archive/completion/COMPLETION_CODEFORMER_SAME_CODEBOOK_PROBE_V1_PREPARATION.md).
+The archive,checksum andguide are in original Testing/outputs. NoactualVMrun.
+
+R1 stays selected; V4 is closed as validstate/failedquality. Nexttest compares
+actualpredicted versus same-inpainting-codebook clean-context ORACLE codes under
+fixed w1/w0 fusion, on32clear+16challenge adaptiveTRAINcases. ExplicitORACLE
+labels denote unavailablecleaninformation,notdeployable app/identityresults.
+NoofficialHQ512codebook/prior swap or newteacherlabels; original16labels retained.
+
+All497R1tensors frozen. Fourfreshordinaryparitypairs and48actual-A historical
+raw/PNG compatibility precede controls/oracles.192outputs/4parityarrays;200planned
+fullcalls/220hard,zerooptimizer/backward/gradient/teacherNN.15minworkerhard/14min
+cooperative,7GiBstart+payload/2GiBfloor,20GiBCUDA,1536MiBperrawoutput/rawtar/gzip,
+15minexport. Allpartialfailureevidence and actualnonfinitehashes retained.
+
+17author tests,18independentbridgechecks,936source/data checks, actualguarded
+transferCLIexit0(all254payloads),35rootinstaller/exportfixtures and13finalguide
+checks pass. Root255regularmemberarchive+publishedcopies/LFchecksum verify.
+Archive30,037,439bytes SHA099e3cac01b107258be8d1af4d5bd2eb72485bdb34b087553c46f0749654e2c7.
+Protocol51782b57fca9ad9cf7161b0f4451a65e545e3eb2f8f58788fa40b64aec48d1ec.
+
+User manually uploads/installs/launches in tmux on existingL4; noautoVMactions.
+Then returnall3files for independent saved192outputs/codes/stateinvariance and
+all12sheet review before choosing nexttraining. Exit0/exportcomplete onlymeans
+thisdiagnosticcompleted. Noautomaticoptimizerpilot,modelpromotion orappchange.
+All22R1app/model pins exact,RESTORATION/IMPLEMENTATION unchanged;goalACTIVE.
+All-familyusefulness,automatic-versus-assisted evaluation,useracceptance,human
+FINAL,minWindowsCPU/freshinstallation/selectiveIMPLEMENTATION remainincomplete.
+Earlier prospective not-readyentries below are historical superseded here.
+
+---
+
+# 26 October2026: V4 returned and audited; retain trained R1
+
+EXECUTED_VALID_RECOVERY_STATE_QUALITY_REJECTION_NO_PROMOTION.
+[Actual V4 results](docs/archive/completion/COMPLETION_CODEFORMER_DELIVERED_OBJECTIVE_V4_RESULTS.md).
+[Next zero-update representation design](docs/archive/completion/COMPLETION_CODEFORMER_POST_V4_REPRESENTATION_DESIGN.md).
+Prospective only:200 planned forwards,zero gradients/optimizers, no ready packet.
+[All20 sheets and independent audits](outputs/completion_codeformer_delivered_objective_v4_return/review.html).
+
+Manual L4 run completed64fusionupdates/256backs/480forwards without timeout;
+valid701,936,805-byte checkpoint.118813 state checks confirm443frozen/54changed,
+codeAdam32exact/fusionAdam96, original165/RNG/sampler intact. All224 saved outputs
+replay exactly, all228NPZ schema/CRC pass, and all20sheets/80cases were reviewed.
+Quality failed:clear+0.310926%,challenge-0.047216% PNG hole-error reduction versus
+R1, below1% plus hole subgroup regressions. Outside38414802RGBbytes remain exact.
+R1 app/model22pins stay exact. No restoration/IMPLEMENTATION edits or V4adoption.
+
+App-aligned hole-only loss did not solve the fixed-code fusion limitation. Local
+hard-top1/detach path and frozen predictor prevent changing code choices here.
+Official HQ512 teacher is acquired but NOTdropin:codebook differs,163/164generator
+and164/164encoder tensors differ despite matching shapes. No naive code labels
+or prior swap. Review boundedzerooptimizer same-codebook clean-context oracle
+versus actual prediction to test representation before further training. Oracle
+hiddenclean inputs are diagnostic only, never app recovery or identity evidence.
+No next packet ready, no automatic training/resume/unchangedV4rerun/epochappend.
+
+V4 guide copies are HISTORICAL/DO NOT LAUNCH with exact original bytes preserved.
+All original checkpoints/source/archives/failures/splits remain. Actual training
+stays manual on L4 with finite limits. Full goal ACTIVE/incomplete:all-family
+quality, automatic-versus-assisted proposals, independent human FINAL, Windows
+CPU installation/minimumhardware and selectiveIMPLEMENTATION port still required.
+The earlier V4prepared/unrun statements below are historical and superseded.
+
+---
+
+# 26 October2026: V4 delivered256 objective test ready for manual transfer
+
+PREPARED_UNRUN_MANUAL_TRANSFER_READY.
+[Current five-step guide](docs/archive/completion/COMPLETION_CODEFORMER_DELIVERED_OBJECTIVE_V4_VM.md).
+[Prepared contract and verification](docs/archive/completion/COMPLETION_CODEFORMER_DELIVERED_OBJECTIVE_V4_PREPARATION.md).
+Files are in original Testing/outputs. No actual V4 VM/training run occurred.
+
+V3 return is closed as valid state/failed quality:clear+0.419741%,challenge+0.479152%
+PNG hole-error reduction versus R1, both below1%, with hole subgroup regressions.
+All224 outputs and20 sheets reviewed. R1 remains the working user-selected model.
+The new objective addresses independently demonstrated HQ512 boundary compensation
+and delivered256 mismatch, rather than adding unchanged epochs to failed V3.
+
+V4 restores full R1/Adam/RNG, same256FITschedule,443frozen/54fusiontrainable,
+LR1e-5 and64newsteps/256backs/480forwards maximum. Loss is exact app float256
+maskedRGBL1 with existing clean256 targets; no additive boundary training term,
+PNGrounding, gradient surrogate or target regeneration. All old raw/PNG boundary
+and hole gates remain. Each paired cohort needs >=1% PNG hole gain plus every
+old subgroup nonworse. Current app/restoration/IMPLEMENTATION stay unchanged.
+
+23 author tests,27 independent plain-pixel loss/gradient checks,6262 source/data
+checks,28 root installer/exporter fixtures and the actual guarded pure-transfer
+CLI passed. Final847-member archive and published files/guide independently verify.
+Archive83,537,186bytes SHA2c5607a06fcc31ded3ebb082ecd88e6914cdd208df4a2c947d3f09896add726f.
+Protocol8bbb3dd611e95cfbce76e7e6426ffdadb31ce23dadb1dfdcd0246e501213069d.
+
+All original limits and failure evidence remain. User manually uploads/installs/
+launches in tmux on existing L4; require7GiB plus installation payload,2GiB floor,
+30-minute workerhard/28-minute cooperative and15-minute exportcooperative limits.
+Root final archive audit and preparation milestone are in outputs/
+completion_codeformer_delivered_objective_v4_packet/draft_001. Return all3files
+for independent state/pixel/all-case review before any candidate replacement.
+No automatic training, repeated failed recipe, checkpoint rescue or relaxedgate.
+Full goal ACTIVE; no new qualified model or covering-family/final/deployment claim.
+The earlier prospective-runtime-unready and V3-unrun entries below are historical.
+
+---
+
+# 26 October 2026: fusion-only V3 returned and audited; retain R1
+
+EXECUTED_QUALITY_REJECTION_WITH_VALID_RECOVERY_STATE.
+[Actual results and next diagnosis](docs/archive/completion/COMPLETION_CODEFORMER_FUSION_ONLY_V3_RESULTS.md).
+[All20 saved comparison sheets](outputs/completion_codeformer_fusion_only_v3_return/review.html).
+
+[Distinct next V4 objective design](docs/archive/completion/COMPLETION_CODEFORMER_DELIVERED_OBJECTIVE_V4_DESIGN.md)
+was independently reviewed. Fresh runtime/source preparation is in progress;
+no V4 packet is admitted or ready to launch at this milestone.
+
+All64 manual L4 fusion cycles completed in216.371seconds without timeout.
+Independent transport,116676 state checks,224 raw/PNG outputs and all20 root-
+reviewed sheets verify. V3 has a complete valid checkpoint:443 tensors frozen,
+54 fusion tensors changed, code Adam unchanged at32 and fusion Adam at96.
+Saving is operationally repaired; worker exit2 is the quality rejection.
+
+Incremental paired PNG hole-L1 reduction versus R1 is0.419741% clear and0.479152%
+challenge, both below1%. Clear lens and challenge lower-face/cheek/RGB-irregular
+hole groups regress. Outside-mask pixels and empty bypasses remain exact.
+The6.579113% cumulative clear gain versus original is not new gain versus R1.
+Root visual review finds no consistent major improvement and unresolved gray
+chroma, fabricated glasses, expression and scarf texture defects.
+
+A new saved-array diagnosis finds boundary gains can mask worse generated holes
+in the512 objective, and512-versus-delivered256 differences also matter. Review
+an app-aligned hole objective before another finite pilot; more epochs alone
+would optimize the same mismatch. No successor transfer is ready; no automatic
+resume, intermediate rescue, historical rerun, relaxed gates or app promotion.
+All22 current R1 app/model pins remain exact. R1 stays the user's working model.
+RESTORATION/IMPLEMENTATION unchanged; full goal ACTIVE and incomplete.
+
+V3 guide copies are now HISTORICAL/DO NOT LAUNCH; exact former bytes, full archive,
+source/protocol, state/Adam/RNG/splits and quality failures remain retained.
+The prepared/unrun statements below are historical and superseded by this return.
+
+---
+
+# 26 October 2026: fusion-only V3 verified and ready for manual L4 launch
+
+PREPARED_AND_INDEPENDENTLY_AUDITED_UNRUN. Keep current trained R1 and original
+completion apps fixed. The new distinct experiment freezes443 model-state tensors,
+including R1 prediction and original generator/codebook, adapting only54 existing
+fusion tensors. It does not repeat the failed joint V2 recipe.
+
+[Five-step upload/install/tmux/launch/download guide](docs/archive/completion/COMPLETION_CODEFORMER_FUSION_ONLY_V3_VM.md).
+The two transfer files and the same guide are in C:\xampp\htdocs\YEAR 4\Testing\outputs.
+Archive:82,400,258 bytes;832 regular members;89,333,017 payload bytes.
+Archive SHA:f2ef14a22a50756ac31825aa14caeb861a76994e75499fce6498bf28df3a07e0.
+Protocol SHA:3dc71dac3002e82587cbc2cb758f36df604ed4c7131a3e592db4d8dcb5c18033.
+No training or actual VM preflight has run for V3.
+
+Start from full R1 parent0a6b... with both named Adam states and all RNG retained.
+Code Adam stays step32; fusion may advance32->96. At most64 new Adam updates,
+256 backwards and480 whole/typed forwards, with the same256 FIT cases/schedule,
+32 clear monitor,16 new challenge and32 unpaired public cases. Historical V2 u64
+saved outputs remain a separate joint-route comparison, not a rerun or usable
+checkpoint. No code loss or teacher encoder/quantizer calls occur in V3.
+
+Four fresh R1 wrapper pairs must pass1e-6; all48 initial clear/challenge raw256
+results must match historical R1 within1e-6 AND their PNG files byte-for-byte
+before any update. Keep the same >=1% incremental mean PNG hole-L1 requirement
+for each separate paired cohort and every old raw/PNG subgroup nonworse gate.
+Exact visible pixels, empty/refusal controls and all planned224 outputs/20 visual
+sheets remain required. A numerical win alone does not qualify a model.
+
+The independently reviewed O(1) writer is integrated in new sources only, with
+pre-save and CPU-copy/assembly/serialization/fsync/hash/commit phase receipts,
+callback counts and preserved failed partials. All original limits remain:
+1800s worker hard /1680s cooperative,7GiB start /2GiB floor,20GiB CUDA,
+2304MiB output/raw+compressed return and900s cooperative export. All actual
+training remains the user's manual tmux launch on the existing L4 VM.
+
+14 author source/serialization tests and6,214 independent source/payload checks
+passed. Independent design and historical compact controls verify; root separately
+ran10 exporter,9 installer and3 actual extracted save-failure fixtures. Publication
+collision, byte cap and fsync failure retain evidence without false commitment.
+Actual unmodified transfer-only CLI passes831 files with Torch/NumPy/PIL imports
+blocked in a guarded local parent-path fixture. That is not live VM preflight.
+Final832-member archive stream/hash/namespace, published copy, LF checksum,
+new runtime Python3.10 syntax and five single-remote SCP commands all verify.
+
+All22 admitted current R1 app sources/manifest/weights remain exact. No app,
+RESTORATION or IMPLEMENTATION changes and no V2 partial reconstruction. Old V2
+source/packet/failures remain retained; its manual guide stays historical.
+Next external action:manual V3 launch and return all3 result files. Then independently
+audit state/optimizer/RNG/frozen443, raw/PNG metrics and all planned visuals before
+any candidate app replacement. Full goal remains ACTIVE, with covering-family
+acceptance, automatic proposal evaluation, final human review and Windows deployment
+still incomplete. Evidence:outputs/completion_codeformer_fusion_only_v3_packet/
+draft_002/preparation_milestone_v1.json and its pinned audit records.
+Historical statements below are superseded by this preparation milestone.
+
+---
+
+# 26 October 2026: V2 return audited; R1 retained, saving repair isolated
+
+AUDITED_QUALITY_REJECTION_AND_TERMINAL_SAVE_TIMEOUT.
+[Results](docs/archive/completion/COMPLETION_CODEFORMER_COVERAGE_V2_RESULTS.md).
+[All20 saved comparison sheets](outputs/completion_codeformer_coverage_v2_return/review.html).
+
+All64 manual L4 cycles and all planned evaluations are retained:128 new Adam
+updates/512 backwards in receipts,896 typed slots,224 saved outputs/80 cases.
+Exact archive/manifest checks pass624regular files. Parent Adam/RNG continuation
+checks pass. Supervisor killed terminal serialization at1800.592s (124/-9).
+No committed model exists;320,900,800-byte.partial is invalid ZIP, never loaded
+or rebuilt. Training-cycle completion does not establish a usable new model.
+
+Independent delivered-PNG hidden-region error gain versus R1:
+clear32=-0.377504% (worse),newchallenge16=+4.136863% but cheek/object endpoints
+regress. Clear eye-band/lens endpoints regress too. All original gates remain.
+Cumulative clear gain versus ORIGINAL is+5.831180%, below R1+6.185334%. No model
+replacement or intermediate snapshot rescue. Visible preservation passes exactly:
+38,414,802 outsideRGBbytes,8savedempty/160functional bypasses. All308NPZ files,
+224 raw/PNG replays and4fresh paritypairs audited. Root viewed every20sheet.
+Gray/near-gray color and scarf/boundary defects remain; public photos are unpaired
+and do not establish CCTV, hidden identity or full-family usefulness.
+
+A separately admitted research writer removes per-write whole-namespace rescans.
+At620trackedoutputs, old3checks made7,446pathresolutions. Local8MiB:6.992s old
+versus.0058s prototype;32MiB/996tensor/5,014callback exactnative/CRC/readback
+fixture passed.18author+41independent policy tests pass. This is a demonstrated
+local bottleneck and likely contributor, not sole-VM-cause proof or a qualityfix.
+No integration into sealed V2 or app and no automatic rerun.
+
+The next distinct route-isolation review freezes R1 code prediction and considers
+fusion-only adaptation with historical V2 outputs as control. No fresh joint-V2
+rerun, trainer or execution archive exists for that proposal. Current R1/original
+apps, RESTORATION, IMPLEMENTATION and failed V2 source/packet stay unchanged.
+The V2 manual guides now warn HISTORICAL/DO NOT LAUNCH; exactformerbytes retained.
+
+Evidence:outputs/completion_codeformer_coverage_v2_return/return_milestone_v1.json;
+research/completion_codeformer_writer_v1/{README.md,independent_writer_admission.json};
+outputs/completion_codeformer_coverage_v2_route_isolation_review_v1/design_review_final.json.
+All new audits/fixtures were local saved-data or CPU-tensor serialization only,
+with no neural/gradient/optimizer/VM work. Full goal remains ACTIVE; quality,
+automatic proposals, final human review and Windows deployment scope incomplete.
+Historical PREPARED/UNRUN statements below are superseded by this actual return.
+
+---
+
+# 25 October 2026: R1 coverage continuation ready for manual L4 training
+
+PREPARED_AND_INDEPENDENTLY_AUDITED_UNRUN. The user prefers trained completion R1;
+the next distinct data-only continuation starts from its full verified terminal
+Adam/RNG state. Current R1/original apps and RESTORATION/IMPLEMENTATION stay fixed.
+
+[Five-step upload, install, tmux, launch and download guide](docs/archive/completion/COMPLETION_CODEFORMER_COVERAGE_V2_VM.md).
+Transfer files and the same guide are also in C:\xampp\htdocs\YEAR 4\Testing\outputs.
+Archive:58,082,704bytes,638regular members,63,670,778payload bytes.
+Archive SHA175ceb02d0dd195dd2b2d0c95d4413714f06e81509251136ba2f12d166f10ac6.
+Protocol SHAc838f4472cf87c138b2d518ef4f543bfcec3e8149ea7a5411b863397bf66859d.
+Original checkpoint and complete R1 parent remain shared VM dependencies; they
+are not duplicated into the small archive. Actual VM preflight is still pending.
+
+All20 prospective data sheets reviewed; independent data replay passed;14 author
+source/native-serialization tests and43 independent source checks passed. Root
+separately tested9 export and9 installer refusal/retention fixtures and streamed
+every final archive member/hash/namespace. LF checksum, Python3.10 new-source/
+installer syntax, source/parent local hashes and exact PuTTY-compatible single-
+remote SCP commands verify. Actual transfer-only CLI passed with Torch imports
+blocked under a clearly isolated local parent-path fixture; not a live VM test.
+
+Maximum64 additional paired cycles/128 new Adam updates/512 backwards. Keep
+unchanged architecture/losses/LR and original32-monitor cohort; require incremental
+improvement versus R1 on it and separate16-challenge cohort, preserving every
+declared raw/PNG endpoint.7GiB startfree,2GiB stopfloor,1800s worker hard cap,
+2304MiB evidence/raw+compressed export cap,900s export cooperative stop. Retain
+all failure/partial/Adam/RNG evidence. Do not auto-launch, extend or rerun an old
+pilot. Training/export completion alone will not qualify the new model.
+
+Next external action:user manually launches the new guide in tmux and downloads
+all3 return files. Then independently audit state/labels/pixels/metrics and all
+planned visual comparisons before app replacement. Current R1 remains working
+starting point, not all-family/final qualification. No new training, NN call,
+VM connection, FINAL-image access or model/app replacement occurred here.
+Full goal remains ACTIVE. Evidence:outputs/completion_codeformer_coverage_v2_packet/
+draft_003/{independent_final_source_admission_r1.json,root_manual_transfer_release_v1.json,
+root_final_archive_audit_v1.json,archive_publication_receipt.json,preparation_milestone_v1.json}.
+Prior pending/preparation statements below are retained historical stages.
+
+---
+
+# 25 October 2026: R1-selected completion coverage data admitted; next packet pending
+
+The user prefers trained R1. Preserve the current R1/original app comparison.
+The next distinct experiment continues from R1's full terminal Adam/RNG state,
+using broader TRAIN examples while keeping architecture, losses, LR and original
+comparison gates fixed. No new actual training or model calls occurred here.
+
+Source-only data is independently admitted:128 unchanged FIT anchors plus128
+augmented pairs,32 unchanged adaptive original-TRAIN monitor cases plus16 new
+challenges. Forty RGB/gray source references give80 frozen teacher target sets.
+All551 data payload hashes and seeded transformations replay exactly. Root
+reviewed every one of20 sheets covering all144 new cases. Gray, mild degradation
+and irregular masks address demonstrated R1 coverage gaps; they are synthetic
+missing-support examples, not real occluder or native CCTV qualification.
+
+Plan:64 new paired cycles/128 additional Adam updates, with 1800-second hard
+worker cap,7GiB startfree and retained failure/optimizer/RNG evidence. All actual
+training remains manual L4 launch. Source implementation, independent source
+audit and verified transfer archive are still pending at this milestone.
+Do not run an older pilot or assume a ready execution file.
+
+A saved-output-only strict-monochrome diagnostic removed a color patch in one
+strict-gray hand-mouth case. It is not in the app, leaves63 other cases unchanged
+and does not fix anatomy. Blinded FINAL-review instructions/forms are prepared;
+no FINAL identities/images were opened and no reviewer ratings are invented.
+
+Evidence:outputs/completion_codeformer_coverage_v2_data_milestone.json;
+COMPLETION_CODEFORMER_R1_CONTEXT_CONTINUATION_DESIGN_V1.md;
+COMPLETION_INDEPENDENT_REVIEW_PREPARATION_V1.md. Full goal remains ACTIVE.
+
+---
+
+# 25 October 2026: user prefers R1 for further completion development
+
+The user answered "r1" to the trained-versus-original same-input/mask comparison.
+Use trained R1 (checkpoint7ae24867...da37e0) as the working starting point for
+further completion improvement. Retain original CodeFormer as a permanent
+comparison. This is a development preference, not all-family/final qualification
+or authorization to release into IMPLEMENTATION.
+
+Current app comparison and SHA-bound admitted sources remain fixed. Saved-output
+analysis of monochrome/style and scarf/covering defects is underway; any display
+processing must stay distinct from the trained model and its raw outputs. A
+new training design must start from retained R1, preserve its terminal/Adam/RNG
+states and unchanged gates, and remain manually launched on L4.
+
+Evidence: outputs/completion_codeformer_finetune_r1_app/
+user_selected_development_model_r1.json. Prior selection statements below are
+historical and superseded by this explicit user preference. Full goal active.
+
+---
+
+# 25 October 2026: trained completion R1 audited; experimental CPU app ready
+
+[Complete return findings](docs/archive/completion/COMPLETION_CODEFORMER_FINETUNE_V1_R1_RESULTS.md).
+[Local trained/original comparison and relaunch guide](docs/archive/completion/COMPLETION_CODEFORMER_FINETUNE_R1_APP.md).
+Current status: R1 EXECUTED_AND_NUMERIC_SCREEN_PASSED; EXPERIMENTAL_USER_REVIEW.
+The original CodeFormer completion remains the selected comparison baseline.
+
+All four fresh app parity pairs are exact. Actual manual L4 learning completed
+32 paired cycles / 64 Adam updates / 256 backwards / 528 typed forward slots,
+exit0, no stop or timeout. Independent state audit verifies all332 intended
+trainable tensors changed, complete 278/54 Adam mappings/moments at step32,
+and reconstructed497-tensor logical SHA55feaa296...4122d6 with165 frozen tensors.
+Terminal recovery state0a6b4ad9... retains all research/optimizer/RNG evidence.
+No local training or new VM launch occurred in this turn.
+
+Independently recomputed delivered-PNG hole-L1 reduction:6.185334% on32 paired
+adaptive original-TRAIN monitor cases. Every declared raw/PNG macro/per-geometry
+hole/seam gate passes. Six individual hole-L1 cases worsened; do not imply every
+image improved. This metric is not restoration structure gain or identity/CCTV
+accuracy. Return transport445files/444payloads passes exact protocol/hash audit.
+All192 evaluated outputs verify,184 nonempty raw-to-PNG replays are bit-exact,
+32,828,064 outside RGB bytes remain exact and eight saved empty cases bypass.
+
+Root inspected all16 complete original-resolution visual sheets. Public32cases
+are exposed unpaired photographs, not native CCTV despite filename suffixes.
+Visual quality is mixed:plausible masks/objects, but generated clear frames in a
+degraded sunglasses case, scarf/glove beard/cloth artifacts and colored patches
+in grayscale hand/hair examples remain. Masks stay fixed; copied covering
+fragments outside support are not disguised as generated defects. No full-family
+qualification, exact hidden-identity claim, FINAL evaluation or automatic adoption.
+
+Inference-only model: outputs/completion_codeformer_finetune_v1_r1_candidate/
+codeformer_completion_finetune_r1.pth (370,764,381bytes), SHA7ae248673...da37e0.
+Manifest e8bc39c3...80ea77; original checkpointb0d1... retained with failedV1.
+License/notice and40-source training attribution accompany the experimental file.
+New app sources/worker/template/loader are isolated from original baseline and
+RESTORATION; source and candidate/state audit hashes bind every request.
+
+Live local trained app: http://127.0.0.1:64529/
+Live unchanged original baseline: http://127.0.0.1:51239/
+Ports are temporary. Prior stopped baseline runtime record was backed up before
+reopening the unchanged service. Current runtime JSONs are in scratch.
+
+Bundled inline Playwright passes upload, brush/undo/import, confirmation resets,
+one actual trained CPU request (12.4968s /1NN), PNG+ZIP downloads, clear-glasses
+empty bypass (0.4787s /0NN), insufficient-visibility422 and375/768/1280 widths.
+All four browser screenshots inspected. Existing120s owned JobObject guard
+remains; completed workers have0activeowned processes. Peak job commit1.871GB
+is a reference commitment measurement, not a RAM certification. Independent
+app artifact audit verifies all337,623 outside bytes and both13-memberbundles.
+CPU-vs-VM difference is150masked pixels/max1byte; no exact device-parity claim.
+
+Evidence: return/{transport_audit.json,independent_state_audit.json,
+independent_saved_output_audit.json,root_visual_review.json};
+candidate/{candidate_manifest.json,independent_app_source_audit.json};
+app/{source_admission.json,independent_app_functionality_audit.json,
+completion_r1_milestone.json}; scratch/completion-codeformer-finetune-r1-playwright.json.
+Directory prefixes: outputs/completion_codeformer_finetune_v1_r1_return,
+outputs/completion_codeformer_finetune_v1_r1_candidate,
+outputs/completion_codeformer_finetune_r1_app.
+
+Next: user compares R1 versus original on identical prepared input/removal mask.
+Keep current baselines and do not relaunch the already executed R1 pilot.
+Further design/training needs the retained full per-case evidence; full family
+usefulness/user satisfaction, automatic versus assisted proposal evaluation,
+independent human final review, minimum hardware/fresh Windows installation and
+selective IMPLEMENTATION integration remain incomplete. Goal remains ACTIVE.
+Historical entries below are superseded by this milestone.
+
+---
+
+# 25 October 2026: existing R1 run located; retrieve its return
+
+The user-pasted VM SSH inventory confirms that both V1 and R1 exist. R1's
+protocol matches the sealed 8815ad168...e5ff3d protocol; results.json (2,934 bytes)
+and supervisor.json (540 bytes) are present. Its installer refusal is explained
+by the already-existing R1 target. Preserve it; no reinstall or training rerun.
+
+This is user-reported file/protocol inventory, not an independent model audit.
+Actual update counts, numeric outcome, export status, saved outputs and quality
+remain unverified until the receipts/return are read. No R1 return archive is
+currently present in original Testing/outputs. Use step 5 of
+COMPLETION_CODEFORMER_FINETUNE_V1_R1_VM.md to download the three R1 files from
+Windows after confirming the VM export receipt. No model promotion occurs.
+
+Evidence: outputs/completion_codeformer_finetune_v1_r1_packet/
+user_reported_r1_existing_run_inventory.json. Prior entries below are historical.
+
+---
+
+# 25 October 2026: completion V1 stopped before training; R1 repair ready
+
+[Audited V1 return](docs/archive/completion/COMPLETION_CODEFORMER_FINETUNE_V1_RETURN_REVIEW.md).
+[New five-step R1 upload/install/tmux/download guide](docs/archive/completion/COMPLETION_CODEFORMER_FINETUNE_V1_R1_VM.md).
+Current status: V1 EXECUTED_WITH_PREFLIGHT_FAILURE; R1 PREPARED_UNRUN.
+Historical prepared/unrun entries below are superseded by this entry.
+
+Returned archive 7d51d190...ba91bd6 is intact. V1 stopped at its first app-parity
+check after 82 typed calls, zero backwards and zero optimizer updates. All 332
+trainable tensors and the reconstructed complete state equal the original;
+both Adam states are empty. No new trained model or quality output exists.
+
+Pure CPU tensor diagnosis demonstrates equal input values but different memory
+layout from the app. R1 uses its exact active-index preprocessing/composition,
+records all four paired parity arrays/layouts/errors before assertions, and
+keeps the original 1e-6 output gate. The exact failed CUDA cause is not proven.
+Independent source review and 10 harmless CPU tensor tests pass; GPU parity must
+still pass on the manual VM run before updates. Training contract/data/splits,
+LR/losses/gates/caps/terminal state retention remain unchanged.
+
+Tiny installer ca8f17a4...98267cd (120,369 bytes) verifies old protocol, all 329
+payload assets, all four failed-run files and original checkpoint. It creates
+fresh cctv_completion_codeformer_finetune_v1_r1_vm by copying only sealed packet
+assets and three repaired sources; V1 and its failed outputs stay untouched.
+Protocol: 8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d.
+Independent installer static review and seven full fixture checks pass,
+including actual worker verification with Torch imports blocked. Initial deep
+Windows fixture hit MAX_PATH; its partial files remain retained, and the short
+fixture passed. Fixtures are not VM/GPU or quality evidence.
+
+Installer, LF checksum and guide are in ORIGINAL Testing/outputs for manual
+Windows SDK upload. Maximum 32 paired cycles / 64 Adam updates / 30-minute child
+cap, followed by bounded evidence export. No VM connection, training launch,
+automatic resume, app promotion or IMPLEMENTATION merge occurred in this turn.
+The selected original completion baseline and separate RESTORATION remain intact.
+
+Evidence: outputs/completion_codeformer_finetune_v1_return/{transport_audit.json,
+independent_return_audit.json,cpu_preprocess_layout_diagnostic.json};
+outputs/completion_codeformer_finetune_v1_r1_source_review/independent_source_admission.json;
+outputs/completion_codeformer_finetune_v1_r1_packet/{independent_installer_static_admission.json,
+independent_installer_fixture_audit.json,publication_receipt.json}.
+
+Next: user manually installs and launches R1 using the new guide; audit returned
+parity, actual updates/state and raw/PNG/visual outputs before any separate trained
+app test. Full family usefulness, automatic/assisted proposals, independent final
+review, fresh Windows deployment and the overall goal remain incomplete.
+The goal service currently reports PAUSED; this entry records the user-requested
+return audit/repair and does not claim the service was resumed or completed.
+
+---
+
+# 25 October 2026: first completion fine-tuning packet verified; manual run ready
+
+[Five-step upload/install/tmux/download guide](docs/archive/completion/COMPLETION_CODEFORMER_FINETUNE_V1_VM.md).
+[Audited diagnostic return](docs/archive/completion/COMPLETION_CODEFORMER_GRADIENT_V1_RETURN_REVIEW.md).
+STATUS: PREPARED_UNRUN_MANUAL_CODEFORMER_COMPLETION_FINETUNING_V1.
+The source-only preparation entry below is now historical. No training was
+launched by the assistant, and no candidate is promoted into the app.
+
+The actual learning pilot starts from original CodeFormer inpainting b0d1...
+and trains the proven code-prediction278 tensors and fusion54 tensors. Its
+quantizer/generator165 tensors stay frozen. Maximum32 paired cycles/64 Adam
+optimizer updates,256 backwards,600typed-forward cap (528planned),1800s hard
+child cap with1680s cooperative stop and a reserved terminal-save interval.
+Originalcheckpoint is reused read-only from the completed gradient packet.
+
+32FIT+8MONITOR originalTRAIN photos,128/32 fixed paired mask cases and32
+previously exposed unpaired public-development cases are independently audited.
+All40source cells were reviewed before training. Prepared256-to512 input matches
+the app; four fresh frozen-wrapper parity checks must pass before any update.
+Final numeric screen is prospective1% relative delivered-PNG hole-L1 improvement
+with nonworsening raw/PNG hole/seam by geometry, not restoration structure gain
+or hidden-identity accuracy. User/visual and full-family review remain required.
+
+One terminal recovery state retains332 trainable tensors, bothAdam states,
+ordered names, RNG/sampler/counters/partialgradients, against the frozen base.
+Intermediate8/16/32 images/metrics cannot be rescued as earlier checkpoints.
+Failed.partial serialization is retained evidence and not a published model.
+Startfree4GiB, stopfree2GiB,1536MiB output cap. Bounded return export preserves
+worker failure status; export success is not training/model qualification.
+
+Archive in ORIGINAL C:\xampp\htdocs\YEAR 4\Testing\outputs:
+cctv-completion-codeformer-finetune-v1-execution.tar.gz (27,675,512bytes),
+SHA256 d5d463d987855dcce2d770b975980fbfb801bff2ce669a772083004ec7aa13c3.
+Protocol0dfe963bd29856ea6201d6397aa25d651ca0291661fa3ec26539c9c770e31b8f.
+All330 archive members verify; original weights are absent from the upload.
+Source tests12 and exporter fixtures3 pass;329file packet/data bindings and
+exact namespace pass independent review. Actual --verify-transfer command also
+passes in a local VM-layout fixture with file_digest removed, importing noTorch;
+local runtime was3.13, so actualVM3.10 transfer verification remains required.
+Evidence: outputs/completion_codeformer_finetune_v1_packet/{independent_packet_admission.json,
+independent_archive_audit.json,full_transfer_fixture_audit.json} and source review.
+
+Next: user manually executes this distinct finite training pilot; independently
+audit returned weights/Adam state/recurrences/RAW/PNGs/visuals before any opt-in
+trained-model app test. Current CodeFormer baseline, RESTORATION, original
+checkpoints/splits/failures and IMPLEMENTATION stay retained. Full completion
+quality, automatic proposals, final human review and fresh deployment remain
+incomplete. Goal ACTIVE. Do not automatically launch or resume this packet.
+
+---
+
+# 25 October 2026: repaired completion diagnostic returned; gradient paths pass
+
+[Independent return findings](docs/archive/completion/COMPLETION_CODEFORMER_GRADIENT_V1_RETURN_REVIEW.md).
+The manual learning-path diagnostic has EXECUTED and completed all8 cases on the
+L4 with24 typed forward slots,16 gradient queries and0 optimizer updates.
+Worker24.154s / supervisor30.683s, exit0, no timeout. Do not relaunch the old
+prepared packet. Python3.10 compatibility repair was used successfully.
+
+Original return archive remains in original Testing/outputs:
+SHA256 a39f6e0323734a8b13150eadba64d047c240a9bab7186a4bf7f52449d182f73c,
+35,289,053bytes. Transport verifies45 members and exacte79183... protocol.
+Saved-output review reproduces all8 PNGs,5,143,440 outside-mask RGB bytes,
+masked/ring losses and CE within declared FP32 reduction bounds. All2,656 tensor
+receipts are finite/positive, no missing/zero. Original checkpoint state binds
+to reported before/after586a8854... and originalb0d1... file hash. Gradient arrays
+and clean teacher latent were not exported: connectivity and latent MSE remain
+VM receipts, not fresh local graph replay. No local model/gradient calls.
+
+Root viewed every original512 returned estimate on four sheets. Hidden mouth
+expressions and eye/gaze quality still differ from known clean targets. Zero
+updates means no learned improvement. CodeFormer stays the selected baseline;
+no model promotion, RESTORATION edit or IMPLEMENTATION merge.
+
+Evidence: outputs/completion_codeformer_gradient_v1_return/{transport_audit.json,
+independent_result_audit.json,root_visual_review.json,preview/}. The full goal
+remains ACTIVE. Next actual training pilot is being prepared:32 TRAIN fit
+photos plus8 source-disjoint adaptive TRAIN monitors, four fixed mask shapes,
+app-aligned256-to512 input,32 paired cycles/64 Adam updates maximum. All40 source
+cells have input-only review; originalVAL/FINAL untouched. Freeze and audit the
+finite packet before giving manual L4 commands. That pilot has NOT RUN.
+
+---
+
+# 25 October 2026: VM Python3.10 preflight failure; small verified repair ready
+
+User reported hashlib.file_digest AttributeError in the first protocol hash at
+--verify-transfer, before model loading or gradient work. The failure is a Python
+compatibility defect, not a completion-quality result. User transfers through
+ORIGINAL C:\xampp\htdocs\YEAR 4\Testing\outputs; completion sources remain
+in this isolated FACE_MASK_COMPLETION worktree. VM path stays ~/forensic-dgp.
+
+[Exact repair/upload/tmux/download commands](docs/archive/completion/COMPLETION_CODEFORMER_PYTHON310_REPAIR_V1_VM.md)
+supersede the old launch SHA. The tiny56,692-byte repair and LF checksum are in
+original Testing/outputs. Repair SHA88a77caf85ef995a185f3d7427596fc18da93e7bf23d3dacdf85385e25c33ed3.
+It verifies all27 original packet files, backs up the two scripts and protocol,
+refuses existing run evidence, replaces only SHA256 helper implementations and
+updates exact protocol bindings. All scientific functions, model weights, inputs,
+masks, limits and gates are unchanged; original packet bytes stay retained.
+
+Compatible protocol e79183a9f4e3ea50e9ac1d6705d9667f046364132e1f1be0628befd024835d9a.
+Original failing R1 protocol e1e4b9fd8c4bf71db806deca03a66e187e9726cafff65ff799acc25aa432387e
+is retained but must not be used after repair. Eleven independent repair tests,
+Python3.10 grammar checks and full-packet transfer verification with file_digest
+removed passed. Local runtime was3.13; no actual local3.10 runtime test is claimed.
+Evidence: outputs/completion_python310_repair_v1/independent_review.json,
+full_packet_dry_run.json and transfer_ready.json. No VM connection, model load,
+gradient query or optimizer update occurred during preparation. Goal ACTIVE;
+await manual compatibility repair, diagnostic execution and independently
+audited return. No learned model promotion or IMPLEMENTATION merge.
+
+---
+
+# 25 October 2026: completion quality diagnosis audited; manual R1 learning-path check ready
+
+CodeFormer inpainting remains the selected completion baseline. The goal is
+ACTIVE and RESTORATION stays isolated. [Fixed TRAIN results and next step](docs/archive/completion/COMPLETION_CODEFORMER_HQ_TRAIN_PROBE_V1_RESULTS.md).
+A six-source genuine-HQ TRAIN calibration finished30 requests/24 model forwards
+and six exact controls. All24 estimates and six native256 sheets were reviewed.
+Independent arithmetic replay verifies30 PNGs,24 raw512 reductions,96 sheet cells
+and5,375,448 exact outside-mask source bytes. Larger holes still change hidden
+mouth expression and eye/lens holes reveal gaze/frame-join defects. No trained
+improvement, full-family qualification or independent final human acceptance.
+
+The original supervisor observed the Windows venv launcher rather than the real
+interpreter; its RAM numbers and actual-worker timeout proof are invalid and
+retained. This test completed in140.105s worker/141.861s outer; it was not rerun.
+A reviewed Windows Job Object guard now owns actual worker descendants. Eleven
+guard and11 server tests plus the actual browser flow pass. The same cloth PNG
+is byte-identical; runtime10.919s, empty bypass0.461s, zero active descendants.
+Measured job peak private commit1,817,030,656bytes is not physical RSS or a
+minimum-RAM certification. Current page remains http://127.0.0.1:54734/.
+Updated manual launch includes --guard-sha; portable preflight14-source integrity
+passes, while a fresh installer and minimum hardware remain unverified.
+
+[Exact upload/install/tmux/download guide](docs/archive/completion/COMPLETION_CODEFORMER_GRADIENT_V1_R1_VM.md)
+is READY, UNRUN. The verified349,969,718-byte execution archive is in this branch's
+outputs, filename cctv-completion-codeformer-gradient-v1-r1-execution.tar.gz,
+SHA256 c17dea799cc29f560b567acf138b0ee966cad4421976321152112d630c0e61ff.
+Protocol e1e4b9fd8c4bf71db806deca03a66e187e9726cafff65ff799acc25aa432387e.
+Independent source/transfer audits verify27 payload files plus protocol, four
+original TRAIN sources and eight fixed lower/eye masks. The old unrun staging
+draft is preserved and superseded; do not launch it.
+
+The manual L4 diagnostic makes0 optimizer updates,24 typed forward slots and16
+gradient queries in at most600s. It isolates code-prediction CE/latent and existing
+fusion RGB/boundary routes. Same-model frozen teacher is explicitly limited;
+a connectivity pass is not learning success. Original weights stay preserved.
+R1 cleanup retains interruption/timeout and bounded failure exports. No actual
+VM connection, gradient query or training was performed by this preparation.
+
+Next: manual R1 execution and returned-output audit, then a justified finite
+fine-tuning pilot if connectivity holds. Manual completion usefulness/user
+acceptance, seven-family automatic/assisted quality, independent final review
+and accepted fresh Windows integration remain incomplete. Keep original models,
+source terms, splits, failures and all prior evidence. Do not weaken gates or
+merge this research branch wholesale into IMPLEMENTATION.
+
+---
+
+# 25 October 2026: CodeFormer selected; local reviewed-mask completion works
+
+Latest user decision: "lets use the codeformer its much better". CodeFormer
+**inpainting** is selected as the completion starting point. This is distinct
+from CodeFormer restoration/U96/u64; RESTORATION remains isolated. The dedicated
+completion goal stays ACTIVE. See [manual test guide](docs/archive/completion/COMPLETION_CODEFORMER_MANUAL_V1.md)
+and [current agreed specification](docs/archive/completion/FACE_MASK_COMPLETION_SPEC_V1.md).
+
+Open http://127.0.0.1:54734/ while its local process remains running. Upload one
+already cropped face, paint/import the removal area, confirm visible structure,
+generate, then download PNG or the original/mask/result evidence ZIP. Generation
+runs locally on CPU using the retained exact codeformer_inpainting.pth. No
+restoration, automatic detector or training is invoked by this prototype.
+
+The masked-face request completed in12.283s including worker startup; empty-mask
+bypass in0.618s with zero neural calls. Fifteen focused tests passed. Bundled
+inline Playwright verified the full focused flow, refusal and downloads at
+375/768/1280px. Independent saved-array and download review verifies exact
+raw/PNG composition and337,623 outside-mask source bytes across both requests.
+Evidence: outputs/completion_codeformer_manual_v1/independent_functionality_audit.json,
+scratch/completion-codeformer-playwright-r2.json and root_visual_review_v1.json.
+The initial browser receipt is retained: its final path test normalized to the
+legitimate root URL; corrected negative checks passed without repeating models.
+
+No new model improvement is claimed: the new cloth completion raw floats match
+the historical baseline exactly. Only declared floor-to-round PNG conversion
+differs, by at most1 RGB byte. The user selects the starting model; scientific
+full-family acceptance, independent human final review and fresh Windows CPU
+installation remain incomplete. Exact preservation is relative to the prepared
+256 canvas; original uploaded bytes are retained in the bundle. Visibility is
+a crop-geometry heuristic plus explicit user review, not a qualified detector.
+
+MI-GAN remains retained comparison evidence, with no promotion: its32 fixed
+assisted requests/29 recorded forwards took35.96s in the CPU worker, with exact
+outside preservation but mixed generated anatomy/appearance. All8 sheets were
+reviewed. MAT and previous failures remain preserved. No new VM action, training,
+restoration edit or IMPLEMENTATION merge occurred. Next: user testing with reviewed
+areas, then justified generator/mask improvements and separate automatic-proposal
+assessment. Port accepted features deliberately after output/user acceptance and
+installation/regression checks; preserve the non-commercial S-Lab license terms.
+
+---
+
+# 25 October 2026: FACE_MASK_COMPLETION uses an ordinary Git worktree
+
+Canonical folder: `C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION`. Open it directly in any editor or terminal.
+This source checkout is outside the Codex-managed directory. Git metadata remains linked to the original Testing repository; retain that repository.
+The path notes below are historical when they name the former .codex location. Read WORKSPACE_STATUS.md for current folder assignments.
+The active Codex completion checkout is temporarily retained detached at its former path because Windows refused its rename. Reopen the normal completion folder to continue there; the managed-only attachment tool cannot move this chat to it automatically.
+Ignored model assets, data and virtual environments remain in the original Testing folder and need explicit configuration. No model code, weights, inference or training changed.
+
+---
+
+# 25 October 2026: FACE_MASK_COMPLETION isolated code worktree ready
+
+Current branch: `FACE_MASK_COMPLETION`. Physical workspace: `C:\Users\janus\.codex\worktrees\face-mask-completion\Testing`.
+Current focus: covering detection, reviewed removal masks and completion; restoration development belongs to RESTORATION.
+Read [workspace status](WORKSPACE_STATUS.md) and [file ownership](docs/archive/vm_ops/WORKSPACE_BRANCHES.md).
+Two chats must use their separate worktree folders; switching branches in the same folder is not isolation.
+All original research source bytes were verified in both worktrees. Branch-specific handoff prefixes are the only intentional changes to existing source at setup closure.
+Ignored datasets, returned archives, model dependencies and virtual environments were not copied. Configure verified read-only assets and the branch environment before launching models.
+New model outputs/checkpoints must have separate filenames and directories. Existing weights, failures and qualification requirements remain intact.
+No model inference, training, VM operation or remote push occurred during this setup. Earlier setup-in-progress entries below are historical.
+
+---
+
 # 27 October 2026: Conditioned SFT Learning V2 (`Goal V3`) live NVIDIA L4 return audited, `56/56` forensic gates passed, Stage 5 live workbench verified, and `p2_u0224` promoted to `IMPLEMENTATION` & `main`
 
 STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_V2_P2_U0224_ALL_56_FORENSIC_GATES_PASSED_PROMOTED_TO_IMPLEMENTATION_AND_MAIN.
 - **Branch & Deployment Handoff (27 October 2026)**:
   - **`main` (`C:\xampp\htdocs\YEAR 4\Testing`, pushed to `origin/main`)**: Consolidated 100% of `RESTORATION` commits and synced all `5,320/5,320` gitignored V1/V2 return-audit, checkpoint, and visual files in `outputs/`. `Testing_RESTORATION` is fully merged into `main` and safe to remove; `FACE_MASK_COMPLETION` (`C:\xampp\htdocs\YEAR 4\Testing_FACE_MASK_COMPLETION`) remains active and untouched.
   - **`IMPLEMENTATION` (`C:\Users\janus\.codex\worktrees\implementation\Testing`, commit `320ec20`, pushed to `origin/IMPLEMENTATION`)**: Replaced `U96`/`u64` model switching with **Conditioned SFT V2 (`p2_u0224`)** (`787` frozen tensors: `515` `R2` + `24` `U96` + `36` `terminal_u0064_heads.npz` + `212` `v2_p2_u0224_heads.npz` tensors, `3,831,362` bytes, SHA-256 `1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f`, canonical state SHA-256 `3faa78e15c2fb50bfaa523b5dc7ee64fa4c19a13c490760a7401ea43ab0269d7`) as the sole production restoration model. Verified `17/17` unit tests, `4/4` model SHA-256 checks, `787`-tensor runtime invariant validation, and inline Playwright (`375x667`, `768x1024`, `1280x900`, `0` overflow, `0` console/page errors).
-- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) — **100% Complete across all 5 Stages**.
-- **Stage 1 Frequency-Selective & Exposure-Matched SFT Headroom Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`.
+- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](docs/archive/restoration/CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) — **100% Complete across all 5 Stages**.
+- **Stage 1 Frequency-Selective & Exposure-Matched SFT Headroom Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`.
 - **Stage 2 Dataset, V2 Package & Unit Tests (`9/9` V2 + `12/12` V1 PASS)**:
   - `56`-identity × `6`-profile realistic CCTV `TRAIN` dataset (`336` opt + `48` `monitor_v2` PNGs) pinned in `outputs/codeformer_conditioned_sft_learning_v2_preparation/v2_data_manifest.json` (`430,694` bytes, SHA256 `f060229847a70b80e8a833a49f4a0764b2e813caad58a991ed2d98d225793a15`).
   - `research/codeformer_conditioned_sft_learning_v2/` + `research/codeformer_conditioned_sft_inference_v2.py` (`515` `R2` + `24` `U96` + `36` `u64` heads frozen; exact step-0 bitwise `u64` parity `0.0` diff; top-down `32->64->128->256` multi-scale dilated `1/2/4` pre-SFT pyramid + dark sensor-noise refiner + frequency-selective VQGAN decoder spatial head; smooth bilinear+Gaussian `16x16` dark coarse exposure alignment + outer-ring-gated anatomical VQGAN high-frequency detail synthesis).
-- **Stage 3 Sealed Manual NVIDIA L4 VM Packet**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md) and `outputs/codeformer_conditioned_sft_learning_v2_source_preparation/independent_packet_audit_v2.json` (`INDEPENDENT_V2_PACKET_AUDIT_PASSED`):
+- **Stage 3 Sealed Manual NVIDIA L4 VM Packet**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md) and `outputs/codeformer_conditioned_sft_learning_v2_source_preparation/independent_packet_audit_v2.json` (`INDEPENDENT_V2_PACKET_AUDIT_PASSED`):
   - Stage directory: `outputs/cctv_codeformer_conditioned_sft_learning_v2_vm` (`850` static files)
   - Protocol SHA256: `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0` (`661,935` bytes)
   - Execution archive: `outputs/cctv-codeformer-conditioned-sft-learning-v2-execution.tar.gz` (`124,224,129` bytes, `849` PAX members, SHA256 `f373cf3b1eb217a409381ff133c47061f4bf06a4db0bb99b34bc78af3eb01d1d`).
-- **Stage 4 Live NVIDIA L4 GPU Return Audit & Visual Qualification**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1/return_audit_v2.json`:
+- **Stage 4 Live NVIDIA L4 GPU Return Audit & Visual Qualification**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_RETURN_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_return_audit_v1/return_audit_v2.json`:
   - Returned archive: `cctv-codeformer-conditioned-sft-learning-v2-results.tar.gz` (`158,864,004` bytes, `1,020` PAX members, SHA256 `8b9632c4f85b46deeb061e63cdefb4318aef48da06adbf07dead81e77b006c22`, `2731.7s` L4 runtime, `exit_code: 0`, `step0_exact_u64_max_abs_diff: 0.0`).
   - Winning checkpoint `p2_u0224` (`checkpoints/p2_u0224/trainable_v2.npz`, `max_linf_displacement = 0.250982`) with smooth `16x16` dark exposure alignment and severity-gated VQGAN detail synthesis passes **`100%` of all `56` `old_quality` forensic checks** (`inherited_56_pass: true`) while achieving across all `48` held-out `v2_monitors`:
     - **4-Role Degraded Mean MAE**: `0.04452 -> 0.02785` (**`-37.4%` error reduction**)
@@ -31,12 +1182,12 @@ STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_V2_P2_U0224_ALL_56_FORENSIC_GATES_PASSED_
 # 25 October 2026: Conditioned SFT Learning V2 (`Goal V3`) feasibility proven, manual L4 VM packet sealed, and live upload UI verified
 
 STATUS: PREPARED_UNRUN_MANUAL_CONDITIONED_SFT_V2_PACKET_INDEPENDENTLY_AUDITED_UI_VERIFIED.
-- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md).
-- **Stage 1 Frequency-Selective & Exposure-Matched SFT Headroom Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`. Proves on real CodeFormer CPU forwards that post-decoder sharpening caps out below `+0.008` SSIM, whereas exposure-matched clean pre-SFT feature alignment unlocks `+0.073` to `+0.141` `SSIM7` (`0.8452 -> 0.9186` on `global_gaussian2p0` `+60%` sharpness; `0.7759 -> 0.9174` on `compound_g1p2_lr64_jpeg70` `+47%` sharpness) while eliminating low-light exposure checkerboarding (`0.2340 -> 0.1240` MAE).
+- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](docs/archive/restoration/CCTV_CODEFORMER_RESTORATION_GOAL_V3.md).
+- **Stage 1 Frequency-Selective & Exposure-Matched SFT Headroom Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V2_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v2_feasibility/v2_feasibility_receipt_v1.json`. Proves on real CodeFormer CPU forwards that post-decoder sharpening caps out below `+0.008` SSIM, whereas exposure-matched clean pre-SFT feature alignment unlocks `+0.073` to `+0.141` `SSIM7` (`0.8452 -> 0.9186` on `global_gaussian2p0` `+60%` sharpness; `0.7759 -> 0.9174` on `compound_g1p2_lr64_jpeg70` `+47%` sharpness) while eliminating low-light exposure checkerboarding (`0.2340 -> 0.1240` MAE).
 - **Stage 2 Dataset, V2 Package & Unit Tests (`8/8` V2 + `12/12` V1 PASS)**:
   - `56`-identity × `6`-profile realistic CCTV `TRAIN` dataset (`336` opt + `48` `monitor_v2` PNGs) pinned in `outputs/codeformer_conditioned_sft_learning_v2_preparation/v2_data_manifest.json` (`430,694` bytes, SHA256 `f060229847a70b80e8a833a49f4a0764b2e813caad58a991ed2d98d225793a15`).
   - `research/codeformer_conditioned_sft_learning_v2/` (`515` `R2` + `24` `U96` + `36` `u64` heads frozen; exact step-0 bitwise `u64` parity; zero-init top-down `32->64->128->256` multi-scale dilated `1/2/4` pre-SFT pyramid + dark sensor-noise refiner + frequency-selective VQGAN decoder spatial head; 4-directional minimum Laplacian `min_dir_lap` + `g_sensor_noise` achieving `100%` zero-overlap physical separation across all `484` tested cases; Two-Phase Clean-SFT + Frozen-`R2` Perceptual/SSIM7/Laplacian training with exposure-decoupled gradient projection) + portable `research/codeformer_conditioned_sft_inference_v2.py`.
-- **Stage 3 Sealed Manual NVIDIA L4 VM Packet (Zero-CPU-Cache Host-RAM-Safe Reseal)**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md) and `outputs/codeformer_conditioned_sft_learning_v2_source_preparation/independent_packet_audit_v2.json` (`INDEPENDENT_V2_PACKET_AUDIT_PASSED`):
+- **Stage 3 Sealed Manual NVIDIA L4 VM Packet (Zero-CPU-Cache Host-RAM-Safe Reseal)**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V2_VM.md) and `outputs/codeformer_conditioned_sft_learning_v2_source_preparation/independent_packet_audit_v2.json` (`INDEPENDENT_V2_PACKET_AUDIT_PASSED`):
   - **Attempt 2 Live L4 Diagnostic & Fix**: Attempt 2 (`e8215d4e...`, preserved in `Testing/outputs/codeformer_conditioned_sft_learning_v2_attempt2_host_oom`) passed `step0_u64_baseline_and_parity` and `u0000_init` (`disp=0.0`, `inherited_56_pass=true`) on live L4 GPU in `45.2s`, then hit Linux host OOM (`exit_code: -9`) on `g2-standard-4` (`16 GB` RAM) while caching `20.16 GB` of 4-scale FP32 feature pyramids in CPU RAM. Replaced CPU feature caching in `worker_v2.py` with zero-CPU-cache on-the-fly batched GPU extraction (`< 3.5 GiB` total host RSS, `12 GiB` RSS guard, `rss_mb` + `cuda_mb` telemetry).
   - Stage directory: `outputs/cctv_codeformer_conditioned_sft_learning_v2_vm` (`850` static files)
   - Protocol SHA256: `84e4976079dd0d29ccb7408254a500298160b08479ce739163ed7dc47d90e5a0` (`661,935` bytes)
@@ -50,7 +1201,7 @@ STATUS: PREPARED_UNRUN_MANUAL_CONDITIONED_SFT_V2_PACKET_INDEPENDENTLY_AUDITED_UI
 # 25 October 2026: Active Goal V3 aligned (`Conditioned SFT V2` — Multi-Scale Dilated SFT & Frequency-Selective Decoder Fusion)
 
 STATUS: GOAL_V3_LOCKED_READY_FOR_STAGE1_EXECUTION.
-- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) (supersedes V2 as active development target; all V1/V2 artifacts preserved).
+- **Active Goal V3 Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V3.md](docs/archive/restoration/CCTV_CODEFORMER_RESTORATION_GOAL_V3.md) (supersedes V2 as active development target; all V1/V2 artifacts preserved).
 - **Aligned Decisions (`/grill-me`)**:
   1. Target balanced forensic sharpening (visibly crisper eyes, brows, nose, lips, and jaw edges on blurred/compressed/lowlight CCTV inputs while strictly preserving identity geometry and `clear`/`dark` photometry).
   2. Keep all `515` `R2` base tensors frozen with exact step-0 `u64` parity, adding zero-initialized multi-scale dilated pre-SFT residual pyramids (`dilations 1/2/4` at `32/64/128/256`) + degradation-gated high-frequency VQGAN `decoder` edge injection.
@@ -62,7 +1213,7 @@ STATUS: GOAL_V3_LOCKED_READY_FOR_STAGE1_EXECUTION.
 # 25 October 2026: Conditioned SFT Learning V1 L4 GPU return audited; clear PNG regression solved & 96/96 gate alignment verified
 
 STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_CLEAR_GATE_PASSED_DARK_COARSE_ALIGNED_96_OF_96.
-- **Returned L4 GPU Run Review**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md), `outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/transport.json`, and `outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/pixels.json`.
+- **Returned L4 GPU Run Review**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_RETURN_REVIEW.md), `outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/transport.json`, and `outputs/codeformer_conditioned_sft_learning_v1_return_audit_v1/pixels.json`.
   - Returned archive `cctv-codeformer-conditioned-sft-learning-v1-results.tar.gz` (`2,360,962,311` bytes, SHA256 `00682555ab4757ca70987e4d3a41af28ec710361b12e1d5c5ab7073e55753d22`, `3,825` PAX members, `712` full forwards, `18` checkpoints, `16` Adam commits).
   - **Normal-Lit Breakthrough**: Both Arm `A` and Arm `B` passed `clear` RAW and `native_png` gates on live L4 GPU (`-0.000273` PNG MAE improvement in Arm `B` vs `+0.000003` regression in `Matched V1`), with `5.3x`–`15.9x` larger degraded-role MAE gains (`global_gaussian2p0` `-0.000393`, `local_gaussian2p0_soft` `-0.000294`, `compound_g1p2_lr64_jpeg70` `-0.000390`).
   - **Dark Exposure Alignment (`96/96` Gates Passing)**: Coarse `16x16` exposure drift sign alignment on `g_dark > 0` (`apply_conditioned_postprocessing_numpy(..., dark_drift_align=True)`) preserves Arm `B`'s fine spatial smoothness gain while passing `100%` of `inh8`, `inh48`, `sup8`, and `sup48` across all `56` inherited + `40` matched monitor cases.
@@ -72,10 +1223,10 @@ STATUS: EXECUTED_L4_GPU_RETURN_AUDITED_CLEAR_GATE_PASSED_DARK_COARSE_ALIGNED_96_
 # 25 October 2026: Conditioned SFT Learning V1 feasibility proven & manual L4 VM packet sealed
 
 STATUS: PREPARED_UNRUN_MANUAL_CONDITIONED_SFT_PACKET_INDEPENDENTLY_AUDITED.
-- **Goal Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V2.md](CCTV_CODEFORMER_RESTORATION_GOAL_V2.md).
-- **Stage 1 Saved-Array Feasibility Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md](CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v1_feasibility/feasibility_receipt_v1.json`. Proves on the retained `Matched V1` (`u64`, `A8`, `B8`) saved RAW/PNG outputs that channel-mean / block16-mean vs. zero-mean spatial decoupling + input-only degradation/luminance gating eliminates the `Matched V1` Arm-B clear-PNG RGB8 regression (`+1,126` codes → `-48,923` to `-57,169` codes) and passes **100% of all 56 inherited quality gates AND 100% of all 40 monitor gates** at both early (`u8`) and terminal (`u24`/`u48`) checkpoints. Input-only `top1pct_luma` separates all 176 normal-lit cases (`>= 0.6838`, `g_dark == 0.0`) from all 40 low-light/dark cases (`<= 0.6356`, `g_dark == 1.0`) with zero overlap across all 216 cases.
+- **Goal Blueprint**: [CCTV_CODEFORMER_RESTORATION_GOAL_V2.md](docs/archive/restoration/CCTV_CODEFORMER_RESTORATION_GOAL_V2.md).
+- **Stage 1 Saved-Array Feasibility Proof**: [CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_FEASIBILITY_V1_REVIEW.md) and `outputs/codeformer_conditioned_sft_learning_v1_feasibility/feasibility_receipt_v1.json`. Proves on the retained `Matched V1` (`u64`, `A8`, `B8`) saved RAW/PNG outputs that channel-mean / block16-mean vs. zero-mean spatial decoupling + input-only degradation/luminance gating eliminates the `Matched V1` Arm-B clear-PNG RGB8 regression (`+1,126` codes → `-48,923` to `-57,169` codes) and passes **100% of all 56 inherited quality gates AND 100% of all 40 monitor gates** at both early (`u8`) and terminal (`u24`/`u48`) checkpoints. Input-only `top1pct_luma` separates all 176 normal-lit cases (`>= 0.6838`, `g_dark == 0.0`) from all 40 low-light/dark cases (`<= 0.6356`, `g_dark == 1.0`) with zero overlap across all 216 cases.
 - **Stage 2 Package & Unit Tests**: Implemented `research/codeformer_conditioned_sft_learning_v1/` (60 trainable tensors in Arm B: 24 `U96` pre-SFT residual adapters + 36 post-fusion spatial heads, 515 `R2` frozen; multi-site Clean-SFT feature distillation at `32/64/128/256`; role-balanced gradient projection `<g_role, g_clear> >= 0`) and `research/codeformer_conditioned_sft_inference_v1.py`, verified by 20 unit tests across `tests/test_codeformer_conditioned_sft_feasibility_v1.py`, `tests/test_codeformer_conditioned_sft_learning_v1.py`, and `tests/test_codeformer_conditioned_sft_inference_v1.py`.
-- **Stage 3 Sealed Manual NVIDIA L4 VM Packet**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md) and [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_PREPARATION.md](CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_PREPARATION.md). Independently audited in `outputs/codeformer_conditioned_sft_learning_v1_source_preparation/independent_packet_audit_v1.json`:
+- **Stage 3 Sealed Manual NVIDIA L4 VM Packet**: [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_VM.md) and [CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_PREPARATION.md](docs/archive/restoration/CCTV_CODEFORMER_CONDITIONED_SFT_LEARNING_V1_PREPARATION.md). Independently audited in `outputs/codeformer_conditioned_sft_learning_v1_source_preparation/independent_packet_audit_v1.json`:
   - Stage directory: `outputs/cctv_codeformer_conditioned_sft_learning_v1_vm` (`691` static files)
   - Protocol SHA256: `f54c37e8b6b05473b1530395549b31f89189445f642ecfc49b1280ba8442d7f0` (`1,248,212` bytes)
   - Execution archive: `outputs/cctv-codeformer-conditioned-sft-learning-v1-execution.tar.gz` (`107,283,842` bytes, `690` PAX members, SHA256 `4e3d07432ea1951a60050bb5aba5dfbbf30f6ad7b2cdc5e54232f0fa62b7af64`).
@@ -97,7 +1248,7 @@ Ignored model assets, data and virtual environments remain in the original Testi
 
 Current branch: `RESTORATION`. Physical workspace: `C:\Users\janus\.codex\worktrees\restoration\Testing`.
 Current focus: restoration model development; covering development belongs to FACE_MASK_COMPLETION.
-Read [workspace status](WORKSPACE_STATUS.md) and [file ownership](WORKSPACE_BRANCHES.md).
+Read [workspace status](WORKSPACE_STATUS.md) and [file ownership](docs/archive/vm_ops/WORKSPACE_BRANCHES.md).
 Two chats must use their separate worktree folders; switching branches in the same folder is not isolation.
 All original research source bytes were verified in both worktrees. Branch-specific handoff prefixes are the only intentional changes to existing source at setup closure.
 Ignored datasets, returned archives, model dependencies and virtual environments were not copied. Configure verified read-only assets and the branch environment before launching models.
@@ -106,12 +1257,13 @@ No model inference, training, VM operation or remote push occurred during this s
 
 ---
 
+
 # 25 October 2026: separate restoration and covering development chats
 
 Latest user decision: this chat continues FACE MASK DETECTION + COMPLETION;
 restoration development continues in a separate chat. The user selected two Git
 branches: RESTORATION and FACE_MASK_COMPLETION. [File ownership and isolation
-rules](WORKSPACE_BRANCHES.md) describe the shared integration boundaries.
+rules](docs/archive/vm_ops/WORKSPACE_BRANCHES.md) describe the shared integration boundaries.
 
 A separate chat alone still shares the same files. Branch/worktree setup is in
 progress; only a verified worktree checkout establishes a separate code folder.
@@ -130,7 +1282,7 @@ all preservation and manual-training constraints continue to apply.
 # 25 October 2026: matched feature-learning return audited; both arms closed at8
 
 STATUS: EXECUTED_QUALITY_STOP_BOTH_ARMS_UPDATE8_NO_PROMOTION.
-[Current returned-evidence review](CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_RETURN_REVIEW.md).
+[Current returned-evidence review](docs/archive/restoration/CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_RETURN_REVIEW.md).
 The prepared/unrun and manual-launch entries below are historical. This packet
 has now been executed; do not relaunch it or append epochs after its quality stop.
 
@@ -151,7 +1303,7 @@ bug. Root reviewed all54 primary plus2 partial sheets, with inspection scale
 documented; no consistent obvious new facial-detail improvement was found.
 
 U96 remains the experimental app incumbent; original u64 remains retained.
-Neither failed arm is promoted. [Additional saved-pixel photometric diagnosis](CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_PHOTOMETRIC_DIAGNOSIS.md)
+Neither failed arm is promoted. [Additional saved-pixel photometric diagnosis](docs/archive/restoration/CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_PHOTOMETRIC_DIAGNOSIS.md)
 finds mixed global-color/spatial error. Next: source design review of condition-
 sensitive feature learning with separate clear-color/local-structure controls;
 all inference conditioning must use input-only information. No successor packet
@@ -165,7 +1317,7 @@ No new native DEV, FINAL, human acceptance or Zamboanga performance claim.
 
 # 24 October 2026: matched feature-learning pilot sealed; manual run ready
 
-[Current five-step upload/install/tmux/download guide](CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_VM.md).
+[Current five-step upload/install/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_VM.md).
 STATUS: PREPARED_UNRUN_MANUAL_MATCHED_PACKET_INDEPENDENTLY_AUDITED.
 The user selected the matched two-arm comparison. Its data, shared objective,
 owned factories, graph-witness checks, finite runner, supervisor, transport and
@@ -228,8 +1380,8 @@ are retained below and backed up in the publication receipt.
 
 # 24 October 2026: matched two-arm comparison selected; data admitted
 
-[Current preparation](CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_PREPARATION.md).
-[Reviewed design](CCTV_CODEFORMER_NEXT_LEARNING_DESIGN_REVIEW_V1.md).
+[Current preparation](docs/archive/restoration/CCTV_CODEFORMER_MATCHED_FEATURE_LEARNING_V1_PREPARATION.md).
+[Reviewed design](docs/archive/restoration/CCTV_CODEFORMER_NEXT_LEARNING_DESIGN_REVIEW_V1.md).
 STATUS: USER_SELECTED_MATCHED_TWO_ARM_DATA_ADMITTED_RUNTIME_NOT_READY.
 The user explicitly selected the matched comparison. Earlier pending-choice
 statements below are historical and resolved. Training remains manual on L4.
@@ -269,7 +1421,7 @@ bytes follow as historical evidence.
 
 # 24 October 2026: protected-surroundings evidence reconciled
 
-[Preparation readiness review](CCTV_CODEFORMER_PROTECTED_SURROUNDINGS_GOAL_READINESS_V1.md).
+[Preparation readiness review](docs/archive/restoration/CCTV_CODEFORMER_PROTECTED_SURROUNDINGS_GOAL_READINESS_V1.md).
 Status: EVIDENCE_RECONCILED_OPTIONAL_MANUAL_PREPARATION_ONLY.
 
 The fixed four-photo paired DEV study completed all 48 outputs, independent
@@ -300,7 +1452,7 @@ incomplete. Exact preceding handoff bytes follow.
 
 # 23 October 2026: existing TRAIN inputs and loss scope independently reviewed
 
-[Read-only TRAIN evidence review](CCTV_CODEFORMER_U64_EXISTING_TRAIN_EVIDENCE_REVIEW_V1.md).
+[Read-only TRAIN evidence review](docs/archive/restoration/CCTV_CODEFORMER_U64_EXISTING_TRAIN_EVIDENCE_REVIEW_V1.md).
 Status: EVIDENCE_REVIEW_COMPLETE_NO_NEW_MODEL_OR_PILOT_SELECTED.
 The previous PNG-checked-step quality stop remains authoritative.
 
@@ -337,8 +1489,8 @@ Exact preceding handoff bytes follow.
 
 # 23 October 2026: PNG-checked step executed; audited quality stop
 
-[Audited return](CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_RETURN_REVIEW.md).
-[Three-route diagnostic matrix](CCTV_CODEFORMER_U64_POST_CHECKED_STEP_DIAGNOSTIC_MATRIX_V1.md).
+[Audited return](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_RETURN_REVIEW.md).
+[Three-route diagnostic matrix](docs/archive/restoration/CCTV_CODEFORMER_U64_POST_CHECKED_STEP_DIAGNOSTIC_MATRIX_V1.md).
 
 STATUS: EXECUTED_PNG_CHECKED_STEP_V1_AUDITED_QUALITY_STOP.
 The manual L4 run executed all four fixed trials, selected trial 0 by the
@@ -394,9 +1546,9 @@ Exact preceding document bytes follow as historical evidence.
 
 # 23 October 2026: actual-PNG checked finite step prepared for manual L4 run
 
-[Verified five-step VM guide](CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_VM.md).
-[Audited zero-update diagnostic](CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_RETURN_REVIEW.md).
-[Selection design](CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_DESIGN.md).
+[Verified five-step VM guide](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_VM.md).
+[Audited zero-update diagnostic](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_RETURN_REVIEW.md).
+[Selection design](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_DESIGN.md).
 
 STATUS: PREPARED_PNG_CHECKED_STEP_V1_UNRUN.
 The completed PNG-surrogate measurement passed transport, saved pixels, states,
@@ -463,8 +1615,8 @@ prior document bytes follow.
 
 # 23 October 2026: PNG-surrogate diagnostic completed and independently audited
 
-[Audited return and interpretation](CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_RETURN_REVIEW.md).
-[Next finite-step design](CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_DESIGN.md).
+[Audited return and interpretation](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_RETURN_REVIEW.md).
+[Next finite-step design](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_CHECKED_STEP_V1_DESIGN.md).
 
 STATUS: EXECUTED_PNG_SURROGATE_MEASUREMENT_V1_AUDITED_ZERO_UPDATES.
 The user's manual L4 diagnostic completed: worker exit0, no timeout, known
@@ -522,8 +1674,8 @@ Full goal ACTIVE/incomplete. Exact historical document bytes follow.
 
 # 23 October 2026: zero-update RAW/PNG diagnostic ready for manual L4 execution
 
-[Five-step upload, install, tmux and download guide](CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_VM.md).
-[Audited prior failure](CCTV_CODEFORMER_U64_GATE_ALIGNED_PILOT_V1_RETURN_REVIEW.md).
+[Five-step upload, install, tmux and download guide](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_VM.md).
+[Audited prior failure](docs/archive/restoration/CCTV_CODEFORMER_U64_GATE_ALIGNED_PILOT_V1_RETURN_REVIEW.md).
 
 STATUS: PREPARED_PNG_SURROGATE_MEASUREMENT_V1_UNRUN.
 The returned gate-aligned training pilot is audited and failed at update two;
@@ -576,8 +1728,8 @@ ACTIVE/incomplete. Prior statuses below are historical; exact prior bytes follow
 
 # 23 October 2026: original-u64 pilot audited; quality stop at update two
 
-[Audited return](CCTV_CODEFORMER_U64_GATE_ALIGNED_PILOT_V1_RETURN_REVIEW.md).
-[Next source-only measurement design](CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_DESIGN.md).
+[Audited return](docs/archive/restoration/CCTV_CODEFORMER_U64_GATE_ALIGNED_PILOT_V1_RETURN_REVIEW.md).
+[Next source-only measurement design](docs/archive/restoration/CCTV_CODEFORMER_U64_PNG_SURROGATE_MEASUREMENT_V1_DESIGN.md).
 
 STATUS: EXECUTED_GATE_ALIGNED_PILOT_V1_AUDITED_QUALITY_STOP_AT2.
 The user's manual L4 run applied two updates, then stopped at its scheduled
@@ -632,8 +1784,8 @@ prepared statuses below are superseded; exact prior bytes follow.
 
 # 23 October 2026: four-update original-u64 pilot ready for manual transfer
 
-[Five-step upload, installation, tmux and download guide](CCTV_CODEFORMER_U64_GATE_ALIGNED_PILOT_V1_VM.md).
-[Audited diagnosis](CCTV_CODEFORMER_U64_ROLE_GRADIENTS_V1_RETURN_REVIEW.md).
+[Five-step upload, installation, tmux and download guide](docs/archive/restoration/CCTV_CODEFORMER_U64_GATE_ALIGNED_PILOT_V1_VM.md).
+[Audited diagnosis](docs/archive/restoration/CCTV_CODEFORMER_U64_ROLE_GRADIENTS_V1_RETURN_REVIEW.md).
 
 STATUS: PREPARED_UNRUN_MANUAL_GATE_ALIGNED_PILOT_V1. The new runner and its
 bounded supervisor are implemented, independently source-reviewed and sealed.
@@ -692,8 +1844,8 @@ Exact preceding document bytes follow.
 
 # 23 October 2026: original-u64 diagnostic audited; next design is source-only
 
-[Audited return and diagnosis](CCTV_CODEFORMER_U64_ROLE_GRADIENTS_V1_RETURN_REVIEW.md).
-[Next gate-aligned design](CCTV_CODEFORMER_U64_GATE_ALIGNED_V1_DESIGN.md).
+[Audited return and diagnosis](docs/archive/restoration/CCTV_CODEFORMER_U64_ROLE_GRADIENTS_V1_RETURN_REVIEW.md).
+[Next gate-aligned design](docs/archive/restoration/CCTV_CODEFORMER_U64_GATE_ALIGNED_V1_DESIGN.md).
 
 The user's manual zero-update diagnostic completed. Its archive is
 1,226,001,016 bytes, SHA256
@@ -743,7 +1895,7 @@ status. Exact prior document bytes follow for provenance.
 
 # 23 October 2026: original-u64 diagnostic ready for a manual VM run
 
-[Five-step upload/install/tmux/download guide](CCTV_CODEFORMER_U64_ROLE_GRADIENTS_V1_VM.md).
+[Five-step upload/install/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_U64_ROLE_GRADIENTS_V1_VM.md).
 The selected diagnostic starts from exact original trained u64 and measures
 separate loss/fidelity gradients on16 admitted optimization photographs under
 four matched roles. Maximum72 forwards and192 gradient queries; zero optimizers,
@@ -784,7 +1936,7 @@ reviewers pending. Full goal ACTIVE/incomplete. Exact prior bytes follow.
 
 # 23 October 2026: trained-u64 continuation audited; quality stop at 8
 
-[Return review](CCTV_CODEFORMER_U64_CLEANANCHORS_CONTINUATION_V1_RETURN_REVIEW.md):
+[Return review](docs/archive/restoration/CCTV_CODEFORMER_U64_CLEANANCHORS_CONTINUATION_V1_RETURN_REVIEW.md):
 the user's manual run continued exact trained u64, committed eight Adam updates,
 then stopped at the scheduled update8 quality bank (worker exit2). Download and
 export succeeded. Archive1,155,880,499bytes, SHA256
@@ -831,7 +1983,7 @@ ACTIVE/incomplete. Exact previous document bytes follow.
 
 # 23 October 2026: trained-u64 continuation ready for a manual VM run
 
-[Use the five-step upload/install/tmux/download guide](CCTV_CODEFORMER_U64_CLEANANCHORS_CONTINUATION_V1_VM.md).
+[Use the five-step upload/install/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_U64_CLEANANCHORS_CONTINUATION_V1_VM.md).
 The selected next experiment restores the exact trained **u64** heads together
 with its retained R2 base and U96 adapters. Its earlier 1.627216% global and
 1.210135% local PNG structure gains remain the reference on the same small,
@@ -883,7 +2035,7 @@ status; this publication supplies current readiness. Exact prior bytes follow.
 
 # 23 October 2026: spatial feasibility packet sealed; checkpoint choice under review
 
-[Five-step manual guide](CCTV_CODEFORMER_U96_SPATIAL_FEASIBILITY_V1_VM.md) and the distinct spatial-feasibility execution packet are prepared and UNRUN. Archive40,009,514bytes, SHA256 `84652e91c859874ece30fceb79b84075d712f1af467b6de69c2ed65ac9b5a8d0`; protocolSHA256 `6ad2d51f25cc5c7ef6fab95c3ff26f6a646780d5c0e5ba6e118b7d78d16d7f1e`. The complete runner passed independent source review and141pure/NumPy tests; independent actual archive audit passed301checks over280members/51,624,775payloadbytes, including complete single-gzip CRC/ISIZE and tar-tail checks. Staged CLI help and281static bindings passed without importing Torch/NumPy or installing the two intentionally omitted retained initializer files. The exact commands and resource/failure wording have independent static review. These are preparation proofs, not CUDA execution, useful restoration or qualification.
+[Five-step manual guide](docs/archive/restoration/CCTV_CODEFORMER_U96_SPATIAL_FEASIBILITY_V1_VM.md) and the distinct spatial-feasibility execution packet are prepared and UNRUN. Archive40,009,514bytes, SHA256 `84652e91c859874ece30fceb79b84075d712f1af467b6de69c2ed65ac9b5a8d0`; protocolSHA256 `6ad2d51f25cc5c7ef6fab95c3ff26f6a646780d5c0e5ba6e118b7d78d16d7f1e`. The complete runner passed independent source review and141pure/NumPy tests; independent actual archive audit passed301checks over280members/51,624,775payloadbytes, including complete single-gzip CRC/ISIZE and tar-tail checks. Staged CLI help and281static bindings passed without importing Torch/NumPy or installing the two intentionally omitted retained initializer files. The exact commands and resource/failure wording have independent static review. These are preparation proofs, not CUDA execution, useful restoration or qualification.
 
 The prepared diagnostic starts from complete U96, opens only existing ResBlock22/RGBConv24 (10tensors/75,843scalars;529frozen), and caps218forwards/32component-gradient queries/two independent FP32 applications from the same initializer. Maximum coordinate displacements 0.00001/0.00005 are not learning rates or epochs; zero optimizer objects/steps. Preserve 16gradientcases,32adaptive TRAIN monitors,24legacy guards and all quality requirements. Normal completion requires complete539-tensor state witnesses; failure retains existing/partial bytes with bounded best-effort extra capture. Scientific stop1200s, external1260s plus20s termination grace, bank phases180s, export300/330s;8GiBinitial/4GiBcontinuing disk,2GiBoutput and archive caps. Forward settings stay strict; known CUDA bilinear-upsample backward warnings are recorded in individual warning-only query scopes and flags restored. No bitwise CUDA gradient repeatability is claimed; unexpected nondeterministic gradient operations stop.
 
@@ -895,7 +2047,7 @@ STATUS: SEALED_UNRUN_DIAGNOSTIC; INITIALIZER_CHOICE_UNDER_REVIEW. No model/Torch
 
 # 23 October 2026: spatial decoder and low-light feasibility source reviewed
 
-[Current preparation](CCTV_CODEFORMER_U96_SPATIAL_FEASIBILITY_V1_PREPARATION.md): the next distinct path starts from complete exact incumbent U96 and opens only its existing final ResBlock22 plus RGBConv24, ten tensors/75,843 scalars with529 frozen. The completed two-tensor readout run remains a quality failure: do not rerun its guide, append epochs or promote its checkpoint. The new path tests richer spatial response together with low-light selectivity; no useful improvement is yet measured.
+[Current preparation](docs/archive/restoration/CCTV_CODEFORMER_U96_SPATIAL_FEASIBILITY_V1_PREPARATION.md): the next distinct path starts from complete exact incumbent U96 and opens only its existing final ResBlock22 plus RGBConv24, ten tensors/75,843 scalars with529 frozen. The completed two-tensor readout run remains a quality failure: do not rerun its guide, append epochs or promote its checkpoint. The new path tests richer spatial response together with low-light selectivity; no useful improvement is yet measured.
 
 Four inert modules now implement the guarded factory/full539-state capture, separate photographic RGB/adjacent components, bounded common-descent arithmetic and exact finite prospective contract. Root53pure/NumPy tests and nine Python3.10 syntax checks pass. Independent model/objective/contract and direction reviews found no unresolved blocker in their scoped source; direction review adds64 independent analytic/packing/FP32 checks. Fresh scope readback verified534checks over250 bindings/136 decoded RGB256 inputs-targets; an independent audit verified801checks. These are source/data proofs, not actual CUDA/gradient/quality evidence. Exact source/test/review pins are retained.
 
@@ -907,7 +2059,7 @@ STATUS: INERT_SOURCE_REVIEWED_UNSEALED_UNRUN. The finite worker, actual gate imp
 
 # 23 October 2026: decoder-readout return audited; quality stop retained
 
-[Current return review](CCTV_CODEFORMER_U96_DECODER_READOUT_V1_RETURN_REVIEW.md): the user's manual L4 run completed64updates/256backwards/712fullforwards, then stopped at the final quality gate (worker exit2, no timeout). Download/export succeeded. Returned archive963,822,573bytes matches SHA256 `73c8f4bcca5814cb845058cbc7d553ad3ea1f29e97967449cad66ac848fed2c4` and sealed protocol `a9b7899cb23ada04779f350dfd37f11818533bf9bf462404e342b8d7e575294e`. The historical upload/launch guide has now been executed; do not rerun it or append epochs.
+[Current return review](docs/archive/restoration/CCTV_CODEFORMER_U96_DECODER_READOUT_V1_RETURN_REVIEW.md): the user's manual L4 run completed64updates/256backwards/712fullforwards, then stopped at the final quality gate (worker exit2, no timeout). Download/export succeeded. Returned archive963,822,573bytes matches SHA256 `73c8f4bcca5814cb845058cbc7d553ad3ea1f29e97967449cad66ac848fed2c4` and sealed protocol `a9b7899cb23ada04779f350dfd37f11818533bf9bf462404e342b8d7e575294e`. The historical upload/launch guide has now been executed; do not rerun it or append epochs.
 
 Independent R1transport/event audit passed33,009checks over3,482files/3,445events; saved-pixel audit passed68,019checks across all712RAW/PNG outputs,256objectives and six complete56-case banks. All floorPNG deliveries and float64 metric/gate values match. State audit passed708,383checks across65checkpoints and64gradient sets; NumPy independently reconstructs all fresh-Adam steps. All64optimizer attempts/returns are known. Local Torch was used only for bounded CPUweights_only checkpoint decoding, with zero model/optimizer construction, forward/backward/steps or VM connection. Full post-training frozen537values are absent from the archive; their exactness remains a source-bound VM assertion rather than an independent rehash.
 
@@ -921,7 +2073,7 @@ STATUS: QUALITY_STOP_AT64_NOT_QUALIFIED. Preserve returned archive, all states/g
 
 # 23 October 2026: manual U96 decoder-readout guide ready; audit counts clarified
 
-[Use the five-step manual VM guide](CCTV_CODEFORMER_U96_DECODER_READOUT_V1_VM.md). Training remains UNRUN. The new64-update maximum pilot, exact initializer/data, unchanged gates and all finite limits remain as sealed; no source, archive, guide, model, app or research outcome changed.
+[Use the five-step manual VM guide](docs/archive/restoration/CCTV_CODEFORMER_U96_DECODER_READOUT_V1_VM.md). Training remains UNRUN. The new64-update maximum pilot, exact initializer/data, unchanged gates and all finite limits remain as sealed; no source, archive, guide, model, app or research outcome changed.
 
 Authoritative saved counts are23,767archive checks and64manual-guide checks. The earlier stdout totals23,804and65included37and1later publication checks respectively. The preceding publication's65guide-check statement refers to that stdout total; use64for the stored guide review. [Retained clarification](outputs/codeformer_u96_decoder_readout_v1_preparation/publication_counter_clarification_v1.json) preserves the distinction. Root freshly checked both pass receipts, guide hash and archive/checksum/protocol hashes. Full goal ACTIVE/incomplete; exact preceding documents remain below.
 
@@ -929,7 +2081,7 @@ Authoritative saved counts are23,767archive checks and64manual-guide checks. The
 
 # 23 October 2026: finite U96 decoder-readout packet sealed; manual VM run pending
 
-[Five-step upload/install/tmux/download guide](CCTV_CODEFORMER_U96_DECODER_READOUT_V1_VM.md) is ready for the existing user-identified L4 VM. The execution archive is39,462,364bytes (39.5MB), SHA256 `8ef7ceeb18379d98db50c250c84afd6e8a3cae3332ad75932ab0ae138423bed2`; protocol SHA256 `a9b7899cb23ada04779f350dfd37f11818533bf9bf462404e342b8d7e575294e`. It intentionally omits the two large frozen initializer files; the exclusive installer copies and rehashes exact retained R2 plus U96 bytes on the VM. No historical pilot is rerun.
+[Five-step upload/install/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_U96_DECODER_READOUT_V1_VM.md) is ready for the existing user-identified L4 VM. The execution archive is39,462,364bytes (39.5MB), SHA256 `8ef7ceeb18379d98db50c250c84afd6e8a3cae3332ad75932ab0ae138423bed2`; protocol SHA256 `a9b7899cb23ada04779f350dfd37f11818533bf9bf462404e342b8d7e575294e`. It intentionally omits the two large frozen initializer files; the exclusive installer copies and rehashes exact retained R2 plus U96 bytes on the VM. No historical pilot is rerun.
 
 The finite worker, initializer installer, static verifier, external supervisor, bounded exporter and builder are implemented and independently source-reviewed with18current pins and no unresolved source blockers. Root's56pure/NumPy/miniature-file-transport tests passed in0.979s. Independent actual archive inspection stored23,767checks:260exact members,49,910,292payload bytes, complete gzip/tar framing, LF checksum, reviewed-source/data/admission/failure bindings and unchanged parent cases/guards. A further37publication checks were included in the reviewer's stdout total23,804; use23,767as the stored archive-audit count. Independent static guide review passed65checks. Root ran the actual staged CLI help/static verification and Python3.10syntax checks with noTorch import; Bash syntax-only validation passed after the sandbox prevented MSYS startup. None of these proves actual L4 runtime or model quality.
 
@@ -943,7 +2095,7 @@ STATUS: PREPARED/SEALED/UNRUN. Actual construction, parity, gradients, optimizer
 
 # 23 October 2026: distinct U96 decoder-readout path prepared as inert source
 
-[Current preparation review](CCTV_CODEFORMER_U96_DECODER_READOUT_V1_PREPARATION.md): the next proposed finite manual L4 pilot starts from complete exact U96 and trains only its two existing final decoder RGB tensors (1,731 parameters), keeping the other 537 tensors frozen. Independent historical review found this parameter path distinct from the reviewed CodeFormer recipes; fusion-only and RGB-plus-feature adapter routes were already tried and failed preservation. This is a falsifiable parameter-path-and-supervision package, not a proven cause or promised fix. It cannot change selected codes or recover absent anatomy.
+[Current preparation review](docs/archive/restoration/CCTV_CODEFORMER_U96_DECODER_READOUT_V1_PREPARATION.md): the next proposed finite manual L4 pilot starts from complete exact U96 and trains only its two existing final decoder RGB tensors (1,731 parameters), keeping the other 537 tensors frozen. Independent historical review found this parameter path distinct from the reviewed CodeFormer recipes; fusion-only and RGB-plus-feature adapter routes were already tried and failed preservation. This is a falsifiable parameter-path-and-supervision package, not a proven cause or promised fix. It cannot change selected codes or recover absent anatomy.
 
 The inert factory and connected clean-target objective are implemented. Root's 22 pure tests passed (14 model-contract/AST/guard checks plus 8 objective checks); a separate objective review passed 44 independent NumPy/coordinate-loop checks. The prospective TRAIN reuse readback passed 1,303 source/pixel/partition/schedule checks for the same 16 optimization and 8 adaptive TRAIN-monitor photographs across four roles, plus 8 legacy guard photographs/24 cases. Exact R2/U96 initializer files were freshly rehashed. No model construction, neural forward, gradient, optimizer, training, VM connection or app change occurred. Actual runtime parity, gradients and quality remain unmeasured.
 
@@ -965,7 +2117,7 @@ The [saved-lineage measurement addendum](outputs/codeformer_u96_u64_saved_lineag
 
 # 23 October 2026: opt-in U96 workflow verified; broader comparison stopped with observed failures
 
-[Current milestone review](CCTV_CODEFORMER_U96_RESTORATION_STAGING_V1_REVIEW.md) and [local U96 workflow](http://127.0.0.1:49619/restoration-workflow): the staged page now offers Auto/On/Off, bypass or reviewed manual Protect/Apply, original/selected/result views, PNG and optional evidence ZIP. Existing main-app routes/defaults/design and all checkpoints remain intact. U96 remains the incumbent experimental control; u64 is not promoted. Model usefulness is not established by this app check.
+[Current milestone review](docs/archive/restoration/CCTV_CODEFORMER_U96_RESTORATION_STAGING_V1_REVIEW.md) and [local U96 workflow](http://127.0.0.1:49619/restoration-workflow): the staged page now offers Auto/On/Off, bypass or reviewed manual Protect/Apply, original/selected/result views, PNG and optional evidence ZIP. Existing main-app routes/defaults/design and all checkpoints remain intact. U96 remains the incumbent experimental control; u64 is not promoted. Model usefulness is not established by this app check.
 
 The readiness defect is fixed: busy or uncertain workers refuse status/restoration. The sealed source passed 39 pure checks, JavaScript syntax validation and 9 bounded multipart/ASGI checks. Root's bundled inline Playwright verified actual Off0, On+bypass1, On+confirmed manual1 and AutoFalse0 branches, with exactly two frozen U96 forwards total. Both On flows passed at 375/768/1280 with no overflow/page/console errors and actual PNG/ZIP downloads. Root personally reviewed all six On result screenshots plus preview/Auto artifacts. Independent saved audits passed 311 zero-neural checks and 873 actual-pair checks, plus five mutation regressions. Exact native protected/outside-Apply input pixels, immutable original rebuilding, preview IDs, FP32-to-PNG delivery, distinct workers and cleanup records passed. Host observation found both workers absent and the same server alive with inactive/uncertain0/cleanup0 status. Persisted RAM/RSS time series and original multipart mask PNG bytes are unavailable; no such proof is claimed. Input protection does not guarantee unchanged generated appearance. No training or VM operation occurred.
 
@@ -979,7 +2131,7 @@ FINAL materials are ready, but reviewers/adjudicator remain unassigned, the fina
 
 # 22 October 2026: empty-log mismatch repaired; remaining511 comparison running
 
-[Continuation review](CCTV_CODEFORMER_BROADER_CONTINUATION_V3_REVIEW.md): further evidence inspection confirmed all9emptyworker.log files are intentional DEVNULL placeholders, each beside16complete saved calls. Independent targeted inspection passed40185checks and rehashed all2414interrupted files. Root's actual checker replay reproduced9emptylog refusals and9passing nonempty controls. The mismatch is the generic nonempty-file assumption; earlier process disappearance cause/time remain unknown. The user requested inspection first, then authorized the best repair if failure persisted. No model-quality gate was changed.
+[Continuation review](docs/archive/restoration/CCTV_CODEFORMER_BROADER_CONTINUATION_V3_REVIEW.md): further evidence inspection confirmed all9emptyworker.log files are intentional DEVNULL placeholders, each beside16complete saved calls. Independent targeted inspection passed40185checks and rehashed all2414interrupted files. Root's actual checker replay reproduced9emptylog refusals and9passing nonempty controls. The mismatch is the generic nonempty-file assumption; earlier process disappearance cause/time remain unknown. The user requested inspection first, then authorized the best repair if failure persisted. No model-quality gate was changed.
 
 Only newV3 permits the exact9retained zero-size/emptySHA ordinary single-link logs; other files retain the old checker. Preserve blocked-source snapshots, failure transcripts, all952original files, all2414interrupted files and205audited outputs. Repaired source passed22author tests/actual205+CIMdependency verification and independent focused/source review. Root sealedplan278c49c19f90b4411445dbb82643e2fba7785511cf23622e32c4e82df66dc96c, verified0NN, checked actualPID/interpreter/token and approved the persistent local supervisor8948. First new outputs are saving from originalslot206; no205saved slot is rerun. Timestamped partial counters are separate from full completion.
 
@@ -1013,7 +2165,7 @@ Manual Protect/Apply remains optional after the completed4photo study showed mix
 
 # 22 October 2026: paired Protect/Apply study audited; preparation remains optional
 
-[Paired review](CCTV_CODEFORMER_PROTECT_APPLY_PAIRED_R1_REVIEW.md): all48 frozen outputs from4DEVphotographs ×3correlated roles ×2models ×2conditions were saved and independently verified. Whole PNG MAE worsened11/12 cases per model, including3/4 localized-blur photographs; no preparation comparison improved both whole MAE andSSIM. Mean changes are small (+0.00032875 U96/+0.00033521 u64 on0–1RGB), without a significance or usefulness claim. Root personally reviewed all3exact256sheets/48generated cells before numerical summaries and found no consistent conspicuous new structure. All adverse cases, RAW/PNG evidence and original radius6 history remain exact.
+[Paired review](docs/archive/restoration/CCTV_CODEFORMER_PROTECT_APPLY_PAIRED_R1_REVIEW.md): all48 frozen outputs from4DEVphotographs ×3correlated roles ×2models ×2conditions were saved and independently verified. Whole PNG MAE worsened11/12 cases per model, including3/4 localized-blur photographs; no preparation comparison improved both whole MAE andSSIM. Mean changes are small (+0.00032875 U96/+0.00033521 u64 on0–1RGB), without a significance or usefulness claim. Root personally reviewed all3exact256sheets/48generated cells before numerical summaries and found no consistent conspicuous new structure. All adverse cases, RAW/PNG evidence and original radius6 history remain exact.
 
 The earlier wild5 visual benefit is case-specific unpaired evidence. Manual Protect/Apply remains optional with review, immutable-original rebuilding and bypass. Automatic detection/matching and always-on blur remain unvalidated; no same-cohort strength search is authorized by this result. Native Protect+guard input pixels remained exact, but generated protected pixels changed: input preparation is not a guarantee of exact generated appearance. Do not copy arbitrary noise/mosaic or request completion to replace insufficient visible structure.
 
@@ -1275,7 +2427,7 @@ The R2 spatial prototype remains untrained/unrun and no training packet is seale
 
 # 21 October 2026: R2-first improvement; local-blur proposals and two editable areas agreed
 
-The user's confirmed choices are 1A, 2A, 3A. Improve the exact current R2 checkpoint as the primary candidate initializer and retain it permanently as a comparison reference. A better challenger may become the preferred development version only after visible improvement, existing preservation checks and user review; retain R2, every preceding incumbent and untouched CodeFormer. R2 is user-preferred research evidence, not a newly qualified universal winner; its historical clear/normal failures remain. This choice supersedes the earlier untouched-original initializer recommendation. [Agreed plan, exact model binding and current status](CCTV_CODEFORMER_R2_FOCUS_V1_PLAN.md).
+The user's confirmed choices are 1A, 2A, 3A. Improve the exact current R2 checkpoint as the primary candidate initializer and retain it permanently as a comparison reference. A better challenger may become the preferred development version only after visible improvement, existing preservation checks and user review; retain R2, every preceding incumbent and untouched CodeFormer. R2 is user-preferred research evidence, not a newly qualified universal winner; its historical clear/normal failures remain. This choice supersedes the earlier untouched-original initializer recommendation. [Agreed plan, exact model binding and current status](docs/archive/restoration/CCTV_CODEFORMER_R2_FOCUS_V1_PLAN.md).
 
 The agreed input stage addresses localized BLUR first, not arbitrary grain/JPEG/mosaic corruption. Estimate a proposal, expose separate Protect and Apply blur areas for brush/erase correction, show the actual derived input and require confirmation before restoration. Protect wins overlaps; recompute each preview from immutable original bytes, never an already processed preview. Exact no-added-blur protection applies inside the reviewed mask; automatic discovery and exact matching of all pre-existing blur are not guaranteed. Unknown/mixed or globally soft inputs allow bypass/manual review. The existing optional page remains rectangle-based and fixed strength: the automatic estimator, two-mask painting and adaptive matching are NOT implemented or qualified by these decisions.
 
@@ -1287,7 +2439,7 @@ Evaluate model learning separately from input preparation: compare R2 and each c
 
 # 21 October 2026: protected-surroundings editor is ready for optional local testing
 
-[Open experimental surroundings test](http://127.0.0.1:61815/restoration-context-test). Upload one readable face, draw or edit protection around its complete face/existing blur, preview the actual outside-only preprocessing, explicitly confirm and compare the SAME R2 or untouched CodeFormer model on original versus prepared input. Protection is manually assisted, not automatically detected. The source-bound reviewed wild5 example is available. The normal four-model comparison route remains available and its source/template/JavaScript are unchanged; main-app defaults and model qualification are unchanged. [Workflow and evidence](CCTV_CODEFORMER_SURROUNDINGS_APP_V1_REVIEW.md).
+[Open experimental surroundings test](http://127.0.0.1:61815/restoration-context-test). Upload one readable face, draw or edit protection around its complete face/existing blur, preview the actual outside-only preprocessing, explicitly confirm and compare the SAME R2 or untouched CodeFormer model on original versus prepared input. Protection is manually assisted, not automatically detected. The source-bound reviewed wild5 example is available. The normal four-model comparison route remains available and its source/template/JavaScript are unchanged; main-app defaults and model qualification are unchanged. [Workflow and evidence](docs/archive/restoration/CCTV_CODEFORMER_SURROUNDINGS_APP_V1_REVIEW.md).
 
 The guarded transform reproduces the earlier wild5 PNG/mask/alpha exactly, preserving all 128,853 selected existing-patch pixels, 159,548 protected native pixels and 37,650 conservative prepared interior pixels. Mask or image edits invalidate confirmation. Five HTTP refusals occurred before any neural call; the confirmed R2 flow ran exactly two CPU forwards in 16.95 seconds and five downloads passed independent RAW/PNG/support/provenance audits. Bundled inline Playwright passed all nine empty/editor/result layouts at 375/768/1280 with no overflow or console/page errors. Root reviewed every saved layout and both outputs; an independent source/scope review passed. Both R2 images equal earlier saved stress fixtures. These functional checks do not establish correct hidden detail, identity, general preprocessing quality or native CCTV performance.
 
@@ -1297,7 +2449,7 @@ No training, optimizer updates, VM action, new checkpoint, storage offload or au
 
 # 21 October 2026: refined surroundings-only blur protects wild5's existing facial blur
 
-Latest user direction selects surroundings-only blur, avoiding additional blur over the already-soft face. The earlier protection missed 346 lower-corner pixels of the manually approximated full blur patch. The refined union adds an 8-native-pixel outward guard and blends only outside protection over 16 pixels. All 128,853 pixels in the selected existing blur patch, all 159,548 protected native pixels and 37,650 conservative prepared interior pixels remain exact. The fixed surroundings Gaussian is unchanged; matching the unknown original blur remains approximate. [Reviewed protection, test input and comparison](CCTV_CODEFORMER_WILD5_PRECISE_SURROUNDINGS_V1_REVIEW.md).
+Latest user direction selects surroundings-only blur, avoiding additional blur over the already-soft face. The earlier protection missed 346 lower-corner pixels of the manually approximated full blur patch. The refined union adds an 8-native-pixel outward guard and blends only outside protection over 16 pixels. All 128,853 pixels in the selected existing blur patch, all 159,548 protected native pixels and 37,650 conservative prepared interior pixels remain exact. The fixed surroundings Gaussian is unchanged; matching the unknown original blur remains approximate. [Reviewed protection, test input and comparison](docs/archive/restoration/CCTV_CODEFORMER_WILD5_PRECISE_SURROUNDINGS_V1_REVIEW.md).
 
 Four new local restoration forwards completed in 27.44 seconds. Independent input, saved RAW/PNG/provenance and visual checks passed; root and peer reviewed all 12 comparison outputs and the protection preview. Results broadly resemble the earlier surroundings-only improvement, with small appearance changes. This is one unpaired stress image, with no clean target or identity/accuracy claim. The protection is manually assisted; automatic blur-boundary detection and editable app integration remain unimplemented and unqualified. No fixed wild5 mask may be silently applied to other images. The stronger whole-image experiment is retained but is no longer the selected preprocessing direction.
 
@@ -1307,9 +2459,9 @@ No app default, model, threshold, training recipe or VM state changed. The share
 
 # 21 October 2026: U96/S96 not accepted; wild5 surroundings-blur response verified
 
-The user reports no significant visible U96/S96 improvement. These adapters are retained as experimental evidence, not accepted upgrades; do not continue their unchanged feature-only recipe. A68-input DEV comparison stopped to free the shared interactive page:10 completed paired cases/40 outputs were independently audited and all3 sheets reviewed,58 inputs remain pending, native0/FINAL0. Its eight degraded observations are from ONE photograph; original CodeFormer has lower PNG MAE than R2/U/S on all eight. Partial integrity or numeric improvement does not satisfy visible restoration acceptance. [Partial review](CCTV_CODEFORMER_SPATIAL_DEV_PARTIAL_V1_REVIEW.md).
+The user reports no significant visible U96/S96 improvement. These adapters are retained as experimental evidence, not accepted upgrades; do not continue their unchanged feature-only recipe. A68-input DEV comparison stopped to free the shared interactive page:10 completed paired cases/40 outputs were independently audited and all3 sheets reviewed,58 inputs remain pending, native0/FINAL0. Its eight degraded observations are from ONE photograph; original CodeFormer has lower PNG MAE than R2/U/S on all eight. Partial integrity or numeric improvement does not satisfy visible restoration acceptance. [Partial review](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_DEV_PARTIAL_V1_REVIEW.md).
 
-On the user's wild5 stress image, fixed surrounding-only blur produces much clearer generated eyes/nose/mouth in all four models, including untouched CodeFormer. All144,534 protected native face RGB pixels and34,091 conservative prepared interior pixels remain exact. Four new local inference calls completed in33.64seconds; eight earlier original/whole-blur outputs were reused exactly. Independent input/payload and root/peer visual checks passed. This demonstrates context sensitivity on ONE unpaired image, not recovered identity, a learned-model gain or validated automatic preprocessing. No clean original exists; blur matching is approximate and strengths differ across variants. [Three-way results and evidence](CCTV_CODEFORMER_WILD5_CONTEXT_BLUR_V1_REVIEW.md).
+On the user's wild5 stress image, fixed surrounding-only blur produces much clearer generated eyes/nose/mouth in all four models, including untouched CodeFormer. All144,534 protected native face RGB pixels and34,091 conservative prepared interior pixels remain exact. Four new local inference calls completed in33.64seconds; eight earlier original/whole-blur outputs were reused exactly. Independent input/payload and root/peer visual checks passed. This demonstrates context sensitivity on ONE unpaired image, not recovered identity, a learned-model gain or validated automatic preprocessing. No clean original exists; blur matching is approximate and strengths differ across variants. [Three-way results and evidence](docs/archive/restoration/CCTV_CODEFORMER_WILD5_CONTEXT_BLUR_V1_REVIEW.md).
 
 The confirmed-stopped prior server was restarted at http://127.0.0.1:61815/restoration-spatial-test (PID32068, scratch/codeformer_spatial_research_server_surroundings_v1.json). Keep the page available; do not restart the shared-server background batch during the user's test. No app default or quality threshold changed. Original source/model/split/failure assets remain retained. No actual training, VM action or new storage offload ran.
 
@@ -1323,7 +2475,7 @@ Restoration user acceptance, full useful DEV/native evidence, independent reserv
 
 The manually run spatial continuation is downloaded and independently audited. Both branches reached absolute update96, adding72 Adam updates each from their exact own24 adapter/Adam/RNG states. All ten repeated-TRAIN preservation snapshots passed. All1,232 returned files, saved RAW/PNG/statistics, twelve checkpoint contents and exact inference exports were verified; root inspected all18 planned sheets/264 candidate PNGs. No training occurred locally or was launched automatically.
 
-[Open experimental test](http://127.0.0.1:61815/restoration-spatial-test): untouched CodeFormer, R2, our U96 and our S96. Upload one cropped readable face, review usability and compare/download. New adapter-only files are `outputs/codeformer_spatial_continuation_v1_models/codeformer_spatial_u_u96.pth` and `codeformer_spatial_s_u96.pth`; they require the exact retained R2 base. [Return review and evidence](CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_RETURN_REVIEW.md). [Export provenance](outputs/codeformer_spatial_continuation_v1_models/model_exports_v1.json).
+[Open experimental test](http://127.0.0.1:61815/restoration-spatial-test): untouched CodeFormer, R2, our U96 and our S96. Upload one cropped readable face, review usability and compare/download. New adapter-only files are `outputs/codeformer_spatial_continuation_v1_models/codeformer_spatial_u_u96.pth` and `codeformer_spatial_s_u96.pth`; they require the exact retained R2 base. [Return review and evidence](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_RETURN_REVIEW.md). [Export provenance](outputs/codeformer_spatial_continuation_v1_models/model_exports_v1.json).
 
 U96 lowers moderate/strong paired TRAIN PNG mean image error8.89%/4.88% versus R2; these are not facial-structure scores or held-out results. Visual change is chiefly modest tone/local contrast adjustment, with limited new fine facial detail; S96 stays closer to R2. Historical full-development preservation failures remain. On unpaired user stress input wild3, untouched CodeFormer removes more mosaic while R2/U96/S96 retain conspicuous blocks. Strong privacy pixelation remains unresolved; no clean-original or native CCTV accuracy claim is made.
 
@@ -1339,7 +2491,7 @@ The completed update-24 return passed archive, saved pixel/statistic, eight-chec
 
 A separately prepared self-contained continuation resumes BOTH audited own24 states/Adam/RNG to a maximum96 updates, adding72 per branch/144 total. Same LR0.0001, matched216 sampler rows, ten TRAIN observations from six repeated photographs, no DEV/native/FINAL optimization. Both full image and feature resume-parity sets must pass before any new backward. Checkpoints precede guards30/36/48/72/96; strong outputs follow passing48/72/96 guards only. Original experiment, initializer, states and failures remain intact.
 
-[Five-step manual guide](CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_VM.md). [Preparation and evidence](CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_PREPARATION.md). Execution archive is668,645,843bytes with SHA256 `7a3c1a067ceef7bfe5a9ee6cf461bd9daaddeb8ea509a3eb7e429de04e26db5f`; protocolSHA256 `c355679d2475a65e19338a6c4fa7e8682b0c154442070e06b92a073037ea50ed`. Actual static readback, verify-transfer CLI, source/format fixtures and staged Bash mock passed;230 regular archive members were fully streamed/hash-checked. Target CUDA resume parity and future output usefulness remain unexecuted/unproven.
+[Five-step manual guide](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_VM.md). [Preparation and evidence](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_CONTINUATION_V1_PREPARATION.md). Execution archive is668,645,843bytes with SHA256 `7a3c1a067ceef7bfe5a9ee6cf461bd9daaddeb8ea509a3eb7e429de04e26db5f`; protocolSHA256 `c355679d2475a65e19338a6c4fa7e8682b0c154442070e06b92a073037ea50ed`. Actual static readback, verify-transfer CLI, source/format fixtures and staged Bash mock passed;230 regular archive members were fully streamed/hash-checked. Target CUDA resume parity and future output usefulness remain unexecuted/unproven.
 
 Require6GiB free after installation,4GiB continuing reserve; estimated8-12minute worker from prior measurements, hard45minute worker/52minute whole ceiling plus40s bounded termination. Conservative501.98MiBreturn/1302physicalfile bounds fit unchanged512MiB/2000 limits. No continuation training, VM call, app default change or further storage cleanup ran during this preparation. The user launches manually through tmux. Full DEV/native, independent FINAL, user acceptance and main app qualification remain outstanding; completion development stays deferred. The full goal remains active and incomplete. Earlier dated statuses below are retained historical evidence.
 
@@ -1351,7 +2503,7 @@ The recovered spatial-objective archive is physically verified: SHA256 `67ab66ad
 
 Root reviewed all 12 planned sheets / 168 candidate PNG outputs. Images still look very similar to R2; no material new visible facial-structure improvement is established. U reduces strong TRAIN PNG mean image error by 0.5635%; S by 0.0758%. S improves centered feature error more (0.0684% versus 0.0205% across ten fitted observations), but that is not the historical 1% structure requirement. These results use six repeated TRAIN photographs, not native CCTV or held-out final evidence. Neither branch is promoted; historical R2 development failures remain.
 
-[Return review and next direction](CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_RETURN_REVIEW.md). The next recommended design is one matched continuation of both audited update-24 branches to update 96, retaining Adam/RNG and preservation stops. It is DESIGN ONLY: no sealed execution packet, continuation launch or extra training has occurred. Verify bounds, parity, export and transfer files before providing commands. Do not relaunch the immutable completed experiment. Full DEV/native, reserved FINAL, user acceptance and main-app qualification remain outstanding. Completion development stays deferred. No additional storage offload or app default change occurred; the full goal remains active and incomplete.
+[Return review and next direction](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_RETURN_REVIEW.md). The next recommended design is one matched continuation of both audited update-24 branches to update 96, retaining Adam/RNG and preservation stops. It is DESIGN ONLY: no sealed execution packet, continuation launch or extra training has occurred. Verify bounds, parity, export and transfer files before providing commands. Do not relaunch the immutable completed experiment. Full DEV/native, reserved FINAL, user acceptance and main-app qualification remain outstanding. Completion development stays deferred. No additional storage offload or app default change occurred; the full goal remains active and incomplete.
 
 ---
 
@@ -1359,7 +2511,7 @@ Root reviewed all 12 planned sheets / 168 candidate PNG outputs. Images still lo
 
 The user supplied the VM traceback: last visible `S update24`, `worker_exit: 0`, `export_exit: 1`. The original exporter failed on Python 3.10 because `compresslevel` was passed to the tar stream constructor. The expected original home-directory download files were not completed. This confirms a packaging defect, not a model-quality verdict. No returned checkpoint or output qualification is inferred.
 
-Use **[CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_EXPORT_RECOVERY_R1.md](CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_EXPORT_RECOVERY_R1.md)**. The verified 13,309-byte standalone helper has SHA256 `6df8b644a2d4669fadf25781bfd1cd92b5804d76859559f36dccf63c5bc59d38`. It writes fresh `recovery-r1` archive/checksum/receipt names using explicit gzip wrapping. It preserves the original sealed protocol/sources, checkpoints, caches, export manifest and failed partial archive, with complete file-hash and archive readback checks. Local tiny format fixtures and independent source review passed; actual manual VM recovery is pending. Zero new training, neural or optimizer calls are permitted by this repair.
+Use **[CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_EXPORT_RECOVERY_R1.md](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_EXPORT_RECOVERY_R1.md)**. The verified 13,309-byte standalone helper has SHA256 `6df8b644a2d4669fadf25781bfd1cd92b5804d76859559f36dccf63c5bc59d38`. It writes fresh `recovery-r1` archive/checksum/receipt names using explicit gzip wrapping. It preserves the original sealed protocol/sources, checkpoints, caches, export manifest and failed partial archive, with complete file-hash and archive readback checks. Local tiny format fixtures and independent source review passed; actual manual VM recovery is pending. Zero new training, neural or optimizer calls are permitted by this repair.
 
 Do not repeat the historical training launch or the old unchanged export command below. After the new files are downloaded, independently audit saved states and RAW/PNG outputs before judging improvement. R2 and original CodeFormer remain comparison references; no promotion, app change or additional cleanup occurred. The restoration-first goal remains active and incomplete; completion development remains deferred.
 
@@ -1374,8 +2526,8 @@ identity adapters with the same frozen R2 base, architecture, Adam and sampler.
 Ten readable TRAIN observations from6 repeated photographs support at most
 24 updates per branch /48 total, not48 epochs. No DEV/native/FINAL input trains.
 
-[Five-step upload/tmux/download guide](CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_VM.md).
-[Preparation, evidence and limitations](CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_PREPARATION.md).
+[Five-step upload/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_VM.md).
+[Preparation, evidence and limitations](docs/archive/restoration/CCTV_CODEFORMER_SPATIAL_OBJECTIVES_V1_PREPARATION.md).
 The643MB execution archive passed full independent readback of173 regular
 members. ProtocolSHA256 is
 `3fe24e684a835268ac805ca56bfafefff429ef5f1aa13a90ec11faa644380dd9`.
@@ -1420,7 +2572,7 @@ spatial correction; this is feature evidence, not proof of image-brightness caus
 The Windows supervisor RSS reading was inconsistent with worker self-samples;
 whole-lifetime peak memory remains unverified and is explicitly documented.
 
-[Diagnosis and evidence](CCTV_CODEFORMER_SKIP_ADAPTER_ROLE_DIAGNOSTIC_V1_REVIEW.md).
+[Diagnosis and evidence](docs/archive/restoration/CCTV_CODEFORMER_SKIP_ADAPTER_ROLE_DIAGNOSTIC_V1_REVIEW.md).
 [Next paired-objective design](outputs/codeformer_skip_spatial_objective_design_v1/DESIGN.md).
 The prospective screen compares uncentered versus centered feature-only training
 from fresh identity adapters on10 readable TRAIN observations from6 photographs.
@@ -1451,7 +2603,7 @@ checks against untouched CodeFormer remain failed. Small paired filter gains and
 successful downloads do not qualify a strong-blur solution or change the main
 application default. The model is experimental, not accepted.
 
-[Current return/model/test evidence](CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_RETURN.md).
+[Current return/model/test evidence](docs/archive/restoration/CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_RETURN.md).
 Local CPU parity and bundled inline Playwright passed with7total forward calls,
 5PNG+3ZIPdownloads and5zero-inference refusal/invalid-input checks. No training,
 VM execution or cleanup occurred in this publication. Native CCTV stays unpaired,
@@ -1477,7 +2629,7 @@ were removed; research roots, caches, checkpoints, splits and failures remain lo
 
 [Storage closure and recovery](outputs/storage_offload_20261019_v1/STORAGE_OFFLOAD_REPORT.md).
 [Verified Drive backup](https://drive.google.com/drive/folders/12527edSyDbSwqdxKZMxUdDZSivts-PxI).
-[Current five-step manual upload/tmux/download guide](CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_VM.md).
+[Current five-step manual upload/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_VM.md).
 The active packet/stage and app defaults are unchanged. Cleanup launched no
 training and does not qualify a new model. The restoration-first goal remains
 active; completion development stays deferred until restoration acceptance.
@@ -1495,8 +2647,8 @@ new feature-adapter tensors, using55 admitted TRAIN photos and165 role inputs.
 epochs. All478 comparisons, source-separated native/unpaired evidence, original
 preservation/dark gates, held sources, failures and reserved FINAL remain intact.
 
-[Preparation and limits](CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_PREPARATION.md).
-[Five-step manual L4 upload/tmux/download guide](CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_VM.md).
+[Preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_PREPARATION.md).
+[Five-step manual L4 upload/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_SKIP_FEATURE_ADAPTER_V1_VM.md).
 No actual training was launched, no learned improvement is claimed and app
 defaults are unchanged. Audit returned states/pixels and all planned sheets
 before acceptance. Completion stays deferred; the full goal remains active.
@@ -1514,7 +2666,7 @@ Root conclusion: Replacing only the four degraded SFT encoder-feature inputs wit
 
 Next action recorded by root: Prepare one distinct finite manual L4 learning pilot of identity-initialized residual feature adapters after the stock skip detach, supervised on matched same-R2 clear features. Freeze all 515 original R2 tensors and retain upstream code/AdaIN parity, real per-site gradient connectivity, clear-image and useful R2-dark controls plus unchanged development gates. Audit readable TRAIN data and measured finite resource limits before verified transfer; do not automatically run training, extend fusion50 or claim the unavailable clean-feature oracle is deployable.
 
-[CCTV_CODEFORMER_CLEAN_SKIP_ORACLE_V1_REVIEW.md](CCTV_CODEFORMER_CLEAN_SKIP_ORACLE_V1_REVIEW.md) records the actual measurements and limits. Original checkpoints, quality failures, native/unpaired source boundaries and FINAL remain preserved. Future actual training stays manual and finite on the L4 VM. App defaults remain unchanged, completion stays deferred, and the full goal remains active. Earlier storage cleanup is closed.
+[CCTV_CODEFORMER_CLEAN_SKIP_ORACLE_V1_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_CLEAN_SKIP_ORACLE_V1_REVIEW.md) records the actual measurements and limits. Original checkpoints, quality failures, native/unpaired source boundaries and FINAL remain preserved. Future actual training stays manual and finite on the L4 VM. App defaults remain unchanged, completion stays deferred, and the full goal remains active. Earlier storage cleanup is closed.
 
 Earlier status below remains historical evidence.
 
@@ -1524,7 +2676,7 @@ Earlier status below remains historical evidence.
 
 User testing found R2 and fusion50 similar; neither fixes strong blur. A new 43-call local inference-only code-oracle diagnostic completed, with independent saved-output checks and all six sheets personally reviewed. Clean-reference codes lowered mean PNG MAE by 2.46% on all six strong synthetic cases (2.07% on the four predeclared readable cases); visible differences remain small. This is not a structure-gate pass, deployable method, new training or accepted model.
 
-[CCTV_CODEFORMER_HQ_CODE_ORACLE_V1_REVIEW.md](CCTV_CODEFORMER_HQ_CODE_ORACLE_V1_REVIEW.md) preserves evidence and corrected history: earlier V1/V2/FP32 already trained encoder/code prediction. Do not repeat those recipes or extend stopped fusion50 unchanged. Review selective corrupted-feature use before a distinct finite manual VM pilot. Original checkpoints, failures, source-separated native/unpaired evidence and FINAL remain preserved; app defaults are unchanged. Completion stays deferred until restoration acceptance. All five milestones and the full goal remain active. Earlier storage cleanup is closed; no deletion occurred here.
+[CCTV_CODEFORMER_HQ_CODE_ORACLE_V1_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_HQ_CODE_ORACLE_V1_REVIEW.md) preserves evidence and corrected history: earlier V1/V2/FP32 already trained encoder/code prediction. Do not repeat those recipes or extend stopped fusion50 unchanged. Review selective corrupted-feature use before a distinct finite manual VM pilot. Original checkpoints, failures, source-separated native/unpaired evidence and FINAL remain preserved; app defaults are unchanged. Completion stays deferred until restoration acceptance. All five milestones and the full goal remain active. Earlier storage cleanup is closed; no deletion occurred here.
 
 Earlier status below remains historical evidence.
 
@@ -1534,7 +2686,7 @@ Earlier status below remains historical evidence.
 
 The actual model is exported for explicit research comparison at [http://127.0.0.1:55093/restoration-filter-test](http://127.0.0.1:55093/restoration-filter-test). 50 new Adam updates changed 72 fusion tensors while 443 frozen tensors remained exact. State/import integrity passed; 2,390 comparison RAW/PNG pairs and 48 guard pairs were independently checked, and all 63 planned sheets reviewed. The finite run stopped on quality at update 50: preservation=False, R2-dark retention=False, parent-dark retention=True. A functional preview is not an accepted improved model, main Auto qualification, user acceptance or independent FINAL review.
 
-[CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_RETURN_REVIEW.md](CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_RETURN_REVIEW.md) and [CCTV_CODEFORMER_FILTER_FUSION_LOCAL_TEST_GUIDE.md](CCTV_CODEFORMER_FILTER_FUSION_LOCAL_TEST_GUIDE.md) retain the failure, model hashes and test limits. This is our CodeFormer adaptation; untouched CodeFormer remains the benchmark. The main app default and original checkpoints/splits/failure evidence remain preserved. Native CCTV stays unpaired; no ethnicity/Zamboanga/identity claim. Training remains manual finite L4/tmux; no unchanged failed rerun. Completion development stays deferred until restoration acceptance. The full goal remains active. Earlier storage cleanup is closed and is not counted again.
+[CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_RETURN_REVIEW.md](docs/archive/restoration/CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_RETURN_REVIEW.md) and [CCTV_CODEFORMER_FILTER_FUSION_LOCAL_TEST_GUIDE.md](docs/archive/restoration/CCTV_CODEFORMER_FILTER_FUSION_LOCAL_TEST_GUIDE.md) retain the failure, model hashes and test limits. This is our CodeFormer adaptation; untouched CodeFormer remains the benchmark. The main app default and original checkpoints/splits/failure evidence remain preserved. Native CCTV stays unpaired; no ethnicity/Zamboanga/identity claim. Training remains manual finite L4/tmux; no unchanged failed rerun. Completion development stays deferred until restoration acceptance. The full goal remains active. Earlier storage cleanup is closed and is not counted again.
 
 Earlier status below remains historical evidence.
 
@@ -1558,7 +2710,7 @@ Earlier status below is retained as historical evidence.
 
 # Filter-fusion151-update manual packet sealed; training unrun — 18 October 2026
 
-[Exact five-step manual guide](CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_VM.md).
+[Exact five-step manual guide](docs/archive/restoration/CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_VM.md).
 The independently reviewed physical packet contains1,143 files /
 1,216,503,758 bytes, with3 exact input model states and full data/provenance.
 Canonical streamed archive readback and ASCII/LF checksum pass. Source/data/math/
@@ -1588,7 +2740,7 @@ Earlier status below remains retained.
 
 # Filter-fusion151-update pilot data admitted; transfer seal pending — 18 October 2026
 
-[Actual preparation and limits](CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_PREPARATION.md).
+[Actual preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_FILTER_FUSION_TRAINING_V1_PREPARATION.md).
 New input-only scope review holds21374 and45780 as whole sources for recognizable
 background faces, including partial faces; prior readable labels remain historical.
 Final separate admission:301 filtered +55 clear +55 brightness-only TRAIN inputs,
@@ -1625,7 +2777,7 @@ Earlier status below remains retained.
 
 # Broader filter TRAIN preparation complete; finite pilot next — 18 October 2026
 
-[Actual512-input preparation and limits](CCTV_CODEFORMER_FILTER_TRAIN_V2_PREPARATION.md).
+[Actual512-input preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_FILTER_TRAIN_V2_PREPARATION.md).
 Fresh source refresh covered391 historical TRAIN/53 DEV photographs. A deterministic
 64-TRAIN cohort produced512 paired filter inputs:1,256 files/105,926,107 bytes in46.53s,
 zero neural or optimizer calls. Independent saved-pixel reconstruction has zero
@@ -1661,7 +2813,7 @@ Earlier status below remains retained.
 
 # Spatial-path test complete; prepare fusion-focused pilot — 18 October 2026
 
-[Controlled path-isolation review and actual evidence](CCTV_CODEFORMER_FILTER_PATH_ISOLATION_V1_REVIEW.md).
+[Controlled path-isolation review and actual evidence](docs/archive/restoration/CCTV_CODEFORMER_FILTER_PATH_ISOLATION_V1_REVIEW.md).
 Completed one frozen local CPU diagnostic: 48 new top-level calls in 251.79 seconds,
 150 files / 43,529,528 bytes, zero training updates. Independent saved RAW/PNG,
 journal and lineage audit passed. All three fresh clear controls matched their
@@ -1697,7 +2849,7 @@ Earlier status below remains retained.
 
 # Filter comparison complete; spatial diagnosis next — 18 October 2026
 
-[Controlled filter comparison, actual outputs and limitations](CCTV_CODEFORMER_FILTER_COMPARISON_V1_REVIEW.md).
+[Controlled filter comparison, actual outputs and limitations](docs/archive/restoration/CCTV_CODEFORMER_FILTER_COMPARISON_V1_REVIEW.md).
 Completed one frozen local CPU comparison: 216 model outputs on 72 identical
 pre-reviewed inputs, with all24 insufficient cases explicitly skipped. Exit0,
 1,258.56seconds, 658files/194,318,386bytes, zero training updates. Independent
@@ -1732,7 +2884,7 @@ Earlier status below remains retained.
 
 # Filter-pair data verified; model comparison next — 18 October 2026
 
-[96-pair preparation, review and limits](CCTV_CODEFORMER_FILTER_PAIRS_V1_PREPARATION.md).
+[96-pair preparation, review and limits](docs/archive/restoration/CCTV_CODEFORMER_FILTER_PAIRS_V1_PREPARATION.md).
 Generated 96 fixed synthetic inputs from 4 approved TRAIN and 4 existing DEV photographs;
 all 238 files / 16,128,800 bytes passed an independent saved-pixel audit with zero
 reconstruction mismatches. Direct1024 targets, attribution, source/role joins,
@@ -1762,7 +2914,7 @@ Earlier status below remains retained.
 
 # User filter stress test reviewed — 18 October 2026
 
-[Five-image stress test and comparison](CCTV_CODEFORMER_USER_FILTER_STRESS_REVIEW_V1.md).
+[Five-image stress test and comparison](docs/archive/restoration/CCTV_CODEFORMER_USER_FILTER_STRESS_REVIEW_V1.md).
 The user supplied wild1–wild5 without unblurred originals to test real-life
 readiness. Preserve them as separate unknown-origin/unpaired user challenge
 examples with unknown reuse terms; they are not new clean targets, native CCTV
@@ -1796,8 +2948,8 @@ visible-feature preservation failures. This is positive subjective development
 feedback without named cases; independent FINAL evaluation and full qualification
 remain pending. The trained model and local research test are available.
 
-[Local test guide](CCTV_CODEFORMER_R2_LOCAL_TEST_GUIDE.md).
-[Saved-evidence improvement review](CCTV_CODEFORMER_R2_IMPROVEMENT_REVIEW_V1.md).
+[Local test guide](docs/archive/restoration/CCTV_CODEFORMER_R2_LOCAL_TEST_GUIDE.md).
+[Saved-evidence improvement review](docs/archive/restoration/CCTV_CODEFORMER_R2_IMPROVEMENT_REVIEW_V1.md).
 The review confirms actual learning and identifies a missing direct normal
 encoder feature/style preservation signal as a hypothesis, alongside token/fusion
 changes and inherited parent bias. No new loss, pilot, automatic resume, additional
@@ -1849,8 +3001,8 @@ Earlier preparation instructions below are historical; R2 has already run.
 # CodeFormer restoration R2 prepared — 18 October 2026
 
 **CURRENT: VERIFIED REPAIRED TRAINING TRANSFER / MANUAL L4 LAUNCH PENDING / NOT QUALIFIED.**
-[Five R2 upload/tmux/download steps](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R2_VM.md). [R2 preparation and limits](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R2_PREPARATION.md).
-[Actual R1 failure and saved-array review](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R1_RETURN_REVIEW.md).
+[Five R2 upload/tmux/download steps](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R2_VM.md). [R2 preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R2_PREPARATION.md).
+[Actual R1 failure and saved-array review](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R1_RETURN_REVIEW.md).
 
 Both failed V1/R1 runs stopped before Adam: zero new updates/gradients/checkpoints.
 R1 saved exact native/RAW/latent/tokens but slightly different float32 logits.
@@ -1890,8 +3042,8 @@ Earlier status and commands below are historical. Use the new R2 guide above.
 # CodeFormer restoration R1 prepared — 18 October 2026
 
 **CURRENT: VERIFIED REPAIRED TRAINING TRANSFER / MANUAL L4 LAUNCH PENDING / NOT QUALIFIED.**
-[Five R1 upload/tmux/download steps](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R1_VM.md). [R1 preparation and limits](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R1_PREPARATION.md).
-[Actual original V1 failure review](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_RETURN_REVIEW.md).
+[Five R1 upload/tmux/download steps](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R1_VM.md). [R1 preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_R1_PREPARATION.md).
+[Actual original V1 failure review](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_RETURN_REVIEW.md).
 
 Original V1 stopped at initializer parity before Adam: zero new updates,
 gradients or checkpoints. Its 460-file return and all 200 selected HQ arrays
@@ -1928,13 +3080,13 @@ Earlier status and commands below are historical. Use the new R1 guide above.
 # Direct CodeFormer restoration training ready — 18 October 2026
 
 **CURRENT: VERIFIED NEW TRAINING PACKAGE / MANUAL L4 LAUNCH PENDING / NOT QUALIFIED.**
-[Five upload/tmux/download steps](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_VM.md).
-[Design, evidence and finite limits](CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_PREPARATION.md).
+[Five upload/tmux/download steps](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_VM.md).
+[Design, evidence and finite limits](docs/archive/restoration/CCTV_CODEFORMER_ROLE_PRESERVING_TRAINING_V1_PREPARATION.md).
 
 The fixed-state return is audited: 656 forwards, zero updates; the final tone
 head darkens all 264 observations, including all 100 fitted dark cases. All 24
 comparison sheets were reviewed. Its genuine trained composite stays preserved
-and unqualified. [Actual return review](CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_RETURN_REVIEW.md).
+and unqualified. [Actual return review](docs/archive/restoration/CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_RETURN_REVIEW.md).
 
 The new package trains CodeFormer's 350 restoration tensors directly from the
 retained full-coarse parent, using fresh Adam. Both normal exposure paths retain
@@ -1962,7 +3114,7 @@ Earlier commands/status below are historical; the new model has not yet trained.
 # Fixed-state return audited; direct restoration training being prepared — 17 October 2026
 
 **CURRENT: 656-FORWARD MEASUREMENT COMPLETE / ZERO NEW UPDATES / NO QUALIFIED MODEL.**
-[Returned evidence and all 24 reviewed sheets](CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_RETURN_REVIEW.md).
+[Returned evidence and all 24 reviewed sheets](docs/archive/restoration/CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_RETURN_REVIEW.md).
 
 All 2,536 return files and 528 saved RAW/PNG responses passed integrity and
 independent pixel readback. Root reviewed all 24 sheets. The frozen final head
@@ -1989,15 +3141,15 @@ is already complete. Earlier status and commands below are historical only.
 # Frozen-response measurement sealed; manual launch pending — 17 October 2026
 
 **CURRENT: VERIFIED PACKAGE PREPARED / UNRUN / ZERO TRAINING UPDATES.**
-[Use these five manual steps](CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_VM.md).
-[Purpose and finite limits](CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_PREPARATION.md).
+[Use these five manual steps](docs/archive/restoration/CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_VM.md).
+[Purpose and finite limits](docs/archive/restoration/CCTV_CODEFORMER_FIXED_STATE_RESPONSE_V1_PREPARATION.md).
 
 The genuine trained CodeFormer-plus-controller composite already exists. All
 519 exported tensor values match its retained stopped checkpoint, but it failed
 preservation and dark retention and remains research-only. The head darkens all
 406 DEV cases and already leaked unwanted correction into 98/100 recorded dark
 TRAIN responses. No fixed-final fitted-response evaluation was returned.
-[Actual model and failed results](CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_RETURN_REVIEW.md).
+[Actual model and failed results](docs/archive/restoration/CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_RETURN_REVIEW.md).
 
 The new manual measurement freezes both saved heads and both parent restorers.
 It reuses 200 fitted input/base/original caches and adds 64 matched observations
@@ -2044,7 +3196,7 @@ previous bytes and sealed instruction snapshots remain preserved for auditing.
 # Actual trained CodeFormer composite exported; quality failed — 17 October 2026
 
 **CURRENT: MODEL CREATED / 50 CONTROLLER UPDATES VERIFIED / NOT APP-QUALIFIED.**
-[Actual return review](CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_RETURN_REVIEW.md).
+[Actual return review](docs/archive/restoration/CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_RETURN_REVIEW.md).
 [Trained composite and compatibility notes](outputs/codeformer_tone_control_training_v1_candidate_unqualified/README.md).
 [All 35 reviewed comparison sheets](outputs/codeformer_tone_control_training_v1_return_review/pixels_v1/visual_sheets/INDEX.md).
 
@@ -2068,7 +3220,7 @@ unwanted negative shifts on 98/100 dark observations, despite correct targets
 and lower aggregate recorded loss. Selective learning was an unproved hypothesis
 that failed this run. No fixed-final all-TRAIN evaluation exists to isolate the
 unique cause. Scalar tone control cannot repair frozen eye/mouth/geometry defects.
-[Evidence-based next design review](CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_DESIGN_REVIEW.md).
+[Evidence-based next design review](docs/archive/restoration/CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_DESIGN_REVIEW.md).
 No new runnable packet or training recipe was created from that review.
 
 The genuine inference artifact retains both base_model and head, with exact
@@ -2098,14 +3250,14 @@ Every pre-publication byte is backed up and preserved as the exact suffix.
 # Next CodeFormer tone-control pilot sealed; manual launch pending — 17 October 2026
 
 **CURRENT: SOURCE PACKAGE VERIFIED / TRAINING PREPARED / UNRUN.**
-[Use these five manual steps](CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_VM.md).
-[Preparation and acceptance limits](CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_PREPARATION.md).
+[Use these five manual steps](docs/archive/restoration/CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_VM.md).
+[Preparation and acceptance limits](docs/archive/restoration/CCTV_CODEFORMER_TONE_CONTROL_TRAINING_V1_PREPARATION.md).
 
 The downloaded normal-tone run already created a genuine trained CodeFormer
 model, independently exported and verified. It failed clear/normal-blur
 preservation and remains research-only. Do not repeat its old launch commands,
 add epochs to that recipe, resume its optimizer or adopt it in the app.
-[Actual model and failed results](CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_RETURN_REVIEW.md).
+[Actual model and failed results](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_RETURN_REVIEW.md).
 
 The new finite pilot freezes the earlier full-coarse fine-tuned CodeFormer and
 trains an 8,257-parameter input-only tone controller for at most 50 Adam updates.
@@ -2144,7 +3296,7 @@ pre-publication bytes and frozen instruction snapshots are retained for auditing
 # Actual CodeFormer model exported; preservation failed — 17 October 2026
 
 **CURRENT: 50 TRAINING UPDATES VERIFIED / MODEL CREATED / QUALITY NOT ACCEPTED.**
-[Return review](CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_RETURN_REVIEW.md).
+[Return review](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_RETURN_REVIEW.md).
 [Trained candidate](outputs/codeformer_normal_tone_training_v1_candidate_unqualified/README.md).
 [All 34 comparison sheets](outputs/codeformer_normal_tone_training_v1_return_review/pixels_v1/visual_sheets/INDEX.md).
 
@@ -2195,10 +3347,10 @@ All earlier preparation status and launch commands below are historical.
 # CodeFormer normal-tone training V1 prepared — 17 October 2026
 
 **CURRENT: ACTUAL CHECKPOINT-PRODUCING PILOT PREPARED / UNRUN.**
-[Five manual steps](CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_VM.md).
-[Preparation](CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_PREPARATION.md).
-[Design](CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_DESIGN.md).
-[Previous diagnostic stop](CCTV_CODEFORMER_NORMAL_TONE_V1_RETURN_REVIEW.md).
+[Five manual steps](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_VM.md).
+[Preparation](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_PREPARATION.md).
+[Design](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_DESIGN.md).
+[Previous diagnostic stop](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_V1_RETURN_REVIEW.md).
 
 Latest user priority is creating an improved trained model promptly. This new
 finite50-update/200-observation pilot starts untouched CodeFormer and writes
@@ -2242,8 +3394,8 @@ Earlier preparation/test commands below are historical. Preserve every old byte.
 # Normal-tone diagnostic stopped; direct training pilot design — 17 October 2026
 
 **CURRENT: RETURN AUDITED / EXACT-GRADIENT CONTROL FAILED / ZERO MODEL UPDATES.**
-[Return review](CCTV_CODEFORMER_NORMAL_TONE_V1_RETURN_REVIEW.md).
-[New checkpoint-producing training design](CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_DESIGN.md).
+[Return review](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_V1_RETURN_REVIEW.md).
+[New checkpoint-producing training design](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_TRAINING_V1_DESIGN.md).
 
 All199 returned members/91,344,209 payload bytes and four companions verified;
 all20 static files exact. Fresh original0 coarse gradients failed strict cached
@@ -2276,9 +3428,9 @@ Earlier command guides below are historical; do not relaunch the failed test.
 # CodeFormer normal-tone V1 prepared for manual objective test — 17 October 2026
 
 **CURRENT: VERIFIED SOURCE PACKET / UNRUN / NO NEW MODEL CHECKPOINT.**
-[Five manual steps](CCTV_CODEFORMER_NORMAL_TONE_V1_VM.md).
-[Preparation and limits](CCTV_CODEFORMER_NORMAL_TONE_V1_PREPARATION.md).
-[Prospective design](CCTV_CODEFORMER_NORMAL_TONE_V1_DESIGN.md).
+[Five manual steps](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_V1_VM.md).
+[Preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_V1_PREPARATION.md).
+[Prospective design](docs/archive/restoration/CCTV_CODEFORMER_NORMAL_TONE_V1_DESIGN.md).
 [Independent source review](outputs/codeformer_normal_tone_v1_preparation/independent_source_review_v1.md).
 
 The next bounded step toward the requested improved trained CodeFormer tests
@@ -2343,7 +3495,7 @@ backups are preserved; the completed loss-response commands are historical.
 # CodeFormer loss response V1 returned and audited — 17 October 2026
 
 **CURRENT: FINITE MEASUREMENT SUCCEEDED / NO NEW MODEL CHECKPOINT OR PROMOTION.**
-[Actual return review](CCTV_CODEFORMER_LOSS_RESPONSE_V1_RETURN_REVIEW.md).
+[Actual return review](docs/archive/restoration/CCTV_CODEFORMER_LOSS_RESPONSE_V1_RETURN_REVIEW.md).
 [All16 exact256 sheets](outputs/codeformer_loss_response_v1_return_review/pixels_v1/visual_sheets/INDEX.md).
 [Saved-pixel evidence](outputs/codeformer_loss_response_v1_return_review/pixels_v1/SCIENTIFIC_READBACK.md).
 [Next independent design review](outputs/codeformer_loss_response_v1_return_review/next_design_independent_review_v1.md).
@@ -2428,10 +3580,10 @@ publication backups. The overall goal remains incomplete.
 # CodeFormer loss response V1 sealed for manual diagnostic — 17 October 2026
 
 **CURRENT: VERIFIED SOURCE/DATA PREPARATION / UNRUN / NO MODEL PROMOTION.**
-[Five manual steps](CCTV_CODEFORMER_LOSS_RESPONSE_V1_VM.md).
-[Preparation and limits](CCTV_CODEFORMER_LOSS_RESPONSE_V1_PREPARATION.md).
-[Prospective measurement design](CCTV_CODEFORMER_LOSS_RESPONSE_V1_DESIGN.md).
-[Previous actual AdaIN result](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_RETURN_REVIEW.md).
+[Five manual steps](docs/archive/restoration/CCTV_CODEFORMER_LOSS_RESPONSE_V1_VM.md).
+[Preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_LOSS_RESPONSE_V1_PREPARATION.md).
+[Prospective measurement design](docs/archive/restoration/CCTV_CODEFORMER_LOSS_RESPONSE_V1_DESIGN.md).
+[Previous actual AdaIN result](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_RETURN_REVIEW.md).
 
 The source-only upload is632,930 bytes,17 regular members, SHA-256
 `5644c4a16113ccba29f63b9f3008db6118f553491ff7c467a3d35b61121c0cdb`.
@@ -2512,7 +3664,7 @@ The overall goal is incomplete.
 # CodeFormer AdaIN return audited; usable-input gate required — 17 October 2026
 
 **CURRENT: 50 REAL ADAM UPDATES / PRESERVATION FAILURE / NO MODEL PROMOTION.**
-[Actual return review](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_RETURN_REVIEW.md).
+[Actual return review](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_RETURN_REVIEW.md).
 [All 55 image sheets](outputs/codeformer_adain_gradient_isolation_v1_return_review/visual_sheets/INDEX.md).
 [Next design review](outputs/codeformer_adain_gradient_isolation_v1_return_review/next_design_review_v1.md).
 [Input-usability requirement](outputs/codeformer_adain_gradient_isolation_v1_return_review/input_usability_requirement_v1.md).
@@ -2590,8 +3742,8 @@ The overall goal remains incomplete.
 
 # Storage rechecked; manual CodeFormer pilot remains ready — 17 October 2026
 
-[Current storage evidence](STORAGE_READINESS_20261017.md).
-[Five-step manual upload/tmux/download guide](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_VM.md).
+[Current storage evidence](docs/archive/dgp_legacy/STORAGE_READINESS_20261017.md).
+[Five-step manual upload/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_VM.md).
 
 Read-only inventory and the resolved denied-path supplement record 630,102
 unique files / 207,461,648,541 logical bytes. Independent review passed. Local
@@ -2618,9 +3770,9 @@ bytes are preserved exactly below and in this check's backup.
 # CodeFormer AdaIN gradient isolation V1 ready for manual VM run — 17 October 2026
 
 **CURRENT: VERIFIED / PREPARED / UNRUN. No new model is accepted.**
-[Use the five-step upload/install/tmux/download guide](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_VM.md).
-[Preparation evidence](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_PREPARATION.md).
-[Prospective single-factor design](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_DESIGN.md).
+[Use the five-step upload/install/tmux/download guide](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_VM.md).
+[Preparation evidence](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_PREPARATION.md).
+[Prospective single-factor design](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_DESIGN.md).
 
 The new upload is1,159,959 bytes, with31 exact regular archive members and a
 portable LF checksum. Protocol SHA-256 `4e2cc86857628617edbb313b6ef2911602a63ad4e1f9862afe07c57c0ba770c5`.
@@ -2690,7 +3842,7 @@ packet passed fresh hash checks. The manual L4 run completed170 forwards and
 gradient updates. Root reviewed all18 sheets /32 TRAIN observations and eight
 individual256 canary outputs. This is not a newly trained or accepted model.
 
-[Actual return review](CCTV_CODEFORMER_BOUNDED_FUSION_FEASIBILITY_V1_RETURN_REVIEW.md).
+[Actual return review](docs/archive/restoration/CCTV_CODEFORMER_BOUNDED_FUSION_FEASIBILITY_V1_RETURN_REVIEW.md).
 [All comparisons](outputs/codeformer_bounded_fusion_feasibility_v1_return_review/visual_sheets/INDEX.md).
 [Closed evidence chain](outputs/codeformer_bounded_fusion_feasibility_v1_return_review/closed_chain_v1.json).
 
@@ -2707,7 +3859,7 @@ forward values and CE/HQ/token/fusion learning intact. Its prospective manual
 VM witness must prove the intended route before Adam. The planned fresh run
 starts from untouched CodeFormer and permits at most50 updates; it does not
 resume failed weights. Source/packet preparation is in review and unrun here.
-[Prospective design](CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_DESIGN.md).
+[Prospective design](docs/archive/restoration/CCTV_CODEFORMER_ADAIN_GRADIENT_ISOLATION_V1_DESIGN.md).
 No new sealed upload/launch guide is established by this milestone header.
 
 Input-policy correction: all200 retained PNG/255 float32 hashes match the
@@ -2742,9 +3894,9 @@ observations before choosing another restoration training recipe. It measures
 170 full model forwards and 960 fusion-block evaluations, with zero gradient,
 backward, teacher or optimizer calls. No new model has been trained or promoted.
 
-[Five exact manual upload/tmux/launch/download steps](CCTV_CODEFORMER_BOUNDED_FUSION_FEASIBILITY_V1_VM.md).
-[Preparation and finite limits](CCTV_CODEFORMER_BOUNDED_FUSION_FEASIBILITY_V1_PREPARATION.md).
-[Previous actual FP32 training review](CCTV_CODEFORMER_FP32_COMPARISON_V1_RETURN_REVIEW.md).
+[Five exact manual upload/tmux/launch/download steps](docs/archive/restoration/CCTV_CODEFORMER_BOUNDED_FUSION_FEASIBILITY_V1_VM.md).
+[Preparation and finite limits](docs/archive/restoration/CCTV_CODEFORMER_BOUNDED_FUSION_FEASIBILITY_V1_PREPARATION.md).
+[Previous actual FP32 training review](docs/archive/restoration/CCTV_CODEFORMER_FP32_COMPARISON_V1_RETURN_REVIEW.md).
 
 The previous FP32 comparison completed 50 actual Adam updates and improves
 many paired blurred/dark cases, but keeps the same clear/normal-blur failures
@@ -2788,9 +3940,9 @@ hash checks. All 350 trainable tensors changed; all 165 frozen tensors stayed
 exact. Root reviewed all 52 sheets covering 406 cases plus the three failed
 clear cases at actual 256 pixels. The full thesis goal remains active.
 
-[Actual return review](CCTV_CODEFORMER_FP32_COMPARISON_V1_RETURN_REVIEW.md).
+[Actual return review](docs/archive/restoration/CCTV_CODEFORMER_FP32_COMPARISON_V1_RETURN_REVIEW.md).
 [All visual comparisons](outputs/codeformer_fp32_comparison_v1_return_review/visual_sheets/INDEX.md).
-[Next design review](CCTV_CODEFORMER_POST_FP32_DESIGN_REVIEW_V1.md).
+[Next design review](docs/archive/restoration/CCTV_CODEFORMER_POST_FP32_DESIGN_REVIEW_V1.md).
 
 FP32 resolves the initial numerical mismatch but still fails the same three
 clear controls and the normal-blur RAW/PNG photometric guards. The issue is
@@ -2833,8 +3985,8 @@ first 50 learning rates, losses and RAW/PNG quality checks, and stops at 50 even
 if they pass. The original 600 schedule horizon remains separate. All prior
 checkpoints, splits, provenance and failed gates remain protected.
 
-[Five exact manual steps](CCTV_CODEFORMER_FP32_COMPARISON_V1_VM.md).
-[Verified preparation and limits](CCTV_CODEFORMER_FP32_COMPARISON_V1_PREPARATION.md).
+[Five exact manual steps](docs/archive/restoration/CCTV_CODEFORMER_FP32_COMPARISON_V1_VM.md).
+[Verified preparation and limits](docs/archive/restoration/CCTV_CODEFORMER_FP32_COMPARISON_V1_PREPARATION.md).
 The package is not uploaded or run. Actual training remains human-launched
 on the L4 in tmux. Require 16 GiB free after dependency installation, retaining
 4 GiB. FP32 backward memory/timing are unmeasured until its finite benchmark.
@@ -2865,9 +4017,9 @@ state, scalar and saved-pixel checks. Root reviewed all eight sheets covering
 104 conditions plus eight native256 PNGs. The supervised measurement took
 145.792 seconds. The original and stopped checkpoints remain unchanged.
 
-[Audited results and limitations](CCTV_CODEFORMER_PATH_DIAGNOSTIC_V1_RETURN_REVIEW.md).
+[Audited results and limitations](docs/archive/restoration/CCTV_CODEFORMER_PATH_DIAGNOSTIC_V1_RETURN_REVIEW.md).
 [All saved visual comparisons](outputs/codeformer_path_diagnostic_v1_return_review/visual_sheets/INDEX.md).
-[Prospective FP32 training comparison](CCTV_CODEFORMER_FP32_COMPARISON_V1_DESIGN.md).
+[Prospective FP32 training comparison](docs/archive/restoration/CCTV_CODEFORMER_FP32_COMPARISON_V1_DESIGN.md).
 
 FP32 inference and FP32 autograd/training match exactly on the eight measured
 TRAIN observations at both states. BF16 changes 5–41 of 256 selected codes
@@ -2907,8 +4059,8 @@ paths before choosing another restoration training recipe. It is not V3
 training or a new application model. Moderate helpful brightening remains
 accepted; protect facial detail, contrast and visible appearance.
 
-[Five exact upload/tmux/launch/download steps](CCTV_CODEFORMER_PATH_DIAGNOSTIC_V1_VM.md).
-[Verified scope and acceptance limits](CCTV_CODEFORMER_PATH_DIAGNOSTIC_V1_PREPARATION.md).
+[Five exact upload/tmux/launch/download steps](docs/archive/restoration/CCTV_CODEFORMER_PATH_DIAGNOSTIC_V1_VM.md).
+[Verified scope and acceptance limits](docs/archive/restoration/CCTV_CODEFORMER_PATH_DIAGNOSTIC_V1_PREPARATION.md).
 Upload: 7,445,777 bytes (7.45 MB). Require 6 GiB free after install; retain
 a 4 GiB reserve. Worker limit 900 seconds; export limit 300 seconds. Actual
 VM timing remains unmeasured. Existing V2 assets are read-only dependencies.
@@ -2941,9 +4093,9 @@ independently checked. All 52 sheets / 406 cases and the three failed clear
 controls at full 256 pixels were reviewed. V2 has useful-looking improvements
 and higher paired SSIM on 50/53 HQ blur cases, but is not an accepted app model.
 
-[V2 results, causes and limitations](CCTV_CODEFORMER_ADAPTATION_V2_RETURN_REVIEW.md).
+[V2 results, causes and limitations](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V2_RETURN_REVIEW.md).
 [All comparison pages](outputs/codeformer_adaptation_v2_return_review/visual_sheets/INDEX.md).
-[Latest brightness preference](CCTV_CODEFORMER_ADAPTATION_V2_USER_REVIEW_20261015.md).
+[Latest brightness preference](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V2_USER_REVIEW_20261015.md).
 
 The user accepts moderate brightening when it makes a dark face easier to see.
 Evaluate that benefit separately from washed-out detail and altered visible
@@ -2978,8 +4130,8 @@ retained historical evidence, superseded by this current return status.
 outputs better than original CodeFormer but observes excess brightness. V1's
 200-update preservation stop remains binding; no failed recipe is resumed.
 
-[Five manual V2 steps](CCTV_CODEFORMER_ADAPTATION_V2_VM.md).
-[Verified changes, limits and acceptance boundaries](CCTV_CODEFORMER_ADAPTATION_V2_PREPARATION.md).
+[Five manual V2 steps](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V2_VM.md).
+[Verified changes, limits and acceptance boundaries](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V2_PREPARATION.md).
 59 local tests and independent source/packet/archive audits passed. A changed
 600-update comparison uses balanced normal/dark TRAIN pairs, coarse brightness
 supervision at all severities and frozen original-behavior anchors. All original
@@ -3000,7 +4152,7 @@ The first fine-tune has visible improvements and mixed profile metrics, but is
 not an accepted replacement. One clear control exceeds the unchanged individual
 RAW/PNG bound. Do not relaunch the V1 commands or resume its stopped state unchanged.
 
-[Returned result and diagnosis](CCTV_CODEFORMER_ADAPTATION_V1_RETURN_REVIEW.md).
+[Returned result and diagnosis](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V1_RETURN_REVIEW.md).
 [Every comparison page](outputs/codeformer_adaptation_v1_return_review/visual_sheets/INDEX.md).
 All 52 pages / 406 case pairs were reviewed; user acceptance and reserved-final
 evaluation remain pending. Native CCTV remains unpaired and unqualified.
@@ -3025,7 +4177,7 @@ There is sufficient space for the verified archive, unpacked packet and the
 16 GiB post-install requirement. No cleanup or dependency upgrade is needed.
 
 Proceed manually through steps 1–4 in
-[CCTV_CODEFORMER_ADAPTATION_V1_VM.md](CCTV_CODEFORMER_ADAPTATION_V1_VM.md).
+[CCTV_CODEFORMER_ADAPTATION_V1_VM.md](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V1_VM.md).
 Step 5 is for downloading after export completes, including a stopped run.
 Actual CUDA/import, gradient, parameter-change, timing and quality checks remain
 inside the manual finite worker. No training, optimizer or model inference was
@@ -3045,8 +4197,8 @@ The finite restoration-first adaptation uses 391 approved 1024 FFHQ TRAIN source
 roles. No actual training, gradients, new candidate qualification or app/default
 change occurred. Further completion/detector development remains deferred.
 
-[Five manual upload/install/tmux/run/download steps](CCTV_CODEFORMER_ADAPTATION_V1_VM.md).
-[Complete design, finite stops and acceptance boundaries](CCTV_CODEFORMER_ADAPTATION_V1_PREPARATION.md).
+[Five manual upload/install/tmux/run/download steps](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V1_VM.md).
+[Complete design, finite stops and acceptance boundaries](docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V1_PREPARATION.md).
 
 Execution archive: `outputs/cctv-codeformer-adaptation-v1-execution.tar.gz`,1,260,533,564 bytes.
 SHA256:`8724496a7089d49ceb658f2f373d5e119c5923d0f780478b0a9ceaf150102cd5`.
@@ -3097,7 +4249,7 @@ checkpoints, splits, failure records, caches, app and comparison stay local.
 C: had40.17GB free at removal completion; observedfreeincrease12.51GB differs
 from exactlogicalremoved12.39GB. The old52.03GB offload is not counted again.
 
-[Completion and retained evidence](GOOGLE_DRIVE_OFFLOAD_COMPLETE_20261015.md).
+[Completion and retained evidence](docs/archive/dgp_legacy/GOOGLE_DRIVE_OFFLOAD_COMPLETE_20261015.md).
 [Restore exact historical outputs](outputs/google_drive_offload_20261015_v1/RESTORE.md).
 Archive index: thesis_archive:FORENSIC_DGP_ARCHIVE/Testing/20261015_v1.
 
@@ -3126,7 +4278,7 @@ is frozen/inference-only. The supported upstream design and its gradient paths
 need a pinned, finite single-L4 protocol before manual tmux training. Do not
 assume that more epochs or adding Phase3 first improves CodeFormer.
 
-[CCTV_CODEFORMER_FINETUNING_PLAN_V1.md](CCTV_CODEFORMER_FINETUNING_PLAN_V1.md)
+[CCTV_CODEFORMER_FINETUNING_PLAN_V1.md](docs/archive/restoration/CCTV_CODEFORMER_FINETUNING_PLAN_V1.md)
 records source/license, model/data design, five steps and all preserved boundaries.
 SYSTEM_WORKFLOW_AND_GOAL.md and PRACTICAL_OUTPUT_SCOPE.md start with the new
 authoritative direction; exact pre-update bytes are backed up under
@@ -3161,7 +4313,7 @@ controls, PNG/CSV downloads and 375/768/1280 layout/error checks. This is
 comparison-page verification and development review, not model qualification,
 independent final review or full application acceptance.
 
-[Sequence results](CCTV_DGP_PHASE3_CODEFORMER_CASCADE_V1_RESULTS.md).
+[Sequence results](docs/archive/dgp_legacy/CCTV_DGP_PHASE3_CODEFORMER_CASCADE_V1_RESULTS.md).
 [Interactive comparison](http://127.0.0.1:61014/cascade_v1/comparison.html).
 [Evidence folder](outputs/cctv_dgp_checkpoint_comparison_v1/cascade_v1).
 
@@ -8410,7 +9562,7 @@ V29 remains rejected for application promotion; useful DGP restoration, all
 covering families, independent final review and the full app flow remain required.
 Goal active/incomplete.
 
-[Local backup and restore guide](VM_CACHE_BACKUP_RESTORE_20261007_V1.md) ·
+[Local backup and restore guide](docs/archive/vm_ops/VM_CACHE_BACKUP_RESTORE_20261007_V1.md) ·
 [Independent local audit](outputs/cctv_dgp_local_research_cache_backup_20261007_v1/independent_local_cache_audit.json) ·
 [Source/resource audit](outputs/cctv_dgp_local_research_cache_backup_20261007_v1/source_final/independent_source_resource_audit.json)
 
@@ -14896,7 +16048,7 @@ Preserve uncommitted work and resolve conflicts explicitly; never reset/clean to
 
 ## Historical setup and restoration evidence (23–25 September)
 
-**Scope update, 25 September 2026:** the user confirmed single-image restoration plus completion of facial regions hidden by masks or other objects. Hidden features are plausible estimates; visible degraded regions may also be restored. Read [FACE_COMPLETION_RESEARCH.md](FACE_COMPLETION_RESEARCH.md) for the researched plan and benchmark sequence, and the current runbook linked above for the implemented baseline. The Phase 5 launcher below remains restoration-only. Historical results and VM instructions below remain relevant.
+**Scope update, 25 September 2026:** the user confirmed single-image restoration plus completion of facial regions hidden by masks or other objects. Hidden features are plausible estimates; visible degraded regions may also be restored. Read [FACE_COMPLETION_RESEARCH.md](docs/archive/dgp_legacy/FACE_COMPLETION_RESEARCH.md) for the researched plan and benchmark sequence, and the current runbook linked above for the implemented baseline. The Phase 5 launcher below remains restoration-only. Historical results and VM instructions below remain relevant.
 
 ## 1. Start here
 
@@ -14914,7 +16066,7 @@ The goal is better face-restoration output for a Philippine school setting, espe
 | Local training runtime | Windows virtual environment, CPU-only PyTorch; not a substitute for GPU verification |
 | Existing tmux session | `dgp_training` |
 
-Read this document, [Phase 5 research](PHASE5_RESEARCH.md), and the actual training code before continuing. [The original understanding document](PROJECT_UNDERSTANDING_AND_IMPROVEMENTS.txt) provides historical context but includes outdated claims. This handoff records verified limitations explicitly.
+Read this document, [Phase 5 research](docs/archive/dgp_legacy/PHASE5_RESEARCH.md), and the actual training code before continuing. [The original understanding document](PROJECT_UNDERSTANDING_AND_IMPROVEMENTS.txt) provides historical context but includes outdated claims. This handoff records verified limitations explicitly.
 
 ## 2. What the project actually does
 
@@ -15028,7 +16180,7 @@ Phase 5 reports `ArcFace_fixed`, which is **not directly comparable** to Phase 4
 
 Local verification already completed: 11 unit tests, Python and launcher syntax checks, conversion parity against ONNX Runtime (maximum embedding difference `1.31e-6`), nonzero input gradients with frozen recognition weights, and real CPU smoke training/save/resume. Smoke tests used one batch per nominal epoch and **are not full training or quality evidence**. `outputs/phase5_smoke` must never be presented as a production training result.
 
-Research rationale and primary references are in [PHASE5_RESEARCH.md](PHASE5_RESEARCH.md). Full GPU compatibility, runtime and restoration benefit are still unverified.
+Research rationale and primary references are in [PHASE5_RESEARCH.md](docs/archive/dgp_legacy/PHASE5_RESEARCH.md). Full GPU compatibility, runtime and restoration benefit are still unverified.
 
 ## 5. Continue on the existing VM
 
@@ -15342,3 +16494,14 @@ See `docs/THESIS_REVISION_RECORD_2026-10-21.md` and `scratch/thesis_revision_202
 The researcher explicitly confirmed retaining the original Deep Generative Prior title. The current DOCX and PDF supersede the preceding 103-page development revision with an 84-page academic rewrite following docs/THESIS_REWRITING_STANDARD.md. The manuscript retains 26 sections and 32 bibliography entries, replaces operational chronology with topical methods/results/discussion, uses actual retained interface screenshots and source-checked code excerpts, and describes the CodeFormer adaptation explicitly without claiming qualified preservation or recovered identity. Original files and full external research evidence remain preserved.
 
 See docs/THESIS_ACADEMIC_REWRITE_RECORD_2026-10-21.md and scratch/thesis_academic_rewrite_20261021/publication.json. DOCX SHA256: 3693d39598388941e5f76e8681266efe5c79db74830ba08ad6548fd007f4af63. PDF SHA256: 77b1642e3dc0034405ac530be28044378979a789c65ba915687e627f2341e3a1. Package, numerical-table, bibliography, source-code, screenshot and full 84-page visual checks passed. Panel names, confirmed defense month, missing CV and issued institutional documents remain researcher-supplied material. This document publication does not establish submission readiness, model qualification or final human review. No training, neural inference, application change, VM action or cleanup occurred.
+
+## Thesis update - 28 October 2026
+
+The manuscript and PDF were revised against the conditioned restoration return and reviewed-mask integration evidence. The small paired monitor compares the calibrated conditioned configuration against its immediate predecessor; the 56 inherited checks are TRAIN-only, and the uncalibrated checkpoint failed. The experimental completion integration retained outside-mask pixels on nine development cases but all automatic proposals were empty. Independent final model assessment and institutional materials remain outstanding. Original title and 32 references retained. Word refreshed contents and rendered 86 pages; package, 26-section, 10-table, reference and page-bound checks passed and contact sheets were visually inspected. Prior documents were backed up as THESIS MANUSCRIPT.before-2026-10-28. See scratch/thesis_update_20261028/publication.json and changes.json for evidence and exact edits. This is not model qualification.
+
+
+## Appendix J & Chapter IV live application evaluation revision - 21 November 2026
+
+Updated `docs/THESIS-MANUSCRIPT-FINAL.docx` and exported `docs/THESIS-MANUSCRIPT-FINAL.pdf` (`137` pages: `12` front-matter `cover + i–xi`, `125` body `1–125`) from live v0.2.13 browser evaluations (0 Playwright/HTTP `>=400` errors; `integrated_app/` source untouched). Appendix J (`Figures J.1–J.4`, logical pp. 118–121) now uses live v0.2.13 Picture-mode Face 1 Auto screenshots including clean-reference attachment in Figure J.4 (`14.13` RGB MAE, `23.34 dB` PSNR, `94.46%` Accuracy, Sharpness `56.22 → 78.55 px²`, Noise `0.25 → 1.48`); Appendix B remains unchanged. Chapter IV (`Additional Face Sample Evaluation`) now reports 25 live browser evaluations: 20 paired With-Ground-Truth cases (`face 1–5` × 4 conditions in Table 4.9 p. 84 and Figures 4.16–4.17 pp. 86–87; overall mean MAE `18.48 → 21.24`, PSNR `20.81 → 19.87 dB`, Accuracy `91.67%`, Sharpness `59.79 → 79.32 px²` with `15/20` increased, `3/5` Raw sensor MAE gains) and five unreferenced Without-Ground-Truth samples (`wild3.png`, `wild4.png`, `wild5.png` framed strictly as unpaired in-the-wild stress faces of unspecified external origin; `synthetic_data_3.png`, `synthetic_data_5.png` as unreferenced `128 × 128` synthetic benchmark cases; Table 4.10 p. 88, Figure 4.18 p. 89, and Appendix A p. 98, with zero Zamboanga City municipal CCTV claims).
+
+Two-pass Word COM refresh and visual PDF audit passed (`QA STATUS: PASS`, `163/163` TOC/LOF/LOT/LOA exact sync with `0` mismatches, `26/26` continuous `w:lnNumType` sections, both Google Drive hyperlinks preserved, Tables 4.1–4.8 and Appendix B identical to backup). DOCX (`85,515,389` bytes) SHA256: `fdac70c53c71e7f719d137bbac33b3b508af1fa9d867665bc818cf62e767ec4f`. PDF (`6,232,014` bytes) SHA256: `56da697ec55646632071b2a570dc17ca1c3129294599fd8368f7702717d2d8e8`. Pre-update backups are retained in `scratch/appj-ch4-update/backup/THESIS-MANUSCRIPT-FINAL.{docx,pdf}`. See `docs/THESIS_APP_AND_SAMPLE_REVISION_2026-11-21.md`, `scratch/appj-ch4-update/eval_results.json`, and `scratch/appj-ch4-update/qa_report.json`.

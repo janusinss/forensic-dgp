@@ -1,0 +1,10 @@
+{
+  "complete": true,
+  "event": "Initial source-only staging refused before destination creation because local Windows lstat could not address long retained C-control path",
+  "error": "FileNotFoundError WinError3 at old same-codebook C monitor NPZ path longer than260characters",
+  "data_drift_established": false,
+  "destination_created": false,
+  "source_sha256": "a6b4896f7661818d20087061fc24f95cb19d4fa1da29e0e2b6a658ab5f609c22",
+  "correction": "Use Windows extended absolute paths for local builderIO only, retaining canonical relative archive paths and all fixed content hashes. VM scientific source and recipes unchanged.",
+  "model_VM_calls": 0
+}

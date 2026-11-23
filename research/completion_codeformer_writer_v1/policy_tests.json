@@ -1,0 +1,26 @@
+{
+  "format": "completion-cached-writer-policy-parity-tests-v1",
+  "complete": true,
+  "tests_run": 16,
+  "failures": 0,
+  "errors": 0,
+  "seconds": 2.495647600000666,
+  "native_serialization": {
+    "tiny_CPU_torch8MiB": {
+      "seconds": 0.010884999996051192,
+      "bytes": 8390185,
+      "writecallbacks": 39,
+      "canonical_paths": 2,
+      "native_file_identical": true,
+      "safe_CPU_readback": true,
+      "model_calls": 0,
+      "gradients": 0
+    }
+  },
+  "limits_changed": false,
+  "old_source_or_packet_changed": false,
+  "model_calls": 0,
+  "gradient_calls": 0,
+  "optimizer_operations": 0,
+  "VM_calls": 0
+}

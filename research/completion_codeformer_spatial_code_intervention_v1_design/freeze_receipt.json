@@ -1,0 +1,24 @@
+{
+  "format": "completion-spatial-code-intervention-v1-root-freeze-v1",
+  "complete": true,
+  "root_design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\root_design.json",
+    "bytes": 243979,
+    "sha256": "1983f9fed9bede2078ffc6a1af0dd6ca08fe6ec532e5c3de9c4ce41d4db2c657"
+  },
+  "readable_design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_DESIGN.md",
+    "bytes": 4129,
+    "sha256": "6a03cc0ff96501b842606cae878bae00eabb8d5e44d0b90f74ba7bc0bac61c81"
+  },
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\freeze_completion_spatial_code_intervention_v1_design.py",
+    "bytes": 18293,
+    "sha256": "2ff5bc01a8142c10917ab850689182a8fbf4dc24dda8bf8f823aedf4742e4ec7"
+  },
+  "new_actual_model_training_or_inference": false,
+  "evidence_count": 15,
+  "external_controls": 196,
+  "runtime_ready": false,
+  "transfer_ready": false
+}

@@ -1,0 +1,353 @@
+{
+  "format": "independent-spatial-code-intervention-v1-manual-preparation-milestone-closure",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T17:51:53.197589+00:00",
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\close_preparation_milestone.py",
+    "bytes": 10342,
+    "sha256": "ab9d65ae39fa3286052459656c725e4c6361c01937a24a3126306113ad37aed2"
+  },
+  "root_milestone": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\preparation_milestone_v1.json",
+    "bytes": 5586,
+    "sha256": "5a6f99b26c7cd22908bc1fc8c5ba84820d6bb6470e7db7d927089980ce65b22b"
+  },
+  "protocol_sha256": "b27617eb4f2a2225e0969d463acc8048a148203488f0fcd5397e5c5f9a0a0123",
+  "checks_passed": 88,
+  "all_current_bound_evidence_pins_exact": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\publish_completion_spatial_code_intervention_v1_preparation_root.py",
+      "bytes": 14145,
+      "sha256": "5e78d4280d650715f66bc1087ddbfe8337cf4d864342968de0a045a60a984c03"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_PREPARATION.md",
+      "bytes": 5599,
+      "sha256": "46cefda6b75d55e2d9601cd9133ef2fcf78d4171ef3fd96aa22f8aa70be37a89"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_VM.md",
+      "bytes": 10551,
+      "sha256": "e35e2618a7fb7d1192cc2a220e536b321a3e156e4e7fcd5eaf69e112d7c65644"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_VM.md",
+      "bytes": 10551,
+      "sha256": "e35e2618a7fb7d1192cc2a220e536b321a3e156e4e7fcd5eaf69e112d7c65644"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+      "bytes": 13610328,
+      "sha256": "24f480add44e4fe8176a68a3b67321b11b4baee0ebb43d0a3790fefc434549a5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\cctv_completion_codeformer_spatial_code_intervention_v1_vm\\protocol.json",
+      "bytes": 298192,
+      "sha256": "b27617eb4f2a2225e0969d463acc8048a148203488f0fcd5397e5c5f9a0a0123"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\root_manual_transfer_release.json",
+      "bytes": 4242,
+      "sha256": "140b74bf93bc31cab12482a4b4b144172ef7320b7cb1f695d51c32a53a494be7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\root_final_archive_audit.json",
+      "bytes": 3314,
+      "sha256": "12d08c9e3152de5979b209c272b0825df770af2b534227907933edf80217bae7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_final_archive_guide_admission_v004.json",
+      "bytes": 88079,
+      "sha256": "3015fb51b15302005b544fced147177c891d90195790983d461ee6c30c1825a7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\independent_source_packet_admission_draft004.json",
+      "bytes": 276542,
+      "sha256": "e9d6a0d0ffb6fd1e4fbd1e95260c8c0437031c93672ed4c43b15baa1435867fe"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\independent_runtime_source_semantics.json",
+      "bytes": 4820,
+      "sha256": "cb038d0e5746295eba36fe5313ee5a1006bc3634f8a5055523553ccb9df7b354"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\root_installer_fixtures.json",
+      "bytes": 6827,
+      "sha256": "610177441433cbb5f282c8264d35a0b63696e13b72cb4c3bcb627eb2c6b58e6e"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\documents_before_preparation_milestone\\PROJECT_HANDOFF.md",
+      "bytes": 1163645,
+      "sha256": "1f33c386bc9a009ef80f4e14a5af207f722722e7c6c80ec722fcb1bacd4f8fd0"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\PROJECT_HANDOFF.md",
+      "bytes": 1165667,
+      "sha256": "af4afd4fcc22940f91592f2cfb8cfd9e5a4404ff7e3c0e884e40ec37033de4df"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\documents_before_preparation_milestone\\FACE_MASK_COMPLETION_SPEC_V1.md",
+      "bytes": 24816,
+      "sha256": "6b31a07f08d92fa41b10e51af7d56dd14ce3ad89f8ed23bdde4a4c3dc8a917af"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\FACE_MASK_COMPLETION_SPEC_V1.md",
+      "bytes": 25951,
+      "sha256": "228b1ad14d08b3ed82903ff0c57061f00edb22f2fc5d437d5bcc2313076e51c9"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\release_completion_spatial_code_intervention_v1_transfer_root.py",
+      "bytes": 6790,
+      "sha256": "611d174c400d58be33ac6846e3fb8c4346fe88ab00bbd0d7578dde5c7e92ea76"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_transport_source_review_v004.json",
+      "bytes": 3057,
+      "sha256": "898430d2607b7403a59d90970fad245c99b56d92958e0d3d0513809d50fa2312"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\root_design.json",
+      "bytes": 243979,
+      "sha256": "1983f9fed9bede2078ffc6a1af0dd6ca08fe6ec532e5c3de9c4ce41d4db2c657"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_design\\pre_release_clarifications_v1.json",
+      "bytes": 5043,
+      "sha256": "98c3521e5e7e0043479862923d03cc21c9b6b7c2e5371a0ffcd292d919ca1d78"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\formal_design_admission.json",
+      "bytes": 3067,
+      "sha256": "4f6ea7134e9c8628efb7deae4ca5dc137b35dc9f1d0471c796c8aa03692e63b5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\independent_bridge_semantics.json",
+      "bytes": 9631,
+      "sha256": "c1c022011c3c430753ccc0d600a0830ae1111a97de9d8e4ef28d4579f06121e1"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\check_completion_spatial_code_intervention_v1_final_release_root.py",
+      "bytes": 6823,
+      "sha256": "e459f96c86816448d3448be2b21b3d9f7e83d37b7f3eec4880474e2957ba0355"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+      "bytes": 13610328,
+      "sha256": "24f480add44e4fe8176a68a3b67321b11b4baee0ebb43d0a3790fefc434549a5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz.sha256",
+      "bytes": 139,
+      "sha256": "ab2f5092d9d2f87032329304fef6b4ec14588d8f6de8f66959164e438dc2992f"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_staged_transport_admission_v004.json",
+      "bytes": 54676,
+      "sha256": "b746b3d8bf9312ec08b93c481d33e2902c18a26bd4817efcf3b5ff78cb8d3a99"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\pretrained_completion.py",
+      "bytes": 3559,
+      "sha256": "29f2d03d692d762d1d9b39c9747e7becf30a14399651e8c419de2a5b39cae9ce"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\completion.py",
+      "bytes": 5022,
+      "sha256": "7debe38b0936add26c663f053fa7ef19649a93b9a717194652911b6d0bdcda72"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\face_workflow.py",
+      "bytes": 13648,
+      "sha256": "ed043f9819e4655c297f092037af156cbfa9e32506f6b15cca0c5d5dfe4cacd1"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\__init__.py",
+      "bytes": 51,
+      "sha256": "22387ba5f42e539104f611c22b709e7e8fee3633d0b48dfa47fd7be8c8b79c07"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\__init__.py",
+      "bytes": 74,
+      "sha256": "e02b6c974f00a7fe9d54a8a22dfdf17e59936aca65608521dfb523018dc61c66"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\codeformer_arch.py",
+      "bytes": 11377,
+      "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\vqgan_arch.py",
+      "bytes": 15855,
+      "sha256": "b47033f66b4a8434e0f04d4df8a69a7ac4b6c5bdf52f5b74912371dff0a20eaf"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\registry.py",
+      "bytes": 2267,
+      "sha256": "bbc3507148101bb202e8f52f5cca75d2cc21d780def757c055d82cb8e6bd594e"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\NOTICE.md",
+      "bytes": 988,
+      "sha256": "6e06e1c0fa1dd295b54c5169d3e8b57859b3c58e2f201788992185f044c9349a"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\LICENSE",
+      "bytes": 1751,
+      "sha256": "4122e9944900d9e23b8622b829f4343384fbb6e0667b39e4cf474b5d88a185dd"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\pretrained_completion_finetune_r1.py",
+      "bytes": 5769,
+      "sha256": "d2ab3890869679ee7501f86f7c7fa1257e238adf5ee6d4e1fc956ec5555f860e"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\completion_codeformer_finetune_r1_worker.py",
+      "bytes": 18139,
+      "sha256": "acf3e2a65099dc6117ff4f5e2079e4fcf15aeba0f000772f4f663a12304eccc4"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\completion_codeformer_finetune_r1_web.py",
+      "bytes": 25529,
+      "sha256": "13ca83675752b115b2f79a8e639cb6af7b7e58bb5e81b01c352bf6f0fdb33045"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\templates\\completion_codeformer_finetune_r1.html",
+      "bytes": 22446,
+      "sha256": "785bd506026ea9dbe2920c4840e022dcc713c16467ee2a795a34553b8c4c279b"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\completion_process_guard_v1.py",
+      "bytes": 19546,
+      "sha256": "1277b0fde51c35337a0391d4089b193aa837f21c7e00ecc9ee4ed7ecd5f687c0"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_candidate\\candidate_manifest.json",
+      "bytes": 5362,
+      "sha256": "e8bc39c321d490ee335b683ea6947bc24df47c92e16db30a1412d6fc5380ea77"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_candidate\\independent_app_source_audit.json",
+      "bytes": 8024,
+      "sha256": "cff9f1cb007e6675574eb3aa4e9c8265cc332b277fc036b35aa9eb47e7fd960e"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_return\\independent_state_audit.json",
+      "bytes": 414910,
+      "sha256": "e920c3ddd9b8a85b50fd6f324bde8760c13c6df805f6be61d1e4393472d59b06"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_return\\independent_saved_output_audit.json",
+      "bytes": 232984,
+      "sha256": "ab4bd40838e33bce240d28265ca727c4ac52e96e0b78ff8ad5abc67854b5b65e"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_return\\root_visual_review.json",
+      "bytes": 14165,
+      "sha256": "4c765b82ca9c7f67e21c2ae7f8f4807902e1993482443e58588ad1dc2f2eaa79"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_candidate\\codeformer_completion_finetune_r1.pth",
+      "bytes": 370764381,
+      "sha256": "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0"
+    }
+  ],
+  "published_archive_checksum_bothguides_exact": true,
+  "prior_fullstream167member_gzipCRC_evidence_hashbound_notrerun": true,
+  "source_and_actualCLI_admissions_final004only": true,
+  "scientific_counts": {
+    "planned_fullforwards": 108,
+    "hardcap": 120,
+    "newNPZ": 104,
+    "newPNG": 96,
+    "frozenR1tensors": 497,
+    "pairedadaptiveTRAINcases": 48,
+    "samebooklabels": 16,
+    "oldACcontrolfiles": 196,
+    "training_optimizer_backward_teacher": 0
+  },
+  "published_resource_limits": {
+    "worker_hard_seconds": 900,
+    "worker_cooperative_seconds": 840,
+    "maximum_new_optimizer_updates": 0,
+    "minimum_free_GiB": 6,
+    "stop_floor_GiB": 2,
+    "unexpected_failure_state_MiB": 384,
+    "output_GiB": 1,
+    "raw_tar_and_gzip_MiB_each": 1280,
+    "export_seconds": 900
+  },
+  "preserved_history_documents": [
+    {
+      "before": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\documents_before_preparation_milestone\\PROJECT_HANDOFF.md",
+        "bytes": 1163645,
+        "sha256": "1f33c386bc9a009ef80f4e14a5af207f722722e7c6c80ec722fcb1bacd4f8fd0"
+      },
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\PROJECT_HANDOFF.md",
+        "bytes": 1165667,
+        "sha256": "af4afd4fcc22940f91592f2cfb8cfd9e5a4404ff7e3c0e884e40ec37033de4df"
+      },
+      "old_bytes_offset": 2022,
+      "all_previous_bytes_exact": true
+    },
+    {
+      "before": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\documents_before_preparation_milestone\\FACE_MASK_COMPLETION_SPEC_V1.md",
+        "bytes": 24816,
+        "sha256": "6b31a07f08d92fa41b10e51af7d56dd14ce3ad89f8ed23bdde4a4c3dc8a917af"
+      },
+      "after": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\FACE_MASK_COMPLETION_SPEC_V1.md",
+        "bytes": 25951,
+        "sha256": "228b1ad14d08b3ed82903ff0c57061f00edb22f2fc5d437d5bcc2313076e51c9"
+      },
+      "old_bytes_offset": 0,
+      "all_previous_bytes_exact": true
+    }
+  ],
+  "new_or_modified_milestone_local_links": [
+    {
+      "document": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\PROJECT_HANDOFF.md",
+      "label": "Five-step upload/install/tmux/download guide",
+      "target": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_VM.md"
+    },
+    {
+      "document": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\PROJECT_HANDOFF.md",
+      "label": "Preparation, verification and limits",
+      "target": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_PREPARATION.md"
+    },
+    {
+      "document": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_PREPARATION.md",
+      "label": "Use the five-step guide",
+      "target": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_VM.md"
+    },
+    {
+      "document": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_PREPARATION.md",
+      "label": "predictor training result",
+      "target": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_PREDICTOR_CE_V1_RESULTS.md"
+    },
+    {
+      "document": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_PREPARATION.md",
+      "label": "the frozen design",
+      "target": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_DESIGN.md"
+    }
+  ],
+  "link_scope": "Complete newpreparation/guide plus newhandoffprefix/specappend. Priorimmutablehistorybytes preserved; no claim allolderexternal/historicallinks re-audited.",
+  "R1_all22_currentpins_exact": true,
+  "manual_transfer_ready": true,
+  "actual_VM_or_model_preflight_verified": false,
+  "actual_new_model_or_training": false,
+  "model_qualified": false,
+  "full_goal_complete": false,
+  "local_actions": {
+    "metadata_and_filehash_checks_only": true,
+    "prior_NN_source_or_CLItests_rerun": false,
+    "model_loads": 0,
+    "neural_calls": 0,
+    "gradient_or_optimizer_calls": 0,
+    "VM_calls": 0,
+    "rootdocs_or_oldevidence_modified": false
+  }
+}

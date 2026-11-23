@@ -1,0 +1,40 @@
+{
+  "reason": "Diagnostic label only: Fusion-only-v3 contract differs -> Delivered-objective-v4 contract differs. Prior source and tests receipt preserved byteexact.",
+  "prior_files": [
+    {
+      "name": "cctv_completion_codeformer_delivered_objective_v4_vm.py",
+      "bytes": 61301,
+      "sha256": "4fdc6346b81972c4c6d18c1115c2aae9d9fdfc8692d3edd04be4e8014cc11a6e"
+    },
+    {
+      "name": "contracts.py",
+      "bytes": 4510,
+      "sha256": "4d3c59a07938554147e0fe78d5e5c5a1d594bf6ea3d5d9cb01f1caf4702ed385"
+    },
+    {
+      "name": "delivered_loss.py",
+      "bytes": 3509,
+      "sha256": "737e6674c294c0ea1ea02fec6792abb741897d16a91d198d41377e5e3ba09586"
+    },
+    {
+      "name": "derivation.json",
+      "bytes": 1975,
+      "sha256": "265882473af245c84bda1efba15f5351d6328f2a7cf8540379f761ba06ba6457"
+    },
+    {
+      "name": "optimized_budget.py",
+      "bytes": 8837,
+      "sha256": "7653a4e7552e0acd229f3168e34269dbd0f6d49b0ae4c2750ff1385cd4925214"
+    },
+    {
+      "name": "source_preparation_tests.json",
+      "bytes": 1614,
+      "sha256": "2edb13b6b5b874951c53f4150bd580f920ee465f2f42c4c2db9776549afd0fe2"
+    },
+    {
+      "name": "source_tests.py",
+      "bytes": 19797,
+      "sha256": "3bc30a67409889ff8df9a8b3638584170a12e9cf16322d644a1957b87b20dd1b"
+    }
+  ]
+}

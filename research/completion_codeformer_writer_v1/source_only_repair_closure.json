@@ -1,0 +1,69 @@
+{
+  "format": "completion-writer-v1-source-only-repair-closure-v1",
+  "complete": true,
+  "recorded_UTC": "2026-10-25T16:12:24.889319+00:00",
+  "files": [
+    {
+      "path": "research\\completion_codeformer_writer_v1\\optimized_budget.py",
+      "bytes": 8825,
+      "sha256": "32ff2e9ea4d56325cc0ebbf3f67ff8831b354cd36346862fdea05682f189f5ec"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\benchmark.py",
+      "bytes": 5316,
+      "sha256": "7616f36f860d6b8b9ae2304cd64ddc0218de11a714c45636eb012878ccd49c11"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\namespace_scale_benchmark_v2.json",
+      "bytes": 3356,
+      "sha256": "812fa3dcd961c5a0cddd0586727dff2f68da242a15653cd3be49c651d5a0d702"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\test_optimized_budget.py",
+      "bytes": 11246,
+      "sha256": "7c22337a040731c27795172020eda929429c3a0e085f1752534cc5d507105346"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\policy_tests_v2.json",
+      "bytes": 627,
+      "sha256": "3a50fc81b50cf3b9c06b77c087fd0df62f42878d92a21455b7bc6e8e9a37454e"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\tensor_scale_fixture.py",
+      "bytes": 4964,
+      "sha256": "fd80e5531f2fc8f2857dc44b75bbdb942f6e4695c5638e41692db398d13ffd49"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\tensor_32MiB_scale_fixture.json",
+      "bytes": 1686,
+      "sha256": "af4d451094be8a955488a9d39b1ef72d3fce587fdddedb4e7ea8e4e90c669ce4"
+    },
+    {
+      "path": "research\\completion_codeformer_writer_v1\\README.md",
+      "bytes": 5619,
+      "sha256": "284bc18d2f3ad4f64a985852e4f1fc62613dd421491a0c99e696477f2de9100a"
+    }
+  ],
+  "sealed_old_helper_unchanged": {
+    "path": "research\\completion_codeformer_coverage_v2\\contracts.py",
+    "bytes": 9488,
+    "sha256": "1822d73ebe57b922cd9e79817ba5c961582a93e65935ef442f60ae07576ec442"
+  },
+  "sealed_old_worker_unchanged": {
+    "path": "scripts\\cctv_completion_codeformer_coverage_v2_vm.py",
+    "bytes": 50344,
+    "sha256": "007f9504cd3cf16cc24a5b5f0f3fd1a1e4325f741bbfd374f6c544a3a6bcefda"
+  },
+  "actual_return_preserved": true,
+  "exact_VM_timeout_sole_cause_proven": false,
+  "namespace_scaling_bottleneck_demonstrated_locally": true,
+  "research_prototype_integrated_into_training_or_app": false,
+  "new_training_packet": false,
+  "neural_calls": 0,
+  "gradient_calls": 0,
+  "optimizer_operations": 0,
+  "VM_calls": 0,
+  "future_pre_save_phase_instrumentation_required": true,
+  "independent_review_pending": true,
+  "model_qualified": false
+}

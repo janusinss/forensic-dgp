@@ -1,0 +1,23 @@
+{
+  "format": "independent-spatial-export-alias-drift-fixture-v1",
+  "complete": true,
+  "source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_spatial_code_intervention_v1.py",
+    "bytes": 15560,
+    "sha256": "e4f3bf117032b24a20752c1d955523972c570e4dff7170a8c22c79c1dcd4ba09"
+  },
+  "fixture_root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_review_alias_001",
+  "initial_same_inode_and_nlink": [
+    3940649674294961,
+    3940649674294961,
+    2
+  ],
+  "mutation": [],
+  "export_returned_complete": false,
+  "error": "ValueError('Exact closed prospective output namespace differs')",
+  "finding_confirmed": false,
+  "scope": "One tiny-file owned fixture replaces only its own partial alias with equal bytes on a distinct inode during tar streaming. No real research/VM/model/archive inputs modified.",
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "real_checkpoint_reads": 0
+}

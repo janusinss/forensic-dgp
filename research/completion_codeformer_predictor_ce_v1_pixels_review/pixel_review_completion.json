@@ -1,0 +1,150 @@
+{
+  "format": "predictor-ce-v1-pixel-review-artifact-closure-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T16:42:07.722642+00:00",
+  "pixel_audit": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\independent_saved_output_audit.json",
+    "bytes": 816009,
+    "sha256": "d1c93643925154fbcdb6310614ebb507b51ddc66d54d649b3b3c03774d1496e0"
+  },
+  "visual_index": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheet_index.json",
+    "bytes": 1302419,
+    "sha256": "c09f368601e54281e52dbe74bb26057ba5cd9c94c11339604e55bd07ddfca2e9"
+  },
+  "scripts": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\audit_completion_codeformer_predictor_ce_v1_pixels.py",
+      "bytes": 32096,
+      "sha256": "e79fdd5ffbae59f78a129288efd5958aa75cb1f69529eb5bb367e11bb64c32c7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\build_completion_codeformer_predictor_ce_v1_review.py",
+      "bytes": 17192,
+      "sha256": "6a06c6274363637444add7c98184faf787e473959ad608e3161bd55a203aa585"
+    }
+  ],
+  "all20sheet_files": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_01.png",
+      "bytes": 721200,
+      "sha256": "9a89d43e4c53717789ead5f28130ee7483ecccff5c9d2ca4d43391322f7761c7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_02.png",
+      "bytes": 715592,
+      "sha256": "e04ca49a58712d17dcbfdf54720fe2f96212447b512a303a8882b481537d2ebf"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_03.png",
+      "bytes": 767074,
+      "sha256": "11cf0619d45e13983dc8ba9728342078c1cf96b6b21a5c6bd1eee461b4901618"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_04.png",
+      "bytes": 694289,
+      "sha256": "7578d2fb5feae896dad3f477a185fd912311c44e4befa733ae96a6414e4d45c8"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_05.png",
+      "bytes": 671652,
+      "sha256": "3490e8b5d25c722e69de0faf43e5648b2d1d11601a6e8ab31cedefc325e5af10"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_06.png",
+      "bytes": 709587,
+      "sha256": "0a5517a02474a368d7b55c8e38c7b917b7a17f4fcca556659bc92647e39aa8f3"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_07.png",
+      "bytes": 680433,
+      "sha256": "7a35a103a3a6d4f5a0342774c5a6e4847132ab1227b95af85ffc863b18cf2932"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\original_monitor_08.png",
+      "bytes": 832302,
+      "sha256": "c773f5a8cd4500a514d17413f86e26b95a42e88cff12239918237d890099dc56"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\challenge_01.png",
+      "bytes": 847332,
+      "sha256": "a57987f5fc7d0513f9bf930f7f5f3a69588309a3e8a1be352ccc24d7b77c0b29"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\challenge_02.png",
+      "bytes": 879675,
+      "sha256": "e14f549eabbe387aa8e81c9ce3c38a8be6b9bb91df408e9e049869c1459f47c7"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\challenge_03.png",
+      "bytes": 830645,
+      "sha256": "487edf033ff3c1821155757a02d71ccf4903a2a03c6b8b77aaace68dde2fdaa1"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\challenge_04.png",
+      "bytes": 887119,
+      "sha256": "5b5013db96eb3457863c54168f256d5cf8d3f6d8b5721e5e6753d94931e69e6b"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_01.png",
+      "bytes": 878284,
+      "sha256": "6219f56ed7de51dbba9fdf9f9eb2aff67ea04ce5115ad2a7777c519352d92cb6"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_02.png",
+      "bytes": 718686,
+      "sha256": "62e1c1a0e56d9d6ca10a664fbf0fab86be31bd17bb32210be91445c82aa4ca57"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_03.png",
+      "bytes": 635109,
+      "sha256": "8f1a0da1a042cef596e14636f1f91c5a429b0aa05e20e6bb7497f85ba05d2dd5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_04.png",
+      "bytes": 651855,
+      "sha256": "01d3c43e2f8e98f6f9d819085d2af90d328a159764a5b98dcdb6f57b244390cd"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_05.png",
+      "bytes": 685587,
+      "sha256": "bab88cd78a0c3cf5c292f329727cf8353f427a7647065d700ef116dff4e74f7b"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_06.png",
+      "bytes": 668106,
+      "sha256": "274721c970a76b8da91e9d6360396d143c35428f61a64fa9b04135f1429db70f"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_07.png",
+      "bytes": 899493,
+      "sha256": "e43443dc60cacef3f5142bf1b7f9856343bfd63c207ec91fc37b3b33f4620ccf"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\visual_sheets\\public_unpaired_08.png",
+      "bytes": 785624,
+      "sha256": "faaa4a2db0aeb606482c23dd0efa9688fb9bbaddfc35986a5893849688d52f85"
+    }
+  ],
+  "all256PNGs468NPZ_and44001540outsideRGBbytes_verified": true,
+  "quality_pass": false,
+  "clear_gain_percent": 0.3075610066954265,
+  "challenge_gain_percent": 0.4460273046000945,
+  "initial_scalar_checker_failure": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_pixels_review\\initial_checker_scalar_rounding_failure.json",
+    "bytes": 744,
+    "sha256": "a9c7a914127fc1d6f4c28247766a0e367710bce76367b5da65024bd4a8501862"
+  },
+  "initial_checker_before_correction": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_pixels_review\\auditor_before_GRAY_reduction_correction.py",
+    "bytes": 31141,
+    "sha256": "9fcd236669e38f2c3f15c6d9199e48d45d68d2a0b664974cedd9c04faaf48cfe"
+  },
+  "scalar_recompute_tolerance_not_science_gate_relaxation": true,
+  "GRAY_gate_failures_reproduced": true,
+  "root_visual_review_pending": true,
+  "HTML_generation_requires_complete_root_visual_review": true,
+  "models_or_VM_calls": 0,
+  "model_qualified": false,
+  "app_promoted": false
+}

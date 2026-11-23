@@ -1,0 +1,6 @@
+{
+  "format": "completion-codeformer-same-codebook-probe-v1-root-release-v1",
+  "released_for_manual_vm_transfer": false,
+  "automatic_vm_launch": false,
+  "protocol_sha256": "51782b57fca9ad9cf7161b0f4451a65e545e3eb2f8f58788fa40b64aec48d1ec"
+}

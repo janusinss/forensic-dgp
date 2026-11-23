@@ -1,0 +1,41 @@
+{
+  "format": "delivered-objective-v4-source-preparation-tests-v1",
+  "complete": true,
+  "tests": 23,
+  "seconds": 2.4486474999994243,
+  "sources": [
+    {
+      "path": "research\\completion_codeformer_delivered_objective_v4_development\\cctv_completion_codeformer_delivered_objective_v4_vm.py",
+      "bytes": 61309,
+      "sha256": "cee91da636b5abc452b43f84c330f35b3814192f7b0f2d2e2f3abddb489d62a4"
+    },
+    {
+      "path": "research\\completion_codeformer_delivered_objective_v4_development\\contracts.py",
+      "bytes": 4510,
+      "sha256": "4d3c59a07938554147e0fe78d5e5c5a1d594bf6ea3d5d9cb01f1caf4702ed385"
+    },
+    {
+      "path": "research\\completion_codeformer_delivered_objective_v4_development\\optimized_budget.py",
+      "bytes": 8837,
+      "sha256": "7653a4e7552e0acd229f3168e34269dbd0f6d49b0ae4c2750ff1385cd4925214"
+    },
+    {
+      "path": "research\\completion_codeformer_delivered_objective_v4_development\\delivered_loss.py",
+      "bytes": 3509,
+      "sha256": "737e6674c294c0ea1ea02fec6792abb741897d16a91d198d41377e5e3ba09586"
+    },
+    {
+      "path": "research\\completion_codeformer_delivered_objective_v4_development\\source_tests.py",
+      "bytes": 19797,
+      "sha256": "3bc30a67409889ff8df9a8b3638584170a12e9cf16322d644a1957b87b20dd1b"
+    }
+  ],
+  "local_actions": {
+    "neural_calls": 0,
+    "gradients": "Small plain CPU loss-only autograd witnesses; no model gradients",
+    "optimizer_objects_or_steps": 0,
+    "VM_calls": 0,
+    "real_model_checkpoint_reads": 0,
+    "toy_CPU_tensor_serialization_and_loss_only": true
+  }
+}

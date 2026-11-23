@@ -1,0 +1,20 @@
+{
+  "format": "independent-predictor-CE-design-literal-only-binding-recheck-v1",
+  "complete": true,
+  "independent": true,
+  "UTC": "2026-10-26T15:55:33.496421+00:00",
+  "prebinding_worker_SHA256": "e669fa5a5b8046bc707bc6a60837def46b5deeb3e4e988148090e1a6ef2dd487",
+  "bound_worker_SHA256": "e61d4c01991705d32695d5306a89c77c7f7fa78ec9a796c795a09f092f58f41c",
+  "bound_worker_bytes": 72251,
+  "formal_design_sha256": "077ed97ec5dc4ca75f6b6bdc3caf8def09344113c3b7ce927d13b7b68a4f2b78",
+  "only_one_DESIGN_SHA_literal_replacement": true,
+  "whole_worker_AST_unchanged": true,
+  "worker_AST_sha256": "a0d0e76ab89d5c21b8eed31a8d3aa6c722445aba08fbd096acecbff71ca11167",
+  "all_tested_helper_files_unchanged": true,
+  "semantic_receipt_SHA256": "0eb9cf6ada1554875bf837d01b97a86c7a063887bbfa6608f12f0bffc1d9a0d7",
+  "runtime_or_packet_admitted": false,
+  "NN_calls": 0,
+  "optimizer_calls": 0,
+  "gradient_calls": 0,
+  "VM_calls": 0
+}

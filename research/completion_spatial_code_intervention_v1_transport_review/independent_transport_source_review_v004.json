@@ -1,0 +1,73 @@
+{
+  "format": "spatial-code-intervention-v1-independent-transport-source-review-v004",
+  "complete": true,
+  "independent": true,
+  "protocol_sha256": "b27617eb4f2a2225e0969d463acc8048a148203488f0fcd5397e5c5f9a0a0123",
+  "source_pins": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_spatial_code_intervention_v1.py",
+      "bytes": 35820,
+      "sha256": "ec6e9cd68579f4b1395794c505a344c5aad0065de4d8ae70fe5efe9e14640c75"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_spatial_code_intervention_v1.py",
+      "bytes": 16848,
+      "sha256": "fd7b7bf5879c3c785d65c9f0ce0884811d11a28c22e16eb084b348f2f96711b5"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\run_completion_codeformer_spatial_code_intervention_v1.sh",
+      "bytes": 919,
+      "sha256": "e5830c0e72ed4e3abbeb33cbb5c9f9433fe603f72e6d59904b16d03007b28a7c"
+    }
+  ],
+  "checks_passed": 24,
+  "checks": [
+    "Reuse exact admitted61checks+9actualfilefixtures",
+    "Exporter exactunchanged fd7; no unrelated fixture rerun",
+    "Installer literal exactunchanged root9fixtures",
+    "Timeout dependency checkedbeforework",
+    "Owned GNUtimeout external900s exactexportcommand",
+    "Nonzero externalexport status propagated",
+    "No unownedbackground orforegroundtimeout mode",
+    "ActualBash syntax passes",
+    "Actual localGNUtimeout kills onlyownedshortsleep andreturns137",
+    "Final template LF no placeholders",
+    "Guide externalhardkill/partial/quiet truth",
+    "FinalfiveSCPcommands",
+    "Finalsingle-remote exactproject/zone",
+    "Finalupload direction",
+    "Finalsingle-remote exactproject/zone",
+    "Finalupload direction",
+    "Finalsingle-remote exactproject/zone",
+    "Finaldownload direction",
+    "Finalsingle-remote exactproject/zone",
+    "Finaldownload direction",
+    "Finalsingle-remote exactproject/zone",
+    "Finaldownload direction",
+    "Windowsfolders andtmux unchanged",
+    "Finalguide exactpreviousroot9testedinstaller"
+  ],
+  "prior_actual_source_review": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_transport_source_review.json",
+    "bytes": 7336,
+    "sha256": "9bde56f93977f9bca794c708a8d48e18b90fd5c98bc230bb1e9b4e399e437ddb"
+  },
+  "unchanged_exporter_and_installer_actual_fixtures_reused": true,
+  "new_Bash_syntax_fixture": {
+    "exit": 0,
+    "stderr": ""
+  },
+  "new_owned_timeout_fixture": {
+    "exit": 0,
+    "stdout": "owned_toy_timeout_exit=137\n",
+    "stderr": "/usr/bin/bash: line 1:     4 Killed                  timeout --signal=KILL 0.1s bash -c \"sleep 3\"\n",
+    "duration_seconds": 0.1,
+    "not_actual_VM900second_measurement": true
+  },
+  "new_VM_calls": 0,
+  "new_NN_calls": 0,
+  "actual_training_calls": 0,
+  "model_qualified": false,
+  "archive_ready_claim": false,
+  "final_archive_guide_review_still_pending": true
+}

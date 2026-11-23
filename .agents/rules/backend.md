@@ -1,0 +1,89 @@
+---
+trigger: model_decision
+description: Backend architecture, data layer, and persistence standards. Activate when implementing database schemas, ORM queries, API routes, connection management, or data access patterns.
+---
+
+# Backend Architecture & Data Layer Standards
+
+Execute this pipeline when designing, implementing, or refactoring server-side architecture, data access layers, database connections, and API endpoints. Defer to [security.md](.agents/rules/security.md) for input validation, authentication, authorization, and attack surface defense.
+
+---
+
+## Mandatory Backend Skill Dispatch Matrix
+Before generating backend architecture, database schemas, or API code, inspect only the 1–2 skills matching the active task/surface via `view_file` rather than loading all listed skills:
+
+| Domain / Task | Required Skill & Direct Specification Link |
+| :--- | :--- |
+| **API Contract & Scoping** | [prompt-enhancer-backend](.agents/skills/prompt-enhancer-backend/SKILL.md) · [api-patterns](.agents/skills/api-patterns/SKILL.md) |
+| **Architecture & Reliability** | [backend-dev-guidelines](.agents/skills/backend-dev-guidelines/SKILL.md) · [architecture-patterns](.agents/skills/architecture-patterns/SKILL.md) |
+| **Database Design & ORM** | [database-design](.agents/skills/database-design/SKILL.md) · [postgres-best-practices](.agents/skills/postgres-best-practices/SKILL.md) |
+| **Runtimes & Frameworks (Node, Python, Go)** | [nodejs-best-practices](.agents/skills/nodejs-best-practices/SKILL.md) · [fastapi-templates](.agents/skills/fastapi-templates/SKILL.md) · [django-pro](.agents/skills/django-pro/SKILL.md) · [python-patterns](.agents/skills/python-patterns/SKILL.md) · [async-python-patterns](.agents/skills/async-python-patterns/SKILL.md) · [golang-pro](.agents/skills/golang-pro/SKILL.md) · [go-concurrency-patterns](.agents/skills/go-concurrency-patterns/SKILL.md) |
+| **MCP Servers, Containers & ADRs** | [mcp-builder](.agents/skills/mcp-builder/SKILL.md) · [docker-expert](.agents/skills/docker-expert/SKILL.md) · [architecture-decision-records](.agents/skills/architecture-decision-records/SKILL.md) |
+| **Observability & Logging** | [observability-engineer](.agents/skills/observability-engineer/SKILL.md) |
+| **Backend Testing & TDD** | [test-driven-development](.agents/skills/test-driven-development/SKILL.md) · [python-testing-patterns](.agents/skills/python-testing-patterns/SKILL.md) · [test-fixing](.agents/skills/test-fixing/SKILL.md) |
+| **System & Schema Visualization** | [archify](.agents/skills/archify/SKILL.md) |
+| **Structural Decoupling & Refactoring** | [untangle-codebase](.agents/skills/untangle-codebase/SKILL.md) |
+| **Security & Auth Defenses** | [security.md](.agents/rules/security.md) |
+| **Specialist Subagents (`.agents/agents/`)** | [architect](.agents/agents/architect.md) · [code-architect](.agents/agents/code-architect.md) · [database-reviewer](.agents/agents/database-reviewer.md) · [fastapi-reviewer](.agents/agents/fastapi-reviewer.md) · [go-reviewer](.agents/agents/go-reviewer.md) · [rust-reviewer](.agents/agents/rust-reviewer.md) · [php-reviewer](.agents/agents/php-reviewer.md) · [django-build-resolver](.agents/agents/django-build-resolver.md) · [go-build-resolver](.agents/agents/go-build-resolver.md) · [rust-build-resolver](.agents/agents/rust-build-resolver.md) · [silent-failure-hunter](.agents/agents/silent-failure-hunter.md) |
+
+---
+
+## Phase 0: System Contract & Infrastructure Scope
+> **Active Skill**: [prompt-enhancer-backend](.agents/skills/prompt-enhancer-backend/SKILL.md), [architecture-patterns](.agents/skills/architecture-patterns/SKILL.md) & [archify](.agents/skills/archify/SKILL.md)
+
+1. **System Scoping**:
+   - Before coding, document connection topologies, P0–P3 API matrices, database schemas, and service boundaries, rendering verified HTML `architecture` diagrams via [archify](.agents/skills/archify/SKILL.md) for non-trivial topologies.
+2. **Environment & Secrets Hygiene**:
+   - Keep production connection strings and secrets strictly inside `.env` (ensuring `.env` is in `.gitignore`).
+   - Maintain non-sensitive template keys inside `.env.example`.
+3. **Migration Integrity**:
+   - Track all database schema updates in sequential, version-controlled migration files rather than ad-hoc SQL executions.
+
+---
+
+## Active Pipeline (Run on Data & Persistence Tasks)
+
+### Stage 1: System Topology & Infrastructure Design
+> **Active Skill**: [backend-dev-guidelines](.agents/skills/backend-dev-guidelines/SKILL.md) & [architecture-patterns](.agents/skills/architecture-patterns/SKILL.md)
+
+1. **Architecture Boundaries**:
+   - Define clean service layers, repository patterns, and ORM/query boundaries separating business logic from transport and storage.
+2. **Connection Pooling**:
+   - Mandate connection pooling (e.g. PgBouncer, HikariCP, generic pool); never open unpooled database connections per HTTP request.
+3. **Lifecycle Cleanup**:
+   - Enforce strict connection lifecycle management: idle connections must terminate cleanly and pooled connections must release upon function exit.
+4. **Caching Strategy**:
+   - For read-heavy endpoints, define an application-level caching layer (Redis, in-memory LRU, or HTTP cache headers with `Cache-Control` / `ETag`). Never cache user-specific data in shared caches without key isolation.
+
+### Stage 2: Schema Integrity & Relational Design
+> **Active Skill**: [database-design](.agents/skills/database-design/SKILL.md), [postgres-best-practices](.agents/skills/postgres-best-practices/SKILL.md) & [archify](.agents/skills/archify/SKILL.md)
+
+1. **Constraint Discipline**:
+   - Define column nullability, unique keys, and explicit foreign key constraints with safe deletion cascades (`ON DELETE RESTRICT` or `CASCADE`).
+2. **Indexing Strategy**:
+   - Add targeted or composite indexes for columns frequently evaluated in `WHERE`, `JOIN`, or `ORDER BY` clauses. Avoid over-indexing high-write tables.
+3. **Foreign Key Enforcement**:
+   - Disallow polymorphic relations that bypass database-level foreign key enforcement.
+4. **Schema Visualization**:
+   - Render verified HTML `erd` diagrams via [archify](.agents/skills/archify/SKILL.md) when documenting or reviewing multi-table relational schemas and foreign-key relationships.
+
+### Stage 3: Atomic Mutation & Transaction Boundaries
+> **Active Skill**: [backend-dev-guidelines](.agents/skills/backend-dev-guidelines/SKILL.md) & [postgres-best-practices](.agents/skills/postgres-best-practices/SKILL.md)
+
+1. **Explicit Transactions**:
+   - Wrap all multi-step data mutations within explicit transactions (`BEGIN` / `COMMIT` / `ROLLBACK`).
+2. **Concurrency & Race Conditions**:
+   - Guard against race conditions using row-level locking (`SELECT ... FOR UPDATE`) or optimistic concurrency tokens (version columns) where applicable.
+
+### Stage 4: Resilience, Observability & Integration Testing
+> **Active Skill**: [observability-engineer](.agents/skills/observability-engineer/SKILL.md) & [test-driven-development](.agents/skills/test-driven-development/SKILL.md)
+
+1. **Health Checks & Recovery**:
+   - Verify database health check endpoints (`/health`, `SELECT 1`).
+   - Test connection recovery logic to ensure graceful reconnection after transient network drops.
+2. **Graceful Pool Exhaustion**:
+   - Log slow queries and verify that connection pool exhaustion thresholds fail gracefully (returning `503 Service Unavailable`) without crashing the server process.
+3. **Structured Observability**:
+   - Use structured JSON logging with request IDs for traceability.
+   - Log query execution times; flag queries exceeding latency thresholds.
+   - Ensure error responses in production suppress stack traces, system paths, and internal details as mandated by [security.md](.agents/rules/security.md).

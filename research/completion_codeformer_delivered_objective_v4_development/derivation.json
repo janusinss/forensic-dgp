@@ -1,0 +1,31 @@
+{
+  "format": "completion-delivered-objective-v4-development-derivation-v1",
+  "source_only": true,
+  "parent_sealed_sources": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_fusion_only_v3_packet\\draft_002\\cctv_completion_codeformer_fusion_only_v3_vm\\scripts\\cctv_completion_codeformer_fusion_only_v3_vm.py",
+      "bytes": 59770,
+      "sha256": "3ddc903b3f2f5af6d76150bb26deb677bf68e693f4fe592633f052fc13614365"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_fusion_only_v3_packet\\draft_002\\cctv_completion_codeformer_fusion_only_v3_vm\\research\\completion_codeformer_fusion_only_v3\\contracts.py",
+      "bytes": 4299,
+      "sha256": "ed4d5782aa6fe73a37afe6bf6e8647ad9650bf177113f0e6a9900261fe030927"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_fusion_only_v3_packet\\draft_002\\cctv_completion_codeformer_fusion_only_v3_vm\\research\\completion_codeformer_fusion_only_v3\\optimized_budget.py",
+      "bytes": 8829,
+      "sha256": "09b5cd1b64db6266180a2252426c4660da078f69ecd4f223af85ff71a51cfa2c"
+    }
+  ],
+  "design": {
+    "path": "research/completion_codeformer_delivered_objective_v4_design_v1/root_design.json",
+    "sha256": "c565e8aa1362378b45c948463fe6018562858ff217f7f66b375161b6117ca289"
+  },
+  "changed_intervention": "Exact delivered float256 RGB hole-only vs existing clean256, no additive boundary term; all prior acceptance gates retained. FreshVMroot/module/format and detached metadata.",
+  "source_shape": "Final packet places runtime script under scripts/ and helpers under research/completion_codeformer_delivered_objective_v4/. Development files do not shadow or modify prior namespaces.",
+  "prior_bytes_edited": false,
+  "archive_created": false,
+  "model_or_optimizer_objects_created_locally": false,
+  "training_launched": false
+}

@@ -1,0 +1,31 @@
+{
+  "format": "completion-r1-primary-method-crosscheck-v1",
+  "reviewed_UTC": "2026-10-25T14:29:04.203904+00:00",
+  "scope": "Primary-source method review for a distinct data-only R1 continuation; not a new executed recipe",
+  "sources": [
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/master/basicsr/models/codeformer_model.py",
+      "observations": "The official trainer obtains target indices with a separate frozen HQ VQGAN and supervises encoder features against quantized codebook features; it has image/perceptual/adversarial options. Our R1 uses its declared original inpainting-encoder prequantized latent teacher and no GAN/perceptual objectives. These are not exact reproductions."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/master/basicsr/data/ffhq_blind_dataset.py",
+      "observations": "The source synthesizes brush-stroke inpainting masks, distinguishes corruption from the inpainting branch, and applies its optional gray conversion to the input. Our appearance-preserving grayscale augmentation must transform both input and known target; do not copy an input-only colorization objective."
+    },
+    {
+      "url": "https://github.com/sczhou/CodeFormer/blob/master/options/CodeFormer_inpainting.yml",
+      "observations": "The published configuration declares a 1024-entry codebook. Our admitted released inpainting checkpoint and official inference script use512. Preserve the actual512 architecture and checkpoint instead of copying an incompatible configuration."
+    },
+    {
+      "url": "https://github.com/sczhou/CodeFormer/blob/master/inference_inpainting.py",
+      "observations": "The released inpainting inference code constructs a512-entry CodeFormer, uses cropped aligned512 input and fixes fidelity weight1/adainFalse. Our wrapper additionally resizes prepared256 visible support and copies observed pixels exactly."
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/master/docs/train.md",
+      "observations": "The training document separates VQGAN prior learning, code-sequence prediction and controllable-module training. It does not qualify our finite thesis adaptation or provide evidence for real-Zamboanga performance."
+    }
+  ],
+  "decision": "Preserve trained R1 and the declared current teacher/loss/LR for a first isolated data-coverage experiment. Retain the quantized-teacher alternative as a separate future audit/ablation, not a silent extra variable.",
+  "actual_training_calls": 0,
+  "new_weights_installed": false,
+  "current_app_or_checkpoint_changed": false
+}

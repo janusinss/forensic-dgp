@@ -2,7 +2,6 @@
 .DS_Store
 error_log
 .agent/
-.agents/
 .codex
 skills/
 AGENTS.MD
@@ -59,6 +58,7 @@ weights/
 !checkpoints/dgp_improved_epoch_[3-9]*.pth
 *.pt
 *.h5
+*.onnx
 
 # Local Codex skills, instructions, and workflow artifacts
 /.codex/
@@ -178,3 +178,21 @@ strix_runs/
 *.db
 sec_test_cookies*.txt
 verify_cookie*.txt
+
+# Local Codex skills, instructions, and workflow artifacts
+/.codex/*
+!/.codex/rules/
+!/.codex/agents/
+
+# Local AGY skills and workflow artifacts
+/.agents/*
+!/.agents/rules/
+!/.agents/agents/
+/.harness/
+/.agent_worktrees/
+
+# Ephemeral Skill Runtime & Review Artifacts
+/.agents/hooks.json
+
+# Downloaded impeccable engine binaries are never committed (launcher fetches and verifies them)
+**/impeccable/scripts/bin/

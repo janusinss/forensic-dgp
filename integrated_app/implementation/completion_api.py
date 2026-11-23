@@ -2,7 +2,7 @@
 
 The passive receipt middleware observes successful restoration responses without
 changing their bytes. Completion accepts only one of those exact canvases. It
-never calls restoration, changes its model, or restores an R1-generated result.
+never calls restoration, changes its model, or restores an R2-generated result.
 """
 from __future__ import annotations
 
@@ -24,11 +24,11 @@ import psutil
 from fastapi import File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 
-from . import app as restoration
 from .completion_process_guard import OwnedWorker
 from .setup_models import ROOT
+from .managed_paths import data_path
 
-STORE = ROOT / 'scratch' / 'completion_requests'
+STORE = data_path(ROOT, 'scratch', 'completion_requests')
 MAX_PNG = 1024**2
 MAX_RECEIPT = 96 * 1024**2
 REGISTRY_LOCK = threading.RLock()
@@ -109,7 +109,7 @@ def admit_restoration(body):
     """Record actual successful server output, not a client-asserted model label."""
     result = json.loads(body)
     metadata = result['metadata']
-    need(metadata['model'] == 'v2' and metadata['selection'] == 'conditioned_sft_v2_p2_u0224',
+    need(metadata['model'] == 'v3' and metadata['selection'] == 'preconditioned_v34_codeformer',
          'Unexpected restoration model.')
     key = metadata_key(metadata)
     images = {name: from_url(result[field], 'data:image/png;base64,', MAX_PNG)
@@ -238,12 +238,15 @@ def prepare(original, image, metadata_raw):
     need(isinstance(bounds, list) and len(bounds) == 4 and all(type(v) is int for v in bounds), 'Invalid observed support.')
     left, top, right, bottom = bounds
     need(0 <= left < right <= 256 and 0 <= top < bottom <= 256, 'Invalid observed support.')
-    native = restoration.decode_original(original)
+    native = restoration.picture_native(original, metadata.get('picture_crop'))
     original256, observed, _, geometry = restoration.prepare_crop(native)
     need(bounds == geometry['observed_bounds_256'] and
          np.array_equal(read_png((admitted['path']/'original-256.png').read_bytes(), 'RGB'), original256),
          'The original geometry differs from the restoration record.')
-    need(np.array_equal(rgb[~observed], original256[~observed]), 'Restoration padding changed.')
+    # Bilinear resizing can blend prepared edge pixels into the padding fringe.
+    # Restoration preserves the selected input there, which may differ from the original.
+    selected256 = read_png((admitted['path']/'selected-input-256.png').read_bytes(), 'RGB')
+    need(np.array_equal(rgb[~observed], selected256[~observed]), 'Restoration padding changed.')
     need(len(SESSIONS) < 100, 'Completion review is full; restart the app to review more outputs.')
     ident = uuid.uuid4().hex
     path = STORE / 'sessions' / ident
@@ -344,14 +347,24 @@ def propose(ident):
     observed = read_png((record['path']/'observed.png').read_bytes(), 'L') > 0
     expected = proposal_from_probability(probability, observed)
     need(np.array_equal(raw, expected[0]) and np.array_equal(proposed, expected[1]), 'Detector proposal replay differs.')
+    from .automatic_covering import detect_face_covering
+    rgb = read_png((record['path'] / 'input.png').read_bytes(), 'RGB')
+    proposed, auto_meta = detect_face_covering(rgb, probability, proposed, observed)
+    proposed_raw = png(proposed)
+    metadata = {
+        **result['metadata'],
+        'auto_covering': auto_meta,
+        'proposed_mask_pixels': int((proposed > 0).sum()),
+        'proposal_empty': not bool(proposed.any()),
+    }
     proposal_id = uuid.uuid4().hex
-    record['proposals'][proposal_id] = {'mask': proposed.copy(), 'path': output, 'metadata': result['metadata'],
+    record['proposals'][proposal_id] = {'mask': proposed.copy(), 'path': output, 'metadata': metadata,
                                         'sha256': sha(proposed_raw), 'supervisor': supervisor}
     record['review'] = None
     return {'proposal_id': proposal_id, 'proposal_png': restoration.url(proposed_raw),
             'message': ('No covering was proposed. This does not establish an uncovered face; paint any covered area.'
                         if not proposed.any() else 'Correct the proposed area before confirming. Clear glasses and visible features must stay protected.'),
-            'metadata': result['metadata']}
+            'metadata': metadata}
 
 
 def review(ident, mask_raw, proposal_id=''):
@@ -408,10 +421,18 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
         need(len(value) == item['bytes'] and sha(value) == item['sha256'], 'Completion evidence fingerprint differs.')
     need(receipt['source_pins']['input']['sha256'] == record['pins']['input.png'] and
          receipt['source_pins']['mask']['sha256'] == sha(mask_raw), 'Worker input bindings differ.')
+    mask_u8 = (~read_png((record['path'] / 'observed.png').read_bytes(), 'L').astype(bool)).astype(np.uint8)
+    before_signals = restoration.quality_signals(original, mask_u8)
+    after_signals = restoration.quality_signals(final, mask_u8)
+    diagnostics = {
+        'before': {name: before_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
+        'after': {name: after_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
+    }
     metadata = {**result['metadata'], 'source': source, 'proposal_id': proposal_id or None,
                 'review_id': review_id, 'restoration': record['restoration'], 'supervisor': supervisor,
                 'seconds': supervisor['seconds'], 'neural_calls': int(bool(mask.any())),
                 'outside_reviewed_support_exact_to': 'restoration-result.png',
+                'output_diagnostics': diagnostics,
                 'exact_hidden_identity_claimed': False, 'model_qualified': False}
     save(output/'combined-workflow.json', canonical(metadata))
     payloads = {name: (record['path']/name).read_bytes() for name in record['pins']}
@@ -421,7 +442,7 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
     if proposal:
         for name in ('detector-probability.npy','detector-raw-mask.png','detector-proposed-mask.png','receipt.json'):
             payloads['proposal/'+name] = (proposal['path']/name).read_bytes()
-    payloads['README.txt'] = ("Original upload, restoration and completion are separate stages. R1 changes only the reviewed removal area of restoration-result.png. "
+    payloads['README.txt'] = ("Original upload, restoration and completion are separate stages. R2 changes only the reviewed removal area of restoration-result.png. "
                                "Restoration may change observed appearance. Hidden pixels are one plausible estimate, not recovered identity. "
                                "Automatic proposals can miss coverings and require review. source records automatic_reviewed versus assisted correction. "
                                "No training or external inference API is used.\n").encode()
@@ -434,6 +455,10 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
 
 
 def register(app):
+    if getattr(app, '_completion_api_registered', False):
+        return
+    app._completion_api_registered = True
+
     app.add_middleware(RestorationReceiptMiddleware)
     app.add_middleware(BoundedResponseMiddleware)
 
@@ -445,7 +470,7 @@ def register(app):
             available, error = True, None
         except (OSError, ValueError, RuntimeError) as exc:
             available, error = False, str(exc)
-        return {'available': available, 'error': error, 'model': 'completion_r1', 'state': dict(STATE),
+        return {'available': available, 'error': error, 'model': 'completion_r2', 'state': dict(STATE),
                 'automatic_proposal_requires_review': True, 'model_qualified': False, 'local_cpu': True}
 
     @app.post('/face/completion/prepare')
@@ -468,3 +493,6 @@ def register(app):
                              mask_confirmed: bool = Form(False), visible_confirmed: bool = Form(False), proposal_id: str = Form('')):
         raw = await mask.read(MAX_PNG+1)
         return await run_in_threadpool(invoke, generate, session_id, raw, review_id, mask_confirmed, visible_confirmed, proposal_id)
+
+
+from . import app as restoration

@@ -1,0 +1,51 @@
+{
+  "format": "post-predictor-ce-v1-scientific-review-pins-v1",
+  "complete": true,
+  "neural_calls": 0,
+  "model_construction": false,
+  "training_calls": 0,
+  "new_packet_prepared": false,
+  "R1_remains_selected": true,
+  "pins": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_state_review\\independent_state_Adam_logits_audit.json",
+      "bytes": 430616,
+      "sha256": "281d966d28f49ca0001f33d78b567c7696a183a2db2946ed3e31f818a00ae88e"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\independent_saved_output_audit.json",
+      "bytes": 816009,
+      "sha256": "d1c93643925154fbcdb6310614ebb507b51ddc66d54d649b3b3c03774d1496e0"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\root_saved_code_geometry_diagnosis.json",
+      "bytes": 554737,
+      "sha256": "647bfa63a9f7aaa62d18cc7e494a5bba5ccf5468d224e3293d5370a469a7fca8"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_predictor_ce_v1_review\\FIT_loss_geometric_decomposition.json",
+      "bytes": 433346,
+      "sha256": "052e200d0ac652c2b6a4f5afa88bf7f563860ec6f8668944221542d5adfc2f11"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_predictor_ce_v1_review\\independent_grid_QA_and_retained_gray.json",
+      "bytes": 40719,
+      "sha256": "ffda4805b10c72ce65417c1081a181f83a1d28c9125e9c09e694eba7190b3807"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_predictor_ce_v1_review\\independent_scientific_review.md",
+      "bytes": 10050,
+      "sha256": "c8e7f78ce4f9ab7f584d204060ea57b038134e46f2a3db1753954ef6643c2a34"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_predictor_ce_v1_review\\decompose_saved_FIT_loss.py",
+      "bytes": 7164,
+      "sha256": "4922f6f789c94be8eb60221c9ad51758cd04c08c205f2285a4e66b4862d2d571"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_predictor_ce_v1_review\\check_saved_grid_and_probe_gray.py",
+      "bytes": 6872,
+      "sha256": "a97b0d8c0ee45d64391e5aba85a6a6f7458045994c9b2ff0ddd016e6a9ca307c"
+    }
+  ]
+}

@@ -46,10 +46,10 @@ class CompletionInstallTests(unittest.TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.destination = self.root / "models"
-        self.payloads = {"completion_r1": b"fixed R1 fixture weights", "covering_detector": b"fixed detector fixture weights"}
+        self.payloads = {"completion_r2": b"fixed R2 fixture weights", "covering_detector": b"fixed detector fixture weights"}
         self.manifest = {"assets": {key: {"filename": filename, "size": len(self.payloads[key]),
                           "sha256": hashlib.sha256(self.payloads[key]).hexdigest()}
-                          for key, filename in (("completion_r1", "codeformer_completion_r1.pth"),
+                          for key, filename in (("completion_r2", "codeformer_completion_r2.pth"),
                                                 ("covering_detector", "covering_detector_segmenter_v1.pth"))}}
         self.manifest_path = self.root / "manifest.json"
         self.manifest_path.write_text(json.dumps(self.manifest), encoding="utf-8")
@@ -85,14 +85,15 @@ class CompletionInstallTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_fixed_release_names_and_immutable_runtime_manifest_urls(self):
-        self.assertEqual(install.RELEASE_BASE, "https://github.com/janusinss/forensic-dgp/releases/download/completion-r1-models-v1/")
+        self.assertEqual(install.RELEASE_BASE, "https://github.com/janusinss/forensic-dgp/releases/download/completion-r2-models-v1/")
         real = json.loads((Path(__file__).resolve().parents[1] / "implementation/completion_assets.json").read_text())
         self.assertTrue(all(row["url"] is None for row in real["assets"].values()))
 
     def test_verified_offline_copies_are_independent_and_record_distribution(self):
         sources = self.files()
-        result = self.setup(local_r1=sources["completion_r1"], local_detector=sources["covering_detector"], opener=Opener([]))
+        result = self.setup(local_r2=sources["completion_r2"], local_detector=sources["covering_detector"], opener=Opener([]))
         self.assertTrue(result["complete"])
+        self.assertEqual(result["component"], "completion-r2-distribution-installation")
         self.assertEqual(result["inference_calls"], 0)
         self.assertFalse(result["restoration_files_modified"])
         record = json.loads((self.destination / result["installation_receipt"]).read_text())
@@ -103,6 +104,46 @@ class CompletionInstallTests(unittest.TestCase):
             self.assertEqual(path.stat().st_nlink, 1)
             self.assertFalse(path.samefile(sources[key]))
         self.assertFalse(list(self.destination.glob("*.partial")))
+
+    def test_r2_install_preserves_previous_r1_and_saved_records(self):
+        self.destination.mkdir()
+        legacy = self.destination / "codeformer_completion_r1.pth"
+        legacy.write_bytes(b"historical R1 weights must stay")
+        saved = self.destination / "installation-previous.json"
+        saved.write_bytes(b'{"model":"completion_r1","evidence":"retained"}')
+        before = {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in (legacy, saved)}
+        sources = self.files()
+        result = self.setup(local_r2=sources["completion_r2"], local_detector=sources["covering_detector"], opener=Opener([]))
+        self.assertTrue(result["complete"])
+        self.assertEqual((self.destination / "codeformer_completion_r2.pth").read_bytes(),
+                         self.payloads["completion_r2"])
+        self.assertEqual(before, {path: (path.read_bytes(), path.stat().st_mtime_ns) for path in before})
+
+    def test_legacy_r1_does_not_satisfy_missing_r2_verification(self):
+        self.destination.mkdir()
+        legacy = self.destination / "codeformer_completion_r1.pth"
+        legacy.write_bytes(b"historical R1 must not be selected")
+        detector = self.destination / self.manifest["assets"]["covering_detector"]["filename"]
+        detector.write_bytes(self.payloads["covering_detector"])
+        before = {path.name: path.read_bytes() for path in self.destination.iterdir()}
+        opener = Opener([])
+        with self.assertRaisesRegex(install.CompletionInstallError, "codeformer_completion_r2.pth"):
+            self.setup(verify_only=True, opener=opener)
+        self.assertEqual(opener.calls, [])
+        self.assertEqual(before, {path.name: path.read_bytes() for path in self.destination.iterdir()})
+
+    def test_corrupt_r2_is_preserved_without_r1_fallback(self):
+        self.installed()
+        r2 = self.destination / "codeformer_completion_r2.pth"
+        r2.write_bytes(b"changed R2 bytes")
+        legacy = self.destination / "codeformer_completion_r1.pth"
+        legacy.write_bytes(b"retained historical R1")
+        before = {path.name: path.read_bytes() for path in self.destination.iterdir()}
+        opener = Opener([])
+        with self.assertRaises(install.CompletionInstallError):
+            self.setup(verify_only=True, opener=opener)
+        self.assertEqual(opener.calls, [])
+        self.assertEqual(before, {path.name: path.read_bytes() for path in self.destination.iterdir()})
 
     def test_verify_only_never_writes_or_downloads(self):
         self.installed()
@@ -134,14 +175,14 @@ class CompletionInstallTests(unittest.TestCase):
         sources = self.files()
         sources["covering_detector"].write_bytes(b"wrong")
         with self.assertRaises(install.CompletionInstallError):
-            self.setup(local_r1=sources["completion_r1"], local_detector=sources["covering_detector"])
+            self.setup(local_r2=sources["completion_r2"], local_detector=sources["covering_detector"])
         self.assertFalse(self.destination.exists())
 
     def test_local_mode_does_not_silently_download_missing_peer(self):
         sources = self.files()
         opener = Opener([])
         with self.assertRaises(install.CompletionInstallError):
-            self.setup(local_r1=sources["completion_r1"], opener=opener)
+            self.setup(local_r2=sources["completion_r2"], opener=opener)
         self.assertEqual(opener.calls, [])
         self.assertFalse(self.destination.exists())
 
@@ -155,29 +196,29 @@ class CompletionInstallTests(unittest.TestCase):
             self.assertEqual((self.destination / asset["filename"]).read_bytes(), self.payloads[key])
 
     def test_hash_mismatch_keeps_bad_partial_and_no_final_model(self):
-        wrong = b"x" * len(self.payloads["completion_r1"])
+        wrong = b"x" * len(self.payloads["completion_r2"])
         opener = Opener([Response(wrong)])
         with self.assertRaises(install.CompletionInstallError):
             self.setup(opener=opener)
         partials = list(self.destination.glob(".*.partial"))
         self.assertEqual(len(partials), 1)
         self.assertEqual(partials[0].read_bytes(), wrong)
-        self.assertFalse((self.destination / "codeformer_completion_r1.pth").exists())
+        self.assertFalse((self.destination / "codeformer_completion_r2.pth").exists())
         self.assertEqual(len(opener.calls), 1)
 
     def test_download_overrun_is_bounded_and_partial_retained(self):
-        opener = Opener([Response(self.payloads["completion_r1"] + b"extra")])
+        opener = Opener([Response(self.payloads["completion_r2"] + b"extra")])
         with self.assertRaises(install.CompletionInstallError):
             self.setup(opener=opener)
         partial = next(self.destination.glob(".*.partial"))
-        self.assertLessEqual(partial.stat().st_size, len(self.payloads["completion_r1"]))
+        self.assertLessEqual(partial.stat().st_size, len(self.payloads["completion_r2"]))
         self.assertEqual(len(opener.calls), 1)
 
     def test_truncated_download_keeps_partial(self):
-        opener = Opener([Response(self.payloads["completion_r1"][:-1])])
+        opener = Opener([Response(self.payloads["completion_r2"][:-1])])
         with self.assertRaises(install.CompletionInstallError):
             self.setup(opener=opener)
-        self.assertEqual(next(self.destination.glob(".*.partial")).read_bytes(), self.payloads["completion_r1"][:-1])
+        self.assertEqual(next(self.destination.glob(".*.partial")).read_bytes(), self.payloads["completion_r2"][:-1])
 
     def test_invalid_headers_and_non_https_final_response_fail_closed(self):
         for response in (Response(b"", declared=1), Response(b"", declared="bad"),
@@ -200,30 +241,30 @@ class CompletionInstallTests(unittest.TestCase):
     def test_download_total_time_stops_before_read_and_retains_partial(self):
         ticks = iter((0, 1801))
         with self.assertRaises(install.CompletionInstallError):
-            self.setup(opener=Opener([Response(self.payloads["completion_r1"])]), clock=lambda: next(ticks))
+            self.setup(opener=Opener([Response(self.payloads["completion_r2"])]), clock=lambda: next(ticks))
         self.assertEqual(next(self.destination.glob(".*.partial")).stat().st_size, 0)
 
     def test_atomic_publication_never_replaces_racing_existing_file(self):
         self.destination.mkdir()
-        asset = self.manifest["assets"]["completion_r1"]
+        asset = self.manifest["assets"]["completion_r2"]
         partial = self.destination / ".prepared.partial"
-        partial.write_bytes(self.payloads["completion_r1"])
+        partial.write_bytes(self.payloads["completion_r2"])
         target = self.destination / asset["filename"]
         target.write_bytes(b"racing existing model must remain")
         with self.assertRaises(FileExistsError):
             install._publish(partial, target, asset)
         self.assertEqual(target.read_bytes(), b"racing existing model must remain")
-        self.assertEqual(partial.read_bytes(), self.payloads["completion_r1"])
+        self.assertEqual(partial.read_bytes(), self.payloads["completion_r2"])
 
     def test_hardlinked_source_or_installed_model_is_refused(self):
         sources = self.files()
         alias = self.root / "aliased.pth"
         try:
-            os.link(sources["completion_r1"], alias)
+            os.link(sources["completion_r2"], alias)
         except OSError as exc:
             self.skipTest(str(exc))
         with self.assertRaises(install.CompletionInstallError):
-            self.setup(local_r1=sources["completion_r1"], local_detector=sources["covering_detector"])
+            self.setup(local_r2=sources["completion_r2"], local_detector=sources["covering_detector"])
         self.assertFalse(self.destination.exists())
 
     def test_linked_destination_directory_is_refused(self):
@@ -239,7 +280,7 @@ class CompletionInstallTests(unittest.TestCase):
 
     def test_verify_only_cannot_stage_local_files(self):
         with self.assertRaises(install.CompletionInstallError):
-            self.setup(verify_only=True, local_r1=self.root / "unused")
+            self.setup(verify_only=True, local_r2=self.root / "unused")
 
     def test_default_cli_bootstraps_only_validated_configured_python(self):
         configured = Path(sys.executable)
@@ -258,7 +299,7 @@ class CompletionInstallTests(unittest.TestCase):
                 patch.object(install, "install_assets", return_value={"complete": True, "verified_only": True}) as verify, \
                 contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(install.main(["--verify-only"]), 0)
-        verify.assert_called_once_with(local_r1=None, local_detector=None, verify_only=True)
+        verify.assert_called_once_with(local_r2=None, local_detector=None, verify_only=True)
 
 
 def uuid_name():

@@ -1,0 +1,306 @@
+{
+  "format": "completion-r1-context-continuation-source-design-v1",
+  "status": "finalized_data_coverage_only_design_not_execution_packet",
+  "created_UTC": "2026-10-25T14:04:55.771041+00:00",
+  "starting_model": {
+    "name": "Our trained completion R1",
+    "checkpoint_SHA256": "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0",
+    "logical_SHA256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "comparison_original_preserved": true,
+    "frozen_R1_matched_control": true,
+    "automatic_promotion": false,
+    "optimizer_RNG_resume_parent": {
+      "kind": "complete terminal trainable delta plus named Adam/RNG/sampler evidence",
+      "path_on_original_VM": "../cctv_completion_codeformer_finetune_v1_r1_vm/outputs/terminal_training_state.pth",
+      "bytes": 701952165,
+      "sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd",
+      "parent_protocol_sha256": "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d",
+      "independent_state_audit_sha256": "e920c3ddd9b8a85b50fd6f324bde8760c13c6df805f6be61d1e4393472d59b06",
+      "teacher_original_checkpoint_sha256": "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797",
+      "inference_candidate_not_resume_source": true
+    }
+  },
+  "source_evidence_sha256": "cdd6a5e8e4f89310f5b3d397508a92a95bc2b3f8df640bff233a0e373370aed3",
+  "fit_sources": 32,
+  "adaptive_TRAIN_monitor_sources": 8,
+  "original_split_preserved": true,
+  "reserved_VAL_FINAL_not_accessed": true,
+  "fit_plan": {
+    "total": 256,
+    "original_clear_anchors": 128,
+    "new_bounded_irregular_cases": 32,
+    "conditions": {
+      "original_clear_anchor": 128,
+      "strict_gray_clear": 32,
+      "RGB_mild_degraded": 32,
+      "strict_gray_mild_degraded": 32,
+      "RGB_clear_irregular": 32
+    },
+    "sampling": "64 cycles, exactly2 distinct anchor+2 distinct augmented pairs percycle; each32source gets fourold+fournew cases; conditions rotate bysource/geometry; oldsamplerstate preserved,newphaseexplicit",
+    "new_mask_bounds": {
+      "translation_pixels256": [
+        -8,
+        8
+      ],
+      "scale": [
+        0.85,
+        1.15
+      ],
+      "rotation_degrees": [
+        -10,
+        10
+      ],
+      "support": "Bounded irregular variants; no padding; existing visibility check; pre-reviewed before output generation",
+      "geometry": "Do not alter existing DEV/MONITOR masks or enlarge delivery masks"
+    },
+    "appearance": {
+      "strict_gray_saturation": 0.0,
+      "RGB_saturation": 1.0,
+      "formula": "A_s(X)=s*X+(1-s)*Y(X),Y=.299R+.587G+.114B, replicated to3channels",
+      "same_A_on_input_and_target": true,
+      "target": "A_s(originalHQ512), with exact A_s retained256 for delivered supervision; original anchors remain byte-identical"
+    },
+    "context_degradation": {
+      "only_on_input256_after_A_before_masking": true,
+      "Gaussian_sigma_pixels256": [
+        0.4,
+        0.8
+      ],
+      "downsample_side": [
+        128,
+        192
+      ],
+      "upsample": "bilinear to256",
+      "Gaussian_noise_std_8bit": [
+        0,
+        2
+      ],
+      "JPEG_quality": [
+        75,
+        90
+      ],
+      "semantics": "Known synthetic low-quality visible context -> appearance-matched HQ hidden target; source-visible pixels are still copied exactly at delivery; no native CCTV equivalence claimed",
+      "parameters": "Deterministic percase seed; freeze actual transform bytes before VM packet",
+      "gray_noise": "sharedscalar noise acrossRGB; ensure graytriplets remain exact after preparation; no thirdlowchromatargetstyle"
+    },
+    "existing_geometry_augmented_conditions": 96,
+    "exact_microbatch_plan": "Each64cycle has two anchors andtwo augmented pairs. Deterministic seeded roundrobin over256uniquecaseIDs; eachcase appears once perroute, each source4anchor+4augmentation. Code andfusion routes useidenticalfour IDs eachcycle."
+  },
+  "learning": {
+    "one_learning_arm_plus_frozen_R1_control": true,
+    "routes": "same278 code tensors and54 fusion tensors;165 quantizer/generator tensors frozen",
+    "generator_unfreeze": false,
+    "actual_optimizer_steps_max": 128,
+    "paired_cycles_max": 64,
+    "microbatches_per_route": 4,
+    "batch_size": 1,
+    "backward_calls_max": 512,
+    "Adam": "Restore exact R1 named code/fusion Adam states at step32, same LR1e-5/betas(.9,.99)/eps1e-8/wd0/clip1;64newsteps perroute => terminal step96,128new/192cumulative updates",
+    "gradient_clip_L2": 1.0,
+    "code_loss": "UNCHANGED CE_all256 + original prequant_encoder_latent_MSE, weights1+1",
+    "teacher": "UNCHANGED same original frozen inpainting encoder prequantlatent andnearest quantizer codes;40RGB+40gray targets=80labelsets/160componentcalls beforeloadR1learner",
+    "fusion_loss": "UNCHANGED unclampedHQ512maskedRGB_L1 + innerboundaryRGB512_L1_kernel7, weights1+1",
+    "chroma_loss": "DEFERRED; no new chroma/luminance/perceptual/GAN/identity loss in the data-only pilot",
+    "delivered_loss": "DEFERRED; actual delivered raw/PNG evaluation remains unchanged, no new training term",
+    "weight_note": "Only data/sampler coverage changes. Original teacher definition, existinglosses/LR/Adam continuation and frozen generator/codebook remain; this is not an exact copy of official CodeFormer training.",
+    "RNG_transition": "Restore and hash-check original R1 CPU/CUDA/Python/NumPy RNG at declared start ofnewoptimization; separate seededprematerialized data/schedule doesnotconsume restoredglobalRNG; record oldandnew samplerphase,cumulativeandphase-localcounters.",
+    "auxiliary_losses_and_quantized_teacher": "Deferred to separate target audit/ablation. Official model uses frozen HQVQGAN quantizedfeatures; our existing prior labels are declared original prequantencoderlatent."
+  },
+  "evaluation": {
+    "original32clear_MONITOR": "unchanged inputs/targets/masks and existing raw/PNG hole/boundary macro/pergeometry gates, including1%relative deliveredPNGhole gain vs frozenR1",
+    "new16challenge_MONITOR": "SameeightadaptiveTRAINsources, twofrozen conditions perref: strictgray+milddegradation andnewirregularRGB+milddegradation;4pergeometry overall; prospective source-only review",
+    "challenge_gates": ">=1%relative meanPNGholeL1improvement vs frozenR1, all raw/PNGhole/boundary condition andgeometry endpoints nonworse; strictgrayrawchroma is separately reported diagnostic, not a new undeclaredgate",
+    "snapshots": [
+      0,
+      16,
+      32,
+      64
+    ],
+    "challenge_snapshots": [
+      0,
+      64
+    ],
+    "public_development": "same32 exposed unpaired cases at0/terminal, original-photo vsdegraded andfamilies separate; not traininglabels or hiddenPSNR/SSIM",
+    "all_outputs": "exact visible raw/PNG, zero-empty forward, allplannedvisualsreview, original/mask/raw/result retained; rawmodel scores separately from optional grayscale/displayprocessing",
+    "catastrophic_stop": "same>10%regression on any existing clear monitor raw/PNG macro/pergeometry hole/boundary endpoint at16/32; resources/nonfinite/parity/preservation stops unchanged",
+    "independent_FINAL": "not used for design, gradientupdates or modelselection; later independent humanreview still required",
+    "report_both_baselines": "Incremental vs currentR1 andcumulative vs original onidentical unchanged32monitor;16challenge endpoints are separate andnotpooled.",
+    "clear_gates": ">=1%relative macroPNGholeL1improvement vsR1 plus every existing raw/PNGmacro/pergeometry hole/boundary nonworse; report cumulative same32cohort vs original separately"
+  },
+  "finite_limits": {
+    "whole_model_forwards_planned": 736,
+    "teacher_component_calls_planned": 160,
+    "typed_slots_planned": 896,
+    "typed_slots_cap": 1000,
+    "worker_hard_seconds": 1800,
+    "cooperative_stop_seconds": 1680,
+    "start_free_GiB": 7,
+    "stop_free_GiB": 2,
+    "CUDA_allocated_cap_GiB": 20,
+    "output_cap_MiB": 2304,
+    "export_cap_MiB": 2304,
+    "export_cooperative_seconds": 900,
+    "resource_admission": "Root-approved2304MiB raw/compressed caps,7GiBstartfree/2GiBstopfree. Source-enforced retainedpayload2,328,882,873B +2MiBarchiveoverhead=2,330,980,025B <2,415,919,104B. Reserve1GiB terminal/partial,24MiBteacherarrays,8MiBmetadata/logs,256KiBperPNG; streaming+cumulativechecks beforepacket, preservefailurepartials.",
+    "terminal_retention": "one complete terminal delta+bothAdam+orderednames+RNG/schedule/counters/partialgradients; no recoverable intermediatecheckpoint rescue",
+    "size_bound": {
+      "nonempty_eval_arrays": 1075838976,
+      "empty_eval_arrays": 14680064,
+      "four_parity_pair_arrays": 60833792,
+      "arrays_plus1percent_ZIP_overhead": 1162866361,
+      "PNG_cap_bytes": 58720256,
+      "terminal_serialized_bound_bytes": 1073741824,
+      "metadata_receipts_logs_bound_bytes": 8388608,
+      "conservative_payload_total_bytes": 2328882873,
+      "archive_overhead_allowance_bytes": 2097152,
+      "cap_bytes": 2415919104,
+      "warning": "Bounds must be source-enforced before actualexecution; not inferred outputcompressibility. If unsupported, redesignbeforepacket rather than discardlater.",
+      "pre_teacher_payload_total_bytes": 2303717049,
+      "retained_teacher_arrays_reservation_bytes": 25165824,
+      "teacher_raw_array_payload_bytes": 21135360,
+      "total_payload_plus_archive_overhead_bytes": 2330980025,
+      "margin_bytes": 84939079
+    }
+  },
+  "preconditions_before_packet": [
+    "Review actual augmented TRAIN/MONITOR masks and RGB/strictGRAY input-target previews withoutmodelcalls; verify fourdistinctrefs/twoanchor+twoaug percycle and256caseIDs onceeachperroute",
+    "Verify exactparent terminal/protocol/independentstateaudit/originalteacherpins andnamedAdam/RNGrestorestep32beforeanyupdate",
+    "Freeze originalmetricformulas/nonworse1e-12 andbothcohort1%gates, exact16challengeassignment,source/maskbytes andallretentionreservations",
+    "Independentsource/data/terms/overlap/admissionandstoragebudget; no originalstates/splits/failures deleted",
+    "ActualtrainingremainsmanualdistinctL4packet; DATApreparation admissiondoesnotauthorizeexecution"
+  ],
+  "primary_sources": [
+    {
+      "url": "https://arxiv.org/abs/2206.11253",
+      "use": "Codebook/context-method motivation only; not evidence of ouradaptation quality"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/README.md",
+      "use": "Official inpainting uses white masks on aligned crops; separate restoration/colorization entrypoints"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/b33cc7d639d6545bfcccc7e0bc6ae51f24e79c2b/basicsr/data/ffhq_blind_dataset.py",
+      "use": "Officialdataset branches corruption separately from gen_inpaint_mask; gray_prob transforms inputonly; ourbothsidesgraychoiceis task-specific"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/sczhou/CodeFormer/master/basicsr/models/codeformer_model.py",
+      "use": "Root primary-source review: officialfeaturetargetisquantizedfrozenHQVQGAN feature, notourprequantoriginalencoderlatent. Preserveourdefinitionforisolateddatatest; noexactofficialrecipeclaim."
+    }
+  ],
+  "local_neural_calls": 0,
+  "gradient_calls": 0,
+  "optimizer_updates": 0,
+  "VM_calls": 0,
+  "packet_prepared": false,
+  "model_qualified": false,
+  "updated_UTC": "2026-10-25T14:29:15.309736+00:00",
+  "prospective_source_evidence_section_superseded": "The prospective_256case_continuation_plan section in saved_source_and_support_evidence.json is an earlier nonexecuted draft; actualsource/schedule/scarf findings remain authoritative. This finaldesigncontrols futureplan.",
+  "teacher_retention": {
+    "definition_unchanged": true,
+    "styles": [
+      "RGB",
+      "GRAY"
+    ],
+    "sources": 40,
+    "label_sets": 80,
+    "keys": "reference_id::RGB/reference_id::GRAY",
+    "latent": {
+      "dtype": "float32",
+      "shape": [
+        1,
+        256,
+        16,
+        16
+      ],
+      "bytes_each": 262144,
+      "meaning": "original frozen encoder prequant latent from prepared cleanHQ512 normalized[-1,1]"
+    },
+    "codes": {
+      "dtype": "int64",
+      "shape": [
+        1,
+        256
+      ],
+      "bytes_each": 2048,
+      "meaning": "original frozen quantizer nearest indices; admitted512codebook"
+    },
+    "raw_payload_bytes": 21135360,
+    "reservation_bytes": 25165824,
+    "save": "one arrays-only NPZ per label plus JSONindex binding source/target512/originalteacher/codebook and file SHA",
+    "finite_original_teacher_component_calls": 160,
+    "adds_neural_calls": 0,
+    "auditability": "Return all80 exact latent/code arrays for independent label/loss audit; no changedteacher definition or unpairedlabels."
+  },
+  "phase_counters": {
+    "parent": {
+      "paired_cycles": 32,
+      "code_optimizer_steps": 32,
+      "fusion_optimizer_steps": 32,
+      "optimizer_steps_total": 64,
+      "backward_calls": 256,
+      "typed_forward_slots": 528,
+      "whole_model_forwards": 448
+    },
+    "new_phase_max": {
+      "paired_cycles": 64,
+      "code_optimizer_steps": 64,
+      "fusion_optimizer_steps": 64,
+      "optimizer_steps_total": 128,
+      "backward_calls": 512,
+      "typed_forward_slots_planned": 896,
+      "typed_forward_slots_cap": 1000,
+      "whole_model_forwards_planned": 736
+    },
+    "cumulative_at_success": {
+      "paired_cycles": 96,
+      "code_optimizer_steps": 96,
+      "fusion_optimizer_steps": 96,
+      "optimizer_steps_total": 192,
+      "backward_calls": 768,
+      "typed_forward_slots": 1424,
+      "whole_model_forwards": 1184
+    },
+    "cumulative_usage_not_compared_to_new_phase_cap": true,
+    "256_new_case_IDs_seen_once_per_route": true,
+    "each_new_cycle": "four distinct source references, exactlytwooriginalanchors+twoaugmentationpairs; code/fusionuseidenticalIDorder"
+  },
+  "challenge_assignment": {
+    "source_order": "originaleightMONITOR referenceIDs sorted and pinned",
+    "conditions": [
+      "GRAY_mild_degraded",
+      "irregular_RGB_mild_degraded"
+    ],
+    "for_source_index_i": {
+      "gray_geometry_index": "i%4",
+      "irregular_RGB_geometry_index": "(i+2)%4"
+    },
+    "geometry_order": [
+      "lower_face",
+      "eye_band",
+      "image_left_lens",
+      "cheek_object"
+    ],
+    "count": 16,
+    "each_source_cases": 2,
+    "each_condition_geometry_cell_cases": 2,
+    "each_geometry_cases": 4,
+    "pixels_andmaskseeds_frozen_before_candidateoutputs": true
+  },
+  "metric_contract": {
+    "domain": "prepared256RGB0..1, binary maskM; targetT exact clean256 or exactpairedGRAY target; pixelpolicyunchanged",
+    "R256": "cloneI; activeindexedassignment I*(1-M)+bilinear256(clamp((raw512+1)/2,0,1))*M",
+    "PNG": "np.rint(clamp(R256,0,1)*255).astype(uint8); exactobservedsourcebytes outsideM",
+    "boundary": "B=clamp(M-(1-max_pool2d(1-M,kernel7,stride1,padding3)),0,1); originalevaluationboundaryat256,trainingboundaryat512",
+    "raw_hole_L1": "sum(abs(R256-T)*M)/(3*sum(M))",
+    "raw_boundary_L1": "sum(abs(R256-T)*B)/(3*sum(B))",
+    "PNG_hole_L1": "mean(abs(PNG.astype(float64)-targetPNG)[M!=0])/255",
+    "PNG_boundary_L1": "mean(abs(PNG.astype(float64)-targetPNG)[B!=0])/255",
+    "aggregation": "case-equal arithmetic means; macro andgeometry, pluschallengecondition; condition\u00d7geometrycellsreportedseparately",
+    "nonworse": "new_endpoint <= frozen_R1_endpoint + 1e-12 for all4raw/PNGhole/boundary endpoints in eachdeclaredmacro/geometry/conditiongroup",
+    "relative_gain": "(frozen_R1_mean_PNG_hole-new_mean_PNG_hole)/max(frozen_R1_mean_PNG_hole,1e-12)",
+    "clear_gate": "relative_gain>=.01 onunchanged32cases ANDall4macro+4geometryendpointsetsnonworse",
+    "challenge_gate": "relative_gain>=.01 on16cases ANDall4macro+4geometry+2conditionendpointsetsnonworse; neverpoolwithclear",
+    "catastrophe_stop": "atnewcycles16/32, anyexistingclearmacro/geometryendpoint > frozenR1_endpoint*1.10; retainterminalfailure",
+    "strictGRAY_chroma": "predeclared raw/PNGdiagnostic, no addedselectiongate",
+    "independent_replay": "sameformulaandcasebytes; report cross-platformFP32reductiondifferences distinctly withoutsilentlyweakeningthedeclaredsame-L4gate"
+  }
+}

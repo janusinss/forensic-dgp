@@ -56,7 +56,7 @@ def fixture(root):
     files['comparison_cases.json'] = put('comparison_cases.json', json.dumps({'cases': cases}).encode())
     files['LICENSE'] = put('LICENSE', b'Owned static test license fixture')
     design_path = worker.DEFAULT_PROTOCOL['design']['path']
-    files[design_path] = put(design_path, (SOURCE.parents[2] / 'CCTV_CODEFORMER_ADAPTATION_V2_DESIGN.md').read_bytes())
+    files[design_path] = put(design_path, (SOURCE.parents[2] / 'docs/archive/restoration/CCTV_CODEFORMER_ADAPTATION_V2_DESIGN.md').read_bytes())
     readback_path = worker.DEFAULT_PROTOCOL['design']['readback_path']
     files[readback_path] = put(readback_path, json.dumps({
         'status': 'APPROVED_FOR_PROSPECTIVE_IMPLEMENTATION_ONLY',

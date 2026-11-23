@@ -1,4 +1,4 @@
-"""Portable frozen R1 completion on an already prepared/restored RGB256 canvas.
+"""Portable frozen R2 completion on an already prepared/restored RGB256 canvas.
 
 Importing this module loads no Torch model, detector, restoration or research
 service. Completion preserves the supplied canvas outside the reviewed mask.
@@ -17,9 +17,10 @@ import numpy as np
 from . import completion_assets as assets
 
 ROOT = Path(__file__).resolve().parents[1]
-LOGICAL_SHA256 = "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6"
+LOGICAL_SHA256 = "300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0"
 ORIGINAL_SHA256 = "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797"
-PROTOCOL_SHA256 = "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d"
+PROTOCOL_SHA256 = "463c1977e9cd74f0a4fd0240df7a784f48b613043ef667714f1ef94adb4cd60a"
+PARENT_R1_SHA256 = "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0"
 ARCHITECTURE_SOURCES = {
     "third_party.codeformer_completion.codeformer_arch": ("codeformer_arch.py", "29c40cee39414c1117d1ae55fc15d6cdd42aed09e03019522c7f55771b1b84af"),
     "third_party.codeformer_completion.vqgan_arch": ("vqgan_arch.py", "01d7d9a796489716439cbd59fbd9e305278d762d97e6582aafd54b9279e73265"),
@@ -37,10 +38,11 @@ def need(ok, message):
 
 
 def model_contract():
-    entry = assets.load_manifest()["assets"]["completion_r1"]
-    return {"model_id": "completion_r1", "model_label": "Trained CodeFormer completion R1",
-            "backend": "codeformer-inpainting-finetune-r1", "weights_sha256": entry["sha256"],
+    entry = assets.load_manifest()["assets"]["completion_r2"]
+    return {"model_id": "completion_r2", "model_label": "Trained CodeFormer completion R2",
+            "backend": "codeformer-inpainting-finetune-r2", "weights_sha256": entry["sha256"],
             "original_checkpoint_sha256": ORIGINAL_SHA256, "logical_state_sha256": LOGICAL_SHA256,
+            "parent_checkpoint_sha256": PARENT_R1_SHA256,
             "training_protocol_sha256": PROTOCOL_SHA256, "source_revision": entry["source_revision"],
             "device": "cpu", "precision": "float32", "internal_resolution": 512,
             "delivered_resolution": 256, "input_policy": "visible-normalized-resize-v1",
@@ -114,7 +116,7 @@ def verify_architecture_sources():
 
 
 class CompletionAdapter:
-    """Owned wrapper with unchanged R1 adapter math; no shared restoration hooks."""
+    """Owned wrapper with unchanged R2 adapter math; no shared restoration hooks."""
     def __init__(self, net):
         self.net = net.eval().requires_grad_(False)
         self.raw512 = None
@@ -147,7 +149,7 @@ class CompletionAdapter:
             raw = self.net(x, w=1, adain=False)[0]
             if forward_event:
                 forward_event("returned")
-            need(raw.shape == x.shape and torch.isfinite(raw).all().item(), "Invalid R1 generator output.")
+            need(raw.shape == x.shape and torch.isfinite(raw).all().item(), "Invalid R2 generator output.")
             self.raw512 = raw.detach().cpu().numpy().copy()
             generated = ((raw + 1) / 2).clamp(0, 1)
             generated = F.interpolate(generated, size=image.shape[-2:], mode="bilinear", align_corners=False)
@@ -157,7 +159,7 @@ class CompletionAdapter:
 
 def load_frozen_cpu_completion():
     verify_architecture_sources()
-    checkpoint = assets.asset_path("completion_r1")
+    checkpoint = assets.asset_path("completion_r2")
     import torch
     from third_party.codeformer_completion.codeformer_arch import CodeFormer
     verify_architecture_sources()
@@ -165,7 +167,7 @@ def load_frozen_cpu_completion():
     need(type(state) is dict and set(state) == {"params_ema"} and isinstance(state["params_ema"], dict),
          "Completion asset must contain only params_ema.")
     params = state["params_ema"]
-    need(len(params) == 497, "Expected complete497-tensor R1 state.")
+    need(len(params) == 497, "Expected complete497-tensor R2 state.")
     logical = hashlib.sha256()
     for name, value in sorted(params.items()):
         need(isinstance(name, str) and isinstance(value, torch.Tensor) and value.device.type == "cpu"
@@ -178,7 +180,7 @@ def load_frozen_cpu_completion():
     net.load_state_dict(params, strict=True)
     adapter = CompletionAdapter(net.cpu().float())
     need(not net.training and not any(p.requires_grad for p in net.parameters()), "Completion model must remain frozen.")
-    assets.asset_path("completion_r1")
+    assets.asset_path("completion_r2")
     return adapter
 
 
@@ -207,9 +209,9 @@ def complete(rgb, mask, prepared_bounds=None, *, forward_event=None):
 
     result = adapter(image, tensor_mask, forward_event=counted_event)
     need(result.shape == image.shape and result.dtype == torch.float32 and torch.isfinite(result).all().item(),
-         "Invalid R1 completion result.")
+         "Invalid R2 completion result.")
     outside = (tensor_mask == 0).expand_as(image)
-    need(torch.equal(result[outside], image[outside]), "R1 changed supplied canvas outside the reviewed mask.")
+    need(torch.equal(result[outside], image[outside]), "R2 changed supplied canvas outside the reviewed mask.")
     need(calls == {"entered": 1, "returned": 1}, "Exactly one successful completion forward required.")
     completed = result[0].permute(1, 2, 0).detach().cpu().numpy().copy()
     output = encode_output(rgb, removal, completed)

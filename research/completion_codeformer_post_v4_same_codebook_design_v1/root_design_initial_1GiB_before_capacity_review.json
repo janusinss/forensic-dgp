@@ -1,0 +1,381 @@
+{
+  "format": "post-V4-same-inpainting-codebook-zero-optimizer-diagnostic-design-v1",
+  "created_UTC": "2026-10-26T13:24:07.606945+00:00",
+  "status": "FROZEN_PROSPECTIVE_DESIGN_RUNTIME_AND_TRANSFER_NOT_IMPLEMENTED_OR_ADMITTED",
+  "question": "Do the already retained clean-context codes in the SAME inpainting codebook yield useful filled-region estimates, compared with actual covered-input code predictions, when context/fusion are controlled?",
+  "why_now": "V3 and V4 fusion-only routes failed fixed quality requirements; app256 objective alignment alone was insufficient. Hard top1 and detached/frozen prediction keep selected codes fixed. Official HQ512 codebook/prior differs and is not a justified direct teacher.",
+  "scope": "Paired adaptive TRAIN representation diagnosis only. Neither oracle arms nor no-fusion controls are new app models, identity recovery or native-CCTV evidence.",
+  "evidence": {
+    "V4_state": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_delivered_objective_v4_return\\independent_state_audit.json",
+      "bytes": 112959,
+      "sha256": "fcde48ec349e953665259eb56df0da70c8eef980e27e19c058c58a06499051f0"
+    },
+    "V4_pixels": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_delivered_objective_v4_return\\independent_saved_output_audit.json",
+      "bytes": 802131,
+      "sha256": "30c6a29c8a7f91044f356139ff691f65833ae1f76f78de0715309b35ecbaac39"
+    },
+    "V4_visual": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_delivered_objective_v4_return\\root_visual_review.json",
+      "bytes": 18300,
+      "sha256": "4b127549313b7bc800505d8f2e647ee06802df9a3f98682c3fd41d2c1a748cc3"
+    },
+    "V4_report": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\COMPLETION_CODEFORMER_DELIVERED_OBJECTIVE_V4_RESULTS.md",
+      "bytes": 7908,
+      "sha256": "43728cf25babda73088b0fc4cbb8a6d8507622c6261f0cd592c66f6113b30e9f"
+    },
+    "independent_representation_review": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_hq512_teacher_assets_v1\\INDEPENDENT_NEXT_REPRESENTATION_REVIEW.md",
+      "bytes": 4363,
+      "sha256": "26365133dab5a484d0ad262284b3ac1e26f0ee8bbc716d0dc9f3c160e148d1b6"
+    },
+    "HQ512_not_dropin": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_hq512_teacher_assets_v1\\independent_passive_compatibility.json",
+      "bytes": 92581,
+      "sha256": "1d44ee09eb4d97159901cfd3e23c5ee17a18570673c9f4ef37f371184914cd04"
+    },
+    "local_architecture": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\third_party\\codeformer\\codeformer_arch.py",
+      "bytes": 11377,
+      "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb"
+    }
+  },
+  "state": {
+    "start": "Exact full trained R1 reconstructed from original + retained full parent delta",
+    "parent_sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd",
+    "full_logical_sha256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "original_prior_codebook_generator_165_bitexact": true,
+    "all497_model_tensors_before_after_identical": true,
+    "model_eval_FP32_no_autocast_TF32": true,
+    "optimizer_objects_or_steps": 0,
+    "backwards_or_gradient_queries": 0,
+    "no_teacher_network_calls": true,
+    "no_failed_V2_V3_V4_parent": true
+  },
+  "data": {
+    "all32_original_monitor_cases_and16_challenges": true,
+    "case_ids_in_fixed_protocol_order": [
+      "tr_ffhq_05179__lower_face",
+      "tr_ffhq_05179__eye_band",
+      "tr_ffhq_05179__image_left_lens",
+      "tr_ffhq_05179__cheek_object",
+      "tr_ffhq_05302__lower_face",
+      "tr_ffhq_05302__eye_band",
+      "tr_ffhq_05302__image_left_lens",
+      "tr_ffhq_05302__cheek_object",
+      "tr_ffhq_06781__lower_face",
+      "tr_ffhq_06781__eye_band",
+      "tr_ffhq_06781__image_left_lens",
+      "tr_ffhq_06781__cheek_object",
+      "tr_ffhq_06809__lower_face",
+      "tr_ffhq_06809__eye_band",
+      "tr_ffhq_06809__image_left_lens",
+      "tr_ffhq_06809__cheek_object",
+      "tr_ffhq_06995__lower_face",
+      "tr_ffhq_06995__eye_band",
+      "tr_ffhq_06995__image_left_lens",
+      "tr_ffhq_06995__cheek_object",
+      "tr_ffhq_07087__lower_face",
+      "tr_ffhq_07087__eye_band",
+      "tr_ffhq_07087__image_left_lens",
+      "tr_ffhq_07087__cheek_object",
+      "tr_ffhq_07202__lower_face",
+      "tr_ffhq_07202__eye_band",
+      "tr_ffhq_07202__image_left_lens",
+      "tr_ffhq_07202__cheek_object",
+      "tr_ffhq_07386__lower_face",
+      "tr_ffhq_07386__eye_band",
+      "tr_ffhq_07386__image_left_lens",
+      "tr_ffhq_07386__cheek_object",
+      "v2m_05179_g0_gd",
+      "v2m_05179_g2_rid",
+      "v2m_05302_g1_gd",
+      "v2m_05302_g3_rid",
+      "v2m_06781_g2_gd",
+      "v2m_06781_g0_rid",
+      "v2m_06809_g3_gd",
+      "v2m_06809_g1_rid",
+      "v2m_06995_g0_gd",
+      "v2m_06995_g2_rid",
+      "v2m_07087_g1_gd",
+      "v2m_07087_g3_rid",
+      "v2m_07202_g2_gd",
+      "v2m_07202_g0_rid",
+      "v2m_07386_g3_gd",
+      "v2m_07386_g1_rid"
+    ],
+    "fit_or_final_optimization": false,
+    "independent_final_used": false,
+    "public_unpaired_hidden_reference_used": false,
+    "unchanged_source_mask_targets_and_app_preparation": true,
+    "teacher_index": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\index.json",
+      "bytes": 47261,
+      "sha256": "0567a9ad54e6397390341a8dfc1ffa8ec50ceb9159da299605fee021ec678a69"
+    },
+    "original_teacher_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f",
+    "reuse_only_original16_exact_clean_context_teacher_labels": [
+      {
+        "teacher_key": "tr_ffhq_05179::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05179_gray.npz",
+          "bytes": 243917,
+          "sha256": "42e79e420de89ddb01d128a0d3a1c4c924e53f72cac658c8442c165bb0595db6"
+        },
+        "clean512_sha256": "656ae49f78e0e2749dda4ef7e2a18f593ddb136ae913d718a9165fe7e6ba3a37",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_05179::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05179_rgb.npz",
+          "bytes": 243504,
+          "sha256": "604fbfb4379ea640f2ad723ed2f87972d40223685d4f0ddb10eadcc1e16337c6"
+        },
+        "clean512_sha256": "61239889027e5c3ff4cf8f0fa08e79850d9a84babbf3581850501ded3c814535",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_05302::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05302_gray.npz",
+          "bytes": 243696,
+          "sha256": "2ec7726d0ef3a1c59b22124e0a50172f37952b0cd79de97797fd3d1426649ba6"
+        },
+        "clean512_sha256": "4281ef3d7011c4bcd27fee62de7ff59856d02209a314e534152630fdfb29f4cd",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_05302::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05302_rgb.npz",
+          "bytes": 243810,
+          "sha256": "0b2b5484e6af870adaf3dc460fcd83748af596e8180797990b4dcab37b88078b"
+        },
+        "clean512_sha256": "cc16fa9943e19f94a062a0367bc50b2cc0363ffd77babd6c095b00e3d9a26df5",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_06781::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06781_gray.npz",
+          "bytes": 243560,
+          "sha256": "cc219b8925f60cc73447c9b79eaa2101f2b7d7cf07101b30c2106999ecfb39f3"
+        },
+        "clean512_sha256": "fd7d7fccb979b2acb761a9328237ae371090673f574e23b2b1b7333b7bf18eee",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_06781::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06781_rgb.npz",
+          "bytes": 243715,
+          "sha256": "b914b175ec0759234df5a000ca36a768a7bd66624e6fa15dfde802c303398cd5"
+        },
+        "clean512_sha256": "448083858da58b88e8559bd2043b580a3cf407f1acd4d87edf3a25763de57457",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_06809::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06809_gray.npz",
+          "bytes": 244091,
+          "sha256": "240f00aee0a8d6f9766fc1eecc9087b3cc777e5098135e540c5b887c785eca74"
+        },
+        "clean512_sha256": "a3000b19690dac7df6cfee5f6de9a17ad4777e59fa1c46b318a639057ddfd510",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_06809::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06809_rgb.npz",
+          "bytes": 243965,
+          "sha256": "e0a3ec9f19811be850320e1108b3ac289a81956d16c1848f933a6ecf9b99ebe6"
+        },
+        "clean512_sha256": "9b81565aada35a41b6e392c243af76050081e2a6cce6c59e134b1552d5d851d6",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_06995::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06995_gray.npz",
+          "bytes": 244046,
+          "sha256": "54f0f189ee9c8e6122601d66278f5ea8c10fccd93d7cbe253ef783e00350f420"
+        },
+        "clean512_sha256": "920dfafb12d1241ffa2622949500fd43ea9334ddbcf95a41249459dc438bad42",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_06995::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06995_rgb.npz",
+          "bytes": 243971,
+          "sha256": "e050166a020f795721d2916b346486a4231464e53078827056130ebb6a3af2e3"
+        },
+        "clean512_sha256": "4746c329b77323292c20ee4c721b8deb91178f3ff279143fc0ed0ab733977131",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_07087::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07087_gray.npz",
+          "bytes": 243957,
+          "sha256": "d5251d1f3167c04bf3b821c7f76b6bb95a6cb68e095e0a07cd8faf0c19d0ffb6"
+        },
+        "clean512_sha256": "6a6686c41ea2bdbdd90b4d415eed7767347ae30d47d805f4f21f193211d028e2",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_07087::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07087_rgb.npz",
+          "bytes": 243892,
+          "sha256": "88dd399cc2c50cbd0b22817d71403c38d60fe59ac12554f3dac4def25aad5c66"
+        },
+        "clean512_sha256": "44e9d02f17060a367c7f5dfe5494927f8197545c02985b7dcda11655d1f88c3b",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_07202::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07202_gray.npz",
+          "bytes": 243743,
+          "sha256": "c5ef46665ff09d96484cb744575f2466d80d490337cc3d22edd996f685807a49"
+        },
+        "clean512_sha256": "da470a9d182261d4d30d8bff3038f30e9a6af62b9e9281b3a30e84bae56e9ec4",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_07202::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07202_rgb.npz",
+          "bytes": 243707,
+          "sha256": "6e06e2ee9f9f024e79df8c3b50cb6f43bfc4c09182fcc1e3c5fa1560648972e6"
+        },
+        "clean512_sha256": "e8d060447d778f456d00365d33b9c29c1ebbd6ed27ef344d075feec273c1c195",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_07386::GRAY",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07386_gray.npz",
+          "bytes": 244089,
+          "sha256": "9e66c08bf636c72c9d0ea75bd013188b95667f8875c9f7e740384734c51d5b2f"
+        },
+        "clean512_sha256": "683b1f9f401524f8f7ff670cd75436512e27be845f9ae0aa446d33a0fc12ac33",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      },
+      {
+        "teacher_key": "tr_ffhq_07386::RGB",
+        "original_label": {
+          "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07386_rgb.npz",
+          "bytes": 244141,
+          "sha256": "d6b71cc53ed95d257c9752ef7d2e004346833bd98892fe30d16557d3761500ad"
+        },
+        "clean512_sha256": "0fd5c4ed96a36b9f5e545c286719d2c77cd283597cfdd4acbdaa081620257f7d",
+        "teacher_original_logical_sha256": "586a8854ed7b5e3f0e202c258addb7a87de63cd3068d153741b065379ff6668f"
+      }
+    ],
+    "no_regenerate_teacher_or_cross_codebook_integer_labels": true,
+    "label_limitation": "Original inpainting encoder nearest SAME-codebook indices from unmasked clean512; not official clean-VQGAN teacher, not guaranteed optimum representation."
+  },
+  "arms": [
+    {
+      "id": "A",
+      "name": "ACTUAL_predicted_codes_R1_fusion_w1",
+      "clean_hidden_information": false
+    },
+    {
+      "id": "B",
+      "name": "ACTUAL_predicted_codes_no_fusion_w0",
+      "clean_hidden_information": false,
+      "control_not_app_incumbent": true
+    },
+    {
+      "id": "C",
+      "name": "ORACLE_clean_context_codes_R1_fusion_w1",
+      "clean_hidden_information": true
+    },
+    {
+      "id": "D",
+      "name": "ORACLE_clean_context_codes_no_fusion_w0",
+      "clean_hidden_information": true
+    }
+  ],
+  "intervention_rules": [
+    "Same prepared observed RGB/mask and exact R1 state for all4arms.",
+    "For oracle only, replace selected256indices with pinned same-codebook clean-context256indices. Do not copy clean RGB into context or result.",
+    "All encoder/context/fusion data remain observed-input only; retain predicted and actual-selected codes separately.",
+    "No softcode surrogate, codebook permutation guess, prior swap, loss backpropagation or optimizer.",
+    "Derive owned intervention source from pinned forward, prove ordinary-path parity and inspect AST semantic difference before transfer.",
+    "Every oracle filename/PNG/page/receipt explicitly marks unavailable-clean-information diagnostic; never publish it as a deployable result."
+  ],
+  "finite_counts": {
+    "cases": 48,
+    "arms": 4,
+    "outputs": 192,
+    "whole_network_calls_for_arm_evaluations": 192,
+    "fresh_app_parity_pairs": 4,
+    "whole_network_calls_for_parity": 8,
+    "whole_network_calls_planned": 200,
+    "whole_network_calls_hard_cap": 220,
+    "gradient_calls": 0,
+    "optimizer_steps": 0,
+    "teacher_calls": 0
+  },
+  "preflight": [
+    "Verify all source/assets/case/16label/target original SHA pins with no scientific imports first.",
+    "No competing GPU workload; explicit L4 VM root/device and original/R1 hashes.",
+    "Four fresh ordinary owned-forward/wrapper parity pairs before oracle, raw256maxerror<=1e-6.",
+    "All48 A-arm outputs match retained actualR1u0 raw256<=1e-6 AND PNG byteexact.",
+    "Record before/after all497 state, model eval/training flags and typed counters; refuse mutation."
+  ],
+  "outputs_and_audit": {
+    "all192": {
+      "PNG256": true,
+      "raw512": true,
+      "result256": true,
+      "observed_input256": true,
+      "mask256": true,
+      "predicted256codes": true,
+      "used256codes": true,
+      "arm_and_oracle_flags": true
+    },
+    "all4parity_arrays_saved_before_gate": true,
+    "source_original_mask_result_and_sourceSHA_pins": true,
+    "metrics": "Separate clear/challenge RAW/PNG hole+kernel7 innerboundary groups; no pooled score or new gate to rescue a failed trained model.",
+    "existing_screen_only_as_diagnostic": "Compare each w1oracle vs A using existing>=1% PNG hole gain percohort and all oldnonworse RAW/PNG groups; success is not model qualification or proofpredictability.",
+    "root_all12_sheets48cases192outputs_before_nextdecision": true,
+    "no_neural_work_during_local_return_audit": true,
+    "independent_code_override_and_state_invariance_audits_required": true
+  },
+  "limits": {
+    "worker_hard_seconds": 900,
+    "cooperative_seconds": 840,
+    "VM_free_GiB_start": 7,
+    "VM_free_GiB_floor": 2,
+    "CUDA_allocated_GiB_cap": 20,
+    "raw_output_MiB_cap": 1024,
+    "export_raw_tar_MiB_cap": 1024,
+    "export_compressed_MiB_cap": 1024,
+    "metadata_MiB_cap": 8,
+    "trainer_log_MiB_cap": 4,
+    "PNG_KiB_cap": 256,
+    "export_cooperative_seconds": 900,
+    "no_checkpoint_save_or_resume_needed": true,
+    "retain_partial_evidence_on_any_stop": true
+  },
+  "decision_rules": [
+    "If both same-codebook oracle arms are poor, do not train CE toward these labels unchanged; review target representation/prior compatibility.",
+    "If oracle decoding is clearly useful and actual predictions poor, review a distinct stage-II code-prediction diagnostic with justified semantic same-codebook targets and existing preservation gates.",
+    "Mixed geometry/style outcomes require targeted cause review; no automatic optimizer pilot, gate relaxation or failed intermediate rescue.",
+    "No mathematical upper-bound claim: these reused clean-context labels are one target representation, not an optimization oracle over all possible codes."
+  ],
+  "manual_execution_only": true,
+  "automatic_launch": false,
+  "ready_to_upload": false,
+  "model_qualified": false,
+  "goal_complete": false
+}

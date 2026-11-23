@@ -1,31 +1,25 @@
 {
   "schema_version": 1,
-  "default_model": "v2",
+  "default_model": "v3",
   "release": "https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1",
   "assets": {
-    "codeformer_r2": {
-      "filename": "codeformer_r2.pth",
-      "size": 376609465,
-      "sha256": "d4abda08831681007fd0c351904ec5dd416a3a5ff6e16d06b25cd8b70b0fc896",
-      "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/codeformer_r2.pth"
+    "fbcnn_color": {
+      "filename": "fbcnn_color.pth",
+      "size": 287755111,
+      "sha256": "8b0e4ef23d59cf7ac934a342cb31a17619e4fa4a0b3374a9d78c5174312387e8",
+      "url": "https://github.com/jiaxi-jiang/FBCNN/releases/download/v1.0/fbcnn_color.pth"
     },
-    "codeformer_u96_adapter": {
-      "filename": "codeformer_u96_adapter.pth",
-      "size": 212827,
-      "sha256": "958e8338d4bc1a0204c314c3af239ab0ab3d783c67e3e532d9fe23c58f8a73d0",
-      "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/codeformer_u96_adapter.pth"
+    "codeformer_base": {
+      "filename": "codeformer.pth",
+      "size": 376637898,
+      "sha256": "1009e537e0c2a07d4cabce6355f53cb66767cd4b4297ec7a4a64ca4b8a5684b7",
+      "url": "https://github.com/sczhou/CodeFormer/releases/download/v0.1.0/codeformer.pth"
     },
-    "terminal_u0064_heads": {
-      "filename": "terminal_u0064_heads.npz",
-      "size": 685818,
-      "sha256": "77c0e1f236eb70d37f3f81059b75580e92d606bb2f8b5dd5eeb00da0305dca17",
-      "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/terminal_u0064_heads.npz"
-    },
-    "v2_p2_u0224_heads": {
-      "filename": "v2_p2_u0224_heads.npz",
-      "size": 3831362,
-      "sha256": "1aee2b840397925049a2c821edd7395c3a9e4b48ce1552e06c5ffd627a33e31f",
-      "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/v2_p2_u0224_heads.npz"
+    "v34_precond_modules": {
+      "filename": "v34_precond_modules.npz",
+      "size": 9065704,
+      "sha256": "65541ac31b50becafec3db34cca8936ab92c5958b0afd75244d85ecd0e0e88b1",
+      "url": "https://github.com/janusinss/forensic-dgp/releases/download/implementation-models-v1/v34_precond_modules.npz"
     }
   }
 }

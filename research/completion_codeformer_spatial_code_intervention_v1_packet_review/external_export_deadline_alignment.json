@@ -1,0 +1,8 @@
+{
+  "complete": true,
+  "reason": "Frozen root export_hard_seconds900 requires an owned OS deadline, while current exporter only cooperatively checks time between operations. Add GNUtimeout KILL900s around export and require binary before model work. Keep worker900hard unchanged.",
+  "source_only_unreleased_repair": true,
+  "scientific_data_resource_limits_unchanged": true,
+  "prior_stage003_preserved": true,
+  "model_VM_calls": 0
+}

@@ -1,0 +1,9 @@
+{
+  "format": "root-fusion-v3-historical-joint-PNG-source-audit-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T10:42:28.587899+00:00",
+  "all80_joint_PNGs_original_source_bytes_hashes_exact": true,
+  "count": 80,
+  "derivation_manifest_sha256": "ff0df6ce85540558f7aa6cde96bc4231eb441267fc12525094b78bb23780f96e",
+  "new_NN_gradient_optimizer_VM_calls": 0
+}

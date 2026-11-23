@@ -1,0 +1,26 @@
+{
+  "format": "predictor-ce-v1-exact-worker-CPUclone-alias-fixture-v1",
+  "complete": true,
+  "checks": 4014,
+  "UTC": "2026-10-26T15:54:11.125560+00:00",
+  "exact_cpu_copy_source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_development\\cctv_completion_codeformer_predictor_ce_v1_vm.py",
+    "bytes": 72251,
+    "sha256": "e61d4c01991705d32695d5306a89c77c7f7fa78ec9a796c795a09f092f58f41c"
+  },
+  "original_slots": 278,
+  "projected_slots": 114,
+  "active_step_and_moment_aliases": false,
+  "mutating_projected_step_and_moments_preserves_parent": true,
+  "merge_retains_original164_inactive_slots_and_updated114_once": true,
+  "execution": {
+    "Torch_CPU_tensor_operations_only": true,
+    "model_or_Module_objects": 0,
+    "optimizer_objects": 0,
+    "gradient_queries": 0,
+    "autograd_calls": 0,
+    "training_steps": 0,
+    "neural_calls": 0,
+    "VM_calls": 0
+  }
+}

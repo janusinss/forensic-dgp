@@ -1,0 +1,1770 @@
+{
+  "format": "spatial-code-intervention-v1-independent-final-archive-guide-admission-v1",
+  "complete": true,
+  "independent": true,
+  "protocol_sha256": "b27617eb4f2a2225e0969d463acc8048a148203488f0fcd5397e5c5f9a0a0123",
+  "archive": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+    "bytes": 13610328,
+    "sha256": "24f480add44e4fe8176a68a3b67321b11b4baee0ebb43d0a3790fefc434549a5"
+  },
+  "canonical_archive": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz",
+    "bytes": 13610328,
+    "sha256": "24f480add44e4fe8176a68a3b67321b11b4baee0ebb43d0a3790fefc434549a5"
+  },
+  "checksum": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\cctv-completion-codeformer-spatial-code-intervention-v1-execution.tar.gz.sha256",
+    "bytes": 139,
+    "sha256": "ab2f5092d9d2f87032329304fef6b4ec14588d8f6de8f66959164e438dc2992f"
+  },
+  "guide": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\COMPLETION_CODEFORMER_SPATIAL_CODE_INTERVENTION_V1_VM.md",
+    "bytes": 10551,
+    "sha256": "e35e2618a7fb7d1192cc2a220e536b321a3e156e4e7fcd5eaf69e112d7c65644"
+  },
+  "regular_members": 167,
+  "payload_bytes": 19491897,
+  "physical_raw_tar_bytes": 19773440,
+  "full_stream_member_SHA_gzip_CRC_verified": true,
+  "all167_manifest_members_match": true,
+  "actual_guide_installer_and_single_remote_commands_verified": true,
+  "root_release": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_spatial_code_intervention_v1_packet\\draft_004\\root_manual_transfer_release.json",
+    "bytes": 4242,
+    "sha256": "140b74bf93bc31cab12482a4b4b144172ef7320b7cb1f695d51c32a53a494be7"
+  },
+  "independent_source_admission": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_spatial_code_intervention_v1_independent_review\\independent_source_packet_admission_draft004.json",
+    "bytes": 276542,
+    "sha256": "e9d6a0d0ffb6fd1e4fbd1e95260c8c0437031c93672ed4c43b15baa1435867fe"
+  },
+  "earlier_staged_admission": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_staged_transport_admission_v004.json",
+    "bytes": 54676,
+    "sha256": "b746b3d8bf9312ec08b93c481d33e2902c18a26bd4817efcf3b5ff78cb8d3a99"
+  },
+  "transport_source_admission": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_spatial_code_intervention_v1_transport_review\\independent_transport_source_review_v004.json",
+    "bytes": 3057,
+    "sha256": "898430d2607b7403a59d90970fad245c99b56d92958e0d3d0513809d50fa2312"
+  },
+  "checks_passed": 1036,
+  "checks": [
+    "Final staged protocol exact",
+    "Actual manual publication scope",
+    "Published canonical archive receipt pin",
+    "Original transfer and canonical archive exactbytes",
+    "Execution compressed cap128MiB",
+    "LF checksum exactfilename/hash/publishedcopies",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size protocol.json",
+    "Installer protocol member first",
+    "Bounded archive payload",
+    "Actual complete member hash protocol.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size completion.py",
+    "Bounded archive payload",
+    "Actual complete member hash completion.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_05179_g0_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_05179_g0_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_05179_g2_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_05179_g2_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_05302_g1_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_05302_g1_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_05302_g3_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_05302_g3_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_06781_g0_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_06781_g0_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_06781_g2_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_06781_g2_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_06809_g1_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_06809_g1_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_06809_g3_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_06809_g3_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_06995_g0_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_06995_g0_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_06995_g2_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_06995_g2_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_07087_g1_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_07087_g1_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_07087_g3_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_07087_g3_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_07202_g0_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_07202_g0_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_07202_g2_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_07202_g2_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_07386_g1_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_07386_g1_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/inputs256/v2m_07386_g3_gd.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/inputs256/v2m_07386_g3_gd.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_05179_g2_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_05179_g2_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_05302_g3_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_05302_g3_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_06781_g0_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_06781_g0_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_06809_g1_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_06809_g1_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_06995_g2_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_06995_g2_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_07087_g3_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_07087_g3_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_07202_g0_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_07202_g0_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_irregular/v2m_07386_g1_rid.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_irregular/v2m_07386_g1_rid.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_00084__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_00084__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_00084__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_00084__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_00178__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_00178__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_00178__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_00178__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05179__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05179__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05179__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05179__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05179__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05179__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05179__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05179__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05302__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05302__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05302__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05302__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05302__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05302__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_05302__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_05302__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06781__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06781__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06781__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06781__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06781__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06781__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06781__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06781__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06809__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06809__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06809__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06809__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06809__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06809__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06809__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06809__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06995__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06995__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06995__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06995__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06995__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06995__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_06995__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_06995__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07087__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07087__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07087__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07087__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07087__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07087__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07087__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07087__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07202__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07202__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07202__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07202__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07202__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07202__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07202__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07202__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07386__cheek_object.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07386__cheek_object.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07386__eye_band.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07386__eye_band.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07386__image_left_lens.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07386__image_left_lens.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/masks_original/tr_ffhq_07386__lower_face.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/masks_original/tr_ffhq_07386__lower_face.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_00084_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_00084_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_00178_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_00178_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_05179_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_05179_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_05179_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_05179_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_05302_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_05302_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_05302_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_05302_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_06781_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_06781_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_06781_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_06781_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_06809_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_06809_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_06809_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_06809_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_06995_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_06995_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_06995_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_06995_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_07087_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_07087_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_07087_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_07087_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_07202_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_07202_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_07202_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_07202_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_07386_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_07386_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t256/tr_ffhq_07386_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t256/tr_ffhq_07386_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_00084_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_00084_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_00178_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_00178_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_05179_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_05179_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_05179_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_05179_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_05302_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_05302_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_05302_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_05302_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_06781_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_06781_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_06781_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_06781_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_06809_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_06809_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_06809_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_06809_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_06995_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_06995_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_06995_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_06995_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_07087_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_07087_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_07087_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_07087_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_07202_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_07202_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_07202_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_07202_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_07386_gray.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_07386_gray.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size coverage_data/data/t512/tr_ffhq_07386_rgb.png",
+    "Bounded archive payload",
+    "Actual complete member hash coverage_data/data/t512/tr_ffhq_07386_rgb.png",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/actual_original_probe_transport.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/actual_original_probe_transport.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/author_alias_revalidation_fixtures.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/author_alias_revalidation_fixtures.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/author_transport_fixtures.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/author_transport_fixtures.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/current_instructions/FACE_MASK_COMPLETION_SPEC_V1.md",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/current_instructions/FACE_MASK_COMPLETION_SPEC_V1.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/current_instructions/PRACTICAL_OUTPUT_SCOPE.md",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/current_instructions/PRACTICAL_OUTPUT_SCOPE.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/current_instructions/PROJECT_HANDOFF.md",
+    "Bounded archive payload",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/current_instructions/PROJECT_HANDOFF.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/current_instructions/SYSTEM_WORKFLOW_AND_GOAL.md",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/current_instructions/SYSTEM_WORKFLOW_AND_GOAL.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/development/source_preparation_tests.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/development/source_preparation_tests.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/development/source_tests.py",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/development/source_tests.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/formal_design_admission.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/formal_design_admission.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/independent_alias_revalidation_fixture.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/independent_alias_revalidation_fixture.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/oracle_label_index.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/oracle_label_index.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/original_R1_protocol.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/original_R1_protocol.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/original_probe_protocol.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/original_probe_protocol.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/original_source_admission.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/original_source_admission.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/parent_saved_output_audit.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/parent_saved_output_audit.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/parent_state_audit.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/parent_state_audit.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/pre_release_clarifications.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/pre_release_clarifications.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/readable_design.md",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/readable_design.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_FIT_CE_allocation.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_FIT_CE_allocation.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_R1_source_admission.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_R1_source_admission.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_actual_current_return_milestone.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_actual_current_return_milestone.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_current_actual_results_report.md",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_current_actual_results_report.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_current_independent_pixels.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_current_independent_pixels.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_current_independent_return_closure.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_current_independent_return_closure.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_current_root_all20_visual.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_current_root_all20_visual.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_current_root_code_geometry.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_current_root_code_geometry.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_current_state_Adam_CE.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_current_state_Adam_CE.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_independent_scientific_admission.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_independent_scientific_admission.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_independent_scientific_review.md",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_independent_scientific_review.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_retained_oracle_actual_pixel_audit.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_retained_oracle_actual_pixel_audit.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_retained_oracle_actual_protocol.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_retained_oracle_actual_protocol.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_retained_oracle_actual_state_audit.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_retained_oracle_actual_state_audit.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_design_retained_oracle_actual_transport.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_design_retained_oracle_actual_transport.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size evidence/root_installer_fixtures.json",
+    "Bounded archive payload",
+    "Actual complete member hash evidence/root_installer_fixtures.json",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size face_workflow.py",
+    "Bounded archive payload",
+    "Actual complete member hash face_workflow.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size legal/LICENSE",
+    "Bounded archive payload",
+    "Actual complete member hash legal/LICENSE",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size legal/NOTICE.md",
+    "Bounded archive payload",
+    "Actual complete member hash legal/NOTICE.md",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05179_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05179_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05179_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05179_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05302_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05302_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05302_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05302_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06781_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06781_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06781_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06781_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06809_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06809_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06809_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06809_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06995_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06995_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06995_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06995_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07087_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07087_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07087_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07087_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07202_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07202_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07202_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07202_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07386_gray.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07386_gray.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07386_rgb.npz",
+    "Bounded archive payload",
+    "Actual complete member hash oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07386_rgb.npz",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size pretrained_completion.py",
+    "Bounded archive payload",
+    "Actual complete member hash pretrained_completion.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size research/completion_codeformer_spatial_code_intervention_v1/app_delivery.py",
+    "Bounded archive payload",
+    "Actual complete member hash research/completion_codeformer_spatial_code_intervention_v1/app_delivery.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size research/completion_codeformer_spatial_code_intervention_v1/contracts.py",
+    "Bounded archive payload",
+    "Actual complete member hash research/completion_codeformer_spatial_code_intervention_v1/contracts.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size research/completion_codeformer_spatial_code_intervention_v1/optimized_budget.py",
+    "Bounded archive payload",
+    "Actual complete member hash research/completion_codeformer_spatial_code_intervention_v1/optimized_budget.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size research/completion_codeformer_spatial_code_intervention_v1/probe_forward.py",
+    "Bounded archive payload",
+    "Actual complete member hash research/completion_codeformer_spatial_code_intervention_v1/probe_forward.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size scripts/cctv_completion_codeformer_spatial_code_intervention_v1_vm.py",
+    "Bounded archive payload",
+    "Actual complete member hash scripts/cctv_completion_codeformer_spatial_code_intervention_v1_vm.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size scripts/export_completion_codeformer_spatial_code_intervention_v1.py",
+    "Bounded archive payload",
+    "Actual complete member hash scripts/export_completion_codeformer_spatial_code_intervention_v1.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size scripts/prepare_completion_codeformer_spatial_code_intervention_v1.py",
+    "Bounded archive payload",
+    "Actual complete member hash scripts/prepare_completion_codeformer_spatial_code_intervention_v1.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size scripts/run_completion_codeformer_spatial_code_intervention_v1.sh",
+    "Bounded archive payload",
+    "Actual complete member hash scripts/run_completion_codeformer_spatial_code_intervention_v1.sh",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size third_party/__init__.py",
+    "Bounded archive payload",
+    "Actual complete member hash third_party/__init__.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size third_party/codeformer/__init__.py",
+    "Bounded archive payload",
+    "Actual complete member hash third_party/codeformer/__init__.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size third_party/codeformer/codeformer_arch.py",
+    "Bounded archive payload",
+    "Actual complete member hash third_party/codeformer/codeformer_arch.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size third_party/codeformer/registry.py",
+    "Bounded archive payload",
+    "Actual complete member hash third_party/codeformer/registry.py",
+    "Exact execution archive root",
+    "Canonical unique execution namespace",
+    "Regular exact protocol manifest member",
+    "Exact member size third_party/codeformer/vqgan_arch.py",
+    "Bounded archive payload",
+    "Actual complete member hash third_party/codeformer/vqgan_arch.py",
+    "All166payloads+protocol exactclosednamespace",
+    "Exact payload sum",
+    "Full gzipCRC/EOF and exact physical rawtar length",
+    "Published guide copies/receipt exact",
+    "Published guide LFonly",
+    "Published guide exact current template/actual archive pins",
+    "Actual pasted installer literal exact",
+    "Actual installer equals root9fixtureliteral",
+    "Actual published fiveSCPcommands",
+    "Actual SCP one remote exact project/zone",
+    "Actual uploadfiles/direction",
+    "Actual SCP one remote exact project/zone",
+    "Actual uploadfiles/direction",
+    "Actual SCP one remote exact project/zone",
+    "Actual downloadfiles/direction",
+    "Actual SCP one remote exact project/zone",
+    "Actual downloadfiles/direction",
+    "Actual SCP one remote exact project/zone",
+    "Actual downloadfiles/direction",
+    "Actual Windowsfolder/tmux/verifyprotocol",
+    "Actual launchprotocol",
+    "Actual scope truth",
+    "Actual root release pin",
+    "Actual manual rootrelease",
+    "Actual separate independent source/CLI admission pin",
+    "Archive stable after complete independent read"
+  ],
+  "files": {
+    "protocol.json": {
+      "bytes": 298192,
+      "sha256": "b27617eb4f2a2225e0969d463acc8048a148203488f0fcd5397e5c5f9a0a0123"
+    },
+    "completion.py": {
+      "bytes": 5022,
+      "sha256": "7debe38b0936add26c663f053fa7ef19649a93b9a717194652911b6d0bdcda72"
+    },
+    "coverage_data/data/inputs256/v2m_05179_g0_gd.png": {
+      "bytes": 34305,
+      "sha256": "55f1ded5272676f503927a29367a3a7217f06e2dc3c08d7d94030cf6c0270392"
+    },
+    "coverage_data/data/inputs256/v2m_05179_g2_rid.png": {
+      "bytes": 75071,
+      "sha256": "25926863cf107a9ece9aabf8cef510f8013b058701d735a8cfdf57e13874a15c"
+    },
+    "coverage_data/data/inputs256/v2m_05302_g1_gd.png": {
+      "bytes": 41621,
+      "sha256": "49071e69e4f63316e53b1bf6049ffecccd9c3f0db28a9c68b9ab9be304e44c8a"
+    },
+    "coverage_data/data/inputs256/v2m_05302_g3_rid.png": {
+      "bytes": 74801,
+      "sha256": "8468c03194401639ae3c1cd017995d543767bf167b3f7b1bcf5f7574a25c998f"
+    },
+    "coverage_data/data/inputs256/v2m_06781_g0_rid.png": {
+      "bytes": 74271,
+      "sha256": "2c5189930d383d6813334c3eed93594ac8f72c66db78ccba4fe503b42ea1e446"
+    },
+    "coverage_data/data/inputs256/v2m_06781_g2_gd.png": {
+      "bytes": 39352,
+      "sha256": "a9b7beba2ff30138f20b9f89a40d1b8cdd93bb710b235b872065254e8d637f8f"
+    },
+    "coverage_data/data/inputs256/v2m_06809_g1_rid.png": {
+      "bytes": 70931,
+      "sha256": "73d67de52ae689b21f1fe6f5129fcf17744a060d09944e3f00d9ed4006fa6fdd"
+    },
+    "coverage_data/data/inputs256/v2m_06809_g3_gd.png": {
+      "bytes": 36997,
+      "sha256": "7fa86f45942835c4e56efbaf9907aaf7e48146001272961a0ef7594365ada7b6"
+    },
+    "coverage_data/data/inputs256/v2m_06995_g0_gd.png": {
+      "bytes": 38910,
+      "sha256": "6a1c918099bb2f2072e14680bd86e9f1e3daa40886b67d723e9c24049c222681"
+    },
+    "coverage_data/data/inputs256/v2m_06995_g2_rid.png": {
+      "bytes": 79509,
+      "sha256": "9b5ca1177e1b88b4aeeb0eb06ba2b929cd7646bb1a5ece2fb5fd12f9a7a9df20"
+    },
+    "coverage_data/data/inputs256/v2m_07087_g1_gd.png": {
+      "bytes": 37597,
+      "sha256": "582e4a9c6260783077bb23fc6cfe77f6520268326ef6df392e5c594c09b2130e"
+    },
+    "coverage_data/data/inputs256/v2m_07087_g3_rid.png": {
+      "bytes": 77675,
+      "sha256": "105dc1432a5a415c23674cb3e276efb67e721d64e9ec14129710c49ab8c5c649"
+    },
+    "coverage_data/data/inputs256/v2m_07202_g0_rid.png": {
+      "bytes": 69181,
+      "sha256": "e5aa000a7bdd987e375487fab1a21b9a355b735c0d3fb6ee11827bed83db0fc6"
+    },
+    "coverage_data/data/inputs256/v2m_07202_g2_gd.png": {
+      "bytes": 37585,
+      "sha256": "37e44f7d0674366c5bd69131837916fbaeb0faea9abc31c3ffeb9de2230af03a"
+    },
+    "coverage_data/data/inputs256/v2m_07386_g1_rid.png": {
+      "bytes": 85518,
+      "sha256": "9db92410a6a6f7328eed022a89dc8c14785d2ee2588096d594727a3f7415f5b5"
+    },
+    "coverage_data/data/inputs256/v2m_07386_g3_gd.png": {
+      "bytes": 49079,
+      "sha256": "ce75188335f2bbd9848afc5bfee1b478e4864172fdc410b8965ddc97f40aff23"
+    },
+    "coverage_data/data/masks_irregular/v2m_05179_g2_rid.png": {
+      "bytes": 417,
+      "sha256": "016d15c512ca71ced4e9dfd0e376dea45231a274f7a7ace0c2a243c11e0bc437"
+    },
+    "coverage_data/data/masks_irregular/v2m_05302_g3_rid.png": {
+      "bytes": 439,
+      "sha256": "bed329d877d324ed4008d4be8fecd803e6442206cb2cd9490a7e86f5c6b504eb"
+    },
+    "coverage_data/data/masks_irregular/v2m_06781_g0_rid.png": {
+      "bytes": 726,
+      "sha256": "4ae03948e34c0f85908e4d1d246d86f9fab9da0daa5572007ad47eac3b2e99ea"
+    },
+    "coverage_data/data/masks_irregular/v2m_06809_g1_rid.png": {
+      "bytes": 522,
+      "sha256": "72407565b168b53cf5582fda79b025c8f2a78dd93422dee19bd0f44526ba45ff"
+    },
+    "coverage_data/data/masks_irregular/v2m_06995_g2_rid.png": {
+      "bytes": 407,
+      "sha256": "daf5f75ee43242de6b26e4eaf235b5098a26fe9ea3ee2e86ce9cb661364ab368"
+    },
+    "coverage_data/data/masks_irregular/v2m_07087_g3_rid.png": {
+      "bytes": 445,
+      "sha256": "f6f507aa20e96c00213f767cdbef323d18929c2e494da27c1db7fa59913e81af"
+    },
+    "coverage_data/data/masks_irregular/v2m_07202_g0_rid.png": {
+      "bytes": 596,
+      "sha256": "1bf57bd9681ee7d00e9fc92ccb01ab7304e4ef75bd10ec5d8f47034ae389ceb8"
+    },
+    "coverage_data/data/masks_irregular/v2m_07386_g1_rid.png": {
+      "bytes": 532,
+      "sha256": "136fa3717c2170bb81724a1f2b7eb2671705faf71cc739a1adca1998b10f6349"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_00084__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_00084__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_00178__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_00178__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05179__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05179__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05179__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05179__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05302__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05302__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05302__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_05302__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06781__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06781__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06781__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06781__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06809__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06809__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06809__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06809__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06995__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06995__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06995__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_06995__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07087__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07087__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07087__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07087__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07202__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07202__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07202__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07202__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07386__cheek_object.png": {
+      "bytes": 418,
+      "sha256": "821a11f34d73aee1f783e0503a9d9b4b02b6175ecf472dd6edc91326bc1c9659"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07386__eye_band.png": {
+      "bytes": 245,
+      "sha256": "4e44258d00a6a467ae49413dc6e26a3ccc10dbf46601093e55b93f1cd2dbe154"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07386__image_left_lens.png": {
+      "bytes": 365,
+      "sha256": "65975084a358516d5b68c18dfc44951c21c5357897b6b6490a91eeef12330265"
+    },
+    "coverage_data/data/masks_original/tr_ffhq_07386__lower_face.png": {
+      "bytes": 471,
+      "sha256": "a060d5831f8a2547057f39ba6dc6468e7efc84ab97a89ceac779066482b7671c"
+    },
+    "coverage_data/data/t256/tr_ffhq_00084_rgb.png": {
+      "bytes": 110325,
+      "sha256": "0cfe95966113c9dbc43bbaee4fef50afddfaf20e7c81dcfcc8070f984bc70f36"
+    },
+    "coverage_data/data/t256/tr_ffhq_00178_rgb.png": {
+      "bytes": 109334,
+      "sha256": "d419ad0f909772a14280048e1196514c9b82d7d60fab4839b559e93ddab7b3f3"
+    },
+    "coverage_data/data/t256/tr_ffhq_05179_gray.png": {
+      "bytes": 51243,
+      "sha256": "9a561bff9bbd10a034806b5e92476a625dd3f4dc1ab833ab0659ad8e217082ad"
+    },
+    "coverage_data/data/t256/tr_ffhq_05179_rgb.png": {
+      "bytes": 105725,
+      "sha256": "319e293325cf3844e1ae7f277e4a0bee27d400616170903a71e04bf8efaa75f1"
+    },
+    "coverage_data/data/t256/tr_ffhq_05302_gray.png": {
+      "bytes": 58641,
+      "sha256": "bcf28395393caa2acb2c0188f9cdfd6745a9d4b7c96a0470645833dba966c517"
+    },
+    "coverage_data/data/t256/tr_ffhq_05302_rgb.png": {
+      "bytes": 108844,
+      "sha256": "f756ce24492eb486e256ddf7d46c667a5f4d8a9580c3e2cced39f7c99015c641"
+    },
+    "coverage_data/data/t256/tr_ffhq_06781_gray.png": {
+      "bytes": 61757,
+      "sha256": "b8a5f959876799951ce52a296a3a7113d06c4f8197c1dbfa3703cc7160684846"
+    },
+    "coverage_data/data/t256/tr_ffhq_06781_rgb.png": {
+      "bytes": 118078,
+      "sha256": "a47aa336d834ca1b1556a8c355943a0f107615a61d5f5ceccd0593cb362c85c3"
+    },
+    "coverage_data/data/t256/tr_ffhq_06809_gray.png": {
+      "bytes": 50282,
+      "sha256": "edadd714e53e15b948d503a76be6e3cdc8b5cd08caf4411383889e393e3934b8"
+    },
+    "coverage_data/data/t256/tr_ffhq_06809_rgb.png": {
+      "bytes": 105991,
+      "sha256": "551ca6924fb869f6a467da05dd4198fc35dfa2f24b839790c8122de81216c3d5"
+    },
+    "coverage_data/data/t256/tr_ffhq_06995_gray.png": {
+      "bytes": 51905,
+      "sha256": "d4818b5185d181860c8962c0b70ec03dc2a26768ac1edb37dad86392c5c8038d"
+    },
+    "coverage_data/data/t256/tr_ffhq_06995_rgb.png": {
+      "bytes": 93430,
+      "sha256": "a9a1dba0c01a991367bb5fa7f2f7948b5a81b48caee7bd97fd740b367eaccb32"
+    },
+    "coverage_data/data/t256/tr_ffhq_07087_gray.png": {
+      "bytes": 52287,
+      "sha256": "96e724732ee4026efc917117ff6dff44c803f0fd09239030902259d6d8921af5"
+    },
+    "coverage_data/data/t256/tr_ffhq_07087_rgb.png": {
+      "bytes": 103453,
+      "sha256": "46ab28d83b1e650ef1400f2c62e6f84f56aa863ff1dcf7dfdc61860c0d5abe69"
+    },
+    "coverage_data/data/t256/tr_ffhq_07202_gray.png": {
+      "bytes": 49226,
+      "sha256": "d90600195d78b8c9b2ee5761e6c24f02a7b5ef9fa9f874398344fa9e6815070b"
+    },
+    "coverage_data/data/t256/tr_ffhq_07202_rgb.png": {
+      "bytes": 94484,
+      "sha256": "f3412a8c6bf8efd96a68ab2228a550ff7080e797fee399346e10cc9a7abdbc03"
+    },
+    "coverage_data/data/t256/tr_ffhq_07386_gray.png": {
+      "bytes": 70472,
+      "sha256": "27b9a42dcc80e3a464e09cd45bfd15d27146d90f47dce084ce397d126a8eec22"
+    },
+    "coverage_data/data/t256/tr_ffhq_07386_rgb.png": {
+      "bytes": 131597,
+      "sha256": "d9414f2017b99711a245d02aee4fdb88822afb1e4b3dfdb51f57cde3a9804bb6"
+    },
+    "coverage_data/data/t512/tr_ffhq_00084_rgb.png": {
+      "bytes": 388395,
+      "sha256": "863f26a7ddf4f888497aee838e75799cda6e4cd20a920dd0a498f3ed5c7e46aa"
+    },
+    "coverage_data/data/t512/tr_ffhq_00178_rgb.png": {
+      "bytes": 386563,
+      "sha256": "508dc4cc328efc3cc253845240faa25464080e2b4dbc747cdf53acf8009c20db"
+    },
+    "coverage_data/data/t512/tr_ffhq_05179_gray.png": {
+      "bytes": 184326,
+      "sha256": "656ae49f78e0e2749dda4ef7e2a18f593ddb136ae913d718a9165fe7e6ba3a37"
+    },
+    "coverage_data/data/t512/tr_ffhq_05179_rgb.png": {
+      "bytes": 391338,
+      "sha256": "61239889027e5c3ff4cf8f0fa08e79850d9a84babbf3581850501ded3c814535"
+    },
+    "coverage_data/data/t512/tr_ffhq_05302_gray.png": {
+      "bytes": 210226,
+      "sha256": "4281ef3d7011c4bcd27fee62de7ff59856d02209a314e534152630fdfb29f4cd"
+    },
+    "coverage_data/data/t512/tr_ffhq_05302_rgb.png": {
+      "bytes": 409394,
+      "sha256": "cc16fa9943e19f94a062a0367bc50b2cc0363ffd77babd6c095b00e3d9a26df5"
+    },
+    "coverage_data/data/t512/tr_ffhq_06781_gray.png": {
+      "bytes": 200442,
+      "sha256": "fd7d7fccb979b2acb761a9328237ae371090673f574e23b2b1b7333b7bf18eee"
+    },
+    "coverage_data/data/t512/tr_ffhq_06781_rgb.png": {
+      "bytes": 420726,
+      "sha256": "448083858da58b88e8559bd2043b580a3cf407f1acd4d87edf3a25763de57457"
+    },
+    "coverage_data/data/t512/tr_ffhq_06809_gray.png": {
+      "bytes": 174933,
+      "sha256": "a3000b19690dac7df6cfee5f6de9a17ad4777e59fa1c46b318a639057ddfd510"
+    },
+    "coverage_data/data/t512/tr_ffhq_06809_rgb.png": {
+      "bytes": 399847,
+      "sha256": "9b81565aada35a41b6e392c243af76050081e2a6cce6c59e134b1552d5d851d6"
+    },
+    "coverage_data/data/t512/tr_ffhq_06995_gray.png": {
+      "bytes": 175904,
+      "sha256": "920dfafb12d1241ffa2622949500fd43ea9334ddbcf95a41249459dc438bad42"
+    },
+    "coverage_data/data/t512/tr_ffhq_06995_rgb.png": {
+      "bytes": 327639,
+      "sha256": "4746c329b77323292c20ee4c721b8deb91178f3ff279143fc0ed0ab733977131"
+    },
+    "coverage_data/data/t512/tr_ffhq_07087_gray.png": {
+      "bytes": 184024,
+      "sha256": "6a6686c41ea2bdbdd90b4d415eed7767347ae30d47d805f4f21f193211d028e2"
+    },
+    "coverage_data/data/t512/tr_ffhq_07087_rgb.png": {
+      "bytes": 389531,
+      "sha256": "44e9d02f17060a367c7f5dfe5494927f8197545c02985b7dcda11655d1f88c3b"
+    },
+    "coverage_data/data/t512/tr_ffhq_07202_gray.png": {
+      "bytes": 177514,
+      "sha256": "da470a9d182261d4d30d8bff3038f30e9a6af62b9e9281b3a30e84bae56e9ec4"
+    },
+    "coverage_data/data/t512/tr_ffhq_07202_rgb.png": {
+      "bytes": 348222,
+      "sha256": "e8d060447d778f456d00365d33b9c29c1ebbd6ed27ef344d075feec273c1c195"
+    },
+    "coverage_data/data/t512/tr_ffhq_07386_gray.png": {
+      "bytes": 221859,
+      "sha256": "683b1f9f401524f8f7ff670cd75436512e27be845f9ae0aa446d33a0fc12ac33"
+    },
+    "coverage_data/data/t512/tr_ffhq_07386_rgb.png": {
+      "bytes": 458323,
+      "sha256": "0fd5c4ed96a36b9f5e545c286719d2c77cd283597cfdd4acbdaa081620257f7d"
+    },
+    "evidence/actual_original_probe_transport.json": {
+      "bytes": 91048,
+      "sha256": "ee4980dcd22a04f4315d7369a16c6fb2ce8ad8704532f6e1b284d35a45d24fa4"
+    },
+    "evidence/author_alias_revalidation_fixtures.json": {
+      "bytes": 2539,
+      "sha256": "adaccc239f58093baad2dfb8e99b3a7ac1c47c8f5aefdb1fb7f689b96483cf74"
+    },
+    "evidence/author_transport_fixtures.json": {
+      "bytes": 6237,
+      "sha256": "8994e680f9b03e6886d6a74bcacfa4f02c623d25c7ff72314cf1e674ec9cdb2b"
+    },
+    "evidence/current_instructions/FACE_MASK_COMPLETION_SPEC_V1.md": {
+      "bytes": 24816,
+      "sha256": "6b31a07f08d92fa41b10e51af7d56dd14ce3ad89f8ed23bdde4a4c3dc8a917af"
+    },
+    "evidence/current_instructions/PRACTICAL_OUTPUT_SCOPE.md": {
+      "bytes": 518647,
+      "sha256": "38cc0ad0ffeb5e366048758a05d8fbd69432f9e893475016338df520f88f6609"
+    },
+    "evidence/current_instructions/PROJECT_HANDOFF.md": {
+      "bytes": 1163645,
+      "sha256": "1f33c386bc9a009ef80f4e14a5af207f722722e7c6c80ec722fcb1bacd4f8fd0"
+    },
+    "evidence/current_instructions/SYSTEM_WORKFLOW_AND_GOAL.md": {
+      "bytes": 585756,
+      "sha256": "237fd7a414a89c46719b1644cb535835548aa94b90778a64213a63d6471f2ed6"
+    },
+    "evidence/development/source_preparation_tests.json": {
+      "bytes": 1833,
+      "sha256": "3dbdb9943d916fb8e5e9e7acf7c2393fcb8c4f8debd78053ac7b16cad5a39ec1"
+    },
+    "evidence/development/source_tests.py": {
+      "bytes": 18506,
+      "sha256": "2e51900870191b90708d6ca289cb73785af2be55b0811b36ef6dee46bf83b2df"
+    },
+    "evidence/formal_design_admission.json": {
+      "bytes": 3067,
+      "sha256": "4f6ea7134e9c8628efb7deae4ca5dc137b35dc9f1d0471c796c8aa03692e63b5"
+    },
+    "evidence/independent_alias_revalidation_fixture.json": {
+      "bytes": 1161,
+      "sha256": "fb98877b30ed1cda7b60858cedbe16bea7f84d7353e74e33a51bcf6c7af78f51"
+    },
+    "evidence/oracle_label_index.json": {
+      "bytes": 47261,
+      "sha256": "0567a9ad54e6397390341a8dfc1ffa8ec50ceb9159da299605fee021ec678a69"
+    },
+    "evidence/original_R1_protocol.json": {
+      "bytes": 183925,
+      "sha256": "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d"
+    },
+    "evidence/original_probe_protocol.json": {
+      "bytes": 196800,
+      "sha256": "51782b57fca9ad9cf7161b0f4451a65e545e3eb2f8f58788fa40b64aec48d1ec"
+    },
+    "evidence/original_source_admission.json": {
+      "bytes": 10356,
+      "sha256": "188e54fd998ad97e9bef84607b8e92643f555565bce5a5c64c4a7a759f2c61ab"
+    },
+    "evidence/parent_saved_output_audit.json": {
+      "bytes": 232984,
+      "sha256": "ab4bd40838e33bce240d28265ca727c4ac52e96e0b78ff8ad5abc67854b5b65e"
+    },
+    "evidence/parent_state_audit.json": {
+      "bytes": 414910,
+      "sha256": "e920c3ddd9b8a85b50fd6f324bde8760c13c6df805f6be61d1e4393472d59b06"
+    },
+    "evidence/pre_release_clarifications.json": {
+      "bytes": 5043,
+      "sha256": "98c3521e5e7e0043479862923d03cc21c9b6b7c2e5371a0ffcd292d919ca1d78"
+    },
+    "evidence/readable_design.md": {
+      "bytes": 4129,
+      "sha256": "6a03cc0ff96501b842606cae878bae00eabb8d5e44d0b90f74ba7bc0bac61c81"
+    },
+    "evidence/root_design.json": {
+      "bytes": 243979,
+      "sha256": "1983f9fed9bede2078ffc6a1af0dd6ca08fe6ec532e5c3de9c4ce41d4db2c657"
+    },
+    "evidence/root_design_FIT_CE_allocation.json": {
+      "bytes": 433346,
+      "sha256": "052e200d0ac652c2b6a4f5afa88bf7f563860ec6f8668944221542d5adfc2f11"
+    },
+    "evidence/root_design_R1_source_admission.json": {
+      "bytes": 6247,
+      "sha256": "7370ff282df6570823deb4e45a3afb4fca3c462356f43796f17fe73f2288eb28"
+    },
+    "evidence/root_design_actual_current_return_milestone.json": {
+      "bytes": 9746,
+      "sha256": "181b00064b9e3c4862095d651c8298a2e3f00b75d6c8f8c2071c8806a0c0c1d9"
+    },
+    "evidence/root_design_current_actual_results_report.md": {
+      "bytes": 7533,
+      "sha256": "85f1aef910241b3d91a3f8ca29740d37dabb4585ce6acf949ab4d231452d0aa0"
+    },
+    "evidence/root_design_current_independent_pixels.json": {
+      "bytes": 816009,
+      "sha256": "d1c93643925154fbcdb6310614ebb507b51ddc66d54d649b3b3c03774d1496e0"
+    },
+    "evidence/root_design_current_independent_return_closure.json": {
+      "bytes": 6288,
+      "sha256": "f28bfdd6b9f9ba66bba80e10e92d7321709bcd05fb05333e0b5c855f02398af9"
+    },
+    "evidence/root_design_current_root_all20_visual.json": {
+      "bytes": 22356,
+      "sha256": "58cd3c91c39754bc216d1bd924a498ec64f107188f8cc447c7cb095ffd569595"
+    },
+    "evidence/root_design_current_root_code_geometry.json": {
+      "bytes": 554737,
+      "sha256": "647bfa63a9f7aaa62d18cc7e494a5bba5ccf5468d224e3293d5370a469a7fca8"
+    },
+    "evidence/root_design_current_state_Adam_CE.json": {
+      "bytes": 430616,
+      "sha256": "281d966d28f49ca0001f33d78b567c7696a183a2db2946ed3e31f818a00ae88e"
+    },
+    "evidence/root_design_independent_scientific_admission.json": {
+      "bytes": 2548,
+      "sha256": "c649ca67f757942e214b9fb806717257b6af694aa3b11e62f926ec1942761305"
+    },
+    "evidence/root_design_independent_scientific_review.md": {
+      "bytes": 10050,
+      "sha256": "c8e7f78ce4f9ab7f584d204060ea57b038134e46f2a3db1753954ef6643c2a34"
+    },
+    "evidence/root_design_retained_oracle_actual_pixel_audit.json": {
+      "bytes": 748984,
+      "sha256": "4f5042edc19496bd3dee515dc052928c03e4f6d9e12b246efdcca4262a54d02f"
+    },
+    "evidence/root_design_retained_oracle_actual_protocol.json": {
+      "bytes": 196800,
+      "sha256": "51782b57fca9ad9cf7161b0f4451a65e545e3eb2f8f58788fa40b64aec48d1ec"
+    },
+    "evidence/root_design_retained_oracle_actual_state_audit.json": {
+      "bytes": 93257,
+      "sha256": "794fed73804eabfa081805cdd0d3db3dda89d5a1fbd6138df725b6b404ad922d"
+    },
+    "evidence/root_design_retained_oracle_actual_transport.json": {
+      "bytes": 91048,
+      "sha256": "ee4980dcd22a04f4315d7369a16c6fb2ce8ad8704532f6e1b284d35a45d24fa4"
+    },
+    "evidence/root_installer_fixtures.json": {
+      "bytes": 6827,
+      "sha256": "610177441433cbb5f282c8264d35a0b63696e13b72cb4c3bcb627eb2c6b58e6e"
+    },
+    "face_workflow.py": {
+      "bytes": 13648,
+      "sha256": "ed043f9819e4655c297f092037af156cbfa9e32506f6b15cca0c5d5dfe4cacd1"
+    },
+    "legal/LICENSE": {
+      "bytes": 1751,
+      "sha256": "4122e9944900d9e23b8622b829f4343384fbb6e0667b39e4cf474b5d88a185dd"
+    },
+    "legal/NOTICE.md": {
+      "bytes": 988,
+      "sha256": "6e06e1c0fa1dd295b54c5169d3e8b57859b3c58e2f201788992185f044c9349a"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05179_gray.npz": {
+      "bytes": 243917,
+      "sha256": "42e79e420de89ddb01d128a0d3a1c4c924e53f72cac658c8442c165bb0595db6"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05179_rgb.npz": {
+      "bytes": 243504,
+      "sha256": "604fbfb4379ea640f2ad723ed2f87972d40223685d4f0ddb10eadcc1e16337c6"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05302_gray.npz": {
+      "bytes": 243696,
+      "sha256": "2ec7726d0ef3a1c59b22124e0a50172f37952b0cd79de97797fd3d1426649ba6"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_05302_rgb.npz": {
+      "bytes": 243810,
+      "sha256": "0b2b5484e6af870adaf3dc460fcd83748af596e8180797990b4dcab37b88078b"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06781_gray.npz": {
+      "bytes": 243560,
+      "sha256": "cc219b8925f60cc73447c9b79eaa2101f2b7d7cf07101b30c2106999ecfb39f3"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06781_rgb.npz": {
+      "bytes": 243715,
+      "sha256": "b914b175ec0759234df5a000ca36a768a7bd66624e6fa15dfde802c303398cd5"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06809_gray.npz": {
+      "bytes": 244091,
+      "sha256": "240f00aee0a8d6f9766fc1eecc9087b3cc777e5098135e540c5b887c785eca74"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06809_rgb.npz": {
+      "bytes": 243965,
+      "sha256": "e0a3ec9f19811be850320e1108b3ac289a81956d16c1848f933a6ecf9b99ebe6"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06995_gray.npz": {
+      "bytes": 244046,
+      "sha256": "54f0f189ee9c8e6122601d66278f5ea8c10fccd93d7cbe253ef783e00350f420"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_06995_rgb.npz": {
+      "bytes": 243971,
+      "sha256": "e050166a020f795721d2916b346486a4231464e53078827056130ebb6a3af2e3"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07087_gray.npz": {
+      "bytes": 243957,
+      "sha256": "d5251d1f3167c04bf3b821c7f76b6bb95a6cb68e095e0a07cd8faf0c19d0ffb6"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07087_rgb.npz": {
+      "bytes": 243892,
+      "sha256": "88dd399cc2c50cbd0b22817d71403c38d60fe59ac12554f3dac4def25aad5c66"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07202_gray.npz": {
+      "bytes": 243743,
+      "sha256": "c5ef46665ff09d96484cb744575f2466d80d490337cc3d22edd996f685807a49"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07202_rgb.npz": {
+      "bytes": 243707,
+      "sha256": "6e06e2ee9f9f024e79df8c3b50cb6f43bfc4c09182fcc1e3c5fa1560648972e6"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07386_gray.npz": {
+      "bytes": 244089,
+      "sha256": "9e66c08bf636c72c9d0ea75bd013188b95667f8875c9f7e740384734c51d5b2f"
+    },
+    "oracle_labels/ORACLE_unavailable_clean_information/tr_ffhq_07386_rgb.npz": {
+      "bytes": 244141,
+      "sha256": "d6b71cc53ed95d257c9752ef7d2e004346833bd98892fe30d16557d3761500ad"
+    },
+    "pretrained_completion.py": {
+      "bytes": 3559,
+      "sha256": "29f2d03d692d762d1d9b39c9747e7becf30a14399651e8c419de2a5b39cae9ce"
+    },
+    "research/completion_codeformer_spatial_code_intervention_v1/app_delivery.py": {
+      "bytes": 1077,
+      "sha256": "cebdf6b36bc06edd51a1d42bb7cd97b91b58c5628280d050e40eba1280f3393e"
+    },
+    "research/completion_codeformer_spatial_code_intervention_v1/contracts.py": {
+      "bytes": 7437,
+      "sha256": "364e467c58381ed8d54bdec7c604b8690a57bf34d42873edfc2c554d7758cf97"
+    },
+    "research/completion_codeformer_spatial_code_intervention_v1/optimized_budget.py": {
+      "bytes": 9970,
+      "sha256": "35ee233b175bd948e38045bfd1c1d67aab062a011d21203ba1e180d7b414511b"
+    },
+    "research/completion_codeformer_spatial_code_intervention_v1/probe_forward.py": {
+      "bytes": 3446,
+      "sha256": "27c5c7a0d21464efedcca7fd8449fd45c2a0610f2ccb24ec00a8bfc8c8b29100"
+    },
+    "scripts/cctv_completion_codeformer_spatial_code_intervention_v1_vm.py": {
+      "bytes": 52567,
+      "sha256": "ffe76c1cf2c0329c8b719687be21db4d775081f9df47d4369137a84bd1dab411"
+    },
+    "scripts/export_completion_codeformer_spatial_code_intervention_v1.py": {
+      "bytes": 16848,
+      "sha256": "fd7b7bf5879c3c785d65c9f0ce0884811d11a28c22e16eb084b348f2f96711b5"
+    },
+    "scripts/prepare_completion_codeformer_spatial_code_intervention_v1.py": {
+      "bytes": 35820,
+      "sha256": "ec6e9cd68579f4b1395794c505a344c5aad0065de4d8ae70fe5efe9e14640c75"
+    },
+    "scripts/run_completion_codeformer_spatial_code_intervention_v1.sh": {
+      "bytes": 919,
+      "sha256": "e5830c0e72ed4e3abbeb33cbb5c9f9433fe603f72e6d59904b16d03007b28a7c"
+    },
+    "third_party/__init__.py": {
+      "bytes": 51,
+      "sha256": "22387ba5f42e539104f611c22b709e7e8fee3633d0b48dfa47fd7be8c8b79c07"
+    },
+    "third_party/codeformer/__init__.py": {
+      "bytes": 74,
+      "sha256": "e02b6c974f00a7fe9d54a8a22dfdf17e59936aca65608521dfb523018dc61c66"
+    },
+    "third_party/codeformer/codeformer_arch.py": {
+      "bytes": 11377,
+      "sha256": "ee9758522173b72fc1f292df825b9a32179aebfd96142ececf9aa68f6e12e9eb"
+    },
+    "third_party/codeformer/registry.py": {
+      "bytes": 2267,
+      "sha256": "bbc3507148101bb202e8f52f5cca75d2cc21d780def757c055d82cb8e6bd594e"
+    },
+    "third_party/codeformer/vqgan_arch.py": {
+      "bytes": 15855,
+      "sha256": "b47033f66b4a8434e0f04d4df8a69a7ac4b6c5bdf52f5b74912371dff0a20eaf"
+    }
+  },
+  "manual_packet_ready": true,
+  "actual_VM_execution_verified": false,
+  "new_model_created": false,
+  "model_qualified": false,
+  "runtime_semantics_certified_by_other_independent_agent": true,
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "model_construction": false,
+  "actual_training_calls": 0
+}

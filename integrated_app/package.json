@@ -1,0 +1,9 @@
+{
+  "name": "forensic-dgp-implementation",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Focused JavaScript checks for the local implementation interface.",
+  "scripts": {
+    "test": "node --test tests/capture_geometry.test.cjs tests/capture_playback.test.cjs tests/capture_return.test.cjs"
+  }
+}

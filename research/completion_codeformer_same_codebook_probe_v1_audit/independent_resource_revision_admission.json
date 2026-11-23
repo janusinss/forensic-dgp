@@ -1,0 +1,75 @@
+{
+  "format": "independent-same-codebook-resource-revision-r1-admission-v1",
+  "complete": true,
+  "independent": true,
+  "audited_UTC": "2026-10-26T13:36:09.253271+00:00",
+  "original_design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_same_codebook_design_v1\\root_design_initial_1GiB_before_capacity_review.json",
+    "bytes": 20989,
+    "sha256": "98ada9f9b56b318dd2aea82931388460ec40fa2bf84631f9ed7c39ffa4061b6a"
+  },
+  "initial_scientific_admission": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_same_codebook_probe_v1_audit\\independent_design_admission.json",
+    "bytes": 18286,
+    "sha256": "148b5cce56a1ba71b71f5c4e5ad4cfb6e1b78f2df0ef40f6f6e587a89e01821f"
+  },
+  "revised_controlling_design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_same_codebook_design_v1\\root_design.json",
+    "bytes": 22031,
+    "sha256": "2ca6fafbaf2a3008459dace2d83bfc0cecb6594ae6e33adc7ac4aaef5bd0effb"
+  },
+  "resource_transition": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_same_codebook_design_v1\\resource_revision_r1.json",
+    "bytes": 778,
+    "sha256": "b5209566c0529732a4e49b824bde517bc81317046928fa05dbdcbc452265ca10"
+  },
+  "only_future_capacity_and_provenance_changed": true,
+  "all_scientific_data_arms_counts_parity_state_and_decision_rules_unchanged": true,
+  "all_executed_historical_limits_unchanged": true,
+  "prospective_counts": {
+    "cases": 48,
+    "arms": 4,
+    "full_outputs": 192,
+    "full_parity_bundles": 4,
+    "whole_forwards": 200,
+    "hard_forward_cap": 220,
+    "optimizers": 0,
+    "gradients": 0
+  },
+  "conservative_format_budget": {
+    "eval_tensor_payload": 957087744,
+    "full_parity_tensor_payload": 60833792,
+    "all_tensor_payload": 1017921536,
+    "NPY_ZIP_container_allowance": 4014080,
+    "NPZ_deflate_expansion_allowance_1percent": 10179216,
+    "NPZ_total_bound": 1032114832,
+    "PNG192_at256KiB": 50331648,
+    "metadata8MiB_plus_log4MiB": 12582912,
+    "protocol_allowance2MiB": 2097152,
+    "raw_outputs_bound": 1097126544,
+    "tar_header_padding_allowance_for1000members": 4106240,
+    "raw_tar_bound": 1101232784,
+    "gzip_1percent_expansion_plus64KiB_bound": 1112310648,
+    "perartifact_cap": 1610612736,
+    "minimum_headroom": 498302088
+  },
+  "mandatory_source_release_conditions": [
+    "At most196NPZ files/10arrays perNPZ with fixed numeric shape/dtype schemas; exact raw/fullparity arrays retained.",
+    "NPY headers <=512B and bounded member names; no custom comments/unbounded ZIP metadata.2KiB perarray container allowance and1percent compression expansion must be validated for chosen NumPy writer.",
+    "At most1000 returned regular members with bounded relative paths;4KiB tar/PAX/padding allowance perfile.",
+    "Only protocol/supervisor/log/outputs are exported; source packets and teacher-label assets are not duplicated into outputs.",
+    "Raw tar is streamed; final gzip partial publication is a same-inode hardlink, not a second payload copy.",
+    "Keep hard1536MiB percategory caps and seven/twoGiB free-space guards; retain all partial evidence on any stop.",
+    "Independent final exact packet/source/format namespace audit must bind these assumptions before release."
+  ],
+  "disk_span": {
+    "free_between_start_and_floor_bytes": 5368709120,
+    "raw_plus_compressed_at_caps_bytes": 3221225472,
+    "remaining_for_packet_install_and_otheroverhead_bytes": 2147483648
+  },
+  "decision": "ADMIT_REVISED_DESIGN_FOR_SOURCE_PREPARATION_WITH_FINAL_FORMAT_BINDING_REQUIRED",
+  "runtime_or_packet_admitted": false,
+  "actual_neural_VM_optimizer_gradient_calls": 0,
+  "ready_to_upload": false,
+  "model_qualified": false
+}

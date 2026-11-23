@@ -1,0 +1,429 @@
+{
+  "format": "independent-same-codebook-zero-optimizer-prospective-design-admission-v1",
+  "complete": true,
+  "independent": true,
+  "created_UTC": "2026-10-26T13:32:57.825204+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_same_codebook_probe_v1_audit\\admit_design.py",
+    "bytes": 9757,
+    "sha256": "603327866ccf2ea287ccb5aea0c2007e710012dd0246597729f0b7ec81992fa0"
+  },
+  "design": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_v4_same_codebook_design_v1\\root_design.json",
+    "bytes": 20989,
+    "sha256": "98ada9f9b56b318dd2aea82931388460ec40fa2bf84631f9ed7c39ffa4061b6a"
+  },
+  "checks": [
+    "Controlling same-codebook design exact",
+    "Design only, manual and unqualified",
+    "Current exact evidence V4_state",
+    "Current exact evidence V4_pixels",
+    "Current exact evidence V4_visual",
+    "Current exact evidence V4_report",
+    "Current exact evidence independent_representation_review",
+    "Current exact evidence HQ512_not_dropin",
+    "Current exact evidence local_architecture",
+    "Exact full working R1",
+    "No model state, optimizer, gradient or teacher generation changes",
+    "All48 fixed cases in unchanged order",
+    "Paired adaptive TRAIN diagnostic only",
+    "Only original same-codebook labels, no regeneration",
+    "Retained teacher index exact",
+    "Original retained index cardinality",
+    "Exactly16 required reused target labels",
+    "Retained exact label tr_ffhq_05179::GRAY",
+    "Label original source/prior binding tr_ffhq_05179::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_05179::GRAY",
+    "Safe retained label arrays tr_ffhq_05179::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_05179::GRAY",
+    "Retained exact label tr_ffhq_05179::RGB",
+    "Label original source/prior binding tr_ffhq_05179::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_05179::RGB",
+    "Safe retained label arrays tr_ffhq_05179::RGB",
+    "Case targetstyle/source label matches tr_ffhq_05179::RGB",
+    "Retained exact label tr_ffhq_05302::GRAY",
+    "Label original source/prior binding tr_ffhq_05302::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_05302::GRAY",
+    "Safe retained label arrays tr_ffhq_05302::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_05302::GRAY",
+    "Retained exact label tr_ffhq_05302::RGB",
+    "Label original source/prior binding tr_ffhq_05302::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_05302::RGB",
+    "Safe retained label arrays tr_ffhq_05302::RGB",
+    "Case targetstyle/source label matches tr_ffhq_05302::RGB",
+    "Retained exact label tr_ffhq_06781::GRAY",
+    "Label original source/prior binding tr_ffhq_06781::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_06781::GRAY",
+    "Safe retained label arrays tr_ffhq_06781::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_06781::GRAY",
+    "Retained exact label tr_ffhq_06781::RGB",
+    "Label original source/prior binding tr_ffhq_06781::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_06781::RGB",
+    "Safe retained label arrays tr_ffhq_06781::RGB",
+    "Case targetstyle/source label matches tr_ffhq_06781::RGB",
+    "Retained exact label tr_ffhq_06809::GRAY",
+    "Label original source/prior binding tr_ffhq_06809::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_06809::GRAY",
+    "Safe retained label arrays tr_ffhq_06809::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_06809::GRAY",
+    "Retained exact label tr_ffhq_06809::RGB",
+    "Label original source/prior binding tr_ffhq_06809::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_06809::RGB",
+    "Safe retained label arrays tr_ffhq_06809::RGB",
+    "Case targetstyle/source label matches tr_ffhq_06809::RGB",
+    "Retained exact label tr_ffhq_06995::GRAY",
+    "Label original source/prior binding tr_ffhq_06995::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_06995::GRAY",
+    "Safe retained label arrays tr_ffhq_06995::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_06995::GRAY",
+    "Retained exact label tr_ffhq_06995::RGB",
+    "Label original source/prior binding tr_ffhq_06995::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_06995::RGB",
+    "Safe retained label arrays tr_ffhq_06995::RGB",
+    "Case targetstyle/source label matches tr_ffhq_06995::RGB",
+    "Retained exact label tr_ffhq_07087::GRAY",
+    "Label original source/prior binding tr_ffhq_07087::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_07087::GRAY",
+    "Safe retained label arrays tr_ffhq_07087::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_07087::GRAY",
+    "Retained exact label tr_ffhq_07087::RGB",
+    "Label original source/prior binding tr_ffhq_07087::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_07087::RGB",
+    "Safe retained label arrays tr_ffhq_07087::RGB",
+    "Case targetstyle/source label matches tr_ffhq_07087::RGB",
+    "Retained exact label tr_ffhq_07202::GRAY",
+    "Label original source/prior binding tr_ffhq_07202::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_07202::GRAY",
+    "Safe retained label arrays tr_ffhq_07202::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_07202::GRAY",
+    "Retained exact label tr_ffhq_07202::RGB",
+    "Label original source/prior binding tr_ffhq_07202::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_07202::RGB",
+    "Safe retained label arrays tr_ffhq_07202::RGB",
+    "Case targetstyle/source label matches tr_ffhq_07202::RGB",
+    "Retained exact label tr_ffhq_07386::GRAY",
+    "Label original source/prior binding tr_ffhq_07386::GRAY",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_07386::GRAY",
+    "Safe retained label arrays tr_ffhq_07386::GRAY",
+    "Case targetstyle/source label matches tr_ffhq_07386::GRAY",
+    "Retained exact label tr_ffhq_07386::RGB",
+    "Label original source/prior binding tr_ffhq_07386::RGB",
+    "Exact two-array numeric label namespace/CRC tr_ffhq_07386::RGB",
+    "Safe retained label arrays tr_ffhq_07386::RGB",
+    "Case targetstyle/source label matches tr_ffhq_07386::RGB",
+    "Actual/oracle arms explicit",
+    "No clean-context leakage; persistent oracle labeling required",
+    "Exact finite4x48+8counts",
+    "Independent call/output/sheet arithmetic",
+    "Full output/override/state reviews retained",
+    "All finite execution/storage/partial-evidence bounds",
+    "No automatic training or mathematical oracle-bound claim"
+  ],
+  "checks_passed": 104,
+  "selected_labels": [
+    {
+      "teacher_key": "tr_ffhq_05179::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05179_gray.npz",
+        "bytes": 243917,
+        "sha256": "42e79e420de89ddb01d128a0d3a1c4c924e53f72cac658c8442c165bb0595db6"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 0,
+      "maximum_code": 510,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_05179::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05179_rgb.npz",
+        "bytes": 243504,
+        "sha256": "604fbfb4379ea640f2ad723ed2f87972d40223685d4f0ddb10eadcc1e16337c6"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 8,
+      "maximum_code": 504,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_05302::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05302_gray.npz",
+        "bytes": 243696,
+        "sha256": "2ec7726d0ef3a1c59b22124e0a50172f37952b0cd79de97797fd3d1426649ba6"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 2,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_05302::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05302_rgb.npz",
+        "bytes": 243810,
+        "sha256": "0b2b5484e6af870adaf3dc460fcd83748af596e8180797990b4dcab37b88078b"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 0,
+      "maximum_code": 509,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_06781::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06781_gray.npz",
+        "bytes": 243560,
+        "sha256": "cc219b8925f60cc73447c9b79eaa2101f2b7d7cf07101b30c2106999ecfb39f3"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 3,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_06781::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06781_rgb.npz",
+        "bytes": 243715,
+        "sha256": "b914b175ec0759234df5a000ca36a768a7bd66624e6fa15dfde802c303398cd5"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 1,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_06809::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06809_gray.npz",
+        "bytes": 244091,
+        "sha256": "240f00aee0a8d6f9766fc1eecc9087b3cc777e5098135e540c5b887c785eca74"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 3,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_06809::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06809_rgb.npz",
+        "bytes": 243965,
+        "sha256": "e0a3ec9f19811be850320e1108b3ac289a81956d16c1848f933a6ecf9b99ebe6"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 4,
+      "maximum_code": 508,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_06995::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06995_gray.npz",
+        "bytes": 244046,
+        "sha256": "54f0f189ee9c8e6122601d66278f5ea8c10fccd93d7cbe253ef783e00350f420"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 13,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_06995::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_06995_rgb.npz",
+        "bytes": 243971,
+        "sha256": "e050166a020f795721d2916b346486a4231464e53078827056130ebb6a3af2e3"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 0,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_07087::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07087_gray.npz",
+        "bytes": 243957,
+        "sha256": "d5251d1f3167c04bf3b821c7f76b6bb95a6cb68e095e0a07cd8faf0c19d0ffb6"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 3,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_07087::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07087_rgb.npz",
+        "bytes": 243892,
+        "sha256": "88dd399cc2c50cbd0b22817d71403c38d60fe59ac12554f3dac4def25aad5c66"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 3,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_07202::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07202_gray.npz",
+        "bytes": 243743,
+        "sha256": "c5ef46665ff09d96484cb744575f2466d80d490337cc3d22edd996f685807a49"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 1,
+      "maximum_code": 510,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_07202::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07202_rgb.npz",
+        "bytes": 243707,
+        "sha256": "6e06e2ee9f9f024e79df8c3b50cb6f43bfc4c09182fcc1e3c5fa1560648972e6"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 0,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_07386::GRAY",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07386_gray.npz",
+        "bytes": 244089,
+        "sha256": "9e66c08bf636c72c9d0ea75bd013188b95667f8875c9f7e740384734c51d5b2f"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 0,
+      "maximum_code": 511,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    },
+    {
+      "teacher_key": "tr_ffhq_07386::RGB",
+      "pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_07386_rgb.npz",
+        "bytes": 244141,
+        "sha256": "d6b71cc53ed95d257c9752ef7d2e004346833bd98892fe30d16557d3761500ad"
+      },
+      "codes_shape": [
+        1,
+        256
+      ],
+      "codes_dtype": "int64",
+      "minimum_code": 4,
+      "maximum_code": 510,
+      "CRC_pass": true,
+      "numeric_no_pickle": true
+    }
+  ],
+  "decision": "ADMIT_SCIENTIFIC_DESIGN_FOR_IMPLEMENTATION_AND_INDEPENDENT_SOURCE_REVIEW",
+  "runtime_or_packet_admitted": false,
+  "actual_VM_preflight": false,
+  "ready_to_upload": false,
+  "resource_followup_before_release": {
+    "uncompressed_array_assumptions": "Each192output raw512/input256/result256/mask256/predicted+usedint64codes; four full canonical parity bundles; maximum192PNGs256KiB;metadata8MiB. Assumption pending actual output schema.",
+    "arrays_bytes": 957087744,
+    "parity_arrays_bytes": 60833792,
+    "max_PNG_bytes": 50331648,
+    "metadata_bytes": 8388608,
+    "subtotal_before_NPZ_tar_overhead": 1076641792,
+    "raw_cap_bytes": 1073741824,
+    "subtotal_exceeds_rawcap": true,
+    "interpretation": "Actual compressed NPZ storage may fit. Source preparation must demonstrate an admissible format/resource bound or explicitly preserve a valid resource-stop possibility; no cap relaxation or silent schema pruning authorized."
+  },
+  "limitations": [
+    "Clean-context indices are reused original inpainting encoder-nearest codes, not official HQVQGAN or guaranteed optimum targets.",
+    "Oracle arms use unavailable clean hidden information and are never deployable outputs or native CCTV evidence.",
+    "A useful clean-code output does not prove predictability from an obscured input or authorize a stageIItrainingpilot.",
+    "Repeated adaptive TRAIN identities and pretrained overlap prevent independent final/identity claims.",
+    "Identical tensors and observed context must be independently checked with exact ordinary-path parity before interpreting the intervention."
+  ],
+  "local_actions": {
+    "Torch_imported": false,
+    "neural_models_or_forwards": 0,
+    "gradients": 0,
+    "optimizer_operations": 0,
+    "VM_calls": 0,
+    "historical_assets_modified": false
+  },
+  "model_qualified": false,
+  "goal_complete": false
+}

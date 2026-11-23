@@ -1,0 +1,30 @@
+{
+  "format": "independent-spatial-export-alias-drift-fixture-v1",
+  "complete": true,
+  "source": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_spatial_code_intervention_v1.py",
+    "bytes": 16848,
+    "sha256": "fd7b7bf5879c3c785d65c9f0ce0884811d11a28c22e16eb084b348f2f96711b5"
+  },
+  "fixture_root": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\spatial_transport_review_alias_003",
+  "initial_same_inode_and_nlink": [
+    14918173766392153,
+    14918173766392153,
+    2
+  ],
+  "mutation": [
+    {
+      "partial_inode_after": 56576470319569625,
+      "committed_inode_after": 14918173766392153,
+      "same_hash": true
+    }
+  ],
+  "export_returned_complete": false,
+  "error": "ValueError('Failed-state source alias identity/link-count drift during export')",
+  "finding_confirmed": false,
+  "repair_refuses_before_publication": true,
+  "scope": "One tiny-file owned fixture replaces only its own partial alias with equal bytes on a distinct inode during tar streaming. No real research/VM/model/archive inputs modified.",
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "real_checkpoint_reads": 0
+}

@@ -1,0 +1,1 @@
+{"format": "completion-codeformer-predictor-ce-v1", "files": [{"path": "source.txt", "bytes": 12, "sha256": "1790adc44f3f48dd06b6849bc7cb1d9158f5b7e7f93746dac529ec9a1792c762"}], "manual_execution_only": true, "automatic_resume_or_promotion": false, "contract": {"output_bytes": 2684354560, "stop_free_bytes": 2147483648}}

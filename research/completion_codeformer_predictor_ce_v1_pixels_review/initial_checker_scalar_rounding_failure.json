@@ -1,0 +1,12 @@
+{
+  "complete": true,
+  "event": "Initial independent checker required bit-exact platform scalar mean; this failed before report publication",
+  "source_sha256": "9fcd236669e38f2c3f15c6d9199e48d45d68d2a0b664974cedd9c04faaf48cfe",
+  "case": "v2m_05179_g0_gd",
+  "returned_snapshot": 0,
+  "local_raw_spread_mean": 0.01817803457379341,
+  "VM_raw_spread_mean": 0.01817803643643856,
+  "scalar_difference": -1.862645149230957e-09,
+  "correction": "Recompute channel spread with float64 reduction; compare VM scalar report under existing RAW2e-7 recomputation tolerance. Keep1e-12 science gate unchanged and require same decisions/failure group keys. PNG metrics remain1e-14 exact. No VM/array/source changes.",
+  "model_or_VM_calls": 0
+}

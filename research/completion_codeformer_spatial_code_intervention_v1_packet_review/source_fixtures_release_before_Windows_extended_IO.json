@@ -1,0 +1,177 @@
+{
+  "format": "completion-spatial-code-intervention-v1-author-pure-file-fixtures-v1",
+  "complete": true,
+  "checks": 17,
+  "all_pass": true,
+  "cases": [
+    {
+      "case": "installer/valid",
+      "passed": true,
+      "expected_failure": false,
+      "actual_error": null,
+      "archive_bytes": 382,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/wrong_sha",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Protocol SHA differs')",
+      "archive_bytes": 382,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/missing_payload",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Missing payload members')",
+      "archive_bytes": 345,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/unlisted_payload",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "archive_bytes": 411,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/duplicate_payload",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "archive_bytes": 386,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/symlink_payload",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Unlisted/duplicate/nonregular member')",
+      "archive_bytes": 375,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/traversal_manifest",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Unsafe member path')",
+      "archive_bytes": 384,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/existing_target",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Preserve existing experiment; do not reinstall')",
+      "archive_bytes": 382,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "installer/six_GiB_without_payload_space",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Need6GiB plus exact installation payload free')",
+      "archive_bytes": 382,
+      "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/valid_success",
+      "passed": true,
+      "expected_failure": false,
+      "actual_error": null,
+      "successful_export": true,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/unlisted_output_refused",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Unlisted output evidence outputs/unlisted.bin')",
+      "successful_export": false,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/success_checkpoint_refused",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Successful frozen diagnostic must not return checkpoint/partial')",
+      "successful_export": false,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/failure_partial_retained",
+      "passed": true,
+      "expected_failure": false,
+      "actual_error": null,
+      "successful_export": true,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/failure_committed_retained",
+      "passed": true,
+      "expected_failure": false,
+      "actual_error": null,
+      "successful_export": true,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/failure_same_inode_alias_once",
+      "passed": true,
+      "expected_failure": false,
+      "actual_error": null,
+      "successful_export": true,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/failure_distinct_pair_refused",
+      "passed": true,
+      "expected_failure": true,
+      "actual_error": "ValueError('Distinct failed-state pair refused; retain VM evidence')",
+      "successful_export": false,
+      "dummy_serialized_bytes_never_deserialized": true,
+      "no_VM_or_models": true
+    },
+    {
+      "case": "export/pre_write_cap_before_IO",
+      "passed": true,
+      "actual_source_Class_used": true,
+      "isolated_tiny_limit_fixture": true,
+      "production_constants_unchanged": true
+    }
+  ],
+  "installer_literal_sha256": "305777c2e412e145bd2059aebc5830e9ff06f374df2ae1f2079b0507136584a3",
+  "source_pins": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\prepare_completion_codeformer_spatial_code_intervention_v1.py",
+      "bytes": 33588,
+      "sha256": "a6b4896f7661818d20087061fc24f95cb19d4fa1da29e0e2b6a658ab5f609c22"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\export_completion_codeformer_spatial_code_intervention_v1.py",
+      "bytes": 15560,
+      "sha256": "e4f3bf117032b24a20752c1d955523972c570e4dff7170a8c22c79c1dcd4ba09"
+    }
+  ],
+  "model_imports": 0,
+  "checkpoint_deserializations": 0,
+  "neural_calls": 0,
+  "optimizer_updates": 0,
+  "VM_calls": 0
+}

@@ -1,93 +1,120 @@
-# Forensic face restoration — IMPLEMENTATION
+# Forensic DGP — IMPLEMENTATION
 
-This branch is for application development, deployment, and real-world testing of a local Windows face-restoration app powered by **Conditioned SFT V2 (`p2_u0224`)**. It accepts one already cropped frontal or mildly turned face and produces a 256×256 result. Research and training are maintained separately.
+Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Requirements
+## Windows installer 0.3.1
 
-- 64-bit Windows with 64-bit Python 3.12 or 3.13; enable the Python launcher or Python on PATH.
-- Git for cloning and updates, plus internet access during installation.
-- At least 2.5 GiB available RAM before restoration; inference uses CPU PyTorch.
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.1 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.1)
 
-Dependencies are pinned in [requirements.txt](requirements.txt). The installer creates a short, checkout-specific environment under `%LOCALAPPDATA%\DGP\` and records it in the ignored `.implementation-env.json` file. Existing project `venv` folders are preserved.
+### What changed in 0.3.1
 
-## Install and start
+- **Smart Auto Blur overhaul & Auto button routing fixes**: Upgrades automatic face-blur detection and surrounding-blur matching (`blur_match.py`, `automatic_preparation.py`, `scanline_cleanup.py`) and fixes Auto button routing, crop handling, and preparation UI reporting across Picture and Video flows (`app.py`, `capture_worker.py`, `implementation.js`, `implementation.html`).
 
-```bat
-git clone --depth 1 --single-branch --branch main https://github.com/janusinss/forensic-dgp.git
-cd forensic-dgp
-install-integrated.bat
-start-integrated.bat
+### What changed in 0.3.0
+
+- **Degraded face-patch restoration (Step 2)**: Fixes false DCT stripping of coarse mosaic, posterized, and block-noise face patches; adds masked multi-pixel block-noise smoothing, wide-scale posterized chroma-blotch homogenization, exterior-referenced shadow/haze veil removal, and straight-row mid-forehead paste-seam detection while preserving `>=512px` JPEG DCT and clean-color privacy mosaics.
+- **Calibrated Step 1 auto-crop (`AUTO_CROP_MARGIN_RATIO = 0.32`)**: Preserves full head crown and natural FFHQ proportions across Picture and Video Step 1 auto-crops (`-15%` calibrated framing) without shrinking coarse mosaics.
+- **Hardened Auto button**: Eliminates warm clean-portrait color-cast and Q95+ `macroblock_hevc` false positives (`CAST_D_MIN = 26.5`, `dc <= 10` guard), catches heavy milky haze veils, enables FBCNN up to `768px` for heavy JPEGs (`dc >= 45`), and adds explicit Auto UI summary labels (`implementation.js?v=47`, `capture.js?v=21`).
+- **Pre-Conditioned Frozen CodeFormer V3.4 (`preconditioned_v34_codeformer`)**: Promotes the winning single-pass V3.4 restoration model (frozen official `codeformer.pth` + `8.65 MiB` `v34_precond_modules.npz`, 859 frozen tensors total, ~`6.46s` CPU per crop) with adaptive fidelity `w_pred`, photometric correction, NAFNet pre-conditioning, MaskedAdaIN, and bit-exact neutral-128 preservation.
+
+## Developer batch installation
+
+1. Download [install.bat](https://raw.githubusercontent.com/janusinss/forensic-dgp/IMPLEMENTATION/install.bat) into an empty folder. Save the actual file, not the GitHub HTML page.
+2. Run `install.bat`. No Git, existing Python, administrator access, or complete repository download is required.
+3. Run the `start.bat` created beside it. Keep the application terminal open; press Ctrl+C to stop.
+
+The installer resolves the latest **IMPLEMENTATION** commit once and downloads that exact version. It prints the installed revision. The managed app lives under `%LOCALAPPDATA%\DGP\app`; an existing unrelated source checkout is not overwritten. If a different `start.bat` already exists beside the download, it is preserved; use the launcher path printed by setup.
+
+Requirements: 64-bit Windows, internet access for setup, at least 2.5 GiB available RAM for processing, and sufficient disk space for Python dependencies, approximately 720 MiB of model files, retained app versions and your saved records. A GPU is not required.
+
+## Update and installation behavior
+
+Close the managed app and rerun `install.bat` to install the current published UI, flow and fixes. `start.bat` starts the last successfully installed version without an online update check. The installer cannot retrieve unpublished local edits.
+
+- Source files are checked against the exact GitHub commit tree; model files retain their complete size/SHA-256 checks. This trusts GitHub HTTPS and the repository; it is not a separately signed release.
+- New code is staged in a separate version directory. The active-version pointer changes only after dependency, asset and application import checks pass. The prior version and saved records remain available if setup fails.
+- Dependencies use the pinned uv installer, its package cache and CPU-only PyTorch. An unchanged dependency fingerprint reuses its environment across UI-only updates. A changed dependency manifest creates a separate environment. The isolated capture runtime skips package installation when its exact versions and detector pass verification.
+- Verified model files are shared across app versions rather than downloaded for every update. Mismatched models or edited managed source files are refused and preserved for inspection.
+- A shared managed-app lock prevents concurrent setup or updating a running managed app. Setup does not kill processes or occupied ports. Previous versions and failed staging files are retained; no automatic evidence deletion occurs.
+
+Package installation is pinned at the direct-dependency level; transitive dependencies are not a complete hash-locked supply chain. First setup needs the network. Repeated setup may still need it to check the branch or obtain missing packages; launching an already installed app is local.
+
+## Input and review
+
+Choose **Picture** to upload one PNG/JPEG face image, or **Video** for an uploaded clip, webcam or LAN RTSP camera. A chosen video file opens automatically. Native playback controls support Space play/pause and a separate 0.25×–4× speed selector.
+
+Picture scans the upload with YuNet and selects **Face 1** when a crop is available. Faces are numbered from left to right. **Picture crop** lets you preview another detected face or keep the full picture. When no face is detected, you can use the full picture or upload a close-up. Before/After metrics refer to the chosen crop. The review ZIP retains the original upload and crop coordinates.
+
+Freeze a frame to scan it locally. The numbered boxes mark the detected faces in the original frame. Selecting a box gives you a slightly wider crop that you can adjust before review. You can also drag on the preview or press Enter to create a manual crop. Arrow keys move it, and Shift+arrow keys resize it. **Full frame crop** returns to the entire frame while keeping the selection. **Use this face** sends the selected rectangular crop directly to Settings.
+
+The capture scanner bundles the MIT-licensed YuNet 2023mar model from [OpenCV Zoo](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet). It scans the selected frame when frozen. Small, blurred, or obstructed faces can still require a manual crop.
+
+Switching Picture/Video or leaving Capture pauses an opened local video while preserving its source, position, speed, and crop selection. **Resume video** continues from the frozen frame. Explicit Stop, file/source replacement, and page unload release it. Leaving capture releases live webcam and RTSP sources.
+
+After uploading a picture, select **Continue**. Settings lists **Auto**, **Manual**, and **Off** in that order. **Auto** is selected by default. It checks the full picture or frozen frame for strong horizontal scanlines, then for pixelation. For scanlines, Auto suppresses the repeating frequency and applies masked ELA comb cleanup and left-edge chroma suppression without blurring crisp background texture. For pixelation, it maps the block regions, fills narrow gaps supported by repeated edges, and compares 2.5, 3.0, and 3.5 px of smoothing using remaining block edges and retained detail. It uses 3.0 px when there is too little evidence to choose another strength. Where the full-source check does not modify the selected crop, Auto can check the face for block patterns or use Protect + Auto-match when the face is measurably blurrier than its surroundings. Otherwise it restores the crop directly.
+
+Auto runs the restoration model once per crop. The result shows the preparation used. Full-source scanline cleanup or pixelation smoothing also offers a separate full-size prepared PNG. These experimental routes improve the appearance of some inputs. Detection, region boundaries, and the chosen strength are estimates. **Manual** lets Picture users bypass preparation or mark regions. **Off** returns the resized original.
+
+If the regional scan finds no supported grid, Auto tests rotation corrections from −33° to +33° in 3° steps. It can refine promising angles by 1°. It maps a supported mask back to the original image and applies 3.0 px smoothing within that mask. This experimental fallback covers some tilted mosaics in pictures and frozen frames.
+
+For pictures and frozen frames where the existing grid mask covers less than 8% of the source, Auto can test for a perspective-warped mosaic. It requires agreement across overlapping windows on two nonorthogonal seam directions, flat cell interiors, and sufficient colour variation. Auto uses the perspective mask when it covers at least 4% of the source and more than doubles the existing coverage. The mask and smoothing stay in source coordinates.
+
+Auto also looks for a concentration of small, bounded, nearly flat cells with a diverse palette. This irregular mosaic route uses the same coverage checks and can locate some nonrectangular pixelation patterns. Where both tests qualify, Auto uses the larger supported mask.
+
+When a rectangular or tilted grid and a separate irregular region both qualify, Auto preserves the first preparation and adds smoothing only inside the supported irregular region outside it. The review archive contains the combined mask and the added irregular-region mask.
+
+When horizontal scanlines and a supported rectangular mosaic coexist, Auto checks whether the scanline pattern can be explained by a shared row offset. If correction removes the scanline signal, Auto reassesses the mosaic and chooses the lightest local smoothing that reduces its grid score while retaining at least 85% of the measured detail signal. Scanline-only inputs continue through the existing scanline preparation.
+
+If neither grid scan finds a region, Auto can flag repeating softened seams. When that mask overlaps the selected crop and no other preparation applies, Auto runs direct restoration. The evidence ZIP includes the suspected mask. This avoids additional Gaussian smoothing when the grid edges are already soft.
+
+For a native crop between 32 and 47 px on both axes, Auto can smooth a strong grid when overlapping windows agree on the block spacing. The evidence ZIP retains the crop mask. This route uses the same 3.0 px reference-scale strength as the rotation fallback and scales it to the native crop.
+
+For a heavily quantized JPEG with strong native 8 px seams on both axes, Auto can use the RGB FBCNN deblocker before V2. The prepared image is available in the result. This route uses native crops from 96 to 384 px and requires the pinned `fbcnn_color.pth` in the implementation model directory. The worker verifies the checkpoint and the result must reduce the seam signal on both axes. Inputs outside those conditions use the other Auto routes. The [authors' release](https://github.com/jiaxi-jiang/FBCNN/releases/tag/v1.0) provides the checkpoint.
+
+On Picture uploads with a strongly supported 4 px mosaic and independent 8 px JPEG seams outside it, Auto can use 1 px smoothing in the mosaic and a 35% FBCNN blend elsewhere. It applies FBCNN at the full JPEG's native origin before extracting the selected crop. Auto uses the combined result when the exterior seam signal falls by at least 20% on both axes and the mean non-seam edge signal retains at least 90% of its original value. Other cases continue through the existing preparation routes. V2 runs once for the selected crop.
+
+For non-flat 8 × 8 or 16 × 16 DCT macroblocking across PNG uploads, EXIF-rotated or low-DC JPEGs, frozen video/webcam/RTSP crops, out-of-range dimensions, or small localized DCT patches, Auto disambiguates genuine DCT blocks from flat privacy mosaics (`is_dct_macroblocking_patch`) and routes the selected crop to adaptive macroblock deblocking (`macroblock_fbcnn` with pinned `fbcnn_color.pth` for 8 × 8 blocks on 96–384 px crops, or `macroblock_hevc` boundary deblocking for 16 × 16 hierarchical grids and out-of-range sizes) with `macroblock-mask.png` saved in the evidence archive.
+
+When no privacy mosaic, softened mosaic, or `protect_auto` blur protection applies, Auto evaluates photometric/noise and spatial refiners sequentially in fixed order: native YCrCb Immerkær noise denoising (`noise_denoise`, `noise-denoise-mask.png`) and tightened color-cast / dark-channel haze correction (`color_cast_balance`, `haze_dehaze`, `cast_dehaze`, `cast-dehaze-mask.png`) before macroblock deblocking, followed by per-crop spatial comb cleanup (`spatial_comb`, `spatial-comb-cleaned.png`, skipped when full-frame `scanline_cleanup` already ran), edge deringing (`edge_deringing`, `deringing-halo-mask.png`), quantized gradient debanding with sub-LSB Bayer 8 × 8 dither (`gradient_debanding`, `debanding-mask.png`), structure-tensor tangent anti-aliasing (`tangent_antialiasing`, `antialiasing-edge-mask.png`), and luma-guided Cr/Cb chroma debleeding (`chroma_debleeding`, `color-bleeding-mask.png`). Each stage updates the crop only if its artifact and detail-retention gates pass; applying two or more stages emits `compound_artifact_preparation` with ordered `stages`/`applied_stages` and `stage_reports` in `automatic-decision.json` and `processing.json`.
+
+In reviewed preparation, green-only **Auto-match surrounding blur** measures reliable edges across the full upload, including protected areas, and adds blur to sharper areas outside green. With this matching option off or blue marks present, **Manual blur strength** sets the radius. Green takes priority. Select **Continue** on the preparation preview to use it for restoration. Generated appearance can change.
+
+After freezing a video, webcam, or RTSP frame, select one face or click **Add all** for up to 12 faces. **Use this face** or **Use these faces** opens Settings directly. Settings shows the selected crops and one shared **Auto**, **Manual**, or **Off** choice, with **Auto** selected by default. Video **Auto** reuses preparation of the verified frozen frame across the selected crops and offers one shared full-frame PNG when full-frame preparation is applied. Video capture skips manual preparation. In Restore, the app processes the selected faces in order, one at a time.
+
+In Restore, choose a numbered face button to see that face’s **Before** and **After** images. Each image has **Download PNG** and **Enlarge** controls. When review files are requested, **Download ZIP** appears beside the After image. Edge variation and estimated noise appear below the pair. Add a clean 256 × 256 PNG or JPEG for that face if it matches the pose and crop. The app compares the resized original and result to the supplied reference using MAE and PSNR over the observed crop area. Without a reference, the panel displays **Ground truth unavailable**. Switching faces keeps each reference and its scores with the corresponding result.
+
+Optional removal review uses **Trained CodeFormer Completion R2** after the picture result, including when restoration was Off. Paint only the covering orange, inspect it, confirm the two statements and generate. Pixels outside the reviewed area are copied exactly from the supplied prepared/restored canvas; an empty selection skips completion. Hidden features remain guesses. Preserve the original, masks and review ZIP when assessing a result.
+
+R2 has its own `codeformer_completion_r2.pth` file. Updating preserves existing R1 files and saved records. Missing or changed R2 weights refuse completion instead of silently using R1. Restoration and the optional covering detector are unchanged; the guided editor continues to use manual covering selection.
+
+## Launch and troubleshooting
+
+`start.bat --port 0` selects an available loopback port. `--no-browser` prints the URL without opening a tab. If a port is occupied, setup/start reports it instead of opening another app's UI.
+
+| Problem | Recovery |
+| --- | --- |
+| Old interface after update | Stop the older app, rerun the new installer, then run the managed launcher printed by setup. Compare its printed commit. |
+| Setup or network failure | Read the error and rerun setup. The active pointer is not promoted on failure. |
+| Model or managed code differs | Keep the reported file. Move only the identified mismatched version/file aside for inspection before retrying. |
+| Capture session is full | Stop and restart the app; saved capture records remain on disk. |
+| Browser permission or RTSP failure | Use a local video file or explicitly reconnect the camera. Do not put camera credentials in the URL. |
+
+Managed models are in `%LOCALAPPDATA%\DGP\app\data\models`. Saved request records are in `data\scratch\implementation_requests`, `data\scratch\completion_requests` and `data\scratch\capture_requests`. Downloaded ZIPs contain image data. Existing source-checkout records are left where they were; updates do not import or delete them automatically.
+
+## Developers and existing source checkouts
+
+The default installer always installs/updates the managed app. To work on an extracted or Git checkout deliberately:
+
+```powershell
+git pull --ff-only origin IMPLEMENTATION
+.\install.bat --source --no-pause
+.\start.bat --source
 ```
 
-Installation downloads the three base model files from the [model release](https://github.com/janusinss/forensic-dgp/releases/tag/implementation-models-v1) and stages `v2_p2_u0224_heads.npz` from `implementation/assets/`. Each of the four model files must match its complete size and SHA-256; existing mismatched files are preserved and reported.
+Save local source changes before pulling. The source path keeps its own environment record and checkout-local models/records. `start.bat --source --verify-only` checks that installation without starting a server. Standalone users need a newly downloaded installer once to get this updater; an older batch file cannot update itself automatically.
 
-The browser opens after the local health check passes, normally at http://127.0.0.1:8000. Keep the terminal open and press Ctrl+C to stop. If that port is occupied, use `start.bat --port 0`; the actual address is printed and recorded in `scratch/implementation_launch.json`. After setup, inference runs locally without model-download requests.
+Python asset verification remains available through `implementation.setup_models --verify-only` and `implementation.completion_install --verify-only` with the installation's Python. Completion assets can be staged from exact verified local files using `--local-r2` and `--local-detector`; consult the module's `--help`. Keep historical R1 files as R1; renaming another checkpoint does not pass the exact R2 size, file hash and logical-state checks.
 
-## Update
+## Model information and licenses
 
-Stop the running app with Ctrl+C and wait for it to exit. Save any local source changes before updating. From this checkout, run:
-
-```bat
-cd ..
-git pull --ff-only origin main
-install-integrated.bat
-start-integrated.bat
-```
-
-If the pull fails, resolve the reported local changes or branch divergence before continuing. Rerunning installation updates dependencies and verifies the model files.
-
-## Use
-
-1. Upload one PNG/JPEG crop, up to 10 MiB and 1600 pixels per side, and inspect its visible facial structure.
-2. Choose **Auto** (input-quality suggestion), **On** (restore with Conditioned SFT V2 `p2_u0224`), or **Off** (keep the resized original with no inference).
-3. Bypass preparation, or paint Protect over the face and its existing soft edges. Paint Apply only where added surroundings blur is permitted.
-4. Preview and confirm manual preparation. Edits invalidate confirmation; every preview rebuilds from the original. Protected pixels and pixels outside Apply stay exact during preparation.
-5. Restore the selected input and compare the original, selected input, and V2 result. Download PNGs or an optional evidence ZIP containing the original, available masks, preparation records, result, and available RAW output.
-
-Manual preparation is optional; there is no automatic blur matcher. Protection applies to preprocessing only. Generated facial details can change, and a sharper-looking result does not prove recovered identity. Request clearer or less-covered input when visible information is insufficient. Optional reviewed covering completion is described below. The models remain experimental; see [MODEL_CARD.md](MODEL_CARD.md).
-
-## Optional covering removal and completion
-
-The Conditioned SFT V2 restoration stage is unchanged. After reviewing its result,
-choose **Review covering removal** if a mask, sunglasses, strong lens glare,
-hand, obstructing hair, scarf or object still hides the face. An uncovered face
-can finish with the restoration result.
-
-The separate detector proposes an orange removal area. Correct it with Paint,
-Erase, Undo, the rectangle tool or a binary mask PNG. Keep clear glasses,
-non-obstructing hair and visible features outside that area. The detector can
-miss coverings or select visible features; an empty proposal does not establish
-an uncovered face. Manual painting remains available when proposals fail.
-
-Confirm the exact removal area and sufficient visible facial structure, then
-generate one estimate with **trained CodeFormer completion R1**. Edits invalidate
-confirmation. Empty reviewed masks skip R1. Excessive coverage requests a
-clearer or less-covered crop.
-
-Completion changes only the reviewed area of the restoration result. Every
-pixel outside it stays exactly equal to that result; this is different from
-preserving the original upload, because restoration may already have changed
-visible appearance. Completion does not rerun restoration or apply it to the
-generated face. Original upload, restoration, mask and final estimate remain
-separate, with PNG and evidence ZIP downloads. Automatic proposals and corrected
-assisted masks are recorded separately.
-
-Both models run locally in separate CPU workers and unload between stages.
-The completion and proposal stages each have a 120-second process cap; the
-existing restoration limit remains unchanged. These limits are not performance
-guarantees for arbitrary Windows hardware. No inference API or training VM is
-required. See [completion model limits](COMPLETION_MODEL_CARD.md) and
-[verified assets/offline setup](COMPLETION_INSTALL.md).
-
-## Privacy and troubleshooting
-
-The service listens on loopback. Restoration records stay locally under `scratch/implementation_requests`; covering proposals, reviewed masks and completion records stay under `scratch/completion_requests`. Downloaded ZIPs also contain image data. Remove your own records and downloads when no longer needed.
-
-- Missing dependency or model: rerun `install.bat` and inspect the failing step.
-- Low memory: close unused applications before retrying. Restoration retains its 6 GiB RSS limit; completion uses a separate 6 GiB owned-process commitment limit. These are different measurements, not minimum RAM specifications.
-- Worker failure: review the retained request directory before restarting `start.bat`. Requests have a 360-second limit and no automatic retry.
-- Busy port: stop your own earlier server or use `start.bat --port 0`. The launcher does not kill other applications.
-
-## Attribution
-
-The app uses trained adaptations of S-Lab's CodeFormer architecture. Retain [the S-Lab license](third_party/codeformer/LICENSE) and [notices](third_party/codeformer/NOTICE.md); its non-commercial terms apply. Training datasets are not included.
+See [MODEL_CARD.md](MODEL_CARD.md) and [COMPLETION_MODEL_CARD.md](COMPLETION_MODEL_CARD.md) for fingerprints, provenance and limits. The app uses adaptations of S-Lab CodeFormer under **non-commercial terms**. Retain the [restoration license](third_party/codeformer/LICENSE), [restoration notices](third_party/codeformer/NOTICE.md), [completion license](third_party/codeformer_completion/LICENSE) and [completion notices](third_party/codeformer_completion/NOTICE.md). Training datasets are not distributed.

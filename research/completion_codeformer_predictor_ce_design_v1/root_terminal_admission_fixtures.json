@@ -1,0 +1,127 @@
+{
+  "format": "root-independent-predictor-terminal-closed-partial-fixtures-v1",
+  "complete": true,
+  "created_UTC": "2026-10-26T15:46:43.146146+00:00",
+  "author": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\check_completion_predictor_terminal_admission_root.py",
+    "bytes": 3649,
+    "sha256": "181ffe7169735c487c8d65db35c890e7595652f97cfe98f1aaaa5cab8e08e746"
+  },
+  "tested_helper": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_development\\terminal_admission.py",
+    "bytes": 2529,
+    "sha256": "748614647780df53949017bdc69e23f68195613caa3afaf08ba4be26268e6227"
+  },
+  "fixture_directory": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf",
+  "actual_checkpoint_used": false,
+  "fixtures": [
+    {
+      "fixture": "valid_closed_partial_CRC",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\valid_small_stored.pth.partial",
+        "bytes": 486,
+        "sha256": "758dcf339891e5f2b330b730d5c11e8115b38bf26e9723b78e246193ea53cc72"
+      },
+      "expected_accept": true,
+      "accepted": true,
+      "error": null,
+      "source_preserved_exact": true,
+      "verdict": {
+        "complete": true,
+        "ZIP_members": 4,
+        "storage_records": 1,
+        "primitive_pickle_bytes": 21,
+        "all_member_CRC_pass": true,
+        "unpickled": false,
+        "bounded_during_all_writes": true,
+        "internal_caps_checked_after_close_before_commit": true
+      }
+    },
+    {
+      "fixture": "unsafe_parent_path",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\unsafe_parent_path.pth.partial",
+        "bytes": 599,
+        "sha256": "fe74f32159baeff91287492bc8d7799c343e24193aceb0a57056732ec098fa91"
+      },
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Safe terminal ZIP namespace')",
+      "source_preserved_exact": true,
+      "verdict": null
+    },
+    {
+      "fixture": "executable_member",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\executable_member.pth.partial",
+        "bytes": 597,
+        "sha256": "49a2f9801cdbc43323cd3afdcdb519df721a2c5e32a67674c637412e50ad2b12"
+      },
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Only Torch tensor-state archive members')",
+      "source_preserved_exact": true,
+      "verdict": null
+    },
+    {
+      "fixture": "pickle_over1MiB",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\large_pickle.pth.partial",
+        "bytes": 1049042,
+        "sha256": "cecd65d06f191a8253cc86f84e5ce81d27e34aec9fc384e502f3f50669e94772"
+      },
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Terminal pickle/storage metadata caps')",
+      "source_preserved_exact": true,
+      "verdict": null
+    },
+    {
+      "fixture": "too_many_members",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\too_many.pth.partial",
+        "bytes": 177204,
+        "sha256": "c3ee42fd8297f415da9a9beab239db7b9fcd26195a187b09e7e39d67d2b7c650"
+      },
+      "expected_accept": false,
+      "accepted": false,
+      "error": "ValueError('Bounded unique terminal ZIP members')",
+      "source_preserved_exact": true,
+      "verdict": null
+    },
+    {
+      "fixture": "stored_member_CRC_corruption",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\bad_CRC.pth.partial",
+        "bytes": 486,
+        "sha256": "e6d0b5f1d5c9f361d4659db4f11ad90ed056f3b742520298b5bc6547045d8b17"
+      },
+      "expected_accept": false,
+      "accepted": false,
+      "error": "BadZipFile(\"Bad CRC-32 for file 'archive/data/0'\")",
+      "source_preserved_exact": true,
+      "verdict": null
+    },
+    {
+      "fixture": "deadline_refusal_preserves_partial",
+      "source": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing\\outputs\\predictor_terminal_root_fixture_f6942d73c98d41629c940efe12386faf\\valid_small_stored.pth.partial",
+        "bytes": 486,
+        "sha256": "758dcf339891e5f2b330b730d5c11e8115b38bf26e9723b78e246193ea53cc72"
+      },
+      "expected_accept": false,
+      "accepted": false,
+      "error": "TimeoutError('Fixture save deadline reached; retain partial')",
+      "source_preserved_exact": true,
+      "verdict": null
+    }
+  ],
+  "all7_expected_verdicts": true,
+  "all_source_bytes_preserved": true,
+  "guard_invocations_valid_fixture": 10,
+  "Torch_imported": false,
+  "NN_calls": 0,
+  "optimizer_objects": 0,
+  "VM_calls": 0,
+  "runtime_or_packet_admitted": false
+}

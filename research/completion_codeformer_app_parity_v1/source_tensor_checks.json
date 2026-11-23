@@ -1,0 +1,45 @@
+{
+  "format": "completion-finetune-r1-source-tensor-author-checks-v1",
+  "complete": true,
+  "mode": "pure_CPU_tensor_math_fake_callable_no_neural",
+  "tests": {
+    "actual_R1_nested_helpers": 10,
+    "proposal_helper": 5
+  },
+  "source_files": [
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\scripts\\cctv_completion_codeformer_finetune_v1_r1_vm.py",
+      "bytes": 37672,
+      "sha256": "a09bc7ad6df990b07eed92b1461ba02858206bfa2697f81d0d96d6d0b4484180"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\tests\\test_completion_finetune_r1_app_parity_v1.py",
+      "bytes": 4215,
+      "sha256": "d292a2cc8640d571fe3adeb069b2cadab3df6fd5edd0229aed9f93a2ca221246"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_app_parity_v1\\repair_proposal.md",
+      "bytes": 2992,
+      "sha256": "fcc1a2ce5137e36143c71871f957682057d142e2cc58735d011fa4aa82eab3ff"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_app_parity_v1\\app_contract.py",
+      "bytes": 2345,
+      "sha256": "63ac2a316841a8e6071d26d9350154c242e23b33550e3588cd08eb04dede2c8f"
+    },
+    {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\tests\\test_completion_app_contract_parity_v1.py",
+      "bytes": 4503,
+      "sha256": "f2f3f7196ae4040ac169e23d8927290efcb82d9c2e2101b274ab77e0eb63f5de"
+    }
+  ],
+  "old_worker_sha256": "8f3a69bc3209590a6919adfa67afa9dbd3da4857e9180c337123a6ee65e332cb",
+  "unchanged_fresh_parity_tolerance": 1e-06,
+  "original_training_contract_unchanged": true,
+  "model_loads": 0,
+  "neural_calls": 0,
+  "gradient_queries": 0,
+  "training_updates": 0,
+  "GPU_parity_unverified": true,
+  "qualified": false
+}

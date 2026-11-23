@@ -1,0 +1,684 @@
+{
+  "format": "post-predictor-ce-v1-independent-grid-QA-retained-gray-v1",
+  "complete": true,
+  "root_geometric_diagnosis_pin": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_predictor_ce_v1_return\\root_saved_code_geometry_diagnosis.json",
+    "bytes": 554737,
+    "sha256": "647bfa63a9f7aaa62d18cc7e494a5bba5ccf5468d224e3293d5370a469a7fca8"
+  },
+  "all192_geometric_token_counts_and_aggregates_match": true,
+  "check_count": 3463,
+  "retained_probe_four_arm_gray": {
+    "A": {
+      "gray_cases": 8,
+      "macro_raw_channel_spread": 0.018322976306080818,
+      "macro_PNG_channel_spread": 4.671183840907002,
+      "macro_PNG_hole_L1": 0.053645689725691656
+    },
+    "B": {
+      "gray_cases": 8,
+      "macro_raw_channel_spread": 0.03374995186459273,
+      "macro_PNG_channel_spread": 8.604045611154516,
+      "macro_PNG_hole_L1": 0.07092946575644817
+    },
+    "C": {
+      "gray_cases": 8,
+      "macro_raw_channel_spread": 0.024554690229706466,
+      "macro_PNG_channel_spread": 6.260324793700355,
+      "macro_PNG_hole_L1": 0.04365406873705463
+    },
+    "D": {
+      "gray_cases": 8,
+      "macro_raw_channel_spread": 0.021586649818345904,
+      "macro_PNG_channel_spread": 5.503564699897694,
+      "macro_PNG_hole_L1": 0.036012475107117206
+    }
+  },
+  "retained_probe_gray_cases": [
+    {
+      "arm": "A",
+      "id": "v2m_05179_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.01817803457379341,
+      "PNG_support_mean_channel_spread": 4.637166983046409,
+      "PNG_hole_L1_previously_audited": 0.06569746224513676,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_05179_g0_gd.npz",
+        "bytes": 3272043,
+        "sha256": "792655d85c0f8a2b98d0b1eecf1fd3ca5997909d8bdae6172616d15d87238858"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_05179_g0_gd.png",
+        "bytes": 47823,
+        "sha256": "01d3a05655d200b7e0ab440b468d1044d2f36a2cacd7ab367cc3983954d60ff8"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_05302_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.017050044611096382,
+      "PNG_support_mean_channel_spread": 4.353356481481481,
+      "PNG_hole_L1_previously_audited": 0.06780864197530864,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_05302_g1_gd.npz",
+        "bytes": 3364564,
+        "sha256": "1dc3f39503678382b1c14a67e2389f0aae042abdbbdc4d88071fda4ea75175d9"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_05302_g1_gd.png",
+        "bytes": 52894,
+        "sha256": "871e8a89caf6e76cc153843818fb55016645815beba0f1ee81c47754c48274f7"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_06781_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.015543151646852493,
+      "PNG_support_mean_channel_spread": 3.961694456962596,
+      "PNG_hole_L1_previously_audited": 0.04613513123440754,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_06781_g2_gd.npz",
+        "bytes": 3253785,
+        "sha256": "9e28bcdcd331e245fef7b7c382fe5a8cebaf7689cf0c235d0bf2dd52a94c471a"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_06781_g2_gd.png",
+        "bytes": 46359,
+        "sha256": "80ad7115a15887e933e8b91169a0aef95c55ba7dae3f9273944c82a79e6557d8"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_06809_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.013852807693183422,
+      "PNG_support_mean_channel_spread": 3.5233837689133427,
+      "PNG_hole_L1_previously_audited": 0.02463162247934479,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_06809_g3_gd.npz",
+        "bytes": 3245420,
+        "sha256": "6aa8183d071bcb349dbc834ef51e6ace10ed28d42fa7750dbe619f125a516474"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_06809_g3_gd.png",
+        "bytes": 43513,
+        "sha256": "465927d003da9be882416b45361cac79273dd3e2bfb85eaf3d0415b1973cd3a5"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_06995_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.02643211930990219,
+      "PNG_support_mean_channel_spread": 6.7449106499967275,
+      "PNG_hole_L1_previously_audited": 0.06579526401557984,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_06995_g0_gd.npz",
+        "bytes": 3260717,
+        "sha256": "7b64a76a410d07cc2a254c9e6bae578fd1bc893467e917e36e628c0d8c833278"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_06995_g0_gd.png",
+        "bytes": 53147,
+        "sha256": "27db021a628246af7b252e246e8ad49d67e057fde900be6f0d09a74900685b97"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_07087_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.01830863580107689,
+      "PNG_support_mean_channel_spread": 4.658449074074074,
+      "PNG_hole_L1_previously_audited": 0.0628973008956669,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_07087_g1_gd.npz",
+        "bytes": 3321532,
+        "sha256": "a4d31d8de99fcd44020b214916ba7edfa38922d156ae7586ba7c025431d017bc"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_07087_g1_gd.png",
+        "bytes": 47955,
+        "sha256": "f0bc30ce2b5c26e3f8473b3e6c5812c608d4a416403f933179ea7ab1aa54c090"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_07202_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.012395652942359447,
+      "PNG_support_mean_channel_spread": 3.163136547994592,
+      "PNG_hole_L1_previously_audited": 0.05294147101532516,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_07202_g2_gd.npz",
+        "bytes": 3223920,
+        "sha256": "f14ba7ea94ce2712c8b70d455f15394cc43db994be81c7768ed435f4a190a432"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_07202_g2_gd.png",
+        "bytes": 44870,
+        "sha256": "74446a3313e7b6a5bac45825154b085cd5b8a720b330195dfb9471b41a938cb1"
+      }
+    },
+    {
+      "arm": "A",
+      "id": "v2m_07386_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": false,
+      "raw_support_mean_channel_spread": 0.02482336387038231,
+      "PNG_support_mean_channel_spread": 6.327372764786795,
+      "PNG_hole_L1_previously_audited": 0.043258623944763604,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_07386_g3_gd.npz",
+        "bytes": 3337961,
+        "sha256": "6982389344b3dcda85482220c83637d41863d59dd95f3d6831498b68dd7e3b96"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ACTUAL_A_R1_w1\\challenge\\v2m_07386_g3_gd.png",
+        "bytes": 57987,
+        "sha256": "2f80bc1d23dee1f5c809da0fb2b29272dc623a096e3700d0efc57f09a5376c3b"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_05179_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.045927077531814575,
+      "PNG_support_mean_channel_spread": 11.710741637756104,
+      "PNG_hole_L1_previously_audited": 0.07373355049946928,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_05179_g0_gd.npz",
+        "bytes": 3273372,
+        "sha256": "0c154875bdbaa1f60dbe2054097ae00b95ea3000eb90a10d6a990590e151ed49"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_05179_g0_gd.png",
+        "bytes": 50438,
+        "sha256": "cecf5637732e6c52c3438dd75edf7dcc91c8b182488b603693a115667b370764"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_05302_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.049202874302864075,
+      "PNG_support_mean_channel_spread": 12.545949074074073,
+      "PNG_hole_L1_previously_audited": 0.07730876301137739,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_05302_g1_gd.npz",
+        "bytes": 3362642,
+        "sha256": "ea963a0d64fa06fe1c5cfd4d3b9d9248c248431716d186db9c7c67f141a7e4c2"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_05302_g1_gd.png",
+        "bytes": 55368,
+        "sha256": "224c3093d35c12dddad2e1af4c5682f33aaf9251e23a8ab8bde2666832f27a02"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_06781_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.01770179346203804,
+      "PNG_support_mean_channel_spread": 4.512843623253718,
+      "PNG_hole_L1_previously_audited": 0.07499639182697264,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_06781_g2_gd.npz",
+        "bytes": 3254282,
+        "sha256": "8e33fb5b5bdb0241b8982e7c57e7b4c148cf15f6af345a6a9f9c44fc9f5ec8bd"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_06781_g2_gd.png",
+        "bytes": 47015,
+        "sha256": "43bef3f0f9aaa25b4f464193b47a9a007218f0d5a6a6d7af41eec73b69189fc6"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_06809_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.01466511283069849,
+      "PNG_support_mean_channel_spread": 3.7400275103163687,
+      "PNG_hole_L1_previously_audited": 0.04515827422211434,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_06809_g3_gd.npz",
+        "bytes": 3242791,
+        "sha256": "52ee3e6c7ed5ef7ac509a84b6e04f5f0a73bee8344f812a632da3d6c540ee68d"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_06809_g3_gd.png",
+        "bytes": 44398,
+        "sha256": "d22adfe2b91c28e720408eaa9ff27035025ada33c5ce400c8969005454980d69"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_06995_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.035665784031152725,
+      "PNG_support_mean_channel_spread": 9.093081102310663,
+      "PNG_hole_L1_previously_audited": 0.08048281388442878,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_06995_g0_gd.npz",
+        "bytes": 3268840,
+        "sha256": "f93289be1dba78fef52916f72c287c4466d491975babef3a3da6cea202e4dac0"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_06995_g0_gd.png",
+        "bytes": 55242,
+        "sha256": "702cc1b3798bf070b3ac804d0df0687c038e17f75ac2aa641600878d26ff3a82"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_07087_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.025383727625012398,
+      "PNG_support_mean_channel_spread": 6.47337962962963,
+      "PNG_hole_L1_previously_audited": 0.07706835511982571,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_07087_g1_gd.npz",
+        "bytes": 3318832,
+        "sha256": "ef03c8dc14a6c31d1165379f970a0e244d9a95e62c08f30c2c0b8f0c1354339e"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_07087_g1_gd.png",
+        "bytes": 50974,
+        "sha256": "dcfc1286b7a9089176ebcc6d6183e6e280006870e3740f87454a06040824d119"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_07202_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.05451326072216034,
+      "PNG_support_mean_channel_spread": 13.885984677782785,
+      "PNG_hole_L1_previously_audited": 0.08400003534536843,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_07202_g2_gd.npz",
+        "bytes": 3224873,
+        "sha256": "14c519754b433db73771ec379e2c3a98b76204c44fa2771ddb82fe6a234297d4"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_07202_g2_gd.png",
+        "bytes": 46282,
+        "sha256": "a2354681fe41d0068a2da9fecb20dbb20e01348930768e8825ea5c66e4e900f8"
+      }
+    },
+    {
+      "arm": "B",
+      "id": "v2m_07386_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": false,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.026939984411001205,
+      "PNG_support_mean_channel_spread": 6.870357634112792,
+      "PNG_hole_L1_previously_audited": 0.05468754214202875,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_07386_g3_gd.npz",
+        "bytes": 3328564,
+        "sha256": "41f2dcee03c5c0f12f10b1672cfcb6d9878a9a6b0f637a7be4f1d53dd98d9bf8"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\CONTROL_B_predicted_codes_w0\\challenge\\v2m_07386_g3_gd.png",
+        "bytes": 58803,
+        "sha256": "b07162e1a1ed49cbfd1c2f51d33e4125fd423ed491988a5d14ac0d931f1a4666"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_05179_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.03241864591836929,
+      "PNG_support_mean_channel_spread": 8.265562610460169,
+      "PNG_hole_L1_previously_audited": 0.05431763157140406,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_05179_g0_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3275985,
+        "sha256": "8f9a9baaff4230e7acdbbb1755364634862fd3422ba30691ec30a09d29634a76"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_05179_g0_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 50067,
+        "sha256": "bebff08d47ea2953250be83c4c39d720e332f6c2b6719175867d9ea825f5b4d4"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_05302_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.020699195563793182,
+      "PNG_support_mean_channel_spread": 5.279976851851852,
+      "PNG_hole_L1_previously_audited": 0.06261574074074074,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_05302_g1_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3365194,
+        "sha256": "c60061b387b60787cb7c25bffec4c47a0177aa1efd0df9f6ffe5db70696cd5b1"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_05302_g1_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 53367,
+        "sha256": "4355ca2cd50f573a435a2dcaba1a564abd29f9dc620f4d20db7345b001a9518d"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_06781_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.016808751970529556,
+      "PNG_support_mean_channel_spread": 4.286164939161784,
+      "PNG_hole_L1_previously_audited": 0.03324762081488747,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_06781_g2_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3253653,
+        "sha256": "3fe0a6618f2d9d4f49666c72c98a31470c273d6f84f0f1746b2330537ffc49f3"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_06781_g2_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 46503,
+        "sha256": "7722552e5eb6e9728e1bd95cebc6d7ffecf06cd362df5889a32456c7cf781454"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_06809_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.01654447801411152,
+      "PNG_support_mean_channel_spread": 4.210453920220083,
+      "PNG_hole_L1_previously_audited": 0.020505524539022393,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_06809_g3_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3245315,
+        "sha256": "d33e9104115eb263eefaf3bf686396eca240e6d70906f6fbd81e55dab14259b3"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_06809_g3_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 43345,
+        "sha256": "56c90a7bfe2f34e3244651edaa79b393a7e586ff3abc0bd1875cbe3c908fbfe2"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_06995_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.04817092791199684,
+      "PNG_support_mean_channel_spread": 12.28487268442757,
+      "PNG_hole_L1_previously_audited": 0.052147938226587795,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_06995_g0_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3259092,
+        "sha256": "8cbab3c0fd59f32b7e36f5de0cd087b73b1c19c640c33837012118f333bf947d"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_06995_g0_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 55896,
+        "sha256": "86302abd9e90c84c81f7edc8dc95f4269391ffb7b16893332a0f598cfc228ca6"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_07087_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.025487028062343597,
+      "PNG_support_mean_channel_spread": 6.493287037037037,
+      "PNG_hole_L1_previously_audited": 0.04863940329218107,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_07087_g1_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3320728,
+        "sha256": "a790a9c161454d6e521671a6d9a1d5f91209d59a31b90ce5c33e1ab59b526b9f"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_07087_g1_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 49067,
+        "sha256": "42467a2366a23158e09b89987d03bdb2bafd62be1d24088900d9542088195363"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_07202_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.012797088362276554,
+      "PNG_support_mean_channel_spread": 3.262280306444344,
+      "PNG_hole_L1_previously_audited": 0.03537482290497692,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_07202_g2_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3224284,
+        "sha256": "13d8b8a2e463efa7d04ace74b68f46600e0bbdd8cf5e53544fa4bd44ab909eeb"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_07202_g2_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 44552,
+        "sha256": "9ff1d44c6d083c99c2a46747e7c7ae71c66e0e47c0724b5f37001293fa8b15ee"
+      }
+    },
+    {
+      "arm": "C",
+      "id": "v2m_07386_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.023511406034231186,
+      "PNG_support_mean_channel_spread": 6.0,
+      "PNG_hole_L1_previously_audited": 0.04238386780663664,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_07386_g3_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3338341,
+        "sha256": "1a9820c005a45eb0ff3b611e9aaa5a18418da566fd9e3fa13e7fb73d12adb268"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_C_unavailable_clean_information_w1\\challenge\\v2m_07386_g3_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 58128,
+        "sha256": "646910c150b062515a308d406dd926d1fb2301e92e3da0dfaf79442e2a31292e"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_05179_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.01881452091038227,
+      "PNG_support_mean_channel_spread": 4.794920468678406,
+      "PNG_hole_L1_previously_audited": 0.03865146503715055,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_05179_g0_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3280826,
+        "sha256": "00c0e39a5b21ae635b4623ee7d8ad0d84b2e707dd3fe4e3ee37a52dcac729f2f"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_05179_g0_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 55167,
+        "sha256": "f4ceac3bad363586e2298ad8fa5a90f1c019269641011f604ffc00da24df8dfd"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_05302_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.025793856009840965,
+      "PNG_support_mean_channel_spread": 6.577083333333333,
+      "PNG_hole_L1_previously_audited": 0.04015780077463084,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_05302_g1_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3363682,
+        "sha256": "9427e833dfedd27023fd946d5f7e0c187108f756ddb360bc5cae3785151fb9d0"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_05302_g1_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 56350,
+        "sha256": "f46c4823d2a818bee89fb6f8ecf1279fb4b508fd6f2e871429dfbd375e47587c"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_06781_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.018977494910359383,
+      "PNG_support_mean_channel_spread": 4.8476791347453805,
+      "PNG_hole_L1_previously_audited": 0.03127181471957868,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_06781_g2_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3255694,
+        "sha256": "3e272a7cebe2d4f1f72ee42af256fb6b4d8e546d9511d086e5b2d53270287ee6"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_06781_g2_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 47216,
+        "sha256": "0049f4d24dc27cd61f53f97a980e6255f3879a7910ea622f0c1f702c4ae056f8"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_06809_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.017041433602571487,
+      "PNG_support_mean_channel_spread": 4.340784044016506,
+      "PNG_hole_L1_previously_audited": 0.01990002786992835,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_06809_g3_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3238148,
+        "sha256": "1d842904dc4ec28720708b3837c48ec02c1b2efbbca17bf9891fe9277634fe01"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_06809_g3_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 44031,
+        "sha256": "6f73184042d3f1fb3380913fffdd5538e9d5b04d40425f2807cd86961e262ad3"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_06995_g0_gd",
+      "mask_kind": "lower_face",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.030513368546962738,
+      "PNG_support_mean_channel_spread": 7.786345486679322,
+      "PNG_hole_L1_previously_audited": 0.03960210166849135,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_06995_g0_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3258754,
+        "sha256": "6c70649500a9cf397a9c54dd981b350633f09493e5c1fe6c12acf2f815ee01a2"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_06995_g0_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 62183,
+        "sha256": "2999164414b1d349a05d22123be9ff1919e1b29dd93da994d35430ae1cc323c8"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_07087_g1_gd",
+      "mask_kind": "eye_band",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.02699473313987255,
+      "PNG_support_mean_channel_spread": 6.892245370370371,
+      "PNG_hole_L1_previously_audited": 0.045143579036552896,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_07087_g1_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3323936,
+        "sha256": "10b0b3113888ead1c42d26f04624cab3e84c7618dccba852a2f4ed8f26848f4b"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_07087_g1_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 53067,
+        "sha256": "71c754d370e4b6a1d0124f418fa3d8825385f7615901a6c7655e27d13df9dd7d"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_07202_g2_gd",
+      "mask_kind": "image_left_lens",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.015656447038054466,
+      "PNG_support_mean_channel_spread": 3.9720594862550698,
+      "PNG_hole_L1_previously_audited": 0.03241995010412156,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_07202_g2_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3218324,
+        "sha256": "c14b9c9d68177a599201bdccbbd0623c01d3923214c493c6db30c6e9f64037f3"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_07202_g2_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 45387,
+        "sha256": "4122a3051308d4e22342b644cb0dd87b23fbf2695eea359d1ebb787c30733fbd"
+      }
+    },
+    {
+      "arm": "D",
+      "id": "v2m_07386_g3_gd",
+      "mask_kind": "cheek_object",
+      "oracle_unavailable_clean_information": true,
+      "not_deployable": true,
+      "raw_support_mean_channel_spread": 0.018901344388723373,
+      "PNG_support_mean_channel_spread": 4.8174002751031635,
+      "PNG_hole_L1_previously_audited": 0.04095306164648344,
+      "NPZ_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_07386_g3_gd__ORACLE_unavailable_clean_information.npz",
+        "bytes": 3329936,
+        "sha256": "f5d52efc3cae5ec20ddcb4896577a676b6116f409a630f8891ab2c8e848f9d83"
+      },
+      "PNG_pin": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\ORACLE_D_unavailable_clean_information_w0\\challenge\\v2m_07386_g3_gd__ORACLE_unavailable_clean_information.png",
+        "bytes": 59366,
+        "sha256": "a24352018ff24055e6891912768dc755397a1bc5bd1aed247ae50ccc1e2b2b08"
+      }
+    }
+  ],
+  "limits": "All token regions are area proxies, not decoder receptivefields or causalpaths. OracleC/D use unavailablecleancontext. Channelspread measures grayscale color artifact, not actualhiddenidentity or perceptual utility. Savedimages only; noNN/autograd/optimizer/VM. Existing differentFIT observations do not provide controlled learningcurve.",
+  "neural_calls": 0,
+  "gradient_queries": 0,
+  "model_construction": false,
+  "optimizer_construction": false
+}

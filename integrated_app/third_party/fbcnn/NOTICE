@@ -1,0 +1,5 @@
+FBCNN architecture from Jiaxi Jiang, Kai Zhang and Radu Timofte.
+https://github.com/jiaxi-jiang/FBCNN
+Source revision 54d1831927506b3247e2d4d245abb4f4dab1a1cd.
+The local copy omits the unused torchvision import and strips trailing whitespace.
+See LICENSE for the Apache 2.0 terms.

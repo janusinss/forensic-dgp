@@ -49,15 +49,63 @@ class CompletionRuntimeTests(unittest.TestCase):
 
     def test_manifest_separates_completion_from_restoration_and_rejects_drift(self):
         body = assets.load_manifest()
-        self.assertEqual(set(body["assets"]), {"completion_r1", "covering_detector"})
-        self.assertEqual(body["assets"]["completion_r1"]["size"], 370764381)
-        self.assertIsNone(body["assets"]["completion_r1"]["url"])
+        self.assertEqual(body["component"], "reviewed-r2-face-completion")
+        self.assertEqual(body["default_model"], "completion_r2")
+        self.assertEqual(set(body["assets"]), {"completion_r2", "covering_detector"})
+        self.assertEqual(body["assets"]["completion_r2"]["size"], 370773572)
+        self.assertEqual(body["assets"]["completion_r2"]["filename"], "codeformer_completion_r2.pth")
+        self.assertEqual(body["assets"]["completion_r2"]["sha256"],
+                         "ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c")
+        self.assertEqual(body["assets"]["covering_detector"]["sha256"],
+                         "ccc22d524073368bc4f5d6b6d2136c90d0e2a117083e4c75fa98d42d7bfff6cf")
+        self.assertIsNone(body["assets"]["completion_r2"]["url"])
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "manifest.json"
-            body["assets"]["completion_r1"]["sha256"] = "0" * 64
+            body["assets"]["completion_r2"]["sha256"] = "0" * 64
             path.write_text(json.dumps(body), encoding="utf-8")
             with self.assertRaises(assets.CompletionAssetError):
                 assets.load_manifest(path)
+
+    def test_contract_and_empty_bypass_bind_r2_provenance(self):
+        contract = runtime.model_contract()
+        self.assertEqual(contract["model_id"], "completion_r2")
+        self.assertEqual(contract["model_label"], "Trained CodeFormer completion R2")
+        self.assertEqual(contract["backend"], "codeformer-inpainting-finetune-r2")
+        self.assertEqual(contract["weights_sha256"],
+                         "ed9f92baf06a73090343ad00cdc23b8493c9dde738a90cde9bdb650e69fee07c")
+        self.assertEqual(contract["logical_state_sha256"],
+                         "300b13b8f01db17aa95ee95ca41dbbdfbd4e5e3257dd16657fcc7950d3351ea0")
+        self.assertEqual(contract["training_protocol_sha256"],
+                         "463c1977e9cd74f0a4fd0240df7a784f48b613043ef667714f1ef94adb4cd60a")
+        self.assertEqual(contract["device"], "cpu")
+        self.assertFalse(contract["model_qualified"])
+        self.assertFalse(contract["hidden_identity_verified"])
+        with patch.object(runtime, "load_frozen_cpu_completion", side_effect=AssertionError("must bypass")):
+            result = runtime.complete(self.rgb, np.zeros_like(self.mask))
+        for key, value in contract.items():
+            self.assertEqual(result["metadata"][key], value)
+        self.assertEqual(result["metadata"]["neural_calls"], 0)
+        self.assertTrue(np.array_equal(result["output_rgb"], self.rgb))
+
+    def test_r1_fingerprint_cannot_be_relabelled_as_r2(self):
+        body = assets.load_manifest()
+        self.assertIn("completion_r2", body["assets"])
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "manifest.json"
+            body["assets"]["completion_r2"]["sha256"] = (
+                "7ae2486739de0f3efa99cf721a0fcb755f8f56cf69e295412f74190d2fda37e0")
+            path.write_text(json.dumps(body), encoding="utf-8")
+            with self.assertRaises(assets.CompletionAssetError):
+                assets.load_manifest(path)
+
+    def test_missing_r2_never_falls_back_to_retained_r1(self):
+        with tempfile.TemporaryDirectory() as folder:
+            models = Path(folder)
+            old = models / "codeformer_completion_r1.pth"
+            old.write_bytes(b"retain previous R1 model")
+            with self.assertRaisesRegex(assets.CompletionAssetError, "codeformer_completion_r2.pth"):
+                assets.asset_path("completion_r2", model_dir=models)
+            self.assertEqual(old.read_bytes(), b"retain previous R1 model")
 
     def test_empty_mask_bypass_cannot_construct_a_model(self):
         with patch.object(runtime, "load_frozen_cpu_completion", side_effect=AssertionError("model must not load")):
@@ -186,6 +234,7 @@ class CompletionWorkerTests(unittest.TestCase):
             base = Path(folder); request, rgb = self.prepare(base)
             result = worker.run_request(request, request_root=base)
             self.assertTrue(result["complete"])
+            self.assertEqual(result["metadata"]["model_id"], "completion_r2")
             self.assertEqual(result["metadata"]["neural_attempts"], 0)
             self.assertEqual(result["metadata"]["neural_returns"], 0)
             with Image.open(result["png_path"]) as image:
@@ -193,7 +242,9 @@ class CompletionWorkerTests(unittest.TestCase):
             with np.load(result["stages_path"], allow_pickle=False) as data:
                 self.assertEqual(set(data.files), {"input_rgb", "removal_mask", "completed_rgb", "output_rgb"})
                 self.assertTrue(np.array_equal(data["output_rgb"], rgb))
-            self.assertEqual(json.loads((base / "output/status.json").read_text())["status"], "complete")
+            status = json.loads((base / "output/status.json").read_text())
+            self.assertEqual(status["status"], "complete")
+            self.assertEqual(status["component"], "completion_r2")
             with self.assertRaises(ValueError):
                 worker.run_request(request, request_root=base)
 

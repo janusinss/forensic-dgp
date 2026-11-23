@@ -1,0 +1,1360 @@
+{
+  "format": "independent-predictor-only-CE-scoped-design-data-Adam-admission-v1",
+  "complete": true,
+  "independent": true,
+  "audited_UTC": "2026-10-26T15:15:50.024021+00:00",
+  "auditor": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\admit_partition_Adam_labels.py",
+    "bytes": 15147,
+    "sha256": "92c4993b8d61ee350c8e9c19919dfe322633e5470bcf1b469dcee69408a67ae7"
+  },
+  "review": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_probe_predictor_review_v1\\independent_design_research.md",
+    "bytes": 9594,
+    "sha256": "b4bcb18388ccd33a8df58f688ffb86d74d47d757f9a471b5df64787fa46e81a7"
+  },
+  "partition": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_post_probe_predictor_review_v1\\independent_predictor_partition.json",
+    "bytes": 139386,
+    "sha256": "286b42ab32449568061b5b62cd09368c40c5c5e9f7c77c2cfd4c2c1a67bc87fd"
+  },
+  "balanced128_subset": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\balanced128_subset.json",
+    "bytes": 206868,
+    "sha256": "8ec2d535cd6fb231af815d0ec833a1cd08f418458cbc4919c0ebd13f638f2a1d"
+  },
+  "source497state": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_same_codebook_probe_v1_return\\cctv_completion_codeformer_same_codebook_probe_v1_results\\outputs\\state_before.json",
+    "bytes": 115110,
+    "sha256": "3e073634b367ba7bf9de9d1a7773427f34702bd93ebb9e14b104ebdcfebc2d9e"
+  },
+  "parent_passive_admission": {
+    "file": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_finetune_v1_r1_return\\cctv_completion_codeformer_finetune_v1_r1_results\\outputs\\terminal_training_state.pth",
+      "bytes": 701952165,
+      "sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd"
+    },
+    "safe_globals_added": false,
+    "arbitrary_pickle_load": false,
+    "complete_ZIP": true,
+    "CRC_all_members_pass": true,
+    "ZIP_entries": 1336,
+    "uncompressed_bytes": 701699976,
+    "pickle_bytes": 175445,
+    "pickle_opcodes": 44904,
+    "pickle_globals": [
+      "collections OrderedDict",
+      "torch ByteStorage",
+      "torch FloatStorage",
+      "torch._utils _rebuild_tensor_v2"
+    ],
+    "allowlisted_globals_only": true
+  },
+  "exact114Adam_mapping": {
+    "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_design_independent_review_v1\\predictor_parent_Adam_mapping.json",
+    "bytes": 129216,
+    "sha256": "157bb777bda588ff89786d8d4a5a80bb4252ca1a66c412811dcc8f6039a92465"
+  },
+  "trainable_tensors": 114,
+  "frozen_tensors": 383,
+  "trainable_scalars": 19450880,
+  "FIT_label_sets": 64,
+  "FIT_label_pins": [
+    {
+      "teacher_key": "tr_ffhq_00084::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00084_gray.npz",
+        "bytes": 243127,
+        "sha256": "a522070962e6e902b7d06a106b7cee8b57e952bfab272850dfd3808688968753"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00084_gray.png",
+      "clean512_sha256": "7bf44959d306b80e76abd8b8576bdaa492525bc1178fe475b61648312d72dd8b",
+      "selected_case_ids": [
+        "v2f_00084_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00084::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00084_rgb.npz",
+        "bytes": 243067,
+        "sha256": "3f89f15c3b6d724e7ddedd6a8a5582418d73a405220276502fea52e403516b3b"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00084_rgb.png",
+      "clean512_sha256": "863f26a7ddf4f888497aee838e75799cda6e4cd20a920dd0a498f3ed5c7e46aa",
+      "selected_case_ids": [
+        "tr_ffhq_00084__image_left_lens",
+        "tr_ffhq_00084__cheek_object",
+        "v2f_00084_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00178::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00178_gray.npz",
+        "bytes": 243663,
+        "sha256": "427bc1f6a98a7028e6c27688ee47fa9069b8afe8d07fea3f3adb9e3c7d52f544"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00178_gray.png",
+      "clean512_sha256": "e743bf4186dacba43a9f181d083525caaac1e1833904a03687c7e62113c11e1f",
+      "selected_case_ids": [
+        "v2f_00178_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00178::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00178_rgb.npz",
+        "bytes": 243716,
+        "sha256": "ad90849913a978b70938d81cc76382c777ea65a682fde0f1a00a809c7e802812"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00178_rgb.png",
+      "clean512_sha256": "508dc4cc328efc3cc253845240faa25464080e2b4dbc747cdf53acf8009c20db",
+      "selected_case_ids": [
+        "tr_ffhq_00178__image_left_lens",
+        "tr_ffhq_00178__cheek_object",
+        "v2f_00178_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00323::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00323_gray.npz",
+        "bytes": 243872,
+        "sha256": "47c5a9b98c35b8d9ef17dd84a59c391f79c524e27ae2e290188aa88ba3272938"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00323_gray.png",
+      "clean512_sha256": "1ef759dc9816814703580432cc2f9942cf2f4b06cc6b368f352467cbcfaa3f8b",
+      "selected_case_ids": [
+        "v2f_00323_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00323::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00323_rgb.npz",
+        "bytes": 243935,
+        "sha256": "7c4f3facf86bdba4155cab365c7f4aa2e34cc3faf49965a4fbc80513f963181f"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00323_rgb.png",
+      "clean512_sha256": "d05bbc8be7db3565be26993bfcbf7ebb79621a4a261e147fbbd3126340bab14f",
+      "selected_case_ids": [
+        "tr_ffhq_00323__lower_face",
+        "tr_ffhq_00323__cheek_object",
+        "v2f_00323_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00616::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00616_gray.npz",
+        "bytes": 243294,
+        "sha256": "c9179c7aa3481a59f95118b9108a32f6c5c862b3014985dbe4be9d397a78f03b"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00616_gray.png",
+      "clean512_sha256": "ddcd0ffa9c9ff33cfdc4bb4b7ce72b457f5b9418f6d6d5cea92edf362aa39eda",
+      "selected_case_ids": [
+        "v2f_00616_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_00616::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_00616_rgb.npz",
+        "bytes": 243205,
+        "sha256": "aa4d3ff406c2f83dfbc778b19e7781851236ea700703412cf586774631befc31"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_00616_rgb.png",
+      "clean512_sha256": "93c5e7c4e186e0a656b9c74a3ff6c138c1f9b8252495b567b527c5b44192ee8e",
+      "selected_case_ids": [
+        "tr_ffhq_00616__eye_band",
+        "tr_ffhq_00616__image_left_lens",
+        "v2f_00616_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01210::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01210_gray.npz",
+        "bytes": 244134,
+        "sha256": "0d2a7d8445b8873f7b7016ff541ea1fd47bd19f53e8603a3768240dfd0db0570"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01210_gray.png",
+      "clean512_sha256": "15a2a8290e89eee51e71f86407dd2ae4c631f28c71efea4787b5f9770f39f8f8",
+      "selected_case_ids": [
+        "v2f_01210_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01210::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01210_rgb.npz",
+        "bytes": 244137,
+        "sha256": "607eacf86324e8eea39810ba27512835ebecbbb85a14e19a23265203c6f7f644"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01210_rgb.png",
+      "clean512_sha256": "ec8a176cdbf95c797ee5ee321aa438e2a5213328c179f3d117cb7ef8482ab4ed",
+      "selected_case_ids": [
+        "tr_ffhq_01210__image_left_lens",
+        "tr_ffhq_01210__cheek_object",
+        "v2f_01210_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01639::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01639_gray.npz",
+        "bytes": 244213,
+        "sha256": "bc2c317e3e6da2cdf8189200423931be34f4dac1753a3064d882640b8aa33462"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01639_gray.png",
+      "clean512_sha256": "ed115c0babef97b87512c1fa7348165a0a520b6cc3be03c0a77bddbbea93889c",
+      "selected_case_ids": [
+        "v2f_01639_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01639::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01639_rgb.npz",
+        "bytes": 244165,
+        "sha256": "8330d1a36d4727b056c177558d678618a229b067886f3d13df9a52d8f38e927a"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01639_rgb.png",
+      "clean512_sha256": "bfc09965a123a102b7454ccfd0fe370cc365e92f0695d503107008f98dd10f3d",
+      "selected_case_ids": [
+        "tr_ffhq_01639__image_left_lens",
+        "tr_ffhq_01639__cheek_object",
+        "v2f_01639_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01672::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01672_gray.npz",
+        "bytes": 243702,
+        "sha256": "5d799645b2185be42f39e503f108c72485ba12a165d3d9489322b424f67abcb7"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01672_gray.png",
+      "clean512_sha256": "63ff7a5879c895d56668ebdbcde5f564cbf8e0820e1023ebceeb9d86566196cf",
+      "selected_case_ids": [
+        "v2f_01672_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01672::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01672_rgb.npz",
+        "bytes": 243632,
+        "sha256": "233edf6d7c3678c37f3ea3f2a4de2a5218e371a74ebdccfd6dc433a7b7f29ff5"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01672_rgb.png",
+      "clean512_sha256": "1309f969834eb3a0f967564450673b1d8f927908d311bc3747a0cef011c81412",
+      "selected_case_ids": [
+        "tr_ffhq_01672__lower_face",
+        "tr_ffhq_01672__cheek_object",
+        "v2f_01672_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01926::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01926_gray.npz",
+        "bytes": 243902,
+        "sha256": "9bc525ad0713c2b1f7914c2b81b4b132da02bc6209c1a4b2c0bffed48453f5a9"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01926_gray.png",
+      "clean512_sha256": "aaaa6f8410f367d42880916a4121e894599438e406e2c5788b802c8cd6644105",
+      "selected_case_ids": [
+        "v2f_01926_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_01926::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_01926_rgb.npz",
+        "bytes": 243884,
+        "sha256": "941209070ed05b70a5a1468383612c09b67784c91397d049500636e729a8bb4c"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_01926_rgb.png",
+      "clean512_sha256": "bdc3c21aea11c1cb5f553c4b29fe608d5bb477497db6e1e9b077e592b08015e4",
+      "selected_case_ids": [
+        "tr_ffhq_01926__eye_band",
+        "tr_ffhq_01926__image_left_lens",
+        "v2f_01926_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02068::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02068_gray.npz",
+        "bytes": 243787,
+        "sha256": "5af68e4265fc49528d9928acfa5a59b4c7d828c91af09187065c7db3581cc4b9"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02068_gray.png",
+      "clean512_sha256": "e55069628a2d3bbd3150797c28970510f3fedcfaa668ace09bedbbfa632f5a51",
+      "selected_case_ids": [
+        "v2f_02068_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02068::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02068_rgb.npz",
+        "bytes": 243949,
+        "sha256": "619b58b5375d007d6ca5d940cfdba4d077d8734e1d04c2429a02e1ab5f5a735c"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02068_rgb.png",
+      "clean512_sha256": "17953d8112ea42e7c12ca8c5e4741a789472821d0bb343c400805314a4be4413",
+      "selected_case_ids": [
+        "tr_ffhq_02068__image_left_lens",
+        "tr_ffhq_02068__cheek_object",
+        "v2f_02068_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02147::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02147_gray.npz",
+        "bytes": 243954,
+        "sha256": "d46688aa8412f6e9a311b8565c9f92b94ee0d05fe9ccb92eaa14041801b65ce0"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02147_gray.png",
+      "clean512_sha256": "c79e8c02c47f0634fbabfb168fdaffdec7011e81ab0772dc9ccaf6ab95254f1c",
+      "selected_case_ids": [
+        "v2f_02147_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02147::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02147_rgb.npz",
+        "bytes": 244053,
+        "sha256": "b4a428be4b8887ca338c0abeb6ec38782d794b8b9f59e5ebc16ac8cba9b2d657"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02147_rgb.png",
+      "clean512_sha256": "97f27afa0aa16e5693905c83bc6377da2220e4792043636375eb139aa789dc92",
+      "selected_case_ids": [
+        "tr_ffhq_02147__image_left_lens",
+        "tr_ffhq_02147__cheek_object",
+        "v2f_02147_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02421::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02421_gray.npz",
+        "bytes": 244089,
+        "sha256": "ef56349b9053765fb7301ac9f7c39890c4cc60291d0950d9249047089cbf26f5"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02421_gray.png",
+      "clean512_sha256": "b2fb9682d52b3e8ec42b721d9922137a73d7cbc4c3aa857473b644815cfb475b",
+      "selected_case_ids": [
+        "v2f_02421_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02421::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02421_rgb.npz",
+        "bytes": 244123,
+        "sha256": "5ec1287c604e2e65343c92fec82d984143ea172fa6a5d4810b38cdfcfc10a275"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02421_rgb.png",
+      "clean512_sha256": "d60a2bc938d8d01dc94fc21ea51370c4233ab06b15113a6b1f883df265d7d863",
+      "selected_case_ids": [
+        "tr_ffhq_02421__lower_face",
+        "tr_ffhq_02421__cheek_object",
+        "v2f_02421_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02473::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02473_gray.npz",
+        "bytes": 243531,
+        "sha256": "404eb3bb0a60de597f52f378f9fd4ae28f8a48bec2372f29fcc7a1137e76d7b9"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02473_gray.png",
+      "clean512_sha256": "a97c7d3a5611d1bbabafd521310faef671184140889797f4b641a3d635249894",
+      "selected_case_ids": [
+        "v2f_02473_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02473::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02473_rgb.npz",
+        "bytes": 243689,
+        "sha256": "18910298fcf157729138f4dc9859d6f86828abbae8bcef824c649ce68cd6fb26"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02473_rgb.png",
+      "clean512_sha256": "7bed634733f33997275ecd84425056e727bd777fc56c0dfa35aaa40d4c02643e",
+      "selected_case_ids": [
+        "tr_ffhq_02473__eye_band",
+        "tr_ffhq_02473__image_left_lens",
+        "v2f_02473_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02665::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02665_gray.npz",
+        "bytes": 243387,
+        "sha256": "568d129c28b2184f46effad32a1f63c61b8def8b5da1bfb2b7afb781ffffb935"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02665_gray.png",
+      "clean512_sha256": "abf1b73224c9f030a748cbb5486bc848ce0af227e81bd6ba93076788863c575c",
+      "selected_case_ids": [
+        "v2f_02665_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02665::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02665_rgb.npz",
+        "bytes": 243383,
+        "sha256": "13a321ab2aed6cb074e71b09af80bd08dafeb5182ae4fad51a912787c7b8c370"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02665_rgb.png",
+      "clean512_sha256": "9ca817a10f552727c8af5f5375190705fad28344d04d1538cd811b969bbfc305",
+      "selected_case_ids": [
+        "tr_ffhq_02665__image_left_lens",
+        "tr_ffhq_02665__cheek_object",
+        "v2f_02665_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02932::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02932_gray.npz",
+        "bytes": 243748,
+        "sha256": "bb1abf5aa461411355bbeb840d5f7671e405b6fd2f68f3416f5de96a026d0706"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02932_gray.png",
+      "clean512_sha256": "f4ace45cbc1c33d67fc891dbd4fbc23e4b7b8e24f3b7b80407ae2a85447ec2d1",
+      "selected_case_ids": [
+        "v2f_02932_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02932::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02932_rgb.npz",
+        "bytes": 243773,
+        "sha256": "cd2943443f530c2e500c0be1826bf3d192a355f0fe8b798c95fd5daae8a926b5"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02932_rgb.png",
+      "clean512_sha256": "729fa16f1881d96288aa21d9443a506d0e97363605c9675aa82dfa7935d86ebd",
+      "selected_case_ids": [
+        "tr_ffhq_02932__image_left_lens",
+        "tr_ffhq_02932__cheek_object",
+        "v2f_02932_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02983::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02983_gray.npz",
+        "bytes": 244149,
+        "sha256": "057309f4ecec021c5880b389e2fa2c1283634c1fb218e75b2e1e8eba07f32dc8"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02983_gray.png",
+      "clean512_sha256": "cb4bf061b47a2353adbf4e707d5907cf597743e2529771121eb5fa5f1ecc3c36",
+      "selected_case_ids": [
+        "v2f_02983_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_02983::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_02983_rgb.npz",
+        "bytes": 244285,
+        "sha256": "e82e82b021e25d3de0983d9a1d8eaab32cf3a2e0c8501ba6fbbb1ff86e6492da"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_02983_rgb.png",
+      "clean512_sha256": "5d7e9ae7e390696ddf9c0ca40b31d1aaa7044345a4b4932196106b5f9f2c36f3",
+      "selected_case_ids": [
+        "tr_ffhq_02983__lower_face",
+        "tr_ffhq_02983__cheek_object",
+        "v2f_02983_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03089::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03089_gray.npz",
+        "bytes": 244073,
+        "sha256": "6d728e46e4ba6760820629695b2d019eceb69147eb6433fdc967c5f7591f5256"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03089_gray.png",
+      "clean512_sha256": "915471db408cbcb175a6affc6db7e32bed2dd97d6708bdf7b2157c72a809d1b5",
+      "selected_case_ids": [
+        "v2f_03089_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03089::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03089_rgb.npz",
+        "bytes": 244127,
+        "sha256": "5d41829b1ab07c5e6d934c41f676cefd9818505d9337adae240a3667c9d2855e"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03089_rgb.png",
+      "clean512_sha256": "d4329a052ea73492a36f364fb76da62d634af3bc795cc07f77691c0d7428367d",
+      "selected_case_ids": [
+        "tr_ffhq_03089__eye_band",
+        "tr_ffhq_03089__image_left_lens",
+        "v2f_03089_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03147::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03147_gray.npz",
+        "bytes": 242811,
+        "sha256": "79c66f970e16315c7632fdbf6b5af87b7846849d3fe240808997640993367ac8"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03147_gray.png",
+      "clean512_sha256": "c4b35d06b86db603d16709f89ab8ec6a8f1bc3d752a64bd62f47776b4b53ad82",
+      "selected_case_ids": [
+        "v2f_03147_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03147::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03147_rgb.npz",
+        "bytes": 242436,
+        "sha256": "f651788d55073f213dafa38a6bb1446e170ab67814f5f76bca997c716b238327"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03147_rgb.png",
+      "clean512_sha256": "9fa7880fbcce2db868562689a71973c3927a5190b541dd9d55bcfcddb3b6d02b",
+      "selected_case_ids": [
+        "tr_ffhq_03147__image_left_lens",
+        "tr_ffhq_03147__cheek_object",
+        "v2f_03147_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03212::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03212_gray.npz",
+        "bytes": 243773,
+        "sha256": "f4f53abd4720c568ea7954776a9c042d9972399fb5a9c6d41bf3c2716d30f478"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03212_gray.png",
+      "clean512_sha256": "569aaaac7ad91429bbfe19e6ed455cf5439ed082cd9bf6fdd417aa14921b6910",
+      "selected_case_ids": [
+        "v2f_03212_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03212::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03212_rgb.npz",
+        "bytes": 243569,
+        "sha256": "9eeb76bae229db73ca2ccd0575930223fb6af8e3b6982c81eab7c86374a3a9fd"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03212_rgb.png",
+      "clean512_sha256": "93e01130b81cc95983b8ca583d0f8a0f180476006998d8460e017cfacd79a10e",
+      "selected_case_ids": [
+        "tr_ffhq_03212__image_left_lens",
+        "tr_ffhq_03212__cheek_object",
+        "v2f_03212_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03313::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03313_gray.npz",
+        "bytes": 243130,
+        "sha256": "3fd43d753f4db527f96ef292ae0cd018559b6cc18d19754970b0557766d88baf"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03313_gray.png",
+      "clean512_sha256": "26bc542ba8d020775e9f0a8d8bd58fcd02994578f7614020f5a219686a67c0dd",
+      "selected_case_ids": [
+        "v2f_03313_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03313::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03313_rgb.npz",
+        "bytes": 243043,
+        "sha256": "4e27b618891966b68fea44f6e91fe8fe2d6f414c4f65c7d39bbc07185dea0114"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03313_rgb.png",
+      "clean512_sha256": "dd7a0d6648f1ce72953767d9586f80403b731991bab748f28fba68126d745103",
+      "selected_case_ids": [
+        "tr_ffhq_03313__lower_face",
+        "tr_ffhq_03313__cheek_object",
+        "v2f_03313_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03437::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03437_gray.npz",
+        "bytes": 243981,
+        "sha256": "298fb603daa719f803ad83c3605f6d2cd4a2c5a30f6b0a6b730aa1a3acb6d3e5"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03437_gray.png",
+      "clean512_sha256": "0ed7644d9c5fab7e1d722c5b1845604da2151ca210990a2d92fa2618b6e2582c",
+      "selected_case_ids": [
+        "v2f_03437_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03437::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03437_rgb.npz",
+        "bytes": 243785,
+        "sha256": "e04851e942528bbce88bdaf7e384c9259b8b6c5c3d67d37ddfc8929ea027836b"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03437_rgb.png",
+      "clean512_sha256": "2f17076529f41cbd052ac28a235b86987699137d8c9cb1277bc7e0b1a6d39246",
+      "selected_case_ids": [
+        "tr_ffhq_03437__eye_band",
+        "tr_ffhq_03437__image_left_lens",
+        "v2f_03437_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03483::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03483_gray.npz",
+        "bytes": 243423,
+        "sha256": "4d03efa79800b3486b1d15d1f5dd616e14a6237ccf0ef86728e654e74c5484c3"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03483_gray.png",
+      "clean512_sha256": "9d3023a49cb01d295eaaf04ab26bbee3e0f06f4f2c8fed2cd623a82ae5927d3a",
+      "selected_case_ids": [
+        "v2f_03483_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03483::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03483_rgb.npz",
+        "bytes": 243448,
+        "sha256": "2b7c3211fcc2bddb53c17efb72a88e0804396c4619f6e7afa5ea26b4d04b941d"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03483_rgb.png",
+      "clean512_sha256": "40685af75ee648e7859a644bba70e67b33eb35a016065e17821dc0ecf31760ff",
+      "selected_case_ids": [
+        "tr_ffhq_03483__image_left_lens",
+        "tr_ffhq_03483__cheek_object",
+        "v2f_03483_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03497::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03497_gray.npz",
+        "bytes": 243025,
+        "sha256": "c9c751f5456aca473d51741e8e46000817bf776a73004d9377ba05bae20ebf5b"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03497_gray.png",
+      "clean512_sha256": "87704daf85dd29a32355e6b9620f45004dc877c3183657434cb9addb4a69e4c4",
+      "selected_case_ids": [
+        "v2f_03497_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03497::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03497_rgb.npz",
+        "bytes": 243042,
+        "sha256": "6c3f5895e07368ddc2125cf97b0592e264973ff112ba9e61181d747e1120e8a3"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03497_rgb.png",
+      "clean512_sha256": "f87beae679c57d6a9ee5db8bde3221cc786c5395d8fc7b4dfd294d28fc1e3b85",
+      "selected_case_ids": [
+        "tr_ffhq_03497__image_left_lens",
+        "tr_ffhq_03497__cheek_object",
+        "v2f_03497_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03735::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03735_gray.npz",
+        "bytes": 244114,
+        "sha256": "16b4322326269b046209ca08089a7bd1616d461b4c6b6655a546dddf60f1adc3"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03735_gray.png",
+      "clean512_sha256": "273bdc46288e5bd31065bf3617dc91b680a0cb539c07de8c0898c70046c9bfdd",
+      "selected_case_ids": [
+        "v2f_03735_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03735::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03735_rgb.npz",
+        "bytes": 243992,
+        "sha256": "150cc67d357467a75125ab3d7b016b94b1712dca6bcb0ab67bcd2d1122b907e8"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03735_rgb.png",
+      "clean512_sha256": "b10c6834259dcf1f2dbe454f737c300556c1c657767779d61a68de9b898bc0e1",
+      "selected_case_ids": [
+        "tr_ffhq_03735__lower_face",
+        "tr_ffhq_03735__cheek_object",
+        "v2f_03735_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03761::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03761_gray.npz",
+        "bytes": 244300,
+        "sha256": "adbdc9ed78fcbe77a4074b3f2363a0eb78c7659ebed53c9819610f1c9c0b8804"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03761_gray.png",
+      "clean512_sha256": "2c0566031ecafb341d4a9b358ba39449704a36204694394861988675e6d4e3b1",
+      "selected_case_ids": [
+        "v2f_03761_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03761::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03761_rgb.npz",
+        "bytes": 243953,
+        "sha256": "1ec7d46eb82ff7875050d6ca00f2ecdb7a9d2d7e4a1f420dd6dbf703dca5fec5"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03761_rgb.png",
+      "clean512_sha256": "1e9aa9f0c65ebd84f198428a5956f3b5ecb89b08995622d0977c5a705c0eae87",
+      "selected_case_ids": [
+        "tr_ffhq_03761__eye_band",
+        "tr_ffhq_03761__image_left_lens",
+        "v2f_03761_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03917::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03917_gray.npz",
+        "bytes": 244191,
+        "sha256": "8696e9742ba3c6f6f486346a9794b8b8a38a8231b6c2053c33ca5cbf246cde44"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03917_gray.png",
+      "clean512_sha256": "60357cfb0e5694c1cb141a152a86c8369075fc90b85c9e5dfc20d69b6f95d4d8",
+      "selected_case_ids": [
+        "v2f_03917_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_03917::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_03917_rgb.npz",
+        "bytes": 244104,
+        "sha256": "e583ee44bf3418122fcd2742be15927b1e3ce08ddfa38a21fc08990d49b88af2"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_03917_rgb.png",
+      "clean512_sha256": "ef25513ad24e10607bc91d3c33152ed25da2e6110d4a655f1fd5c4b9c11d2734",
+      "selected_case_ids": [
+        "tr_ffhq_03917__image_left_lens",
+        "tr_ffhq_03917__cheek_object",
+        "v2f_03917_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04169::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04169_gray.npz",
+        "bytes": 243808,
+        "sha256": "44adfdb839b010a2c0d78599e9de91dee4bc4d23a42fa94cfcab6dc010822266"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04169_gray.png",
+      "clean512_sha256": "41fe97384db067ba09081d73b251b351f5f02c04742c910d0820506eccfb0ffa",
+      "selected_case_ids": [
+        "v2f_04169_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04169::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04169_rgb.npz",
+        "bytes": 243902,
+        "sha256": "e8bb4cdd4e98d8f538ff29fc7941cc92548b5a8cf1ac65ab9f39496782f1efc9"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04169_rgb.png",
+      "clean512_sha256": "408068a87b5e020397dfed4c23797471cba9358fc0cfae2a1354bf4d080b3872",
+      "selected_case_ids": [
+        "tr_ffhq_04169__image_left_lens",
+        "tr_ffhq_04169__cheek_object",
+        "v2f_04169_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04436::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04436_gray.npz",
+        "bytes": 243308,
+        "sha256": "8304b4ba7889c01acfc538675178dac1f210c2af01adbf24fc6c808f70d916f4"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04436_gray.png",
+      "clean512_sha256": "1c6522105a541c5ad018525bb25ba69bddfcc87e3cb1dc7cd78b02f07bd9a84d",
+      "selected_case_ids": [
+        "v2f_04436_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04436::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04436_rgb.npz",
+        "bytes": 243211,
+        "sha256": "2f3eb704e9ceb4f1b62338dc2d5c8f77c1ac901fe533c13071768fc780057ff6"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04436_rgb.png",
+      "clean512_sha256": "57ca57c90657b90d21d6cbe4e63622e6783097bc97e281c6049c3c73d29750eb",
+      "selected_case_ids": [
+        "tr_ffhq_04436__lower_face",
+        "tr_ffhq_04436__cheek_object",
+        "v2f_04436_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04454::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04454_gray.npz",
+        "bytes": 244023,
+        "sha256": "cb1f3d0800e4ec909cc40144add32df6424c6b939a15952e1c2307c406a2e084"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04454_gray.png",
+      "clean512_sha256": "5165ac163be65a1c83cecfb71a8d0560875d61066b55c78c44c58296232d5316",
+      "selected_case_ids": [
+        "v2f_04454_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04454::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04454_rgb.npz",
+        "bytes": 243894,
+        "sha256": "c064cff77d46cc0011ab02af3cebde05354f66fef9db8d1f0c3f6e0c642e7548"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04454_rgb.png",
+      "clean512_sha256": "5c5a65b94ce701d1af8307e33d30e9f22020e22f2b4f0221c2cf09e657898043",
+      "selected_case_ids": [
+        "tr_ffhq_04454__eye_band",
+        "tr_ffhq_04454__image_left_lens",
+        "v2f_04454_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04476::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04476_gray.npz",
+        "bytes": 243940,
+        "sha256": "319f7893503804a49a1af51775da95ca9703897618fba7eaf717d77dbacaf3d1"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04476_gray.png",
+      "clean512_sha256": "23480213291e46498aee4bb686961d977a0c22b869878e9ec629d5d1b1652fa8",
+      "selected_case_ids": [
+        "v2f_04476_g0_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04476::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04476_rgb.npz",
+        "bytes": 243760,
+        "sha256": "137c8451baf8b53a6f3be32390722f40ac34715b1b8a7e40eaf2902d528c1cfa"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04476_rgb.png",
+      "clean512_sha256": "3bd527442904dc66de811164fac8b83c9c188b89167472ad5a869571c44d863d",
+      "selected_case_ids": [
+        "tr_ffhq_04476__image_left_lens",
+        "tr_ffhq_04476__cheek_object",
+        "v2f_04476_g1_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04498::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04498_gray.npz",
+        "bytes": 244018,
+        "sha256": "00176ad28b2466c4ca1915c18c0187e4f7d426c04f19dcab2f4822d81d5b2614"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04498_gray.png",
+      "clean512_sha256": "1bf41fa38199e38a851115ad8764e591dc4c374fb3b06824c6002a77adcdf203",
+      "selected_case_ids": [
+        "v2f_04498_g1_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04498::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04498_rgb.npz",
+        "bytes": 243806,
+        "sha256": "4eef43747f9de39dd5f553d10be0268eb0170d8cf61abed0a09c27dc0a1344e4"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04498_rgb.png",
+      "clean512_sha256": "0ca06d5e09413add3fa7f76791257303d784718acfdce68704fb0bf771c5817e",
+      "selected_case_ids": [
+        "tr_ffhq_04498__image_left_lens",
+        "tr_ffhq_04498__cheek_object",
+        "v2f_04498_g0_rd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04759::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04759_gray.npz",
+        "bytes": 243735,
+        "sha256": "db7cbca0abea19f6e617620e1a02df825aa9625c859fda6fd078bfada6b5a6bf"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04759_gray.png",
+      "clean512_sha256": "03b548e7b42822243019d357d27a6710df508629aa62e7c1d7483687a22855f8",
+      "selected_case_ids": [
+        "v2f_04759_g2_gc"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_04759::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_04759_rgb.npz",
+        "bytes": 243711,
+        "sha256": "dd4cb94badd98b5d348426f943e0ec17e55983617c38262b2a467674e216429b"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_04759_rgb.png",
+      "clean512_sha256": "ccfcf395482fb80198125157ec5760549ca73ac61288695dc340e7b7a7a04db9",
+      "selected_case_ids": [
+        "tr_ffhq_04759__lower_face",
+        "tr_ffhq_04759__cheek_object",
+        "v2f_04759_g1_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_05002::GRAY",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05002_gray.npz",
+        "bytes": 243921,
+        "sha256": "e51e99d6ce220ae9bab615a5ef71b792b3d807b3c3528bf8f44ec87a6d3b2106"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_05002_gray.png",
+      "clean512_sha256": "961c6e6a7001c01737e398ca51a47f29938906277ac1658c90cf8394d1e0ad87",
+      "selected_case_ids": [
+        "v2f_05002_g3_gd"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    },
+    {
+      "teacher_key": "tr_ffhq_05002::RGB",
+      "label": {
+        "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\cctv_completion_codeformer_coverage_v2_results\\outputs\\teacher_labels\\tr_ffhq_05002_rgb.npz",
+        "bytes": 243604,
+        "sha256": "78a43bee0189eee77102d6f8b52dd46a13a05af71b2adf7dba38ca52b66043b6"
+      },
+      "clean512": "coverage_data/data/t512/tr_ffhq_05002_rgb.png",
+      "clean512_sha256": "0e5e4bb6d4bcca9ee80888b89645f9646e5ca2c1033eee6c827b4f3cc0a15c28",
+      "selected_case_ids": [
+        "tr_ffhq_05002__eye_band",
+        "tr_ffhq_05002__image_left_lens",
+        "v2f_05002_g0_ri"
+      ],
+      "int64_code_shape": [
+        1,
+        256
+      ],
+      "no_new_teacher_calls": true
+    }
+  ],
+  "excluded_monitor_label_sets": [
+    "tr_ffhq_05179::GRAY",
+    "tr_ffhq_05179::RGB",
+    "tr_ffhq_05302::GRAY",
+    "tr_ffhq_05302::RGB",
+    "tr_ffhq_06781::GRAY",
+    "tr_ffhq_06781::RGB",
+    "tr_ffhq_06809::GRAY",
+    "tr_ffhq_06809::RGB",
+    "tr_ffhq_06995::GRAY",
+    "tr_ffhq_06995::RGB",
+    "tr_ffhq_07087::GRAY",
+    "tr_ffhq_07087::RGB",
+    "tr_ffhq_07202::GRAY",
+    "tr_ffhq_07202::RGB",
+    "tr_ffhq_07386::GRAY",
+    "tr_ffhq_07386::RGB"
+  ],
+  "decision": "ADMIT_DISTINCT_SCOPED_DESIGN_FOR_FORMALIZATION_NOT_RUNTIME_OR_PACKET",
+  "optimizer_choice": "Exact per-name R1Adam moment+step32 subset, retained original group options, new topology114IDs; step32to64 at most32newupdates. Fresh reset would add a confound.",
+  "declared_loss": "Mean CE of logits.permute(0,2,1) against exact cached int64[1,256]same-inpainting-book labels, divided by4exactlyonce acrossfourmicrobatches. NoimageSTE,latentMSE,GAN,prior/encoder/fusionupdate.",
+  "finite_phase": {
+    "steps_maximum": 32,
+    "backwards_maximum": 128,
+    "updatesample_count": 128,
+    "full_pool_count_preserved": 256,
+    "all256used": false,
+    "safety_checks_at": [
+      8,
+      16
+    ],
+    "final_endpoint_only": 32,
+    "early_success_adoption_or_recovering_failedfinal": false,
+    "predicted_codes_only_at_evaluation": true
+  },
+  "unchanged_quality": "Final32must separately improve bothclear/challenge PNGholeL1>=1percent and all old raw/PNG macro/geometry/condition hole+boundary nonworse1e-12. All visible/empty/refusal,gray/publicfamily visual/user/final gates staybinding. Early8/16onlysafety/nonfinite/frozen/catastrophic checks, not compulsory1percent and notselectable winners.",
+  "provisional_call_accounting_if_same224outputprotocol": {
+    "fresh_full_parity": 8,
+    "normal_nonempty_evaluation_full_forwards": 216,
+    "training_code_only_forwards": 128,
+    "total_model_method_invocations": 352,
+    "teacher_network_calls": 0,
+    "backwards": 128,
+    "optimizer_steps": 32,
+    "empty_bypasses_with_four40controlsets_and8savedpublicempties": 168,
+    "saved_outputs": 224,
+    "full_parity_bundles": 4,
+    "count_scope": "Assumesclear0/8/16/32,challenge0/32,public0/32 with28nonemptyof32public; source/protocolmustconfirmbeforetransfer. Code-onlyinvocationsdoNOTexecute generator, despitecommonnetforwardhook countingboth."
+  },
+  "unresolved_before_runtime_packet_admission": [
+    "Freeze final protocol/worktypes/actual-hookcounts andhardcaps; no extra matchedFITpasses unlesscounted.",
+    "Bind exact32cycle balanced128schedule;64FITlabels are optimizationtargets,16monitorlabels may only scoreevaluation.",
+    "Runtimeassert named114parameterorder and savedAdam114mapping+moments/steps equal parent exactly beforefirstupdate; frozen383 exact aftereverycheckedstage.",
+    "Verify actual CEgraph reaches intended114parameters with encoder/fusion/prior frozen, finite pergroup gradients and nonzero update deltas; safe synthetic tests only locally.",
+    "Use onlyordinary predictedcode/w1inference; noownedoracleoverride,teacherNN,latentMSEorSTE inactuallearning/evaluation.",
+    "Derive terminaldelta+activeAdam/RNG/sampler/partialgradient/savephase schema andserialization bound; keepfrozen parent moment evidence. A full332delta+114Adam alone~389MB beforeRNG, so outputbudgets needexplicit conservativeheadroom.",
+    "Reserveall224savedoutputs/4parity/ordinarycode/logitdiagnostics ifdeclared; noautomatic extraepochs or retrospectivecheckpointselection.",
+    "Independent target/source/importblockCLI,savefailure,budget/manualguide andallreturnedstate/PNG/visualaudits requiredbeforetransfer/adoption."
+  ],
+  "limitations": [
+    "Probe clean-context oracle gains16percent are not an achievable learningpromise or generalization claim.",
+    "All256grid codeagreement is not inside-hole accuracy, identity confidence or nativeCCTVperformance.",
+    "Fixedencoder lq_feat MSE has no gradient to onlypredictor path; omitting it is an intentional methodchange.",
+    "Original inpainting labels andeightadaptive monitoridentities have limited coverage/unknownpretrainingoverlap.",
+    "LowerCE/highercodeagreement/fulltrainingstate cannot override failed deliveredimage or preservation gates."
+  ],
+  "checks_passed": 1475,
+  "local_actions": {
+    "safe_CPU_weights_only_parent_loads": 1,
+    "neural_models_or_forwards": 0,
+    "gradients": 0,
+    "optimizer_objects_or_steps": 0,
+    "VM_calls": 0,
+    "full_original_pool_or_labels_changed": false
+  },
+  "runtime_or_packet_admitted": false,
+  "ready_to_upload": false,
+  "model_qualified": false,
+  "goal_complete": false,
+  "seconds": 10.569794600000023
+}

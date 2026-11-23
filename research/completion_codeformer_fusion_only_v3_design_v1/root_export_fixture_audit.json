@@ -1,0 +1,21 @@
+{
+  "format": "root-fusion-only-v3-export-fixtures-v1",
+  "complete": true,
+  "source_sha256": "5c9504c37dd56f6cfb7852e2770411d789f787c8ae549ea38f68f7d84a8f53f4",
+  "checks": [
+    "failed partial and every return payload retained with exact hashes",
+    "archive receipt exact",
+    "existing export refuses overwrite",
+    "exit0 requires state and results",
+    "exit2 requires state and results",
+    "pinned source drift refusal",
+    "empty pinned source set refusal",
+    "2GiB disk floor",
+    "900second export stop",
+    "byte cap before oversized write"
+  ],
+  "Python310_AST_pass": true,
+  "fixtures_toy_bytes_not_checkpoints": true,
+  "actual_neural_gradient_optimizer_VM_calls": 0,
+  "scope": "Exporter fixtures only; full source/packet audit separate."
+}

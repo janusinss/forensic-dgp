@@ -1,0 +1,178 @@
+{
+  "format": "completion-fusion-only-v3-root-design-v1",
+  "created_UTC": "2026-10-26T10:34:00.209904+00:00",
+  "status": "FROZEN_PROSPECTIVE_DESIGN_SOURCE_AND_PACKET_ADMISSION_PENDING",
+  "scope": "Separate useful local256completion with reviewed removal support; currentR1app and RESTORATION/IMPLEMENTATION remain fixed.",
+  "scientific_question": "Can adapting only the54existingfusion tensors improve gray/degraded/irregular completion withoutclearregressions while R1 encoder/codeprior remainsfixed?",
+  "evidence": {
+    "prior_route_review": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_route_isolation_review_v1\\design_review_final.json",
+      "bytes": 9257,
+      "sha256": "f6ec0010289d426a3c651733a9567c5f53ea5c778ab24bdff110f1fe75ad66dd"
+    },
+    "V2_state_audit": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\independent_state_audit.json",
+      "bytes": 74413,
+      "sha256": "d56cd6c58f5c5800a5b924d5887fe9a058b549597aecb791ce8f352b08cf1c05"
+    },
+    "V2_pixels_audit": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\independent_saved_output_audit.json",
+      "bytes": 492496,
+      "sha256": "6ac24d0ac4ccbe4d54201e0c907a132b753c2ee84be35ea8adddf6cfde195fbb"
+    },
+    "V2_all_visuals": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\root_visual_review.json",
+      "bytes": 16006,
+      "sha256": "38d08337156cf61d895678aac1c0c30273a651850255f09d42f1d7be5c96b6ab"
+    },
+    "V2_tradeoff_diagnosis": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_return\\independent_learning_tradeoff_diagnosis_v1.json",
+      "bytes": 257567,
+      "sha256": "f3b98d5a4ea743630921341115edf76becf830926c99f4d6a29ddda11ca94e2a"
+    },
+    "optimized_writer_independent": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_writer_v1\\independent_writer_admission.json",
+      "bytes": 16069,
+      "sha256": "07eb9a55e2aa5dd737629e1695a15f8499833183d88d92987a2e45ea29249541"
+    }
+  },
+  "comparison": {
+    "new_learning_arm": "fusion_only_from_complete_R1",
+    "historical_joint_control": "Audited coverageV2u64 savedoutputs only; do notrerun itsfailedjointrecipe orreconstructinvalidpartial.",
+    "incumbent_and_primary_quality_control": "R1 freshu0 onidenticalinputs andmasks; originalCodeFormer remainshistoricalpermanentbaseline.",
+    "historical_control_limit": "Separate executions, not simultaneous matchedcompute. Frozenbytes/environment+initialR1raw/PNGcompatibility required; no claimcrossrunbitwiseCUDAtrainingdeterminism."
+  },
+  "recovery_parent": {
+    "terminal_sha256": "0a6b4ad907c6ead86d8f26d3446666387493cdce81c6adc1ed78a8677d50fadd",
+    "bytes": 701952165,
+    "protocol_sha256": "8815ad168ab429bf4f30b8d719d3a6de6d1e2667fc38412c89c9c95e74e5ff3d",
+    "logical_state_sha256": "55feaa296f5164a6bd12995b487c9366c5fe7778f0e9dbe8912fc4ee7c4122d6",
+    "base_original_sha256": "b0d1b868c3dacf75d637bbcc0d4b3dd4ce2a064a338dfb4d35c740d3b4ae8797",
+    "inference_only_parent_forbidden": true,
+    "V2_partial_parent_forbidden": true
+  },
+  "training": {
+    "cycles": 64,
+    "microbatches_per_cycle": 4,
+    "new_fusion_Adam_updates": 64,
+    "new_code_Adam_updates": 0,
+    "new_backward_calls": 256,
+    "frozen_model_state_tensors": 443,
+    "trainable_existing_fusion_tensors": 54,
+    "frozen_includes": "278 R1encoder/codeprediction tensors plus165originalgenerator/codebook tensors, allbitexact.",
+    "code_Adam": "Retain originalnamedstate/step32/hyperparameters/moments exactly; nozero_grad/step ornewtraining incode route.",
+    "fusion_Adam": "Restore namedR1step32;64newsteps end96;lr1e-5,betas(.9,.99),eps1e-8,wd0,clipL2one.",
+    "loss": "UnchangedunclampedHQ512maskedRGBL1 + innerboundaryRGBL1(kernel7),1+1;nogray/GAN/perceptual/identity/CE/latent/newloss.",
+    "precision": "FP32,noautocast/noTF32;evalmode asprior, gradientenabledonly54fusion.",
+    "RNG": "RestorecompleteparentCPU/CUDA/Python/NumPyRNGafterdeterministicconstructors/parity/baselines;recordhashesequality. Materializednewdataphase/scheduleusesnoglobaloptimizationRNG.",
+    "cumulative": "Parent32cycles/64Adamupdates/256backwards/528typed448whole. New64cycles/64fusionupdates256backwards480typed480whole => cumulative96cycles/128Adamupdates512backwards1008typed928whole; code32/fusion96."
+  },
+  "data": {
+    "source_manifest": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_data\\manifest.json",
+      "bytes": 1925038,
+      "sha256": "393bea14e4ba8a350644bc51d65c68a0eb57ba919b1c9d0954245c1f40935ea7"
+    },
+    "independent_data": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_data\\independent_data_admission_v1.json",
+      "bytes": 83969,
+      "sha256": "7c072ec5a916468275e4e5ba3e3124e9b472030014f1e7afed803f5beca3d63a"
+    },
+    "root20previewreview": {
+      "path": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\outputs\\completion_codeformer_coverage_v2_root_data_visual_review.json",
+      "bytes": 11131,
+      "sha256": "8488e9354a87ce186931c2770a9ce6a8de0da06b92baddba2c6d593aea54db72"
+    },
+    "FIT": "Exact256sealedcases:128oldclearanchors+128augmented;64x4originalV2schedule2anchor+2aug,fourdistinctrefs,eachcaseonce.",
+    "sources": "Same32FIT/eightadaptiveoriginalTRAINmonitor sources withperphotoattribution/terms;unknownFFHQoverlap,notindependentidentityFINAL.",
+    "monitor_clear": 32,
+    "monitor_challenge": 16,
+    "unpaired_public": 32,
+    "case_masks_or_targets_changed": false,
+    "teacher_neural_work": 0,
+    "targets": "Usealreadyfrozenappearance-matchedHQ512 RGB/GRAY targets;noquantizer/teacherencoderlabelwork.",
+    "real_coverings": "Publicphotosunpaired,nocleantarget,nohiddenPSNR/SSIM,noethnicity/nativeCCTV/Zamboangaperformanceclaim."
+  },
+  "initial_admission": {
+    "canonicalfresh_R1_app_parity_pairs": 4,
+    "parity_whole_forwards": 8,
+    "parity_raw256_max_error": 1e-06,
+    "all_four_saved_before_assertion": true,
+    "historical_R1_case_count": 48,
+    "historical_array_derivation": "Compactfloat32result256only foreachauditedV2u0clear32/challenge16NPZ usingallow_pickleFalse;indexpinsfullsourceNPZ/V2archive/audit andnewfilehash. Noresampling orprecisionconversion.",
+    "initial_vs_historical_raw256_max_error": 1e-06,
+    "initial_vs_historical_PNG_bytes_exact": true,
+    "all48_admit_before_update": true,
+    "on_incompatibility": "Stop retainbaseline/parity/state andredesign;noquietlyrelaxinggate or freshjointV2rerun."
+  },
+  "evaluation": {
+    "clear_snapshots": [
+      0,
+      16,
+      32,
+      64
+    ],
+    "challenge_snapshots": [
+      0,
+      64
+    ],
+    "public_snapshots": [
+      0,
+      64
+    ],
+    "planned_saved_outputs": 224,
+    "planned_nonempty": 216,
+    "planned_saved_empty": 8,
+    "empty_bypasses_total": 168,
+    "whole_and_typed_forwards": 480,
+    "FIT_fusion": 256,
+    "clear": 128,
+    "challenge": 32,
+    "public": 56,
+    "parity": 8,
+    "teacher": 0,
+    "forward_cap": 600,
+    "backward_cap": 256,
+    "fusion_updates_cap": 64,
+    "code_updates_cap": 0,
+    "quality": "Eachclear32/challenge16separately >=1%incrementalmeanPNGholeL1gainvsR1 AND allraw/PNGmacro/geometryhole+kernel7innerboundarynonworse<=R1+1e-12;challengeconditionalso. Same>10%catastropheoldclearat16/32. NochangetoV2gates.",
+    "source_preservation": "Activeindexedcompositioncopiesobservedprepared256outsidefixedreviewedsupportexactFP32andPNG;empty0NN;existingvisibility/refusal/exclusionsretained.",
+    "historicaljoint_comparison": "Reportallmatchedclear/challengemetricdeltasvsV2u64separately,neverreplaceincumbentR1gates;unpairedpublicvisualsonly.",
+    "original_cumulative": "Identicalclear32versusoriginalCodeFormerreportedseparately;notchallengepool.",
+    "visual": "All20plannedcompletecomparisonpages/80cases withall224savedoutputs, fixedorder, nointermediatestate rescue;userreviewaftervalidcheckpoint."
+  },
+  "resource_limits": {
+    "worker_hard_seconds": 1800,
+    "cooperative_seconds": 1680,
+    "VM_start_free_bytes": 7516192768,
+    "stop_floor_bytes": 2147483648,
+    "CUDA_allocated_bytes": 21474836480,
+    "raw_output_and_compressed_export_bytes_each": 2415919104,
+    "terminal_and_failedpart_cumulative_bytes": 1073741824,
+    "metadata_logs_bytes": 8388608,
+    "PNG_perfile_bytes": 262144,
+    "export_cooperative_seconds": 900,
+    "save_policy": "O1cachedwriterfromindependentlyadmittedprototype,alloldcaps/reserves preserved. Noextendingdeadline tohideoverhead.",
+    "timing_instrumentation": "Boundphasepreflight/parentload/Adamrestore/parity/eachbaselineandfinaleval;pre-savereceiptbeforepartial,bindlogicalstate/counts/plannedtensorbytes/disk/ledgertotals/deadlineremaining. TimeterminalCPUcopy/assembly/serialize/flushfsync/commitandcallbacks/bytes. Onfailurekeepfull/partialstateandreceipts.",
+    "terminal_retention": "Saveall332R1derivedtrainablepartitiontensors(includes278nowfrozen),bothnamedAdamstates,allRNG/schedule/progress/cumulativecounters/partialgrads;verify443frozenhashandcodeAdamunchanged. Onecompleteboundedterminal, nointermediatecandidate.",
+    "conservative_serialization": "RetainpriorV2bound2,330,980,025bytes asconservativeceiling(withteacher24MiBallowancenotactuallyused),below2304MiB2,415,919,104. SourceauditorrecountsactualV3protocol/loggrowth;7GiBpermitsoutput+exportwith2GiBfloor."
+  },
+  "execution": {
+    "manual_L4_only": true,
+    "VM_root": "~/forensic-dgp/cctv_completion_codeformer_fusion_only_v3_vm",
+    "transfer_stem": "cctv-completion-codeformer-fusion-only-v3",
+    "source_tests_only_locally": true,
+    "local_neural_gradient_optimizer_calls": 0,
+    "automatic_launch": false,
+    "frozen_old_packet_or_current_app_edits": false
+  },
+  "required_next_admissions": [
+    "Independentdesignreviewnow",
+    "Source-onlyworker/packetO1writerintegration tests",
+    "Python3.10compatibilityandTorch-blockedtransferCLIfixture",
+    "Allpayloadnamespace/hasharchiveandexactWindowsSDK/VM/tmuxcommands",
+    "ManualL4run+independentreturnedstate/outputs/allvisuals beforeanyreplacement"
+  ],
+  "model_qualified": false,
+  "goal_complete": false
+}

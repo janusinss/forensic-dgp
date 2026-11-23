@@ -1,0 +1,38 @@
+{
+  "complete": true,
+  "same_author_not_independent": true,
+  "exporter_sha256": "0010276bc3e3501f1660eb8919e498309d05eace8fa4aa04e3b0a298cacb58f9",
+  "cases": [
+    {
+      "case": "partial",
+      "passed": true,
+      "aliases": 0
+    },
+    {
+      "case": "single",
+      "passed": true,
+      "aliases": 0
+    },
+    {
+      "case": "quality",
+      "passed": true,
+      "aliases": 0
+    },
+    {
+      "case": "alias",
+      "passed": true,
+      "aliases": 1
+    },
+    {
+      "case": "distinct",
+      "expected_refusal": "Distinct checkpoint payloads violate one-save invariant; preserve both at source"
+    }
+  ],
+  "count": 5,
+  "source_paths_bytes_preserved": true,
+  "same_hash_different_inode_refused": true,
+  "neural_calls": 0,
+  "VM_calls": 0,
+  "actual_checkpoint_reads": 0,
+  "prior_long_path_fixture_attempt_preserved": "C:\\xampp\\htdocs\\YEAR 4\\Testing_FACE_MASK_COMPLETION\\research\\completion_codeformer_predictor_ce_v1_packet_preparation\\alias_export_author_fixtures"
+}
