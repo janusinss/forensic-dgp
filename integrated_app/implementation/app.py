@@ -44,7 +44,7 @@ app.mount('/static', StaticFiles(directory=str(ROOT / 'static')), name='static')
 LOCK = threading.Lock()
 STATE = {'neural_forward_attempts': 0, 'neural_forward_returns': 0,
          'active_worker': False, 'uncertain': False, 'last_worker_pid': None}
-ARMS = {'v2': 'conditioned_sft_v2_p2_u0224'}
+ARMS = {'v3': 'preconditioned_v34_codeformer'}
 DEFAULT_MODEL = json.loads((ROOT / 'implementation/models.json').read_bytes())['default_model']
 REQUEST_LIMIT = 360
 MAX_BUNDLE = 64 * 1024**2
@@ -162,7 +162,7 @@ def invoke(function, *args):
 
 
 def one_forward(contents, model):
-    need(model in ARMS, 'Only the V2 (p2_u0224) model is supported.')
+    need(model in ARMS, 'Only the V3.4 (preconditioned_v34_codeformer) model is supported.')
     if psutil.virtual_memory().available < 2684354560:
         raise RuntimeError('Restoration needs at least 2.5 GiB available RAM. Close unused applications and retry.')
     verify_models()
