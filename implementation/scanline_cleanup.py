@@ -215,6 +215,18 @@ def detect_and_clean_spatial_comb(
     m_before_mean = float(m_comb[1:-1].mean())
     if not force and (m_before_mean < 10.0 or run3_frac < 0.018):
         return None, None, {}
+    if not force:
+        # Guard against background height-chart ruler ticks at the crop edges when
+        # the central face region is smooth/blurred with near-zero comb energy.
+        h_s, w_s = luma.shape
+        cy0, cy1 = int(h_s * 0.25), int(h_s * 0.75)
+        cx0, cx1 = int(w_s * 0.25), int(w_s * 0.75)
+        if cy1 > cy0 + 8 and cx1 > cx0 + 8:
+            center_m_comb = float(m_comb[cy0:cy1, cx0:cx1].mean())
+            center_run3 = float(run3_mask[cy0:cy1, max(0, cx0):min(run3_mask.shape[1], cx1)].mean())
+            center_lap = cv2.Laplacian(luma[cy0:cy1, cx0:cx1], cv2.CV_32F)
+            if center_m_comb < 1.5 and center_run3 < 0.002 and float(np.var(center_lap)) < 12.0:
+                return None, None, {}
 
     alpha = np.clip((m_comb - np.float32(12.0)) / np.float32(48.0), 0.0, 1.0).astype(np.float32)
     alpha *= binary_dilation(comb_mask, iterations=1).astype(np.float32)

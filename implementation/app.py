@@ -800,7 +800,10 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         if automatic:
             need(protect is None and apply is None and not preview_id and not confirmed,
                  'Auto selects its own preparation. Remove manual preparation fields.')
+            from . import capture_api
             from .automatic_preparation import (
+                detect_blur_island_face_box,
+                is_background_grid_with_blurred_face,
                 prepare as prepare_automatically,
                 prepare_composables,
                 prepare_macroblocking,
@@ -810,7 +813,6 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 pixelation_signal,
                 tiny_crop_pixelation,
             )
-            from .capture_api import detect_faces
             selected_rectangle = rectangle
             detection_method = 'original_image'
             if capture_id:
@@ -830,6 +832,47 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     else:
                         deblocked, jpeg_report = prepare_jpeg(contents, native, rectangle)
                 payloads.update(region_evidence)
+
+            def _in_selection(boxes):
+                if selected_rectangle is None:
+                    return boxes
+                sx, sy, sw, sh = selected_rectangle
+                return [box for box in boxes if sx <= box[0] + box[2] / 2 < sx + sw
+                        and sy <= box[1] + box[3] / 2 < sy + sh]
+
+            _face_cache = {'done': False, 'face': None, 'method': 'original_image'}
+
+            def _detect_single_face():
+                if _face_cache['done']:
+                    return _face_cache['face'], _face_cache['method']
+                scan_image = Image.fromarray(source_rgb)
+                method = 'original_image'
+                try:
+                    with capture_api.DETECTION_LOCK:
+                        faces = _in_selection(capture_api.detect_faces(scan_image))
+                        if not faces:
+                            # Retry detection on copies. Preparation still requires
+                            # a block-pattern signal on the untouched source pixels.
+                            scale = max(scan_image.size) / 256
+                            for scan_radius in (min(2., max(.5, scale * .9)), min(12., max(2.5, scale * 3.3))):
+                                smoothed = scan_image.filter(ImageFilter.GaussianBlur(scan_radius))
+                                matches = _in_selection(capture_api.detect_faces(smoothed))
+                                if len(matches) > 1:
+                                    break
+                                if matches and pixelation_signal(source_rgb, matches[0])['suspected']:
+                                    faces = matches
+                                    method = 'smoothed_detection_copy_with_block_signal'
+                                    break
+                except RuntimeError:
+                    faces = []
+                detected = faces[0] if len(faces) == 1 else None
+                if detected is None:
+                    island = detect_blur_island_face_box(source_rgb, selected_rectangle)
+                    if island is not None:
+                        detected = island
+                        method = 'blur_island_fallback'
+                _face_cache.update(done=True, face=detected, method=method)
+                return detected, method
 
             if 'scanline-cleaned.png' in region_evidence:
                 scanline_report = regional_report
@@ -877,6 +920,31 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     or (scanline_report is not None and 'mosaic' in scanline_report)
                 )
             )
+            if (
+                is_privacy_mosaic_region
+                and tiny_report is None
+                and scanline_report is None
+                and regional_report is not None
+                and not regional_report.get('degraded_patch_conditioning')
+                and not regional_report.get('mixed_jpeg_mosaic')
+                and not regional_report.get('coordinated_mosaic_regions')
+                and 'full-image-pixelation-mask.png' in region_evidence
+            ):
+                with Image.open(io.BytesIO(region_evidence['full-image-pixelation-mask.png'])) as m_im:
+                    mosaic_mask = np.asarray(m_im) > 0
+                face_candidate, _ = _detect_single_face()
+                if face_candidate is not None and is_background_grid_with_blurred_face(source_rgb, mosaic_mask, face_candidate):
+                    is_privacy_mosaic_region = False
+                    region_input = None
+                    smoothed_image = None
+                    picture_regions = None
+                    frame_regions = None
+                    smoothed_frame_png = None
+                    for key in ('full-image-smoothed.png', 'full-image-pixelation-mask.png',
+                                'capture/frame-pixelation-mask.png', 'capture/frame-irregular-region-mask.png',
+                                'irregular-region-mask.png'):
+                        payloads.pop(key, None)
+
             if is_privacy_mosaic_region:
                 selected = png(region_input)
                 prepared, _, _, _ = prepare_crop(region_input)
@@ -962,72 +1030,96 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 if scanline_report is None and 'spatial_comb' in stage_reports:
                     scanline_report = stage_reports['spatial_comb']
 
-                if applied_stages:
+                face, detection_method = _detect_single_face()
+
+                if not applied_stages and face is not None:
+                    face_mask = _face_mask_for_native(native.shape, face, crop_origin) if jpeg_report is None else None
+                    if face_mask is not None:
+                        mb_out, mb_stage, mb_report, mb_evidence = prepare_macroblocking(
+                            current_rgb, origin=crop_origin, mask=face_mask, allow_fbcnn=True, dc=macroblock_dc
+                        )
+                    else:
+                        mb_out, mb_stage, mb_report, mb_evidence = None, None, None, {}
+                    if mb_out is not None and mb_stage is not None:
+                        current_rgb = mb_out
+                        applied_stages = [mb_stage]
+                        stage_reports = {mb_stage: mb_report}
+                        stage_evidence = dict(mb_evidence)
+                        comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(
+                            current_rgb, allow_spatial_comb=(scanline_report is None)
+                        )
+                        if comp_out is not None and comp_stages:
+                            current_rgb = comp_out
+                            applied_stages.extend(comp_stages)
+                            stage_reports.update(comp_reports)
+                            stage_evidence.update(comp_evidence)
+                        if scanline_report is None and 'spatial_comb' in stage_reports:
+                            scanline_report = stage_reports['spatial_comb']
+
+                allow_auto_blur = face is not None and (
+                    not applied_stages
+                    or detection_method != 'blur_island_fallback'
+                    or selected_rectangle is not None
+                )
+                if allow_auto_blur:
+                    if applied_stages:
+                        if selected_rectangle is None:
+                            blur_source = current_rgb
+                        else:
+                            bx, by, bw, bh = selected_rectangle
+                            blur_source = source_rgb.copy()
+                            blur_source[by:by + bh, bx:bx + bw] = current_rgb
+                    else:
+                        blur_source = source_rgb
+                    candidate, blur_prep, auto_evidence, blur_decision = prepare_automatically(
+                        current_rgb, blur_source, face, selected_rectangle
+                    )
+                    if candidate is not None and (not applied_stages or blur_decision.get('route') == 'protect_auto'):
+                        if applied_stages:
+                            composed_stages = list(applied_stages) + ['protect_auto']
+                            stage_reports['protect_auto'] = blur_decision
+                            payloads.update(stage_evidence)
+                            payloads.update(auto_evidence)
+                            selected = candidate
+                            prepared, _, _, _ = prepare_crop(decode_original(selected))
+                            preparation = {
+                                **blur_prep,
+                                'applied_stages': composed_stages,
+                                'stage_reports': stage_reports,
+                                'crop_changed_native_pixels': int(np.any(decode_original(selected) != native, axis=2).sum()),
+                                'derived_native_sha256': digest(selected),
+                            }
+                            auto_decision = {
+                                **blur_decision,
+                                'route': 'protect_auto',
+                                'face_detection': detection_method,
+                                'applied_stages': composed_stages,
+                                'composed_stages': composed_stages,
+                                'stage_reports': stage_reports,
+                            }
+                            payloads['processing.json'] = canonical(preparation)
+                            macroblock_report = stage_reports.get('macroblock_fbcnn') or stage_reports.get('macroblock_hevc')
+                        else:
+                            blur_decision['face_detection'] = detection_method
+                            auto_decision = blur_decision
+                            preparation = blur_prep
+                            payloads.update(auto_evidence)
+                            selected = candidate
+                            prepared, _, _, _ = prepare_crop(decode_original(selected))
+                    elif applied_stages:
+                        selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
+                            current_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
+                        )
+                    else:
+                        blur_decision['face_detection'] = detection_method
+                        auto_decision = blur_decision
+                        payloads.update(auto_evidence)
+                elif applied_stages:
                     selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
                         current_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
                     )
                 else:
-                    def in_selection(boxes):
-                        if selected_rectangle is None:
-                            return boxes
-                        x, y, width, height = selected_rectangle
-                        return [box for box in boxes if x <= box[0] + box[2] / 2 < x + width
-                                and y <= box[1] + box[3] / 2 < y + height]
-
-                    scan_image = Image.fromarray(source_rgb)
-                    try:
-                        faces = in_selection(detect_faces(scan_image))
-                        if not faces:
-                            # Retry detection on copies. Preparation still requires
-                            # a block-pattern signal on the untouched source pixels.
-                            scale = max(scan_image.size) / 256
-                            for scan_radius in (min(2., max(.5, scale * .9)), min(12., max(2.5, scale * 3.3))):
-                                smoothed = scan_image.filter(ImageFilter.GaussianBlur(scan_radius))
-                                matches = in_selection(detect_faces(smoothed))
-                                if len(matches) > 1:
-                                    break
-                                if matches and pixelation_signal(source_rgb, matches[0])['suspected']:
-                                    faces = matches
-                                    detection_method = 'smoothed_detection_copy_with_block_signal'
-                                    break
-                    except RuntimeError:
-                        faces = []
-                    face = faces[0] if len(faces) == 1 else None
-                    if face is None:
-                        auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
-                    else:
-                        face_mask = _face_mask_for_native(native.shape, face, crop_origin) if jpeg_report is None else None
-                        if face_mask is not None:
-                            mb_out, mb_stage, mb_report, mb_evidence = prepare_macroblocking(
-                                native, origin=crop_origin, mask=face_mask, allow_fbcnn=True, dc=macroblock_dc
-                            )
-                        else:
-                            mb_out, mb_stage, mb_report, mb_evidence = None, None, None, {}
-                        if mb_out is not None and mb_stage is not None:
-                            applied_stages = [mb_stage]
-                            stage_reports = {mb_stage: mb_report}
-                            stage_evidence = dict(mb_evidence)
-                            comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(
-                                mb_out, allow_spatial_comb=(scanline_report is None)
-                            )
-                            final_rgb = mb_out
-                            if comp_out is not None and comp_stages:
-                                final_rgb = comp_out
-                                applied_stages.extend(comp_stages)
-                                stage_reports.update(comp_reports)
-                                stage_evidence.update(comp_evidence)
-                            if scanline_report is None and 'spatial_comb' in stage_reports:
-                                scanline_report = stage_reports['spatial_comb']
-                            selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
-                                final_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
-                            )
-                        else:
-                            candidate, preparation, auto_evidence, auto_decision = prepare_automatically(native, source_rgb, face, selected_rectangle)
-                            auto_decision['face_detection'] = detection_method
-                            payloads.update(auto_evidence)
-                            if candidate is not None:
-                                selected = candidate
-                                prepared, _, _, _ = prepare_crop(decode_original(selected))
+                    auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
             payloads['automatic-decision.json'] = canonical(auto_decision)
         elif preparation_mode == 'bypass':
             need(protect is None and apply is None and not preview_id and not confirmed,

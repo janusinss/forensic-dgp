@@ -1348,6 +1348,73 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(body_drift_ok['source_mode'], 'native_crop')
         self.assertEqual(body_drift_ok['observed_bounds_256'], base_geo['observed_bounds_256'])
 
+    def test_auto_blur_composes_after_non_mosaic_stages_and_supports_blur_island_fallback(self):
+        from implementation import automatic_preparation
+
+        # Build a 320x320 scene with sharp background grid + heavily blurred face
+        rng = np.random.default_rng(707)
+        yy, xx = np.mgrid[0:320, 0:320].astype(np.float32)
+        scene = np.full((320, 320, 3), 210.0, dtype=np.float32)
+        scene[(yy.astype(int) % 16) < 2] = 60.0
+        scene[(xx.astype(int) % 24) < 2] = 85.0
+        scene += rng.normal(0.0, 12.0, scene.shape)
+        face = [100, 90, 120, 140]
+        fx, fy, fw, fh = face
+        cx, cy = fx + fw / 2.0, fy + fh / 2.0
+        oval = ((xx - cx) / (fw * 0.48)) ** 2 + ((yy - cy) / (fh * 0.48)) ** 2 <= 1.0
+        scene[oval] = np.stack([
+            195.0 - 25.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+            152.0 - 20.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+            128.0 - 16.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+        ], axis=-1)[oval]
+        scene[fy + 38:fy + 50, fx + 24:fx + 48] = [30, 28, 32]
+        scene[fy + 38:fy + 50, fx + 72:fx + 96] = [30, 28, 32]
+        scene[fy + 96:fy + 108, fx + 36:fx + 84] = [125, 55, 55]
+        scene = np.clip(np.rint(scene), 0, 255).astype(np.uint8)
+        blurred = np.asarray(Image.fromarray(scene).filter(ImageFilter.GaussianBlur(12.0)))
+        zone = ((xx >= fx - 6) & (xx < fx + fw + 6) & (yy >= fy - 6) & (yy < fy + fh + 6))
+        scene[zone] = blurred[zone]
+
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        fake_stage_out = scene.copy()
+        fake_stage_out[0, 0] = np.clip(fake_stage_out[0, 0].astype(int) ^ 1, 0, 255).astype(np.uint8)
+
+        # 1) Composition: non-mosaic stage + Auto Blur both run and compose into protect_auto
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+            patch.object(automatic_preparation, 'prepare_composables', return_value=(fake_stage_out, ['edge_deringing'], {'edge_deringing': {'policy': 'test'}}, {})),
+            patch.object(capture_api, 'detect_faces', return_value=[face]),
+            patch.object(controller, 'one_forward', return_value=dummy_out),
+        ):
+            res_composed = self.restore(
+                file=self.upload(png(scene)),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        auto_comp = res_composed['metadata']['automatic_preparation']
+        self.assertEqual(auto_comp['route'], 'protect_auto')
+        self.assertIn('edge_deringing', auto_comp['applied_stages'])
+        self.assertIn('protect_auto', auto_comp['applied_stages'])
+
+        # 2) Blur-island fallback: YuNet returns [] on extreme blur, manual crop still triggers protect_auto
+        crop_json = json.dumps([40, 30, 240, 260])
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+            patch.object(capture_api, 'detect_faces', return_value=[]),
+            patch.object(controller, 'one_forward', return_value=dummy_out),
+        ):
+            res_island = self.restore(
+                file=self.upload(png(scene)),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+                picture_crop=crop_json,
+            )
+        auto_island = res_island['metadata']['automatic_preparation']
+        self.assertEqual(auto_island['route'], 'protect_auto')
+        self.assertEqual(auto_island['face_detection'], 'blur_island_fallback')
+
 
 if __name__ == '__main__':
     unittest.main()
