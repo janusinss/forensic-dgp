@@ -2,15 +2,16 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.2.14
+## Windows installer 0.3.0
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.2.14 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.2.14)
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.0 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.0)
 
-### What changed in 0.2.14
+### What changed in 0.3.0
 
 - **Degraded face-patch restoration (Step 2)**: Fixes false DCT stripping of coarse mosaic, posterized, and block-noise face patches; adds masked multi-pixel block-noise smoothing, wide-scale posterized chroma-blotch homogenization, exterior-referenced shadow/haze veil removal, and straight-row mid-forehead paste-seam detection while preserving `>=512px` JPEG DCT and clean-color privacy mosaics.
 - **Calibrated Step 1 auto-crop (`AUTO_CROP_MARGIN_RATIO = 0.32`)**: Preserves full head crown and natural FFHQ proportions across Picture and Video Step 1 auto-crops (`-15%` calibrated framing) without shrinking coarse mosaics.
-- **Hardened Auto button**: Eliminates warm clean-portrait color-cast and Q95+ `macroblock_hevc` false positives (`CAST_D_MIN = 26.5`, `dc <= 10` guard), catches heavy milky haze veils, enables FBCNN up to `768px` for heavy JPEGs (`dc >= 45`), and adds explicit Auto UI summary labels (`implementation.js?v=46`, `capture.js?v=21`).
+- **Hardened Auto button**: Eliminates warm clean-portrait color-cast and Q95+ `macroblock_hevc` false positives (`CAST_D_MIN = 26.5`, `dc <= 10` guard), catches heavy milky haze veils, enables FBCNN up to `768px` for heavy JPEGs (`dc >= 45`), and adds explicit Auto UI summary labels (`implementation.js?v=47`, `capture.js?v=21`).
+- **Pre-Conditioned Frozen CodeFormer V3.4 (`preconditioned_v34_codeformer`)**: Promotes the winning single-pass V3.4 restoration model (frozen official `codeformer.pth` + `8.65 MiB` `v34_precond_modules.npz`, 859 frozen tensors total, ~`6.46s` CPU per crop) with adaptive fidelity `w_pred`, photometric correction, NAFNet pre-conditioning, MaskedAdaIN, and bit-exact neutral-128 preservation.
 
 ## Developer batch installation
 

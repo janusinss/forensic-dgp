@@ -29,7 +29,7 @@ class CompletionAPITests(unittest.TestCase):
         self.rgb = np.stack((xx,yy,(xx+yy)//2),axis=2).astype(np.uint8)
         self.raw = api.png(self.rgb)
         _, _, _, geometry = api.restoration.prepare_crop(self.rgb)
-        self.metadata = {'model': 'v2', 'selection': 'conditioned_sft_v2_p2_u0224',
+        self.metadata = {'model': 'v3', 'selection': 'preconditioned_v34_codeformer',
                          'uploaded_bytes_sha256': api.sha(self.raw), 'result_file_sha256': api.sha(self.raw),
                          'restoration_applied': False, 'geometry': geometry}
         self.response = {'metadata': self.metadata, 'original_input': api.restoration.url(self.raw),
@@ -533,8 +533,8 @@ class CompletionAPITests(unittest.TestCase):
         prepared_rgb, observed, _, geometry = api.restoration.prepare_crop(canvas_rgb)
         self.assertTrue(np.array_equal(prepared_rgb, canvas_rgb))
         meta = {
-            'model': 'v2',
-            'selection': 'conditioned_sft_v2_p2_u0224',
+            'model': 'v3',
+            'selection': 'preconditioned_v34_codeformer',
             'uploaded_bytes_sha256': api.sha(native_png),
             'result_file_sha256': api.sha(canvas_raw),
             'restoration_applied': False,

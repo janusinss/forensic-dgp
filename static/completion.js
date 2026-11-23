@@ -439,7 +439,7 @@
         reset();
         const detail = event.detail;
         try {
-            if (!(detail?.originalFile instanceof File) || detail.result?.metadata?.selection !== 'conditioned_sft_v2_p2_u0224') throw new Error('The restored image is not available. Please restore the photo first.');
+            if (!(detail?.originalFile instanceof File) || detail.result?.metadata?.selection !== 'preconditioned_v34_codeformer') throw new Error('The restored image is not available. Please restore the photo first.');
             pngURL(detail.result.result); pngURL(detail.result.original_input);
             source = { originalFile: detail.originalFile, result: detail.result };
             byId('completion-stage').classList.remove('hidden');

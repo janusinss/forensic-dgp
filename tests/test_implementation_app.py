@@ -55,7 +55,7 @@ class ControllerTests(unittest.TestCase):
     def restore(self, **overrides):
         values = dict(file=self.upload(self.contents), input_review='usable', restoration='on',
                       preparation_mode='bypass', protect_mask=None, apply_mask=None, radius=1,
-                      preview_id='', confirmed=False, include_bundle=True, model='v2')
+                      preview_id='', confirmed=False, include_bundle=True, model='v3')
         values.update(overrides)
         return asyncio.run(controller.restore(**values))
 
@@ -75,7 +75,7 @@ class ControllerTests(unittest.TestCase):
 
     def video_restore(self, token, *, contents=None, **overrides):
         fields = dict(input_review='video_capture', restoration='off', preparation_mode='bypass',
-                      capture_id=self.capture_id, model='v2', include_bundle='true')
+                      capture_id=self.capture_id, model='v3', include_bundle='true')
         fields.update(overrides)
         boundary = b'controller-test-boundary'
         body = b''.join(b'--' + boundary + f'\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode()
@@ -127,11 +127,11 @@ class ControllerTests(unittest.TestCase):
     def test_inspect_and_off_do_not_call_a_worker(self):
         with patch.object(controller, 'one_forward', side_effect=AssertionError('worker forbidden')):
             inspection = asyncio.run(controller.inspect(self.upload(self.contents)))
-            response = self.restore(restoration='off', model='v2', input_review='picture_upload')
+            response = self.restore(restoration='off', model='v3', input_review='picture_upload')
         self.assertEqual(inspection['neural_calls'], 0)
         self.assertFalse(inspection['input_review_required'])
         self.assertEqual((inspection['width'], inspection['height']), (128, 96))
-        self.assertEqual(response['metadata']['model'], 'v2')
+        self.assertEqual(response['metadata']['model'], 'v3')
         self.assertEqual(response['metadata']['input_review'], 'picture_upload')
         self.assertEqual(response['metadata']['neural_forward_attempts'], 0)
         self.assertEqual(response['metadata']['neural_forward_returns'], 0)
@@ -418,7 +418,7 @@ class ControllerTests(unittest.TestCase):
             self.restore(input_review='picture_upload', preparation_mode='manual', radius=6,
                          protect_mask=self.upload(png(protect)), apply_mask=self.upload(png(apply)),
                          preview_id=response['preview_id'], confirmed=True)
-        worker.assert_called_once_with(prepared_bytes, 'v2')
+        worker.assert_called_once_with(prepared_bytes, 'v3')
 
     def test_auto_blur_uses_full_upload_and_preserves_the_already_blurry_region(self):
         stripes = np.tile(np.array([30] * 32 + [220] * 32, np.uint8), 6)
@@ -459,7 +459,7 @@ class ControllerTests(unittest.TestCase):
                          preparation_mode='manual', match_blur=True, radius=1, confirmed=True,
                          protect_mask=self.upload(png(protect[:256])), apply_mask=self.upload(png(np.zeros_like(protect[:256]))),
                          preview_id=cropped['preview_id'])
-        worker.assert_called_once_with(base64.b64decode(cropped['prepared_input'].split(',', 1)[1]), 'v2')
+        worker.assert_called_once_with(base64.b64decode(cropped['prepared_input'].split(',', 1)[1]), 'v3')
 
         flat = preview(np.zeros_like(original), protect)
         self.assertEqual(flat['metadata']['algorithm']['blur_matching']['status'], 'insufficient_edges')
@@ -487,7 +487,7 @@ class ControllerTests(unittest.TestCase):
         output = png(np.zeros((256, 256, 3), np.uint8))
         with patch.object(capture_api, 'detect_faces', return_value=[]), patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
-        worker.assert_called_once_with(self.contents, 'v2')
+        worker.assert_called_once_with(self.contents, 'v3')
         self.assertFalse(result['metadata']['preparation_applied'])
         self.assertEqual(result['metadata']['automatic_preparation']['route'], 'direct')
         self.assertEqual(result['metadata']['neural_forward_returns'], 1)
@@ -514,7 +514,7 @@ class ControllerTests(unittest.TestCase):
             return derived, effective, {'status': 'estimated', 'target_radius_at256': 3}
         with patch.object(automatic_preparation, 'picture_pixelation', return_value=(None, None, {})), patch.object(capture_api, 'detect_faces', return_value=[face]), patch.object(automatic_preparation, 'decide', return_value=decision), patch('implementation.preparation.match_surroundings', side_effect=fake_matching), patch.object(controller, 'one_forward', return_value=(None, png(np.zeros((256, 256, 3), np.uint8)), {})) as worker:
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
-        worker.assert_called_once_with(png(derived), 'v2')
+        worker.assert_called_once_with(png(derived), 'v3')
         self.assertTrue(result['metadata']['preparation_applied'])
         self.assertEqual(result['metadata']['automatic_preparation']['route'], 'protect_auto')
         with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
@@ -584,7 +584,7 @@ class ControllerTests(unittest.TestCase):
         self.assertIn('chroma_cleanup_pixels', result['metadata']['scanline_cleanup'])
         self.assertEqual(result['metadata']['scanline_cleanup']['full_image_sha256'], report['full_image_sha256'])
         self.assertEqual(base64.b64decode(result['scanline_cleaned_full_image'].split(',', 1)[1]), png(prepared))
-        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v2')
+        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v3')
 
     def test_video_auto_keeps_scanline_mosaic_mask_with_frozen_crop(self):
         from implementation import automatic_preparation
@@ -602,7 +602,7 @@ class ControllerTests(unittest.TestCase):
             status, result = self.video_restore(self.capture_owner, restoration='auto', preparation_mode='automatic')
         self.assertEqual(status, 200)
         self.assertEqual(result['metadata']['automatic_preparation']['route'], 'scanline_mosaic_coordinated')
-        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v2')
+        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v3')
         with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
             self.assertEqual(archive.read('capture/frame-scanline-mosaic-mask.png'), mask)
 
@@ -631,7 +631,7 @@ class ControllerTests(unittest.TestCase):
         scan.assert_called_once()
         np.testing.assert_array_equal(scan.call_args.args[0], self.rgb)
         self.assertEqual([call.args for call in worker.call_args_list],
-                         [(png(smoothed[5:37, 4:44]), 'v2'), (png(smoothed[18:50, 50:80]), 'v2')])
+                         [(png(smoothed[5:37, 4:44]), 'v3'), (png(smoothed[18:50, 50:80]), 'v3')])
         self.assertEqual(first_result['metadata']['automatic_preparation']['route'], 'frame_region_gaussian')
         self.assertEqual(first_result['metadata']['frame_pixelation'], second_result['metadata']['frame_pixelation'])
         self.assertEqual(base64.b64decode(first_result['smoothed_full_frame'].split(',', 1)[1]), full_png)
@@ -646,7 +646,7 @@ class ControllerTests(unittest.TestCase):
         with patch.object(automatic_preparation, 'picture_pixelation', return_value=(None, None, {})), patch.object(capture_api, 'detect_faces', side_effect=[[], [], [[20, 10, 80, 70]]]), patch.object(automatic_preparation, 'pixelation_signal', return_value={'suspected': True}), patch.object(automatic_preparation, 'prepare', return_value=(None, None, {}, {'route': 'direct'})) as prepare, patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker:
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
         np.testing.assert_array_equal(prepare.call_args.args[1], self.rgb)
-        worker.assert_called_once_with(self.contents, 'v2')
+        worker.assert_called_once_with(self.contents, 'v3')
         self.assertEqual(result['metadata']['automatic_preparation']['face_detection'], 'smoothed_detection_copy_with_block_signal')
 
     def test_picture_auto_delivers_jpeg_preparation_and_runs_v2_once(self):
@@ -665,7 +665,7 @@ class ControllerTests(unittest.TestCase):
             patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker,
         ):
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
-        worker.assert_called_once_with(png(deblocked), 'v2')
+        worker.assert_called_once_with(png(deblocked), 'v3')
         self.assertEqual(result['metadata']['automatic_preparation']['route'], 'jpeg_deblocking')
         self.assertEqual(result['metadata']['jpeg_deblocking'], report)
         self.assertEqual(result['metadata']['neural_forward_returns'], 1)
@@ -690,7 +690,7 @@ class ControllerTests(unittest.TestCase):
         ):
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
         standalone.assert_not_called()
-        worker.assert_called_once_with(combined_png, 'v2')
+        worker.assert_called_once_with(combined_png, 'v3')
         self.assertEqual(result['metadata']['automatic_preparation']['route'], 'jpeg_mosaic_coordinated')
         self.assertEqual(base64.b64decode(result['smoothed_full_picture'].split(',', 1)[1]), combined_png)
 
@@ -707,7 +707,7 @@ class ControllerTests(unittest.TestCase):
             patch.object(controller, 'one_forward', return_value=(None, output, {})) as worker,
         ):
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
-        worker.assert_called_once_with(self.contents, 'v2')
+        worker.assert_called_once_with(self.contents, 'v3')
         self.assertFalse(result['metadata']['preparation_applied'])
         self.assertEqual(result['metadata']['automatic_preparation'],
                          {'route': 'direct', 'reason': 'suspected_softened_mosaic'})
@@ -745,7 +745,7 @@ class ControllerTests(unittest.TestCase):
             self.assertTrue(mask[50:178, 42:185].any())
             self.assertTrue(mask[196:346, 249:394].any())
             np.testing.assert_array_equal(prepared[~mask], source[~mask])
-            worker.assert_called_once_with(png(prepared[40:200, 40:200]), 'v2')
+            worker.assert_called_once_with(png(prepared[40:200, 40:200]), 'v3')
         self.assertEqual(result['metadata']['picture_pixelation']['Gaussian_radius_at256'],
                          automatic_preparation.PIXELATION_RADIUS_AT256)
 
@@ -789,7 +789,7 @@ class ControllerTests(unittest.TestCase):
     def test_fake_completed_worker_checks_raw_png_hashes_and_counts(self):
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker:
-            raw, pixels, metadata = controller.one_forward(self.contents, 'v2')
+            raw, pixels, metadata = controller.one_forward(self.contents, 'v3')
         self.assertGreater(len(raw), 0); self.assertGreater(len(pixels), 0)
         self.assertEqual(metadata['uploaded_bytes_sha256'], controller.digest(self.contents))
         self.assertEqual(controller.STATE['neural_forward_attempts'], 1)
@@ -800,7 +800,7 @@ class ControllerTests(unittest.TestCase):
         self.corrupt_padding = True
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker, self.assertRaises(ValueError):
-            controller.one_forward(self.contents, 'v2')
+            controller.one_forward(self.contents, 'v3')
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual(controller.STATE['neural_forward_attempts'], 1)
         self.assertEqual(controller.STATE['neural_forward_returns'], 1)
@@ -814,7 +814,7 @@ class ControllerTests(unittest.TestCase):
         self.worker_status = {'phase': 'forward_entered', 'forward_attempts': 1, 'forward_returns': 0}
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker, self.assertRaises(RuntimeError):
-            controller.one_forward(self.contents, 'v2')
+            controller.one_forward(self.contents, 'v3')
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
 
@@ -824,7 +824,7 @@ class ControllerTests(unittest.TestCase):
         verify, memory, worker = self.worker_patches()
         with verify, memory, worker, patch.object(controller.time, 'monotonic', side_effect=[0, 361]):
             with self.assertRaisesRegex(RuntimeError, '360-second'):
-                controller.one_forward(self.contents, 'v2')
+                controller.one_forward(self.contents, 'v3')
         self.assertEqual(self.process.returncode, -15)
         self.assertTrue(controller.STATE['uncertain']); self.assertFalse(controller.STATE['active_worker'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
@@ -842,7 +842,7 @@ class ControllerTests(unittest.TestCase):
         with verify, memory, patch.object(controller.subprocess, 'Popen', side_effect=denied_worker), \
                 patch.object(controller.time, 'monotonic', side_effect=[0, 361]):
             with self.assertRaises((OSError, RuntimeError)):
-                controller.one_forward(self.contents, 'v2')
+                controller.one_forward(self.contents, 'v3')
         self.assertTrue(controller.STATE['uncertain'])
         self.assertEqual((controller.STATE['neural_forward_attempts'], controller.STATE['neural_forward_returns']), (1, 0))
 
