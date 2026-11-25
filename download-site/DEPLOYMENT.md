@@ -1,6 +1,29 @@
 # Cloudflare Pages deployment
 
-## Current 0.3.1 offline preview
+## Current 0.3.2 offline preview
+
+Published November 25, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 2810c075](https://2810c075.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.2)
+references `ForensicDGP_Setup-0.3.2.exe` from build source
+`c4c0156e5054167a5610fa79d7e073ceaef16ba2` (`1,322,979,230` bytes, SHA-256
+`4bef36834eb8a96e10cae5888c276a92aa988658eb99e21ef47a4e0ecc9a9ca9`). GitHub confirmed
+`Content-Range: bytes 0-15/1322979230` (`HTTP 206`) and exact `.sha256` match, and
+Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) reported zero threats. This
+release ships the Dual Auto Mode Overhaul (Step 1 smart foreground face selection &
+ghost-crop elimination, Step 2 Voronoi/coarse mosaic & crowd privacy-blur matching
+with clean-portrait do-no-harm guards and faster CPU execution, and Steps 4–5
+one-click BiSeNet + XSeg covering removal with zero unoccluded/beard false positives
+and seamless Lab skin-tone blending) paired with Pre-Conditioned Frozen CodeFormer
+V3.4 and Completion R2. All 19 site tests, `tsc --noEmit`, Vite production build,
+and live Playwright audits across 375px, 768px, and 1280px passed with zero
+overflow, console, network, or accessibility errors. Published versions remain
+immutable: future updates must use a new version, build, and release rather than
+replacing `0.3.2`.
+
+## Historical 0.3.1 offline preview
 
 Published November 23, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs
