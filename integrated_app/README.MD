@@ -2,9 +2,15 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.3.1
+## Windows installer 0.3.2
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.1 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.1)
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.2 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.2)
+
+### What changed in 0.3.2
+
+- **Restoring Auto Mode (Steps 1–3) overhaul**: Hardens automatic crop framing, artifact detection, and multi-stage preparation routing across Picture and Video flows (`automatic_preparation.py`, `capture_api.py`, `capture_worker.py`, `cast_dehaze.py`, `macroblock_deblocking.py`, `noise_denoise.py`, `scanline_cleanup.py`, `deringing.py`, `antialiasing.py`, `color_bleeding.py`, `irregular_mosaic.py`, `perspective_mosaic.py`, `softened_grid.py`, `tiny_grid.py`, `app.py`, `implementation.js`).
+- **Face Mask & Completion Auto Mode (Steps 4–5) overhaul**: Upgrades automatic face-covering detection, guided mask review, and completion workflow handoff (`automatic_covering.py`, `completion_api.py`, `completion_runtime.py`, `completion.js`, `implementation.html`, `test_completion_ui_flow.cjs`).
+- **65-sample real-world internet stress suite & CPU reliability**: Validated against a 65-sample real-world stress suite with OpenBLAS and cold-start CPU reliability fixes while keeping Frozen CodeFormer V3.4 and Completion R2 weights bit-exact and untouched.
 
 ### What changed in 0.3.1
 

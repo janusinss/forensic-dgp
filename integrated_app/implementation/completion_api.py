@@ -334,6 +334,10 @@ def run_worker(record, kind, mask=None):
 
 def propose(ident):
     record = session(ident)
+    from .completion_runtime import visibility_check256
+    observed = read_png((record['path']/'observed.png').read_bytes(), 'L') > 0
+    empty_visibility = visibility_check256(np.where(observed, 0, 255).astype(np.uint8), observed=observed)
+    need(not empty_visibility['rejected'], 'Too little visible face remains. Upload a clearer or less-covered crop.')
     output, result, supervisor = run_worker(record, 'detector')
     names = {'probability_path': 'detector-probability.npy', 'raw_mask_path': 'detector-raw-mask.png',
              'proposed_mask_path': 'detector-proposed-mask.png'}
@@ -344,13 +348,15 @@ def propose(ident):
     proposed_raw = (output/names['proposed_mask_path']).read_bytes()
     proposed = read_png(proposed_raw, 'L')
     from .covering_detector import proposal_from_probability
-    observed = read_png((record['path']/'observed.png').read_bytes(), 'L') > 0
     expected = proposal_from_probability(probability, observed)
     need(np.array_equal(raw, expected[0]) and np.array_equal(proposed, expected[1]), 'Detector proposal replay differs.')
     from .automatic_covering import detect_face_covering
     rgb = read_png((record['path'] / 'input.png').read_bytes(), 'RGB')
     proposed, auto_meta = detect_face_covering(rgb, probability, proposed, observed)
     proposed_raw = png(proposed)
+    auto_mask_path = output / 'auto-proposed-mask.png'
+    if not auto_mask_path.exists():
+        save(auto_mask_path, proposed_raw)
     metadata = {
         **result['metadata'],
         'auto_covering': auto_meta,
@@ -358,7 +364,8 @@ def propose(ident):
         'proposal_empty': not bool(proposed.any()),
     }
     proposal_id = uuid.uuid4().hex
-    record['proposals'][proposal_id] = {'mask': proposed.copy(), 'path': output, 'metadata': metadata,
+    record['proposals'][proposal_id] = {'mask': proposed.copy(), 'auto_mask_raw': proposed_raw,
+                                        'path': output, 'metadata': metadata,
                                         'sha256': sha(proposed_raw), 'supervisor': supervisor}
     record['review'] = None
     return {'proposal_id': proposal_id, 'proposal_png': restoration.url(proposed_raw),
@@ -373,7 +380,7 @@ def review(ident, mask_raw, proposal_id=''):
     from .completion_runtime import visibility_check256
     observed = read_png((record['path']/'observed.png').read_bytes(), 'L') > 0
     need(not mask[~observed].any(), 'Removal must not include neutral padding.')
-    visibility = visibility_check256(np.where(observed, mask, 255))
+    visibility = visibility_check256(np.where(observed, mask, 255), observed=observed)
     need(not visibility['rejected'], 'Too little visible face remains. Upload a clearer or less-covered crop.')
     need(not proposal_id or proposal_id in record['proposals'], 'The proposal is stale. Review this mask again.')
     review_id = uuid.uuid4().hex
@@ -429,6 +436,7 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
         'after': {name: after_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
     }
     metadata = {**result['metadata'], 'source': source, 'proposal_id': proposal_id or None,
+                'auto_covering': proposal['metadata'].get('auto_covering') if proposal else None,
                 'review_id': review_id, 'restoration': record['restoration'], 'supervisor': supervisor,
                 'seconds': supervisor['seconds'], 'neural_calls': int(bool(mask.any())),
                 'outside_reviewed_support_exact_to': 'restoration-result.png',
@@ -442,6 +450,10 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
     if proposal:
         for name in ('detector-probability.npy','detector-raw-mask.png','detector-proposed-mask.png','receipt.json'):
             payloads['proposal/'+name] = (proposal['path']/name).read_bytes()
+        if proposal.get('auto_mask_raw') is not None:
+            payloads['proposal/auto-proposed-mask.png'] = proposal['auto_mask_raw']
+        elif (proposal['path'] / 'auto-proposed-mask.png').is_file():
+            payloads['proposal/auto-proposed-mask.png'] = (proposal['path'] / 'auto-proposed-mask.png').read_bytes()
     payloads['README.txt'] = ("Original upload, restoration and completion are separate stages. R2 changes only the reviewed removal area of restoration-result.png. "
                                "Restoration may change observed appearance. Hidden pixels are one plausible estimate, not recovered identity. "
                                "Automatic proposals can miss coverings and require review. source records automatic_reviewed versus assisted correction. "

@@ -15,6 +15,40 @@ from .quality import (
 
 POLICY = "ycrcb-immerkaer-nlm-v1"
 MIN_SIDE = 16
+COARSE_CHROMA_THRESHOLD = 2.8
+COARSE_CHROMA_LOWLIGHT_THRESHOLD = 2.0
+COARSE_LOWLIGHT_LUMA_MAX = 65.0
+
+
+def _coarse_chroma_sigma(
+    src: np.ndarray,
+    active: np.ndarray,
+    mask: np.ndarray | None = None,
+) -> tuple[float, float, float, bool]:
+    """Measure 2x-downsampled Cr/Cb Immerkær noise to catch 2-4px blotchy low-light/CCTV chroma noise."""
+    height, width = src.shape[:2]
+    if min(height, width) < 64:
+        return 0.0, 0.0, 128.0, False
+    half_w, half_h = max(16, width // 2), max(16, height // 2)
+    half_rgb = cv2.resize(src, (half_w, half_h), interpolation=cv2.INTER_AREA)
+    excl_half = None
+    if mask is not None:
+        half_active = cv2.resize(active.astype(np.uint8), (half_w, half_h), interpolation=cv2.INTER_NEAREST) > 0
+        if int(half_active.sum()) < 64:
+            return 0.0, 0.0, 128.0, False
+        excl_half = (~half_active).astype(np.uint8)
+    sig_y2, sig_cr2, sig_cb2 = native_ycrcb_noise_sigma(half_rgb, mask=excl_half)
+    y_plane = cv2.cvtColor(src, cv2.COLOR_RGB2YCrCb)[..., 0]
+    luma_mean = float(y_plane[active].mean())
+    thresh = COARSE_CHROMA_LOWLIGHT_THRESHOLD if luma_mean < COARSE_LOWLIGHT_LUMA_MAX else COARSE_CHROMA_THRESHOLD
+    # Require chroma-dominant 2x blotches so high-frequency luma textures / wrap patterns never false-trigger.
+    max_c2 = max(sig_cr2, sig_cb2)
+    coarse_triggered = (
+        max_c2 >= thresh
+        and sig_y2 < 6.0
+        and max_c2 >= 1.25 * max(1.0, sig_y2)
+    )
+    return _finite_float(sig_cr2), _finite_float(sig_cb2), _finite_float(luma_mean, 128.0), bool(coarse_triggered)
 
 
 def _validate_rgb(rgb: np.ndarray) -> np.ndarray | None:
@@ -83,15 +117,19 @@ def detect_noise(rgb: np.ndarray, mask: np.ndarray | None = None) -> dict | None
         return None
     excl = (~active).astype(np.uint8) if mask is not None else None
     sig_y, sig_cr, sig_cb = native_ycrcb_noise_sigma(src, mask=excl)
-    triggered = (sig_y >= NATIVE_Y_NOISE_THRESHOLD) or (
+    native_triggered = (sig_y >= NATIVE_Y_NOISE_THRESHOLD) or (
         max(sig_cr, sig_cb) >= NATIVE_CHROMA_NOISE_THRESHOLD
     )
+    sig_cr2, sig_cb2, luma_mean, coarse_triggered = _coarse_chroma_sigma(src, active, mask=mask)
+    triggered = native_triggered or coarse_triggered
     if not triggered:
         return None
     return {
         "policy": POLICY,
         "triggered": True,
         "sigma_before": [_finite_float(sig_y), _finite_float(sig_cr), _finite_float(sig_cb)],
+        "coarse_chroma_sigma_before": [sig_cr2, sig_cb2],
+        "coarse_chroma_triggered": bool(coarse_triggered),
         "thresholds": {"y": NATIVE_Y_NOISE_THRESHOLD, "chroma": NATIVE_CHROMA_NOISE_THRESHOLD},
         "masked": bool(mask is not None),
         "mask_fraction": round(_finite_float(float(active.mean())), 6),
@@ -148,9 +186,11 @@ def apply_noise_denoise(
 
     excl = (~active).astype(np.uint8) if mask is not None else None
     sig_y, sig_cr, sig_cb = native_ycrcb_noise_sigma(src, mask=excl)
-    triggered = (sig_y >= NATIVE_Y_NOISE_THRESHOLD) or (
+    native_triggered = (sig_y >= NATIVE_Y_NOISE_THRESHOLD) or (
         max(sig_cr, sig_cb) >= NATIVE_CHROMA_NOISE_THRESHOLD
     )
+    sig_cr2, sig_cb2, luma_mean, coarse_triggered = _coarse_chroma_sigma(src, active, mask=mask)
+    triggered = native_triggered or coarse_triggered
     if not triggered and not force:
         return (
             src.copy(),
@@ -159,6 +199,8 @@ def apply_noise_denoise(
                 "policy": POLICY,
                 "triggered": False,
                 "sigma_before": [_finite_float(sig_y), _finite_float(sig_cr), _finite_float(sig_cb)],
+                "coarse_chroma_sigma_before": [sig_cr2, sig_cb2],
+                "coarse_chroma_triggered": False,
                 "h_params": [0.0, 0.0, 0.0],
                 "changed_native_pixels": 0,
                 "masked": bool(mask is not None),
@@ -180,6 +222,28 @@ def apply_noise_denoise(
     if h_cb > 0.0:
         cb_ch = cv2.fastNlMeansDenoising(cb_ch, None, h=h_cb, templateWindowSize=7, searchWindowSize=21)
 
+    if coarse_triggered and min(height, width) >= 64:
+        # 2x downsampled chroma-only denoiser (Cr/Cb residual upsampled back; Y stays 100% untouched).
+        half_w, half_h = max(16, width // 2), max(16, height // 2)
+        cr_half = cv2.resize(cr_ch, (half_w, half_h), interpolation=cv2.INTER_AREA)
+        cb_half = cv2.resize(cb_ch, (half_w, half_h), interpolation=cv2.INTER_AREA)
+        h_cr2 = float(np.clip(2.0 * max(sig_cr2, 2.0), 6.0, 20.0))
+        h_cb2 = float(np.clip(2.0 * max(sig_cb2, 2.0), 6.0, 20.0))
+        cr_clean = cv2.fastNlMeansDenoising(cr_half, None, h=h_cr2, templateWindowSize=7, searchWindowSize=21)
+        cb_clean = cv2.fastNlMeansDenoising(cb_half, None, h=h_cb2, templateWindowSize=7, searchWindowSize=21)
+        cr_delta = cv2.resize(
+            cr_clean.astype(np.float32) - cr_half.astype(np.float32),
+            (width, height),
+            interpolation=cv2.INTER_LINEAR,
+        )
+        cb_delta = cv2.resize(
+            cb_clean.astype(np.float32) - cb_half.astype(np.float32),
+            (width, height),
+            interpolation=cv2.INTER_LINEAR,
+        )
+        cr_ch = np.clip(np.rint(cr_ch.astype(np.float32) + cr_delta), 0, 255).astype(np.uint8)
+        cb_ch = np.clip(np.rint(cb_ch.astype(np.float32) + cb_delta), 0, 255).astype(np.uint8)
+
     out = cv2.cvtColor(cv2.merge((y_ch, cr_ch, cb_ch)), cv2.COLOR_YCrCb2RGB)
     if mask is not None:
         out[~active] = src[~active]
@@ -196,6 +260,8 @@ def apply_noise_denoise(
         "forced": bool(force and not triggered),
         "sigma_before": [_finite_float(sig_y), _finite_float(sig_cr), _finite_float(sig_cb)],
         "sigma_after": [_finite_float(after_y), _finite_float(after_cr), _finite_float(after_cb)],
+        "coarse_chroma_sigma_before": [sig_cr2, sig_cb2],
+        "coarse_chroma_triggered": bool(coarse_triggered),
         "h_params": [round(_finite_float(h_y), 3), round(_finite_float(h_cr), 3), round(_finite_float(h_cb), 3)],
         "edge_retention": _finite_float(edge_ret, 1.0),
         "changed_native_pixels": changed,

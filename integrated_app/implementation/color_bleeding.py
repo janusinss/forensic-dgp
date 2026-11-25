@@ -138,14 +138,12 @@ def _analyze_color_bleeding(source):
 
     dilated = binary_dilation(bleed_map, structure=np.ones((5, 5), dtype=bool))
     components, count = label(dilated)
-    kept_ridge = np.zeros((height, width), dtype=bool)
     min_pts = max(8, min(14, round(0.25 * min(height, width))))
-    for cid in range(1, count + 1):
-        comp_mask = components == cid
-        n_bleed = int((comp_mask & bleed_map).sum())
-        n_all = int((comp_mask & all_map).sum())
-        if n_bleed >= min_pts and n_bleed >= 0.50 * max(1, n_all):
-            kept_ridge |= (comp_mask & bleed_map)
+    bleed_counts = np.bincount(components[bleed_map], minlength=count + 1)
+    all_counts = np.bincount(components[all_map], minlength=count + 1)
+    bleed_counts[0] = 0
+    keep_cids = (bleed_counts >= min_pts) & (bleed_counts >= 0.50 * np.maximum(1, all_counts))
+    kept_ridge = keep_cids[components] & bleed_map
 
     n_kept = int(kept_ridge.sum())
     bleed_edge_fraction = float(n_kept / max(1, int(ry.size)))

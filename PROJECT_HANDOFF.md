@@ -1,5 +1,17 @@
 # Forensic DGP project handoff
 
+## 25 November 2026 — Version 0.3.2 release (Dual Auto Mode Overhaul)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`bf65d7f`](https://github.com/janusinss/forensic-dgp/commit/bf65d7fc3c98b06a13151128ba1ffe8b4df2c47a) |
+| Offline installer build, `codex/r2-installer-release` | [`c4c0156`](https://github.com/janusinss/forensic-dgp/commit/c4c0156e5054167a5610fa79d7e073ceaef16ba2) (site sync [`c8008e0`](https://github.com/janusinss/forensic-dgp/commit/c8008e02e4232cb9716a65dc09d3eec05a89bd2d)) |
+| Public download page | [Forensic DGP 0.3.2 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `2810c075`](https://2810c075.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.3.2`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.2) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.3.2.exe` (`1,322,979,230` bytes, SHA-256 `4bef36834eb8a96e10cae5888c276a92aa988658eb99e21ef47a4e0ecc9a9ca9`) on GitHub Releases (`v0.3.2`, verified `HTTP 206` `Content-Range: bytes 0-15/1322979230`) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json` and `/downloads/ForensicDGP_Setup-0.3.2.exe.sha256`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`), `19/19` download-site tests passing, and clean live Playwright audits across `375x667`, `768x1024`, and `1280x800` (`0` overflow, `0` console/network errors, `0` a11y violations).
+- Ships the **Dual Auto Mode Overhaul** paired with **Pre-Conditioned Frozen CodeFormer V3.4** and **Completion R2** across `integrated_app/`, `IMPLEMENTATION`, and `codex/r2-installer-release`: Step 1 smart foreground face selection & ghost-crop elimination, Step 2 Voronoi/coarse mosaic & crowd privacy-blur matching with clean-portrait do-no-harm guards and faster CPU execution, and Steps 4–5 one-click BiSeNet + XSeg covering removal with zero unoccluded/beard false positives and seamless Lab skin-tone blending.
+
 ## 23 November 2026 — Version 0.3.1 release (Smart Auto Blur overhaul and Auto button routing fixes)
 
 | Component | Verified revision or version |

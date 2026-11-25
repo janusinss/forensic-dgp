@@ -66,15 +66,16 @@ def validate_arrays(rgb, mask, prepared_bounds=None):
     need(0 <= left < right <= 256 and 0 <= top < bottom <= 256, "Invalid prepared content bounds.")
     unavailable = np.ones((256, 256), np.uint8)
     unavailable[top:bottom, left:right] = 0
+    observed = unavailable == 0
     need(not removal[unavailable != 0].any(), "Keep prepared padding outside the removal area.")
     unavailable = np.maximum(unavailable, removal)
-    review = visibility_check256(unavailable)
+    review = visibility_check256(unavailable, observed=observed)
     if review["rejected"]:
         raise CompletionRefused("Too little visible facial structure remains. Use a clearer or less-covered face crop.")
     return removal, list(bounds), review
 
 
-def visibility_check256(unavailable):
+def visibility_check256(unavailable, observed=None):
     """Retained frontal-crop geometry heuristic; not a face/quality detector."""
     need(isinstance(unavailable, np.ndarray) and unavailable.shape == (256, 256), "Expected256 visibility support.")
     m = unavailable != 0
@@ -83,13 +84,94 @@ def visibility_check256(unavailable):
     bands = {"left_eye": (60, 84, 119, 133), "right_eye": (137, 84, 196, 133),
              "nose": (108, 119, 149, 166), "mouth": (82, 165, 174, 208)}
     fractions = {name: float(m[y1:y2, x1:x2].mean()) for name, (x1, y1, x2, y2) in bands.items()}
-    covered = float(m[face].mean())
+    if observed is not None:
+        need(isinstance(observed, np.ndarray) and observed.shape == (256, 256) and observed.dtype == np.bool_,
+             "Expected boolean256 observed support.")
+        obs_face = face & observed
+        obs_face_fraction = float(obs_face.sum()) / float(max(1, int(face.sum())))
+        covered = float(m[obs_face].mean()) if obs_face.any() else 1.0
+        insufficient_observed_face = obs_face_fraction < 0.45
+    else:
+        obs_face_fraction = 1.0
+        covered = float(m[face].mean())
+        insufficient_observed_face = False
     all_features = (fractions["left_eye"] >= .85 and fractions["right_eye"] >= .85
-                    and fractions["nose"] >= .9 and fractions["mouth"] >= .9)
-    return {"rejected": bool(covered >= .80 or all_features or m.mean() >= .85),
-            "face_covered_fraction": covered, "feature_covered_fractions": fractions,
+                    and fractions["nose"] >= .9 and fractions["mouth"] >= .9 and covered >= .65)
+    return {"rejected": bool(insufficient_observed_face or covered >= .82 or all_features or m.mean() >= .85),
+            "face_covered_fraction": covered, "observed_face_fraction": obs_face_fraction,
+            "feature_covered_fractions": fractions,
             "padding_counts_as_unavailable": True,
             "scope": "Approximate frontal/mild-turn crop geometry conditional on the reviewed mask; not a detector or proof of adequate detail."}
+
+
+def _blend_inside_mask(rgb, generated, removal, observed):
+    """Strictly inside-mask bounded Lab seam tone matching + guarded 3px inward feathering.
+
+    Zero pixels outside removal == 1 are modified; output is float32 in [0, 1].
+    """
+    mask_bool = removal != 0
+    if not mask_bool.any():
+        return generated
+    import cv2
+
+    mask_u8 = mask_bool.astype(np.uint8)
+    orig_f = rgb.astype(np.float32) / np.float32(255.0)
+    gen_f = np.clip(generated.astype(np.float32, copy=False), 0.0, 1.0)
+
+    ring_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+    outer_ring = (cv2.dilate(mask_u8, ring_kernel) > 0) & (~mask_bool) & observed
+    inner_ring = mask_bool & (cv2.erode(mask_u8, ring_kernel) == 0)
+
+    dist = cv2.distanceTransform(mask_u8, cv2.DIST_L2, 5).astype(np.float32)
+    orig_lab = cv2.cvtColor(rgb, cv2.COLOR_RGB2LAB).astype(np.float32)
+    gen_u8 = np.rint(gen_f * np.float32(255.0)).clip(0, 255).astype(np.uint8)
+    gen_lab = cv2.cvtColor(gen_u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+
+    def _trimmed_median_lab(lab_img, region):
+        l_vals = lab_img[..., 0][region]
+        p25, p75 = np.percentile(l_vals, [25.0, 75.0])
+        mid = region & (lab_img[..., 0] >= p25) & (lab_img[..., 0] <= p75)
+        pts = mid if int(mid.sum()) >= 12 else region
+        return (
+            float(np.median(lab_img[..., 0][pts])),
+            float(np.median(lab_img[..., 1][pts])),
+            float(np.median(lab_img[..., 2][pts])),
+        )
+
+    gen_adj_f = gen_f
+    out_med = None
+    if int(outer_ring.sum()) >= 24 and int(inner_ring.sum()) >= 24:
+        out_med = _trimmed_median_lab(orig_lab, outer_ring)
+        in_med = _trimmed_median_lab(gen_lab, inner_ring)
+        dl = float(np.clip(out_med[0] - in_med[0], -10.0, 10.0))
+        da = float(np.clip(out_med[1] - in_med[1], -5.0, 5.0))
+        db = float(np.clip(out_med[2] - in_med[2], -5.0, 5.0))
+        if abs(dl) > 0.25 or abs(da) > 0.25 or abs(db) > 0.25:
+            att = np.exp(-dist / np.float32(28.0)).astype(np.float32)
+            shifted_lab = gen_lab.copy()
+            shifted_lab[..., 0] = np.clip(shifted_lab[..., 0] + dl * att, 0.0, 255.0)
+            shifted_lab[..., 1] = np.clip(shifted_lab[..., 1] + da * att, 0.0, 255.0)
+            shifted_lab[..., 2] = np.clip(shifted_lab[..., 2] + db * att, 0.0, 255.0)
+            shifted_u8 = np.rint(shifted_lab).clip(0, 255).astype(np.uint8)
+            gen_adj_f = cv2.cvtColor(shifted_u8, cv2.COLOR_LAB2RGB).astype(np.float32) / np.float32(255.0)
+
+    # Guarded 3px inward feathering: suppress feathering where original edge pixel deviates from clean skin.
+    alpha = np.clip((dist - np.float32(0.5)) / np.float32(2.5), 0.0, 1.0)
+    if out_med is not None:
+        edge_band = mask_bool & (dist <= 3.0)
+        if edge_band.any():
+            de_orig = np.sqrt(
+                (orig_lab[..., 0] - out_med[0]) ** 2
+                + (orig_lab[..., 1] - out_med[1]) ** 2
+                + (orig_lab[..., 2] - out_med[2]) ** 2
+            )
+            alpha = np.where(edge_band & (de_orig > 20.0), np.float32(1.0), alpha)
+
+    alpha3 = alpha[..., None]
+    blended = orig_f * (np.float32(1.0) - alpha3) + gen_adj_f * alpha3
+    blended = np.clip(blended, 0.0, 1.0).astype(np.float32)
+    blended[~mask_bool] = orig_f[~mask_bool]
+    return blended
 
 
 def encode_output(rgb, removal, completed):
@@ -214,6 +296,9 @@ def complete(rgb, mask, prepared_bounds=None, *, forward_event=None):
     need(torch.equal(result[outside], image[outside]), "R2 changed supplied canvas outside the reviewed mask.")
     need(calls == {"entered": 1, "returned": 1}, "Exactly one successful completion forward required.")
     completed = result[0].permute(1, 2, 0).detach().cpu().numpy().copy()
+    observed = np.zeros((256, 256), dtype=bool)
+    observed[bounds[1]:bounds[3], bounds[0]:bounds[2]] = True
+    completed = _blend_inside_mask(rgb, completed, removal, observed)
     output = encode_output(rgb, removal, completed)
     need(np.array_equal(output[removal == 0], rgb[removal == 0]), "Completion changed outside-mask RGB bytes.")
     return {"output_rgb": output, "completed_rgb": completed, "raw512": adapter.raw512,

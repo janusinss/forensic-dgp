@@ -72,7 +72,9 @@ def cell_evidence(rgb, rows, columns):
         return 0., 1.
     gradients = np.maximum(np.abs(rgb[1:, :-1] - rgb[:-1, :-1]).max(-1),
                            np.abs(rgb[:-1, 1:] - rgb[:-1, :-1]).max(-1))
-    flat = float((gradients[cropped] < 1.5).mean())
+    # Tolerate +-3 LSB JPEG cell-interior ripple when seam step ratio >= 3.8x on both axes.
+    interior_tol = 3.0 if min(rows[2], columns[2]) >= 3.8 else 1.5
+    flat = float((gradients[cropped] <= interior_tol).mean())
     samples = np.floor(rgb[interior] / 12).astype(np.int16)
     colours, counts = np.unique(samples, axis=0, return_counts=True)
     dominant = float(np.sort(counts)[-2:].sum() / counts.sum())

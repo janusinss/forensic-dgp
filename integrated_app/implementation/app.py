@@ -18,6 +18,8 @@ import uuid
 import zipfile
 from typing import Annotated
 
+os.environ.setdefault('OPENBLAS_NUM_THREADS', '1')
+
 import numpy as np
 from PIL import Image, ImageFilter, ImageOps
 import psutil
@@ -419,6 +421,70 @@ def status():
             'controller': {'selection': ARMS[DEFAULT_MODEL], 'worker': dict(STATE)}}
 
 
+def _recommend_face_index(image, records, width, height):
+    """Score sorted face records to pick the primary foreground subject (favoring degraded faces on ties)."""
+    if not records:
+        return 0
+    if len(records) == 1:
+        return 0
+    from .automatic_preparation import _hf_deficit_stats, pixelation_signal
+
+    best_idx = 0
+    best_val = -1.0
+    img_h, img_w = image.shape[:2]
+    for idx, rec in enumerate(records):
+        bx, by, bw, bh = [int(v) for v in rec['box']]
+        score = max(0.05, float(rec.get('score', 0.75)))
+        area = max(1.0, float(bw * bh))
+        cx = (bx + bw * 0.5) / max(1.0, float(width))
+        cy = (by + bh * 0.5) / max(1.0, float(height))
+        dist = math.hypot(cx - 0.5, cy - 0.45)
+        centrality = max(0.35, 1.15 - 0.95 * dist)
+        val = (score ** 1.5) * (area ** 0.35) * centrality
+        if 0 <= bx and 0 <= by and bx + bw <= img_w and by + bh <= img_h and min(bw, bh) >= 24:
+            crop_box = rec.get('crop')
+            degraded_bonus = False
+            if pixelation_signal(image, (bx, by, bw, bh))['suspected']:
+                degraded_bonus = True
+            elif isinstance(crop_box, (list, tuple)) and len(crop_box) == 4:
+                rx, ry, rw, rh = [int(v) for v in crop_box]
+                if (
+                    0 <= rx <= bx
+                    and 0 <= ry <= by
+                    and bx + bw <= rx + rw <= img_w
+                    and by + bh <= ry + rh <= img_h
+                    and rw >= bw + 12
+                    and rh >= bh + 12
+                ):
+                    hf = _hf_deficit_stats(image[ry:ry + rh, rx:rx + rw], [bx - rx, by - ry, bw, bh])
+                    if hf is not None and hf.get('clear'):
+                        degraded_bonus = True
+            if degraded_bonus:
+                val *= 1.35
+        if val > best_val:
+            best_val = val
+            best_idx = idx
+    return int(best_idx)
+
+
+def _fallback_inspect_face_box(image, width, height):
+    """Fallback ROI when YuNet finds 0 faces on extreme privacy blur or localized mosaic."""
+    from .automatic_preparation import detect_blur_island_face_box, picture_pixelation
+
+    island = detect_blur_island_face_box(image)
+    if island is not None:
+        return [int(v) for v in island]
+    _, report, _ = picture_pixelation(image)
+    if report is not None:
+        bounds = report.get('region_bounds') or []
+        if len(bounds) == 1:
+            bx, by, bw, bh = [int(v) for v in bounds[0]]
+            aspect = bw / max(1.0, float(bh))
+            if 0.45 <= aspect <= 1.80 and (bw * bh) <= 0.45 * width * height and min(bw, bh) >= 24:
+                return [bx, by, bw, bh]
+    return None
+
+
 @app.post('/face/restoration/inspect')
 async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form()] = False):
     contents = await file.read(MAX_UPLOAD_BYTES + 1)
@@ -429,6 +495,7 @@ async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form
                   'neural_calls': 0, 'input_review_required': False}
         if scan_faces:
             from . import capture_api
+            from .capture_worker import AUTO_CROP_MARGIN_RATIO, _padded_face_crop
             use_details = capture_api.detect_faces is capture_api._DEFAULT_DETECT_FACES
             records = []
             faces = []
@@ -447,19 +514,31 @@ async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form
             else:
                 unavailable = True
             if use_details:
+                if not records and not unavailable:
+                    fb_box = _fallback_inspect_face_box(image, width, height)
+                    if fb_box is not None:
+                        records = [{
+                            'box': fb_box,
+                            'crop': _padded_face_crop(fb_box, width, height),
+                            'score': 0.5,
+                        }]
                 sorted_recs = sorted(records, key=lambda rec: (rec['box'][0], rec['box'][1]))
                 result['face_crops'] = [rec['crop'] for rec in sorted_recs]
                 result['face_boxes'] = [rec['box'] for rec in sorted_recs]
+                result['recommended_index'] = _recommend_face_index(image, sorted_recs, width, height)
             else:
-                from .capture_worker import AUTO_CROP_MARGIN_RATIO
                 sorted_faces = sorted(faces, key=lambda box: (box[0], box[1]))
                 result['face_crops'] = []
+                pseudo_recs = []
                 for x, y, w, h in sorted_faces:
                     margin = int(max(w, h) * AUTO_CROP_MARGIN_RATIO + .5)
                     left, top = max(0, x - margin), max(0, y - margin)
                     right, bottom = min(width, x + w + margin), min(height, y + h + margin)
-                    result['face_crops'].append([left, top, right - left, bottom - top])
+                    crop_rect = [left, top, right - left, bottom - top]
+                    result['face_crops'].append(crop_rect)
+                    pseudo_recs.append({'box': [x, y, w, h], 'crop': crop_rect, 'score': 0.75})
                 result['face_boxes'] = sorted_faces
+                result['recommended_index'] = _recommend_face_index(image, pseudo_recs, width, height)
             result['face_scan_unavailable'] = unavailable
         return result
     return await run_in_threadpool(invoke, execute)
@@ -797,16 +876,20 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         deblocked = jpeg_report = macroblock_report = None
         softened_detection = None
         tiny_report = None
+        alignment_info = None
         if automatic:
             need(protect is None and apply is None and not preview_id and not confirmed,
                  'Auto selects its own preparation. Remove manual preparation fields.')
             from . import capture_api
+            from .capture_worker import _box_iou, _padded_face_crop
             from .automatic_preparation import (
+                _is_genuine_dct_macroblocking,
                 detect_blur_island_face_box,
                 is_background_grid_with_blurred_face,
                 prepare as prepare_automatically,
                 prepare_composables,
                 prepare_macroblocking,
+                prepare_mosaics,
                 prepare_noise,
                 prepare_photometric,
                 prepare_source,
@@ -833,46 +916,135 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         deblocked, jpeg_report = prepare_jpeg(contents, native, rectangle)
                 payloads.update(region_evidence)
 
-            def _in_selection(boxes):
+            def _in_selection(items):
                 if selected_rectangle is None:
-                    return boxes
+                    return items
                 sx, sy, sw, sh = selected_rectangle
-                return [box for box in boxes if sx <= box[0] + box[2] / 2 < sx + sw
-                        and sy <= box[1] + box[3] / 2 < sy + sh]
+                matched = []
+                for item in items:
+                    box = item['box'] if isinstance(item, dict) else item
+                    cx = box[0] + box[2] / 2.0
+                    cy = box[1] + box[3] / 2.0
+                    if sx <= cx < sx + sw and sy <= cy < sy + sh:
+                        matched.append(item)
+                        continue
+                    ix1 = max(sx, box[0])
+                    iy1 = max(sy, box[1])
+                    ix2 = min(sx + sw, box[0] + box[2])
+                    iy2 = min(sy + sh, box[1] + box[3])
+                    inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+                    if inter >= 0.40 * max(1, box[2] * box[3]):
+                        matched.append(item)
+                return matched
 
-            _face_cache = {'done': False, 'face': None, 'method': 'original_image'}
+            def _pick_target_face(items):
+                if not items:
+                    return None
+                if len(items) == 1:
+                    return items[0]
+                if selected_rectangle is None:
+                    return None
+                sx, sy, sw, sh = selected_rectangle
+                scx, scy = sx + sw * 0.5, sy + sh * 0.5
+                diag = max(1.0, math.hypot(sw, sh))
+                src_h, src_w = source_rgb.shape[:2]
+
+                def _rank(item):
+                    box = item['box'] if isinstance(item, dict) else item
+                    ix1 = max(sx, box[0])
+                    iy1 = max(sy, box[1])
+                    ix2 = min(sx + sw, box[0] + box[2])
+                    iy2 = min(sy + sh, box[1] + box[3])
+                    inter = max(0, ix2 - ix1) * max(0, iy2 - iy1)
+                    overlap = inter / max(1.0, float(box[2] * box[3]))
+                    padded = item['crop'] if isinstance(item, dict) and 'crop' in item else _padded_face_crop(box, src_w, src_h)
+                    crop_iou = _box_iou(padded, selected_rectangle)
+                    dist = math.hypot((box[0] + box[2] * 0.5) - scx, (box[1] + box[3] * 0.5) - scy) / diag
+                    centrality = max(0.0, 1.0 - dist)
+                    score = float(item.get('score', 0.75)) if isinstance(item, dict) else 0.75
+                    return (crop_iou * 2.0 + overlap + centrality * 1.2 + score * 0.35, box[2] * box[3])
+
+                return max(items, key=_rank)
+
+            _face_cache = {'done': False, 'face': None, 'method': 'original_image', 'record': None}
 
             def _detect_single_face():
                 if _face_cache['done']:
                     return _face_cache['face'], _face_cache['method']
                 scan_image = Image.fromarray(source_rgb)
                 method = 'original_image'
+                use_details = capture_api.detect_faces is capture_api._DEFAULT_DETECT_FACES
+                picked_rec = None
                 try:
                     with capture_api.DETECTION_LOCK:
-                        faces = _in_selection(capture_api.detect_faces(scan_image))
-                        if not faces:
+                        if use_details:
+                            items = _in_selection(capture_api.detect_face_details(scan_image))
+                        else:
+                            items = _in_selection(capture_api.detect_faces(scan_image))
+                        if not items:
                             # Retry detection on copies. Preparation still requires
                             # a block-pattern signal on the untouched source pixels.
                             scale = max(scan_image.size) / 256
                             for scan_radius in (min(2., max(.5, scale * .9)), min(12., max(2.5, scale * 3.3))):
                                 smoothed = scan_image.filter(ImageFilter.GaussianBlur(scan_radius))
-                                matches = _in_selection(capture_api.detect_faces(smoothed))
-                                if len(matches) > 1:
+                                matches = _in_selection(
+                                    capture_api.detect_face_details(smoothed) if use_details
+                                    else capture_api.detect_faces(smoothed)
+                                )
+                                if len(matches) > 1 and selected_rectangle is None:
                                     break
-                                if matches and pixelation_signal(source_rgb, matches[0])['suspected']:
-                                    faces = matches
-                                    method = 'smoothed_detection_copy_with_block_signal'
-                                    break
+                                chosen = _pick_target_face(matches)
+                                if chosen is not None:
+                                    chosen_box = chosen['box'] if isinstance(chosen, dict) else chosen
+                                    if pixelation_signal(source_rgb, chosen_box)['suspected']:
+                                        items = [chosen]
+                                        method = 'smoothed_detection_copy_with_block_signal'
+                                        break
                 except RuntimeError:
-                    faces = []
-                detected = faces[0] if len(faces) == 1 else None
+                    items = []
+                chosen = _pick_target_face(items)
+                if isinstance(chosen, dict):
+                    detected = chosen['box']
+                    picked_rec = chosen
+                else:
+                    detected = chosen
                 if detected is None:
                     island = detect_blur_island_face_box(source_rgb, selected_rectangle)
                     if island is not None:
                         detected = island
                         method = 'blur_island_fallback'
-                _face_cache.update(done=True, face=detected, method=method)
+                _face_cache.update(done=True, face=detected, method=method, record=picked_rec)
                 return detected, method
+
+            def _apply_upright_roll_if_needed(rgb_arr):
+                nonlocal alignment_info
+                rec = _face_cache.get('record')
+                if not isinstance(rec, dict) or float(rec.get('score', 0.0)) < 0.65:
+                    return rgb_arr
+                roll_deg = rec.get('roll_deg')
+                if roll_deg is None or not math.isfinite(float(roll_deg)):
+                    return rgb_arr
+                roll_val = float(roll_deg)
+                if abs(roll_val) < 15.0 or abs(roll_val) > 165.0:
+                    return rgb_arr
+                import cv2
+
+                h_a, w_a = rgb_arr.shape[:2]
+                mat = cv2.getRotationMatrix2D((w_a * 0.5, h_a * 0.5), roll_val, 1.0)
+                rotated = cv2.warpAffine(
+                    rgb_arr,
+                    mat,
+                    (w_a, h_a),
+                    flags=cv2.INTER_CUBIC,
+                    borderMode=cv2.BORDER_REPLICATE,
+                )
+                alignment_info = {
+                    'applied': True,
+                    'roll_deg': round(roll_val, 2),
+                    'interpolation': 'INTER_CUBIC',
+                    'border_mode': 'BORDER_REPLICATE',
+                }
+                return rotated
 
             if 'scanline-cleaned.png' in region_evidence:
                 scanline_report = regional_report
@@ -907,6 +1079,42 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     region_input = smoothed_image[y:y + height, x:x + width]
                 if np.array_equal(region_input, native):
                     region_input = None
+            # Crop-scoped mosaic fallback when a small face mosaic inside a large scene
+            # (e.g. Voronoi/low-poly or compact face blocks) was below full-frame scale.
+            if (
+                region_input is None
+                and not capture_id
+                and selected_rectangle is not None
+                and scanline_report is None
+                and softened_detection is None
+                and min(native.shape[:2]) >= 48
+                and max(source_rgb.shape[:2]) > 1.5 * max(native.shape[:2])
+            ):
+                crop_sm, crop_rep, crop_ev = prepare_mosaics(native)
+                if crop_sm is not None and crop_rep is not None and not np.array_equal(crop_sm, native):
+                    rx, ry, rw, rh = selected_rectangle
+                    full_sm = source_rgb.copy()
+                    full_sm[ry:ry + rh, rx:rx + rw] = crop_sm
+                    full_mask = np.zeros(source_rgb.shape[:2], dtype=np.uint8)
+                    with Image.open(io.BytesIO(crop_ev['full-image-pixelation-mask.png'])) as cm_im:
+                        full_mask[ry:ry + rh, rx:rx + rw] = np.asarray(cm_im.convert('L'))
+                    full_sm_png = png(full_sm)
+                    full_mask_png = png(full_mask)
+                    region_input = crop_sm
+                    regional_report = {
+                        **crop_rep,
+                        'native_size': [int(source_rgb.shape[1]), int(source_rgb.shape[0])],
+                        'crop_scoped_mosaic': True,
+                        'full_image_sha256': digest(full_sm_png),
+                        'mask_sha256': digest(full_mask_png),
+                    }
+                    picture_regions = regional_report
+                    region_evidence = {
+                        'full-image-smoothed.png': full_sm_png,
+                        'full-image-pixelation-mask.png': full_mask_png,
+                    }
+                    payloads.update(region_evidence)
+
             if region_input is None and scanline_report is None:
                 region_input, tiny_report, tiny_evidence = tiny_crop_pixelation(native)
                 if tiny_report is not None:
@@ -928,6 +1136,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 and not regional_report.get('degraded_patch_conditioning')
                 and not regional_report.get('mixed_jpeg_mosaic')
                 and not regional_report.get('coordinated_mosaic_regions')
+                and not regional_report.get('geometric_mosaic_pattern')
+                and not regional_report.get('crop_scoped_mosaic')
                 and 'full-image-pixelation-mask.png' in region_evidence
             ):
                 with Image.open(io.BytesIO(region_evidence['full-image-pixelation-mask.png'])) as m_im:
@@ -946,10 +1156,49 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         payloads.pop(key, None)
 
             if is_privacy_mosaic_region:
-                selected = png(region_input)
-                prepared, _, _, _ = prepare_crop(region_input)
+                extra_stages = []
+                extra_reports = {}
+                mosaic_out = region_input.copy()
+                if (
+                    tiny_report is None
+                    and scanline_report is None
+                    and regional_report is not None
+                    and not regional_report.get('degraded_patch_conditioning')
+                    and not regional_report.get('mixed_jpeg_mosaic')
+                ):
+                    # Allow noise/cast cleanup to compose after privacy mosaic smoothing
+                    # while keeping smoothed mosaic pixels protected from luma noise blur.
+                    crop_mosaic_mask = None
+                    if 'full-image-pixelation-mask.png' in region_evidence:
+                        with Image.open(io.BytesIO(region_evidence['full-image-pixelation-mask.png'])) as cm_im:
+                            full_m = np.asarray(cm_im) > 0
+                        if selected_rectangle is not None:
+                            rx, ry, rw, rh = selected_rectangle
+                            crop_mosaic_mask = full_m[ry:ry + rh, rx:rx + rw]
+                        elif full_m.shape == mosaic_out.shape[:2]:
+                            crop_mosaic_mask = full_m
+                    if crop_mosaic_mask is not None and int((~crop_mosaic_mask).sum()) >= 64:
+                        n_out, n_rep, n_ev = prepare_noise(mosaic_out)
+                        if n_out is not None and n_rep is not None:
+                            # Preserve the smoothed mosaic region exact; denoise exterior noise only.
+                            merged_n = n_out.copy()
+                            merged_n[crop_mosaic_mask] = mosaic_out[crop_mosaic_mask]
+                            if not np.array_equal(merged_n, mosaic_out):
+                                mosaic_out = merged_n
+                                extra_stages.append('noise_denoise')
+                                extra_reports['noise_denoise'] = n_rep
+                                payloads.update(n_ev)
+                    cd_out, cd_route, cd_rep, cd_ev = prepare_photometric(mosaic_out)
+                    if cd_out is not None and cd_route == 'color_cast_balance' and cd_rep is not None:
+                        mosaic_out = cd_out
+                        extra_stages.append(cd_route)
+                        extra_reports[cd_route] = cd_rep
+                        payloads.update(cd_ev)
+
+                selected = png(mosaic_out)
+                prepared, _, _, _ = prepare_crop(mosaic_out)
                 preparation = {**(tiny_report or regional_report),
-                               'crop_changed_native_pixels': int(np.any(region_input != native, axis=2).sum()),
+                               'crop_changed_native_pixels': int(np.any(mosaic_out != native, axis=2).sum()),
                                'derived_native_sha256': digest(selected)}
                 if scanline_report is not None:
                     auto_decision = {'route': 'scanline_mosaic_coordinated',
@@ -977,6 +1226,11 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                                      'reason': 'suspected_pixelation_in_model_input',
                                      'Gaussian_radius_at256': regional_report['Gaussian_radius_at256'],
                                      'strength_basis': regional_report.get('strength_selection', {}).get('basis')}
+                if extra_stages:
+                    preparation['applied_stages'] = [auto_decision['route']] + extra_stages
+                    preparation['stage_reports'] = extra_reports
+                    auto_decision['applied_stages'] = [auto_decision['route']] + extra_stages
+                    auto_decision['stage_reports'] = extra_reports
                 payloads.update({'derived-native.png': selected, 'processing.json': canonical(preparation)})
             elif softened_detection is not None and softened_detection['crop_intersects']:
                 auto_decision = {'route': 'direct', 'reason': 'suspected_softened_mosaic'}
@@ -1074,24 +1328,35 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     candidate, blur_prep, auto_evidence, blur_decision = prepare_automatically(
                         current_rgb, blur_source, face, selected_rectangle
                     )
-                    if candidate is not None and (not applied_stages or blur_decision.get('route') == 'protect_auto'):
+                    blur_route = blur_decision.get('route')
+                    if candidate is not None and (not applied_stages or blur_route in ('protect_auto', 'face_gaussian')):
                         if applied_stages:
-                            composed_stages = list(applied_stages) + ['protect_auto']
-                            stage_reports['protect_auto'] = blur_decision
+                            composed_stages = list(applied_stages) + [blur_route]
+                            stage_reports[blur_route] = blur_decision
                             payloads.update(stage_evidence)
                             payloads.update(auto_evidence)
-                            selected = candidate
-                            prepared, _, _, _ = prepare_crop(decode_original(selected))
+                            cand_rgb = decode_original(candidate)
+                            aligned_rgb = _apply_upright_roll_if_needed(cand_rgb)
+                            selected = png(aligned_rgb) if alignment_info is not None else candidate
+                            selected_sha = digest(selected)
+                            if alignment_info is not None:
+                                payloads['derived-native.png'] = selected
+                            prepared, _, _, _ = prepare_crop(aligned_rgb)
                             preparation = {
                                 **blur_prep,
                                 'applied_stages': composed_stages,
                                 'stage_reports': stage_reports,
-                                'crop_changed_native_pixels': int(np.any(decode_original(selected) != native, axis=2).sum()),
-                                'derived_native_sha256': digest(selected),
+                                'crop_changed_native_pixels': int(np.any(aligned_rgb != native, axis=2).sum()),
+                                'derived_native_sha256': selected_sha,
                             }
+                            if alignment_info is not None and isinstance(preparation.get('payload_pins'), dict):
+                                preparation['payload_pins'] = {
+                                    **preparation['payload_pins'],
+                                    'derived-native.png': {'bytes': len(selected), 'sha256': selected_sha},
+                                }
                             auto_decision = {
                                 **blur_decision,
-                                'route': 'protect_auto',
+                                'route': blur_route,
                                 'face_detection': detection_method,
                                 'applied_stages': composed_stages,
                                 'composed_stages': composed_stages,
@@ -1102,24 +1367,66 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         else:
                             blur_decision['face_detection'] = detection_method
                             auto_decision = blur_decision
-                            preparation = blur_prep
+                            preparation = dict(blur_prep) if isinstance(blur_prep, dict) else blur_prep
                             payloads.update(auto_evidence)
-                            selected = candidate
-                            prepared, _, _, _ = prepare_crop(decode_original(selected))
+                            cand_rgb = decode_original(candidate)
+                            aligned_rgb = _apply_upright_roll_if_needed(cand_rgb)
+                            selected = png(aligned_rgb) if alignment_info is not None else candidate
+                            if alignment_info is not None:
+                                selected_sha = digest(selected)
+                                payloads['derived-native.png'] = selected
+                                if isinstance(preparation, dict):
+                                    preparation['derived_native_sha256'] = selected_sha
+                                    preparation['crop_changed_native_pixels'] = int(np.any(aligned_rgb != native, axis=2).sum())
+                                    if isinstance(preparation.get('payload_pins'), dict):
+                                        preparation['payload_pins'] = {
+                                            **preparation['payload_pins'],
+                                            'derived-native.png': {'bytes': len(selected), 'sha256': selected_sha},
+                                        }
+                                    payloads['processing.json'] = canonical(preparation)
+                            prepared, _, _, _ = prepare_crop(aligned_rgb)
                     elif applied_stages:
+                        aligned_rgb = _apply_upright_roll_if_needed(current_rgb)
                         selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
-                            current_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
+                            aligned_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
                         )
                     else:
                         blur_decision['face_detection'] = detection_method
                         auto_decision = blur_decision
                         payloads.update(auto_evidence)
+                        aligned_rgb = _apply_upright_roll_if_needed(current_rgb)
+                        if alignment_info is not None:
+                            selected = png(aligned_rgb)
+                            prepared, _, _, _ = prepare_crop(aligned_rgb)
                 elif applied_stages:
+                    aligned_rgb = _apply_upright_roll_if_needed(current_rgb)
                     selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
-                        current_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
+                        aligned_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
                     )
                 else:
-                    auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
+                    # Crop-level pixelation_signal fallback when face detection is uncertain.
+                    ch_c, cw_c = current_rgb.shape[:2]
+                    crop_pix = (
+                        pixelation_signal(current_rgb, (0, 0, cw_c, ch_c))
+                        if min(ch_c, cw_c) >= 24 else {'suspected': False}
+                    )
+                    if crop_pix.get('suspected') and not _is_genuine_dct_macroblocking(current_rgb, origin=crop_origin):
+                        cand, blur_prep, auto_evidence, blur_decision = prepare_automatically(
+                            current_rgb, current_rgb, [0, 0, cw_c, ch_c], None
+                        )
+                        if cand is not None:
+                            blur_decision['face_detection'] = 'crop_pixelation_fallback'
+                            auto_decision = blur_decision
+                            preparation = blur_prep
+                            payloads.update(auto_evidence)
+                            selected = cand
+                            prepared, _, _, _ = prepare_crop(decode_original(cand))
+                        else:
+                            auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
+                    else:
+                        auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
+            if alignment_info is not None and auto_decision is not None:
+                auto_decision['alignment'] = alignment_info
             payloads['automatic-decision.json'] = canonical(auto_decision)
         elif preparation_mode == 'bypass':
             need(protect is None and apply is None and not preview_id and not confirmed,
@@ -1184,6 +1491,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 metadata['frame_size'] = [int(frame_im.width), int(frame_im.height)]
         if auto_decision is not None:
             metadata['automatic_preparation'] = auto_decision
+        if alignment_info is not None:
+            metadata['alignment'] = alignment_info
         if picture_regions is not None:
             metadata['picture_pixelation'] = picture_regions
         if frame_regions is not None:

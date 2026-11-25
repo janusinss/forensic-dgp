@@ -643,5 +643,123 @@ class CompletionAPITests(unittest.TestCase):
         self.assertEqual(set(diag), {'before', 'after'})
         self.assertEqual(diag['before'], diag['after'])
 
+    def test_propose_precheck_and_evidence_zip_includes_auto_proposed_mask(self):
+        base_rgb, _ = self._load_prepared_test_image('face 1 - default.jpg')
+        masked_rgb = base_rgb.copy()
+        masked_rgb[140:205, 86:170] = (135, 195, 225)
+        proposal, generated = self._run_propose_review_generate(masked_rgb, expected_neural_calls=1)
+        self.assertIsInstance(generated['metadata'].get('auto_covering'), dict)
+        self.assertGreater(generated['metadata']['auto_covering']['auto_detected_pixels'], 0)
+        bundle_prefix = 'data:application/zip;base64,'
+        self.assertTrue(generated['bundle'].startswith(bundle_prefix))
+        bundle_bytes = base64.b64decode(generated['bundle'][len(bundle_prefix):])
+        with zipfile.ZipFile(io.BytesIO(bundle_bytes)) as archive:
+            names = set(archive.namelist())
+            self.assertIn('proposal/auto-proposed-mask.png', names)
+            self.assertIn('proposal/detector-proposed-mask.png', names)
+            manifest = json.loads(archive.read('manifest.json'))['sha256']
+            self.assertEqual(api.sha(archive.read('proposal/auto-proposed-mask.png')),
+                             manifest['proposal/auto-proposed-mask.png'])
+            combined = json.loads(archive.read('combined-workflow.json'))
+            self.assertEqual(combined['auto_covering'], proposal['metadata']['auto_covering'])
+
+        # Tiny observed sliver must refuse inside propose() before spawning detector worker.
+        sliver = np.full((256, 20, 3), 120, dtype=np.uint8)
+        sliver_raw = api.png(sliver)
+        orig256, _, _, geom = api.restoration.prepare_crop(sliver)
+        orig256_raw = api.png(orig256)
+        meta = {
+            'model': 'v3',
+            'selection': 'preconditioned_v34_codeformer',
+            'uploaded_bytes_sha256': api.sha(sliver_raw),
+            'result_file_sha256': api.sha(orig256_raw),
+            'restoration_applied': False,
+            'geometry': geom,
+        }
+        resp = {
+            'metadata': meta,
+            'original_input': api.restoration.url(orig256_raw),
+            'prepared_input': api.restoration.url(orig256_raw),
+            'result': api.restoration.url(orig256_raw),
+        }
+        api.admit_restoration(api.canonical(resp))
+        sliver_sid = api.prepare(sliver_raw, orig256_raw, api.canonical(meta))['session_id']
+        with patch.object(api, 'run_worker') as worker:
+            with self.assertRaisesRegex(ValueError, 'Too little visible face'):
+                api.propose(sliver_sid)
+            worker.assert_not_called()
+
+    def test_real_frozen_detector_zero_fp_on_review_zips_and_internet_controls(self):
+        import torch
+        from implementation.automatic_covering import detect_face_covering
+        from implementation.covering_detector import load_frozen_detector, proposal_from_probability
+
+        root = self._test_images_dir()
+        review_zips = sorted((root / 'review files').glob('*.zip'))
+        self.assertGreaterEqual(len(review_zips), 1)
+        detector = load_frozen_detector()
+
+        def run_real(rgb, obs):
+            tensor = torch.from_numpy(rgb.astype(np.float32) / np.float32(255.0)).permute(2, 0, 1).unsqueeze(0)
+            with torch.inference_mode():
+                prob = detector(tensor).sigmoid()[0, 0].cpu().numpy().copy()
+            _, prop, _ = proposal_from_probability(prob, obs)
+            return detect_face_covering(rgb, prob, prop, obs)
+
+        full_obs = np.ones((256, 256), dtype=bool)
+        for zp in review_zips:
+            with zipfile.ZipFile(zp) as archive:
+                if 'result.png' not in archive.namelist():
+                    continue
+                with self.subTest(archive=zp.name):
+                    with Image.open(io.BytesIO(archive.read('result.png'))) as img:
+                        rgb256 = np.array(img.convert('RGB'))
+                    mask, meta = run_real(rgb256, full_obs)
+                    self.assertTrue(meta['onnx_used'])
+                    self.assertEqual(int((mask > 0).sum()), 0)
+                    self.assertEqual(meta['auto_detected_pixels'], 0)
+
+        covering_dir = root / 'internet_samples' / 'covering'
+        if covering_dir.is_dir():
+            controls = sorted(covering_dir.glob('control_*.jpg'))
+            self.assertGreaterEqual(len(controls), 4)
+            control_crops = {
+                'control_01_thick_white_beard.jpg': (0, 31, 960, 1388),
+                'control_02_darkskin_beard.jpg': (0, 0, 441, 712),
+                'control_03_heavy_stage_makeup.jpg': (0, 212, 845, 1091),
+                'control_04_makeup_dark_shadow.jpg': (198, 140, 333, 388),
+            }
+            for path in controls:
+                with self.subTest(control=path.name):
+                    with Image.open(path) as img:
+                        native = np.array(img.convert('RGB'))
+                    crop = control_crops.get(path.name)
+                    if crop is not None:
+                        x, y, w, h = crop
+                        native = native[y:y + h, x:x + w]
+                    rgb256, obs, _, _ = api.restoration.prepare_crop(native)
+                    mask, meta = run_real(rgb256, obs)
+                    self.assertTrue(meta['onnx_used'])
+                    self.assertEqual(int((mask > 0).sum()), 0)
+                    self.assertEqual(meta['auto_detected_pixels'], 0)
+
+            bearded_eyewear = {
+                'eyewear_01_dark_opaque_beard.jpg': (220, 220, 412, 477),
+                'eyewear_05_clear_prescription.jpg': (0, 0, 744, 1154),
+                'eyewear_06_round_tinted.jpg': (0, 0, 960, 880),
+            }
+            for fn, (x, y, w, h) in bearded_eyewear.items():
+                path = covering_dir / fn
+                if not path.is_file():
+                    continue
+                with self.subTest(bearded_eyewear=fn):
+                    with Image.open(path) as img:
+                        native = np.array(img.convert('RGB'))[y:y + h, x:x + w]
+                    rgb256, obs, _, _ = api.restoration.prepare_crop(native)
+                    mask, meta = run_real(rgb256, obs)
+                    self.assertIn('eyewear_or_glare', meta['families_triggered'])
+                    self.assertGreater(int((mask[:145, :] > 0).sum()), 800)
+                    self.assertEqual(int((mask[150:, :] > 0).sum()), 0)
+
 
 if __name__=='__main__': unittest.main()

@@ -75,11 +75,39 @@ def photometric_metrics(rgb: np.ndarray, mask: np.ndarray | None = None) -> dict
     cast_m = float(np.hypot(a_vals.std(), b_vals.std()))
     cast_k = cast_d / max(cast_m, 1e-6)
     y_act = y[active]
+    # Measure haze on inner portrait pixels excluding bright white/light-gray studio backdrops
+    # so clean portraits on white studio backgrounds never trigger dark-channel dehazing.
+    h_img, w_img = src.shape[:2]
+    sat_ch = hsv[..., 1]
+    haze_region = active
+    if mask is None and min(h_img, w_img) >= 64:
+        inner = np.zeros((h_img, w_img), dtype=bool)
+        inner[int(h_img * 0.20):int(h_img * 0.80), int(w_img * 0.20):int(w_img * 0.80)] = True
+        outer = active & ~inner
+        outer_bright_frac = (
+            float(((y >= 200.0) & (sat_ch <= 25))[outer].mean()) if bool(outer.any()) else 0.0
+        )
+        white_thresh = 210.0 if outer_bright_frac >= 0.45 else 235.0
+        non_white = active & ~((y >= white_thresh) & (sat_ch <= 30))
+        inner_nw = inner & non_white
+        if int(inner_nw.sum()) >= max(64, int(0.15 * int(inner.sum()))):
+            haze_region = inner_nw
+        elif int(inner.sum()) >= 64:
+            haze_region = inner
+        elif int(non_white.sum()) >= max(64, int(0.25 * int(active.sum()))):
+            haze_region = non_white
+    else:
+        non_white = active & ~((y >= 235.0) & (sat_ch <= 30))
+        if int(non_white.sum()) >= max(64, int(0.25 * int(active.sum()))):
+            haze_region = non_white
+
     return {
         "dark_channel_mean": round(_finite_float(float(dark_ch[active].mean())), 2),
+        "haze_dark_channel_mean": round(_finite_float(float(dark_ch[haze_region].mean())), 2),
         "luma_mean": round(_finite_float(float(y_act.mean())), 2),
         "luma_std": round(_finite_float(float(y_act.std())), 2),
-        "sat_mean": round(_finite_float(float(hsv[..., 1][active].mean())), 2),
+        "sat_mean": round(_finite_float(float(sat_ch[active].mean())), 2),
+        "haze_sat_mean": round(_finite_float(float(sat_ch[haze_region].mean())), 2),
         "cast_D": round(_finite_float(cast_d), 2),
         "cast_factor": round(_finite_float(cast_k), 3),
         "clip_shadow_pct": round(_finite_float(float((src.min(axis=2)[active] <= 2).mean() * 100.0)), 2),
@@ -176,11 +204,12 @@ def _face_safe_dcp(
 
 def _evaluate_gates(pm: dict[str, float]) -> tuple[bool, bool]:
     cast_fire = (pm["cast_D"] >= CAST_D_MIN) and (pm["cast_factor"] >= CAST_K_MIN)
-    dc = pm["dark_channel_mean"] / 255.0
+    dc = pm.get("haze_dark_channel_mean", pm["dark_channel_mean"]) / 255.0
+    sat_val = pm.get("haze_sat_mean", pm["sat_mean"])
     sat_cap = HAZE_SAT_MAX + max(0.0, (dc - HAZE_DC_MIN) * 90.0)
     haze_fire = (
         (dc >= HAZE_DC_MIN)
-        and (pm["sat_mean"] < sat_cap)
+        and (sat_val < sat_cap)
         and (pm["clip_shadow_pct"] < 1.0)
     )
     return bool(cast_fire), bool(haze_fire)
