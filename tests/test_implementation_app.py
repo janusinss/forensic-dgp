@@ -1415,6 +1415,68 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(auto_island['route'], 'protect_auto')
         self.assertEqual(auto_island['face_detection'], 'blur_island_fallback')
 
+    def test_upright_roll_alignment_pins_derived_native_and_processing_hashes(self):
+        """Upright roll alignment must atomically re-pin derived-native.png, processing.json, and selected_input_sha256."""
+        from implementation import automatic_preparation
+
+        rng = np.random.default_rng(808)
+        yy, xx = np.mgrid[0:320, 0:320].astype(np.float32)
+        scene = np.full((320, 320, 3), 210.0, dtype=np.float32)
+        scene[(yy.astype(int) % 16) < 2] = 60.0
+        scene[(xx.astype(int) % 24) < 2] = 85.0
+        scene += rng.normal(0.0, 12.0, scene.shape)
+        face = [100, 90, 120, 140]
+        fx, fy, fw, fh = face
+        cx, cy = fx + fw / 2.0, fy + fh / 2.0
+        oval = ((xx - cx) / (fw * 0.48)) ** 2 + ((yy - cy) / (fh * 0.48)) ** 2 <= 1.0
+        scene[oval] = np.stack([
+            195.0 - 25.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+            152.0 - 20.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+            128.0 - 16.0 * np.hypot((xx - cx) / fw, (yy - cy) / fh),
+        ], axis=-1)[oval]
+        scene[fy + 38:fy + 50, fx + 24:fx + 48] = [30, 28, 32]
+        scene[fy + 38:fy + 50, fx + 72:fx + 96] = [30, 28, 32]
+        scene[fy + 96:fy + 108, fx + 36:fx + 84] = [125, 55, 55]
+        scene = np.clip(np.rint(scene), 0, 255).astype(np.uint8)
+        blurred = np.asarray(Image.fromarray(scene).filter(ImageFilter.GaussianBlur(12.0)))
+        zone = ((xx >= fx - 6) & (xx < fx + fw + 6) & (yy >= fy - 6) & (yy < fy + fh + 6))
+        scene[zone] = blurred[zone]
+
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        rolled_rec = [{'box': face, 'crop': [55, 45, 210, 230], 'score': 0.91, 'roll_deg': 22.5}]
+        fake_stage_out = scene.copy()
+        fake_stage_out[0, 0] = np.clip(fake_stage_out[0, 0].astype(int) ^ 1, 0, 255).astype(np.uint8)
+
+        for label_tag, comp_patch in (
+            ('standalone_protect_auto', patch.object(automatic_preparation, 'prepare_composables', return_value=(None, [], {}, {}))),
+            ('composed_protect_auto', patch.object(automatic_preparation, 'prepare_composables', return_value=(fake_stage_out, ['edge_deringing'], {'edge_deringing': {'policy': 'test'}}, {}))),
+        ):
+            with self.subTest(branch=label_tag):
+                with (
+                    patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+                    patch.object(capture_api, 'detect_face_details', return_value=rolled_rec),
+                    comp_patch,
+                    patch.object(controller, 'one_forward', return_value=dummy_out),
+                ):
+                    res = self.restore(
+                        file=self.upload(png(scene)),
+                        restoration='auto',
+                        preparation_mode='automatic',
+                        input_review='picture_upload',
+                    )
+                meta = res['metadata']
+                self.assertEqual(meta['alignment']['applied'], True)
+                self.assertAlmostEqual(meta['alignment']['roll_deg'], 22.5, places=2)
+                bundle_bytes = base64.b64decode(res['bundle'].split(',', 1)[1])
+                with zipfile.ZipFile(io.BytesIO(bundle_bytes)) as archive:
+                    derived_bytes = archive.read('derived-native.png')
+                    processing = json.loads(archive.read('processing.json'))
+                derived_sha = controller.digest(derived_bytes)
+                self.assertEqual(derived_sha, meta['selected_input_sha256'])
+                self.assertEqual(derived_sha, processing['derived_native_sha256'])
+                if isinstance(processing.get('payload_pins'), dict) and 'derived-native.png' in processing['payload_pins']:
+                    self.assertEqual(processing['payload_pins']['derived-native.png']['sha256'], derived_sha)
+
 
 if __name__ == '__main__':
     unittest.main()

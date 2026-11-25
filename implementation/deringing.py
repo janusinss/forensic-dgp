@@ -212,6 +212,14 @@ def _analyze_ringing(source):
         return None
 
     kept_idx = ring_core[cy, cx] & ring_flag
+    if not np.any(kept_idx):
+        return None
+    primary_core_ratio = float(ring_core_px) / max(1, int(len(cy)))
+    med_coherence = float(np.median(coherence[kept_idx]))
+    # Guard against sparse sharp portrait edges (glasses, eyelashes, collar seams)
+    # where only a tiny fraction of primary edges show weak tangential coherence.
+    if primary_core_ratio < 0.08 and not (primary_core_ratio >= 0.04 and med_coherence >= 0.86):
+        return None
     rel_rev = np.maximum(rev_dark[kept_idx], rev_bright[kept_idx]) / np.maximum(jump[kept_idx], 1.0)
     report = {
         'policy': 'gibbs-halo-deringing-v1',
@@ -223,7 +231,7 @@ def _analyze_ringing(source):
         'halo_band_fraction': halo_band_fraction,
         'median_edge_contrast': round(float(np.median(jump[kept_idx])), 2),
         'median_reversal_ratio': round(float(np.median(rel_rev)), 4),
-        'median_tangential_coherence': round(float(np.median(coherence[kept_idx])), 4),
+        'median_tangential_coherence': round(med_coherence, 4),
         'noise_sigma_255': round(noise_sigma, 3),
     }
     if not all(

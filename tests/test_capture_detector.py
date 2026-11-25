@@ -228,3 +228,5 @@ class MultiPassFaceScanTests(unittest.TestCase):
             self.assertEqual(cli_rec['box'], py_rec['box'])
             self.assertEqual(cli_rec['crop'], py_rec['crop'])
             self.assertAlmostEqual(cli_rec['score'], py_rec['score'], places=5)
+            self.assertEqual(len(cli_rec['landmarks']), 5)
+            self.assertIsInstance(cli_rec['roll_deg'], float)

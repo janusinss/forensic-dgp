@@ -472,3 +472,68 @@ class AutoBlurOverhaulTests(unittest.TestCase):
 
         uniform, _ = self._make_sharp_grid_with_face(uniform_blur_sigma=6.0)
         self.assertIsNone(automatic.detect_blur_island_face_box(uniform))
+
+    def test_overhaul_regressions_small_crop_period_radius_white_backdrop_and_coarse_chroma(self):
+        """Verify 48-64px dead-zone closure, period-coupled radius, white-backdrop haze guard, and coarse chroma denoise."""
+        import cv2
+        from implementation.cast_dehaze import detect_cast_dehaze
+        from implementation.irregular_mosaic import irregular_mosaic_mask
+        from implementation.noise_denoise import detect_noise, prepare_noise_denoise
+
+        # 1) 56x56 small-crop mosaic (was in 48-60px dead zone) now detected cleanly
+        rng = np.random.default_rng(515)
+        small_canvas = Image.new('RGB', (56, 56), (120, 122, 125))
+        tiles = Image.fromarray(rng.integers(20, 235, (10, 10, 3), dtype=np.uint8))
+        small_canvas.paste(tiles.resize((40, 40), Image.Resampling.NEAREST), (8, 8))
+        t_out, t_rep, _ = automatic.tiny_crop_pixelation(np.asarray(small_canvas))
+        self.assertIsNotNone(t_out)
+        self.assertIsNotNone(t_rep)
+
+        # 2) Period-coupled native Gaussian radius prevents over-blurring 12px blocks in a 1024px scene
+        big_scene = np.full((1024, 1024, 3), 120, dtype=np.uint8)
+        blk12 = Image.fromarray(rng.integers(25, 230, (12, 12, 3), dtype=np.uint8)).resize((144, 144), Image.Resampling.NEAREST)
+        big_scene[400:544, 400:544] = np.asarray(blk12)
+        mask12 = np.zeros((1024, 1024), dtype=bool)
+        mask12[400:544, 400:544] = True
+        _, rep12, _ = automatic.apply_pixelation_mask(big_scene, mask12, (1024, 1024), 0)
+        self.assertIsNotNone(rep12)
+        self.assertLessEqual(rep12['native_Gaussian_radius'], 7.0)
+        self.assertGreaterEqual(rep12['native_Gaussian_radius'], 3.5)
+
+        # 3) Clean portrait on bright white studio backdrop must NOT trigger haze_dehaze
+        studio = np.full((320, 320, 3), 242, dtype=np.uint8)
+        yy, xx = np.mgrid[0:320, 0:320]
+        oval = ((xx - 160) / 70.0) ** 2 + ((yy - 160) / 90.0) ** 2 <= 1.0
+        studio[oval] = np.array([155, 110, 88], dtype=np.uint8)
+        studio[(yy > 235) & (np.abs(xx - 160) < 95)] = np.array([45, 42, 48], dtype=np.uint8)
+        self.assertIsNone(detect_cast_dehaze(studio))
+
+        # 4) 2x coarse chroma blotch noise triggers chroma-only denoise leaving Y untouched
+        base_ycrcb = np.full((160, 160, 3), [110, 134, 118], dtype=np.uint8)
+        blotch_cr = cv2.resize(rng.normal(0, 14.0, (80, 80)).astype(np.float32), (160, 160), interpolation=cv2.INTER_LINEAR)
+        blotch_cb = cv2.resize(rng.normal(0, 14.0, (80, 80)).astype(np.float32), (160, 160), interpolation=cv2.INTER_LINEAR)
+        noisy_ycrcb = base_ycrcb.astype(np.float32)
+        noisy_ycrcb[..., 1] = np.clip(noisy_ycrcb[..., 1] + blotch_cr, 0, 255)
+        noisy_ycrcb[..., 2] = np.clip(noisy_ycrcb[..., 2] + blotch_cb, 0, 255)
+        blotch_rgb = cv2.cvtColor(noisy_ycrcb.astype(np.uint8), cv2.COLOR_YCrCb2RGB)
+        n_det = detect_noise(blotch_rgb)
+        self.assertIsNotNone(n_det)
+        self.assertTrue(n_det['coarse_chroma_triggered'])
+        n_out, _, n_rep = prepare_noise_denoise(blotch_rgb)
+        self.assertIsNotNone(n_out)
+        self.assertTrue(n_rep['coarse_chroma_triggered'])
+        y_before = cv2.cvtColor(blotch_rgb, cv2.COLOR_RGB2YCrCb)[..., 0].astype(np.float32)
+        y_after = cv2.cvtColor(n_out, cv2.COLOR_RGB2YCrCb)[..., 0].astype(np.float32)
+        self.assertLessEqual(float(np.abs(y_after - y_before).mean()), 1.0)
+
+        # 5) Rippled Voronoi mosaic (+-2 LSB interior ripple, missed by strict tol=1) detected by irregular_mosaic_mask
+        xs = np.arange(4, 160, 9)
+        ys = np.arange(4, 160, 9)
+        sy, sx = np.meshgrid(ys, xs, indexing='ij')
+        py = sy.ravel().astype(np.float32) + rng.uniform(-2.0, 2.0, sy.size).astype(np.float32)
+        px = sx.ravel().astype(np.float32) + rng.uniform(-2.0, 2.0, sx.size).astype(np.float32)
+        yy2, xx2 = np.mgrid[0:160, 0:160].astype(np.float32)
+        nearest = np.argmin((xx2[..., None] - px[None, None, :]) ** 2 + (yy2[..., None] - py[None, None, :]) ** 2, axis=2)
+        vor = rng.integers(30, 230, (py.size, 3), dtype=np.uint8)[nearest]
+        vor_rippled = np.clip(vor.astype(np.int16) + rng.integers(-1, 2, vor.shape), 0, 255).astype(np.uint8)
+        self.assertGreaterEqual(float(irregular_mosaic_mask(vor_rippled).mean()), 0.25)

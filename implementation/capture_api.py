@@ -110,7 +110,7 @@ def _run_face_worker(image, mode, max_stdout):
     try:
         result = subprocess.run([worker_python(), '-B', str(Path(__file__).with_name('capture_worker.py')), mode],
                                 input=buffer.getvalue(), stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                                timeout=15, check=True, cwd=ROOT,
+                                timeout=30, check=True, cwd=ROOT,
                                 creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
         if len(result.stdout) > max_stdout:
             raise ValueError

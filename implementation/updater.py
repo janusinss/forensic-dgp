@@ -18,7 +18,7 @@ import zipfile
 
 from .setup_models import ROOT
 
-APP_VERSION = "0.3.1"
+APP_VERSION = "0.3.2"
 DEFAULT_MANIFEST_URL = "https://forensic-dgp.pages.dev/release.json"
 MAX_MANIFEST_BYTES = 64 * 1024
 MAX_PACKAGE_BYTES = 2 * 1024**3
