@@ -5,7 +5,7 @@
     const canvas = byId('completion-editor'), context = canvas.getContext('2d');
     const cursorX = byId('completion-x'), cursorY = byId('completion-y'), cursorLabel = byId('completion-cursor');
     let source, session, imagePixels, bounds, mask = new Uint8Array(256 * 256), undo = [];
-    let reviewId, reviewedMask, busy = false, revision = 0, operation = 0, drawing = false, previous;
+    let reviewId, reviewedMask, lastProposalId, serviceAvailable = true, busy = false, revision = 0, operation = 0, drawing = false, previous;
     let overlayPixels, selectedCount = 0, dirty, renderFrame = 0;
     const error = message => { byId('completion-error').textContent = message; byId('completion-error').classList.toggle('hidden', !message); };
     const progress = message => { byId('completion-progress').textContent = message; };
@@ -39,6 +39,8 @@
             [/Removal must not include neutral padding/i, 'Keep the selected area inside the photo.'],
             [/Too little visible face remains/i, 'Too much of the face is hidden. Choose a clearer photo with more of the face visible.'],
             [/Confirm the removal area and sufficient visible facial structure/i, 'Confirm the selected area and that enough of the face is visible.'],
+            [/The proposal is stale/i, 'The detected area is out of date. Detect or paint the area again.'],
+            [/The removal mask or input changed/i, 'The selected area or image changed. Check and confirm it again.'],
             [/not produced in the current app session/i, 'This result is from an earlier session. Restore the photo again or choose Off.'],
             [/Completion review is full/i, 'Too many images are open for review. Restart the app to continue.'],
             [/at least 2\.5 GiB available RAM/i, 'There is not enough memory. Close unused apps and try again.'],
@@ -46,7 +48,7 @@
             [/6 GiB owned-worker memory limit/i, 'The request used too much memory and stopped. Close unused apps and try again.'],
         ];
         for (const [pattern, message] of messages) if (pattern.test(detail)) return message;
-        if (/\b(?:R1|R2|V2|model|detector|worker|provenance|fingerprint|sha256|metadata|artifact|mask|binary|padding|bounds|receipt|session|review_id|proposal_id|neural)\b/i.test(detail)) {
+        if (/\b(?:R1|R2|V2|provenance|fingerprint|sha256|metadata|artifact|binary|bounds|receipt|review_id|proposal_id|neural)\b/i.test(detail)) {
             return 'The request could not be completed. Please review your image and try again.';
         }
         return detail;
@@ -77,7 +79,7 @@
         document.querySelectorAll('#completion-stage input, #completion-stage select, #completion-stage button:not([data-wizard-nav])').forEach(item => {
             if (!item.closest('#completion-result-section')) item.disabled = busy || !ready;
         });
-        byId('completion-start').disabled = busy || !source;
+        byId('completion-start').disabled = busy || !source || !serviceAvailable;
         byId('completion-start').setAttribute('aria-busy', String(busy));
         byId('completion-undo').disabled = busy || !ready || !undo.length;
         byId('completion-generate').disabled = busy || !ready || !reviewId || !byId('completion-mask-confirm').checked || !byId('completion-visible-confirm').checked;
@@ -95,7 +97,7 @@
         setGenerating(false);
         byId('completion-confirm-preview').removeAttribute('src');
         operation++; revision++; source = undefined; session = undefined; imagePixels = undefined; bounds = undefined;
-        reviewId = undefined; reviewedMask = undefined; busy = false; drawing = false; undo = []; mask.fill(0);
+        reviewId = undefined; reviewedMask = undefined; lastProposalId = undefined; serviceAvailable = true; busy = false; drawing = false; undo = []; mask.fill(0);
         byId('completion-mask-confirm').checked = false; byId('completion-visible-confirm').checked = false;
         byId('completion-editor-section').classList.add('hidden'); byId('completion-stage').classList.add('hidden');
         byId('completion-import').value = ''; clearResult(); error(''); context.clearRect(0, 0, 256, 256); update();
@@ -290,7 +292,7 @@
         const image = new Image(); image.src = pngURL(result.input_png); await image.decode();
         if (!current(token, version)) return false;
         if (image.naturalWidth !== 256 || image.naturalHeight !== 256) throw new Error('The restored image has an unexpected size. Please restore it again.');
-        session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = [];
+        session = result.session_id; bounds = b.slice(); mask = new Uint8Array(256 * 256); undo = []; lastProposalId = undefined;
         context.drawImage(image, 0, 0); imagePixels = context.getImageData(0, 0, 256, 256); rebuildOverlay();
         return true;
     };
@@ -358,11 +360,18 @@
             const proposal = await post('/propose', proposeData);
             if (!current(token, version)) return;
             if (typeof proposal.proposal_id !== 'string' || !/^[a-f0-9]{24,64}$/.test(proposal.proposal_id)) throw new Error('Could not detect covered areas. Please try again.');
+            lastProposalId = proposal.proposal_id;
             const proposalURL = pngURL(proposal.proposal_png);
             mask = await decodeProposalMask(proposalURL);
             if (!current(token, version)) return;
             rebuildOverlay();
             const hasRemoval = mask.some(Boolean) || (proposal.metadata?.proposed_mask_pixels ?? 0) > 0;
+            if (!hasRemoval) {
+                setGenerating(false);
+                window.dispatchEvent(new Event('completion:prepared'));
+                progress('No covering was detected automatically. Keep your restored image or paint the covered area manually.');
+                return;
+            }
             const submittedMask = pngBlob(proposalURL);
             progress('Reviewing detected covering.');
             const reviewData = new FormData();
@@ -372,7 +381,7 @@
             const reviewResult = await post('/review', reviewData);
             if (!current(token, version)) return;
             if (!(await verifyReviewEcho(submittedMask, reviewResult, token, version))) return;
-            progress(hasRemoval ? 'Creating an estimate of the covered area. Please keep the app open.' : 'No covering was detected, so your restored image will stay the same.');
+            progress('Creating an estimate of the covered area. Please keep the app open.');
             const genData = new FormData();
             genData.append('session_id', session);
             genData.append('mask', submittedMask, 'proposed-mask.png');
@@ -405,6 +414,7 @@
         try {
             const submittedMask = await maskPNG(mask.slice());
             const data = new FormData(); data.append('session_id', session); data.append('mask', submittedMask, 'reviewed-mask.png');
+            if (lastProposalId) data.append('proposal_id', lastProposalId);
             if (!current(token, version)) return;
             const result = await post('/review', data);
             if (!current(token, version)) return;
@@ -423,6 +433,7 @@
         try {
             const data = new FormData(); data.append('session_id', session); data.append('mask', fixedReviewedMask, 'reviewed-mask.png');
             data.append('review_id', fixedReview); data.append('mask_confirmed', 'true'); data.append('visible_confirmed', 'true');
+            if (lastProposalId) data.append('proposal_id', lastProposalId);
             if (!current(token, version)) return;
             const result = await post('/generate', data);
             if (!current(token, version)) return;
@@ -435,6 +446,28 @@
         } catch (problem) { if (current(token, version)) { clearResult(); error(problem.message); progress('Covering removal stopped. Your saved files are still available. Check the message before trying again.'); } }
         finally { if (token === operation) setGenerating(false); finish(token); }
     });
+    const checkCompletionStatus = async activeSource => {
+        if (typeof window.location !== 'object' || !window.location || !/^https?:$/.test(window.location.protocol || '')) return;
+        try {
+            const response = await fetch(api + '/status', { method: 'GET' });
+            if (!response.ok) return;
+            const info = await response.json();
+            if (source !== activeSource) return;
+            if (info && info.available === false) {
+                serviceAvailable = false;
+                const reason = typeof info.error === 'string' && info.error.trim()
+                    ? 'Covering removal is unavailable because required local model files are missing or need attention.'
+                    : 'Covering removal is currently unavailable.';
+                progress(reason);
+                update();
+            } else {
+                serviceAvailable = true;
+                update();
+            }
+        } catch {
+            // Leave Remove covering enabled so clicking surfaces the local connection message.
+        }
+    };
     window.addEventListener('restoration:completed', event => {
         reset();
         const detail = event.detail;
@@ -444,6 +477,7 @@
             source = { originalFile: detail.originalFile, result: detail.result };
             byId('completion-stage').classList.remove('hidden');
             progress('Your result is ready. Removal is optional; keep the image as it is if there is nothing to remove.'); update();
+            void checkCompletionStatus(source);
         } catch (problem) { error(problem.message); }
     });
     // Existing restoration invalidations remove/hide its output. Observe only;

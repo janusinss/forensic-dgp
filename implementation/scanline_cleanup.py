@@ -212,8 +212,20 @@ def detect_and_clean_spatial_comb(
     frac = float(comb_mask.mean())
     run3_mask = comb_mask[:, :-2] & comb_mask[:, 1:-1] & comb_mask[:, 2:]
     run3_frac = float(run3_mask.mean())
+    run5_mask = (
+        comb_mask[:, :-4]
+        & comb_mask[:, 1:-3]
+        & comb_mask[:, 2:-2]
+        & comb_mask[:, 3:-1]
+        & comb_mask[:, 4:]
+    )
+    run5_frac = float(run5_mask.mean())
     m_before_mean = float(m_comb[1:-1].mean())
-    if not force and (m_before_mean < 10.0 or run3_frac < 0.018):
+    if not force and (
+        m_before_mean < 10.0
+        or run3_frac < 0.018
+        or (min(source.shape[:2]) >= 256 and run5_frac < 0.010)
+    ):
         return None, None, {}
     if not force:
         # Guard against background height-chart ruler ticks at the crop edges when

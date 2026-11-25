@@ -135,7 +135,48 @@ def _box_iou(a, b):
     return inter / union if union > 0 else 0.0
 
 
-def _collect_records(detector, frame, original_size, threshold, pass_bias, relaxed_landmarks=False):
+def _box_intersection_area(a, b):
+    ix1 = max(a[0], b[0])
+    iy1 = max(a[1], b[1])
+    ix2 = min(a[0] + a[2], b[0] + b[2])
+    iy2 = min(a[1] + a[3], b[1] + b[3])
+    return max(0, ix2 - ix1) * max(0, iy2 - iy1)
+
+
+def _plausible_relaxed_face_patch(frame, left_f, top_f, right_f, bottom_f):
+    """Reject uniform shadows, flat panels, and high-frequency striped grids in relaxed Pass 2."""
+    import numpy as np
+
+    dh, dw = frame.shape[:2]
+    x0 = max(0, min(dw - 1, int(math.floor(left_f))))
+    y0 = max(0, min(dh - 1, int(math.floor(top_f))))
+    x1 = max(x0 + 1, min(dw, int(math.ceil(right_f))))
+    y1 = max(y0 + 1, min(dh, int(math.ceil(bottom_f))))
+    patch = frame[y0:y1, x0:x1]
+    if patch.size == 0 or min(patch.shape[:2]) < 8:
+        return False
+    gray = patch.astype(np.float32).mean(axis=2)
+    if float(gray.std()) < 8.0:
+        return False
+    gx = float(np.abs(np.diff(gray, axis=1)).mean())
+    gy = float(np.abs(np.diff(gray, axis=0)).mean())
+    if max(gx, gy) < 1.5:
+        return False
+    # Reject strongly 1D striped/ticket-machine textures where one axis overwhelms the other.
+    if max(gx, gy) > 4.5 * max(0.5, min(gx, gy)):
+        return False
+    return True
+
+
+def _collect_records(
+    detector,
+    frame,
+    original_size,
+    threshold,
+    pass_bias,
+    relaxed_landmarks=False,
+    pass_idx=0,
+):
     det_height, det_width = frame.shape[:2]
     detector.setInputSize((int(det_width), int(det_height)))
     detector.setScoreThreshold(float(threshold))
@@ -166,25 +207,40 @@ def _collect_records(detector, frame, original_size, threshold, pass_bias, relax
             lx = float(row[4 + 2 * idx]) * scale_x
             ly = float(row[5 + 2 * idx]) * scale_y
             row_scaled.extend((lx, ly))
-            landmarks.append((lx, ly))
-        if not _valid_face_landmarks(row_scaled, row_scaled[2], row_scaled[3]):
+            landmarks.append([round(lx, 1), round(ly, 1)])
+        valid_lm = _valid_face_landmarks(row_scaled, row_scaled[2], row_scaled[3])
+        if not valid_lm:
             aspect = bw_i / max(1.0, float(bh_i))
-            if not (relaxed_landmarks and raw_score >= 0.42 and 0.55 <= aspect <= 1.45):
+            if not (
+                relaxed_landmarks
+                and raw_score >= 0.50
+                and 0.60 <= aspect <= 1.38
+                and _plausible_relaxed_face_patch(frame, x, y, right, bottom)
+            ):
                 continue
+        re_pt, le_pt = landmarks[0], landmarks[1]
+        roll_deg = round(math.degrees(math.atan2(le_pt[1] - re_pt[1], le_pt[0] - re_pt[0])), 2)
+        if not math.isfinite(roll_deg):
+            roll_deg = 0.0
         box = [left, top, bw_i, bh_i]
         crop = _padded_face_crop(box, width, height)
         records.append({
             'box': box,
             'crop': crop,
             'score': raw_score,
+            'landmarks': landmarks,
+            'roll_deg': roll_deg,
             '_priority': raw_score + pass_bias,
+            '_pass': pass_idx,
+            '_relaxed': not valid_lm,
         })
     return records
 
 
 def scan_face_records(image):
-    """Multi-pass YuNet face detection returning validated boxes, +32% padded crops, and scores."""
+    """Multi-pass YuNet face detection returning validated boxes, +32% padded crops, scores, and landmarks."""
     import cv2
+    import numpy as np
 
     if image is None or getattr(image, 'ndim', 0) != 3 or image.shape[2] != 3:
         return []
@@ -206,7 +262,7 @@ def scan_face_records(image):
     detector = cv2.FaceDetectorYN.create('onnx', checked_model(), b'', (int(scan_width), int(scan_height)), 0.50, 0.3)
 
     # Pass 0: full bounded scan at 0.50 threshold.
-    candidates = _collect_records(detector, scan_image, original_size, 0.50, pass_bias=0.02)
+    candidates = _collect_records(detector, scan_image, original_size, 0.50, pass_bias=0.02, pass_idx=0)
 
     max_raw_score = max((c['score'] for c in candidates), default=0.0)
     max_box_side = max((max(c['box'][2], c['box'][3]) for c in candidates), default=0)
@@ -218,7 +274,7 @@ def scan_face_records(image):
                 sc = side / max_scan
                 tw, th = max(1, round(scan_width * sc)), max(1, round(scan_height * sc))
                 resized = cv2.resize(scan_image, (tw, th), interpolation=cv2.INTER_AREA)
-                candidates.extend(_collect_records(detector, resized, original_size, 0.45, pass_bias=0.01))
+                candidates.extend(_collect_records(detector, resized, original_size, 0.45, pass_bias=0.01, pass_idx=1))
 
         sigma = max(1.2, 0.007 * max_scan)
         smoothed = cv2.GaussianBlur(scan_image, (0, 0), sigmaX=sigma, sigmaY=sigma)
@@ -230,9 +286,10 @@ def scan_face_records(image):
                 continue
             seen_sm.add((tw, th))
             resized_sm = cv2.resize(smoothed, (tw, th), interpolation=cv2.INTER_AREA) if sc < 1.0 else smoothed
-            candidates.extend(_collect_records(detector, resized_sm, original_size, 0.42, pass_bias=0.0))
+            candidates.extend(_collect_records(detector, resized_sm, original_size, 0.42, pass_bias=0.0, pass_idx=1))
 
     max_raw_score = max((c['score'] for c in candidates), default=0.0)
+    had_prior_verified = any(not c.get('_relaxed', False) for c in candidates)
 
     # Pass 2: downscales + LAB-L CLAHE + dual unsharp filters for heavy defocus/motion/low-contrast blur.
     if not candidates or max_raw_score < 0.72:
@@ -260,9 +317,24 @@ def scan_face_records(image):
                         original_size,
                         thresh_u,
                         pass_bias=-0.04,
-                        relaxed_landmarks=(not had_prior_candidates),
+                        relaxed_landmarks=(not had_prior_verified),
+                        pass_idx=2,
                     )
                 )
+
+    # Pass 2b: mild gamma lift ONLY when 0 candidates were found on a dark/backlit frame.
+    if not candidates:
+        gray_scan = cv2.cvtColor(scan_image, cv2.COLOR_BGR2GRAY)
+        if float(np.percentile(gray_scan, 25)) < 45.0:
+            lut = np.clip(np.rint(((np.arange(256, dtype=np.float32) / 255.0) ** 0.55) * 255.0), 0, 255).astype(np.uint8)
+            lifted = cv2.LUT(scan_image, lut)
+            candidates.extend(_collect_records(detector, lifted, original_size, 0.48, pass_bias=-0.05, pass_idx=2))
+            for side in (360, 200):
+                if side < max_scan:
+                    sc = side / max_scan
+                    tw, th = max(1, round(scan_width * sc)), max(1, round(scan_height * sc))
+                    resized_l = cv2.resize(lifted, (tw, th), interpolation=cv2.INTER_AREA)
+                    candidates.extend(_collect_records(detector, resized_l, original_size, 0.46, pass_bias=-0.05, pass_idx=2))
 
     candidates.sort(key=lambda c: (c['_priority'], c['score'], c['box'][2] * c['box'][3]), reverse=True)
     kept = []
@@ -287,8 +359,27 @@ def scan_face_records(image):
                     if ox <= cx_box <= ox + ow and oy <= cy_box <= oy + oh:
                         suppressed = True
                         break
+        # Suppress giant low-confidence ghost boxes enclosing a smaller higher-score verified face.
+        if not suppressed and cand['score'] < 0.72:
+            for other in kept:
+                if other is cand or other.get('_relaxed', False):
+                    continue
+                if other['score'] < max(0.50, cand['score'] + 0.10):
+                    continue
+                other_area = other['box'][2] * other['box'][3]
+                if cand_area > 3.5 * other_area:
+                    inter = _box_intersection_area(cand['box'], other['box'])
+                    if inter >= 0.70 * other_area:
+                        suppressed = True
+                        break
         if not suppressed:
-            filtered.append({'box': cand['box'], 'crop': cand['crop'], 'score': float(cand['score'])})
+            filtered.append({
+                'box': cand['box'],
+                'crop': cand['crop'],
+                'score': float(cand['score']),
+                'landmarks': cand['landmarks'],
+                'roll_deg': float(cand['roll_deg']),
+            })
             if len(filtered) == 100:
                 break
     return filtered

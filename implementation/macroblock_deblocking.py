@@ -188,8 +188,9 @@ def _classify_axis(profile: np.ndarray, origin_offset: int) -> dict | None:
 
 
 def _tile_scan_support(dy: np.ndarray, dx: np.ndarray, height: int, width: int, origin: tuple[int, int]) -> tuple[np.ndarray, dict | None]:
-    """Fast vectorized 48x48 stride-16 scan to localize macroblocked regions."""
-    tile, step = 48, 16
+    """Fast vectorized 48x48 stride-16 (stride-32 on >512px frames) scan to localize macroblocked regions."""
+    tile = 48
+    step = 32 if max(height, width) > 512 else 16
     k = tile // 16
     xs = np.arange(0, width - tile + 1, step)
     ys = np.arange(0, height - tile + 1, step)
@@ -203,7 +204,14 @@ def _tile_scan_support(dy: np.ndarray, dx: np.ndarray, height: int, width: int, 
         return np.zeros((height, width), dtype=bool), None
     hy_blocks = hmean_y[:n16_y * 16].reshape(n16_y, 16, len(xs))
     cs_hy = np.pad(np.cumsum(hy_blocks, axis=0), ((1, 0), (0, 0), (0, 0)))
-    prof_y = (cs_hy[k:] - cs_hy[:-k]) / k  # (Ny_blk, 16, Nx)
+    prof_y_all = (cs_hy[k:] - cs_hy[:-k]) / k  # (Ny_blk_16, 16, Nx)
+    y_stride_idx = ys // 16
+    valid_y = y_stride_idx < prof_y_all.shape[0]
+    ys = ys[valid_y]
+    y_stride_idx = y_stride_idx[valid_y]
+    if ys.size == 0:
+        return np.zeros((height, width), dtype=bool), None
+    prof_y = prof_y_all[y_stride_idx]
 
     cs_x = np.pad(np.cumsum(dx.astype(np.float64), axis=0), ((1, 0), (0, 0)))
     vmean_x = (cs_x[ys + tile, :] - cs_x[ys, :]) / tile
@@ -212,7 +220,15 @@ def _tile_scan_support(dy: np.ndarray, dx: np.ndarray, height: int, width: int, 
         return np.zeros((height, width), dtype=bool), None
     vx_blocks = vmean_x[:, :n16_x * 16].reshape(len(ys), n16_x, 16)
     cs_vx = np.pad(np.cumsum(vx_blocks, axis=1), ((0, 0), (1, 0), (0, 0)))
-    prof_x = (cs_vx[:, k:, :] - cs_vx[:, :-k, :]) / k  # (Ny, Nx_blk, 16)
+    prof_x_all = (cs_vx[:, k:, :] - cs_vx[:, :-k, :]) / k  # (Ny, Nx_blk_16, 16)
+    x_stride_idx = xs // 16
+    valid_x = x_stride_idx < prof_x_all.shape[1]
+    xs = xs[valid_x]
+    x_stride_idx = x_stride_idx[valid_x]
+    if xs.size == 0:
+        return np.zeros((height, width), dtype=bool), None
+    prof_x = prof_x_all[:, x_stride_idx, :]
+    prof_y = prof_y[:, :, valid_x]
 
     ny = min(prof_y.shape[0], len(ys))
     nx = min(prof_x.shape[1], len(xs))

@@ -136,6 +136,58 @@ class CompletionRuntimeTests(unittest.TestCase):
         with self.assertRaises(runtime.CompletionRefused):
             runtime.validate_arrays(self.rgb, np.zeros_like(mask), [120, 0, 136, 256])
 
+    def test_visibility_check_letterbox_observed_ratio_and_combo_mask(self):
+        # Letterboxed crop (valid observed face >= 45%) with large lower mask should pass.
+        observed = np.zeros((256, 256), dtype=bool)
+        observed[:, 28:228] = True
+        removal = np.zeros((256, 256), dtype=np.uint8)
+        removal[130:225, 65:191] = 1
+        unavailable = np.where(observed, removal * 255, 255).astype(np.uint8)
+        vis = runtime.visibility_check256(unavailable, observed=observed)
+        self.assertFalse(vis["rejected"])
+        self.assertGreaterEqual(vis["observed_face_fraction"], 0.45)
+
+        # Sunglasses + surgical mask with visible forehead/cheeks (<65% total face covered) passes.
+        full_obs = np.ones((256, 256), dtype=bool)
+        combo = np.zeros((256, 256), dtype=np.uint8)
+        combo[84:133, 60:196] = 255  # eyes band
+        combo[119:208, 82:174] = 255  # nose + mouth band
+        vis_combo = runtime.visibility_check256(combo, observed=full_obs)
+        self.assertLess(vis_combo["face_covered_fraction"], 0.65)
+        self.assertFalse(vis_combo["rejected"])
+
+    def test_blend_inside_mask_preserves_outside_bytes_and_matches_seam_tone(self):
+        # Clean skin canvas with slightly darker generated interior.
+        rgb = np.full((256, 256, 3), (185, 145, 125), dtype=np.uint8)
+        removal = np.zeros((256, 256), dtype=np.uint8)
+        removal[100:180, 90:170] = 1
+        observed = np.ones((256, 256), dtype=bool)
+        generated = rgb.astype(np.float32) / np.float32(255.0)
+        generated[removal != 0] = np.array([150, 115, 100], dtype=np.float32) / np.float32(255.0)
+
+        blended = runtime._blend_inside_mask(rgb, generated, removal, observed)
+        self.assertEqual(blended.dtype, np.float32)
+        self.assertTrue(np.isfinite(blended).all())
+        self.assertGreaterEqual(float(blended.min()), 0.0)
+        self.assertLessEqual(float(blended.max()), 1.0)
+        # Bit-exact outside mask preservation in both float32 and uint8 encoding.
+        expected_out = rgb.astype(np.float32) / np.float32(255.0)
+        self.assertTrue(np.array_equal(blended[removal == 0], expected_out[removal == 0]))
+        encoded = runtime.encode_output(rgb, removal, blended)
+        self.assertTrue(np.array_equal(encoded[removal == 0], rgb[removal == 0]))
+        # Interior seam shifts closer to surrounding skin luminance.
+        seam_l_before = float(generated[105:110, 120:140].mean())
+        seam_l_after = float(blended[105:110, 120:140].mean())
+        self.assertGreater(seam_l_after, seam_l_before)
+
+        # Covering-bleed guard: bright blue covering pixel right inside mask edge must NOT bleed back in.
+        rgb_cov = rgb.copy()
+        rgb_cov[removal != 0] = (30, 110, 235)
+        blended_cov = runtime._blend_inside_mask(rgb_cov, generated, removal, observed)
+        # Outermost pixel (d=1) inside mask should stay near generated skin, not blue covering (B=235/255=0.92).
+        self.assertLess(float(blended_cov[100, 130, 2]), 0.65)
+        self.assertTrue(np.array_equal(blended_cov[removal == 0], expected_out[removal == 0]))
+
     def test_nearly_hidden_face_refuses_before_loading(self):
         mask = np.ones_like(self.mask)
         with patch.object(runtime, "load_frozen_cpu_completion", side_effect=AssertionError("must not load")):

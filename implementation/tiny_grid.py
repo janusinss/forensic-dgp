@@ -8,7 +8,7 @@ PHASES = np.exp(-2j * np.pi * FREQUENCIES[:, None] * np.arange(WINDOW - 1)[None,
 
 def tiny_grid_mask(gray):
     height, width = gray.shape
-    if min(height, width) < 32 or max(height, width) >= 48:
+    if min(height, width) < 32 or max(height, width) > 64:
         return None, None
     # A low-color grid can be part of the scene, such as a checkerboard.
     if np.unique(gray).size < 8:

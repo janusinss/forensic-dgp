@@ -5,7 +5,7 @@ import math
 
 import cv2
 import numpy as np
-from scipy.ndimage import binary_dilation, label, map_coordinates
+from scipy.ndimage import binary_dilation, find_objects, label, map_coordinates
 
 from .preparation import png, sha
 
@@ -161,27 +161,32 @@ def _analyze_aliasing(source):
     min_comp = max(8, min(16, min(height, width) // 3))
 
     aliased_ridge = np.zeros((height, width), dtype=bool)
-    for cid in range(1, count + 1):
-        if sizes[cid] < min_comp:
+    for cid, sl in enumerate(find_objects(components), start=1):
+        if sl is None or sizes[cid] < min_comp:
             continue
-        comp_mask = components == cid
-        ry, rx = np.nonzero(comp_mask)
-        y0 = max(0, int(ry.min()) - 12)
-        y1 = min(height, int(ry.max()) + 13)
-        x0 = max(0, int(rx.min()) - 12)
-        x1 = min(width, int(rx.max()) + 13)
+        local_comp = components[sl] == cid
+        ry_loc, rx_loc = np.nonzero(local_comp)
+        ry = ry_loc + sl[0].start
+        rx = rx_loc + sl[1].start
+        y0 = max(0, sl[0].start - 12)
+        y1 = min(height, sl[0].stop + 12)
+        x0 = max(0, sl[1].start - 12)
+        x1 = min(width, sl[1].stop + 12)
         if _is_hv_block_grid(luma, coherence, grad, tx, ty, y0, y1, x0, x1):
             continue
         if _is_sawtooth_wrap_ramp(luma, ry, rx, nx, ny):
             continue
         _, _, _, r2, r3 = _tangent_metrics(luma, ry, rx, nx, ny, tx, ty, grad)
         if float(np.median(r2)) >= 0.38 and float(np.median(r3)) >= 0.85 and float((r2 >= 0.38).mean()) >= 0.55:
-            aliased_ridge |= comp_mask
+            aliased_ridge[sl] |= local_comp
 
     n_aliased = int(aliased_ridge.sum())
     diag_count = int(diag_ridge.sum())
     aliased_ratio = float(n_aliased / max(1, diag_count))
-    if min(height, width) >= 64:
+    if min(height, width) >= 256:
+        if n_aliased < 24 or aliased_ratio < 0.14:
+            return None
+    elif min(height, width) >= 64:
         if n_aliased < 24 or aliased_ratio < 0.04:
             return None
     elif n_aliased < min_comp:
@@ -194,7 +199,12 @@ def _analyze_aliasing(source):
     d2_before, _, cross_before, r2_all, r3_all = _tangent_metrics(luma, ry, rx, nx, ny, tx, ty, grad)
     rough_before = float(d2_before.mean())
     cross_before_mean = float(cross_before.mean())
+    med_r2 = float(np.median(r2_all))
+    med_r3 = float(np.median(r3_all))
     if rough_before <= 1e-4 or cross_before_mean < 4.0:
+        return None
+    # Reject natural diagonal studio edges (eyeglass frames, hair strands) with mild roughness.
+    if med_r2 < 0.60 or med_r3 < 1.20:
         return None
 
     report = {

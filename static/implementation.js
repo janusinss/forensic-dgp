@@ -670,19 +670,20 @@
             sourceFile = file; captureId = options.captureId; pictureImage = image;
             pictureLabel = options.label || 'Full uploaded picture';
             pictureCrops = Array.isArray(result.face_crops) ? result.face_crops : [];
-            const first = pictureCrops[0];
-            selectPictureCrop(first, first ? 'Face 1 crop' : pictureLabel);
+            const recommendedIndex = Number.isInteger(result.recommended_index) && result.recommended_index >= 0 && result.recommended_index < pictureCrops.length ? result.recommended_index : 0;
+            const initialCrop = pictureCrops[recommendedIndex];
+            selectPictureCrop(initialCrop, initialCrop ? `Face ${recommendedIndex + 1} crop` : pictureLabel);
             if (!captureId) {
                 const choices = byId('picture-face');
                 choices.replaceChildren();
                 pictureCrops.forEach((_, index) => choices.add(new Option(`Face ${index + 1}`, String(index))));
                 choices.add(new Option('Full picture', '-1'));
-                choices.value = first ? '0' : '-1';
+                choices.value = initialCrop ? String(recommendedIndex) : '-1';
                 byId('picture-face-field').classList.toggle('hidden', !pictureCrops.length);
                 const status = byId('picture-face-status');
                 status.textContent = result.face_scan_unavailable ? 'Face scanning is unavailable. Use the full picture or upload a close-up.'
-                    : !first ? 'No face detected. Use the full picture or upload a close-up.'
-                    : pictureCrops.length > 1 ? 'Face 1 is selected. Faces are numbered from left to right.'
+                    : !initialCrop ? 'No face detected. Use the full picture or upload a close-up.'
+                    : pictureCrops.length > 1 ? `Face ${recommendedIndex + 1} is selected. Faces are numbered from left to right.`
                     : 'One face detected. Its crop is selected.';
                 status.classList.remove('hidden');
             }
