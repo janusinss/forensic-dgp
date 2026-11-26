@@ -46,7 +46,7 @@ class AutomaticPreparationTests(unittest.TestCase):
         self.assertFalse(automatic.pixelation_signal(stripes, [0, 0, 96, 96])['suspected'])
         self.assertFalse(automatic.pixelation_signal(np.full_like(block, 120), [0, 0, 96, 96])['suspected'])
 
-    def test_face_smoothing_keeps_crop_geometry_and_every_surrounding_pixel(self):
+    def test_face_smoothing_keeps_crop_geometry_and_applies_uniform_whole_crop_blur(self):
         source = np.random.default_rng(3).integers(0, 256, (160, 180, 3), dtype=np.uint8)
         rectangle = [20, 10, 130, 140]
         native = source[10:150, 20:150]
@@ -55,13 +55,20 @@ class AutomaticPreparationTests(unittest.TestCase):
         with patch.object(automatic, 'decide', return_value=decision):
             contents, metadata, evidence, report = automatic.prepare(native, source, [40, 30, 80, 90], rectangle)
         prepared = np.asarray(Image.open(io.BytesIO(contents)))
-        apply = np.zeros(native.shape[:2], bool)
-        apply[20:110, 20:100] = True
+        face_box = np.zeros(native.shape[:2], bool)
+        face_box[20:110, 20:100] = True
+        expected_radius_native = 3.0 * max(native.shape[:2]) / 256.0
+        expected_uniform = np.asarray(Image.fromarray(native).filter(ImageFilter.GaussianBlur(expected_radius_native)))
         self.assertEqual(prepared.shape, native.shape)
-        np.testing.assert_array_equal(prepared[~apply], native[~apply])
-        self.assertGreater(np.any(prepared[apply] != native[apply], axis=1).mean(), .99)
+        np.testing.assert_array_equal(prepared, expected_uniform)
+        self.assertGreater(np.any(prepared[face_box] != native[face_box], axis=1).mean(), .99)
+        self.assertGreater(np.any(prepared[~face_box] != native[~face_box], axis=1).mean(), .99)
         self.assertFalse(metadata['automatic_protection'])
+        self.assertTrue(metadata['uniform_crop_smoothing'])
+        self.assertTrue(report['uniform_crop_smoothing'])
         self.assertEqual(report['Gaussian_radius_at256'], 3.0)
+        self.assertAlmostEqual(report['crop_Gaussian_radius_native'], round(expected_radius_native, 4), places=4)
+        self.assertEqual(metadata['crop_Gaussian_radius_native'], report['crop_Gaussian_radius_native'])
         self.assertEqual(evidence['automatic-crop-input.png'], automatic.png(native))
 
     def test_coarse_rectangular_blocks_survive_noninteger_resizing(self):
@@ -537,3 +544,64 @@ class AutoBlurOverhaulTests(unittest.TestCase):
         vor = rng.integers(30, 230, (py.size, 3), dtype=np.uint8)[nearest]
         vor_rippled = np.clip(vor.astype(np.int16) + rng.integers(-1, 2, vor.shape), 0, 255).astype(np.uint8)
         self.assertGreaterEqual(float(irregular_mosaic_mask(vor_rippled).mean()), 0.25)
+
+    def test_protect_auto_softens_narrow_sharp_ruler_ticks_beside_blurred_head(self):
+        """Sparse sharp exterior ticks on a smooth wall beside a blurred face must be surround-matched."""
+        size = 256
+        yy, xx = np.mgrid[0:size, 0:size].astype(np.float32)
+        # Smooth bright mugshot wall with narrow sharp black ruler ticks along left/right borders
+        scene = np.full((size, size, 3), 225.0, dtype=np.float32)
+        for y_tick in range(12, size - 12, 16):
+            scene[y_tick:y_tick + 2, 2:14] = 25.0
+            scene[y_tick:y_tick + 2, size - 14:size - 2] = 25.0
+        # Blurred oval head in center
+        cx, cy = size * 0.5, size * 0.5
+        head = ((xx - cx) / 72.0) ** 2 + ((yy - cy) / 86.0) ** 2 <= 1.0
+        scene[head] = np.array([150.0, 118.0, 98.0], dtype=np.float32)
+        scene[96:110, 96:118] = 45.0
+        scene[96:110, 138:160] = 45.0
+        scene[154:166, 108:148] = [120.0, 62.0, 62.0]
+        scene_u8 = np.clip(np.rint(scene), 0, 255).astype(np.uint8)
+        blurred = np.asarray(Image.fromarray(scene_u8).filter(ImageFilter.GaussianBlur(10.0)))
+        blur_zone = ((xx - cx) / 84.0) ** 2 + ((yy - cy) / 96.0) ** 2 <= 1.0
+        scene_u8[blur_zone] = blurred[blur_zone]
+
+        face = [68, 52, 120, 152]
+        cand, meta, ev, dec = automatic.prepare(scene_u8, scene_u8, face, None)
+        self.assertIsNotNone(cand)
+        self.assertEqual(dec['route'], 'protect_auto')
+        self.assertTrue(meta['every_protected_native_RGB_exact'])
+        pmask = np.asarray(Image.open(io.BytesIO(ev['effective-Protect-native.png']))) > 0
+        derived = np.asarray(Image.open(io.BytesIO(cand)))
+        np.testing.assert_array_equal(derived[pmask], scene_u8[pmask])
+        # Narrow sharp ticks along left & right edges must be softened (not held out!)
+        left_tick_diff = np.abs(derived[:, :16].astype(np.float32) - scene_u8[:, :16].astype(np.float32)).max()
+        right_tick_diff = np.abs(derived[:, -16:].astype(np.float32) - scene_u8[:, -16:].astype(np.float32)).max()
+        self.assertGreater(left_tick_diff, 30.0)
+        self.assertGreater(right_tick_diff, 30.0)
+
+    def test_face_gaussian_calibrates_from_face_box_and_blurs_entire_crop_uniformly(self):
+        """face_gaussian measures coarse block strength on the face box and applies that sigma across 100% of crop."""
+        rng = np.random.default_rng(717)
+        native = rng.integers(30, 225, (256, 256, 3), dtype=np.uint8)
+        coarse_face = Image.fromarray(rng.integers(0, 256, (6, 6, 3), dtype=np.uint8)).resize(
+            (144, 144), Image.Resampling.NEAREST
+        )
+        native[56:200, 56:200] = np.asarray(coarse_face)
+        face = [56, 56, 144, 144]
+        with patch.object(
+            automatic,
+            'decide',
+            return_value={'route': 'face_gaussian', 'reason': 'suspected_pixelation', 'degradation': {'period_native': 24}},
+        ):
+            cand, meta, ev, report = automatic.prepare(native, native, face, None)
+        self.assertIsNotNone(cand)
+        self.assertTrue(report['uniform_crop_smoothing'])
+        self.assertTrue(meta['uniform_crop_smoothing'])
+        self.assertEqual(report['Gaussian_radius_at256'], 3.5)
+        self.assertAlmostEqual(report['crop_Gaussian_radius_native'], 3.5, places=4)
+        prepared = np.asarray(Image.open(io.BytesIO(cand)))
+        expected = np.asarray(Image.fromarray(native).filter(ImageFilter.GaussianBlur(3.5)))
+        np.testing.assert_array_equal(prepared, expected)
+        # Exterior sharp hair/background outside face box is softened identically to face interior
+        self.assertGreater(float(np.any(prepared[:48, :] != native[:48, :], axis=2).mean()), 0.99)

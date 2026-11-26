@@ -1,5 +1,17 @@
 # Forensic DGP project handoff
 
+## 26 November 2026 — Version 0.3.3 release (Step 2 Uniform Auto Blur Overhaul)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`5f974bb`](https://github.com/janusinss/forensic-dgp/commit/5f974bb283c6666d08f16869f8c634b49e8f93c1) |
+| Offline installer build, `codex/r2-installer-release` | [`007ac07`](https://github.com/janusinss/forensic-dgp/commit/007ac078e57cc2af8639ccfe1413f6f5d48b8523) (site sync [`bad0ae0`](https://github.com/janusinss/forensic-dgp/commit/bad0ae03558f7ecfb7e5dd4a2dd136f2d725a74c)) |
+| Public download page | [Forensic DGP 0.3.3 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `59ce3935`](https://59ce3935.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.3.3`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.3) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.3.3.exe` (`1,322,986,527` bytes, SHA-256 `63c18df5017e586450a338f99e8b85c134921f9d93125bb0dd78aa118fde447d`) on GitHub Releases (`v0.3.3`, verified `HTTP 206` `Content-Range: bytes 0-15/1322986527`) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json` and `/downloads/ForensicDGP_Setup-0.3.3.exe.sha256`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`), `19/19` download-site tests passing, and clean live Playwright audits across `375x667`, `768x1024`, and `1280x800` (`0` overflow, `0` console/network errors, `0` a11y violations).
+- Ships the **Step 2 Uniform Auto Blur overhaul (Policy A1 + A2)** across `integrated_app/`, `IMPLEMENTATION`, and `codex/r2-installer-release` (verified `10/10` partitioned harness suites / `149/149` tests + Cold-Context Skeptic `APPROVE`, keeping Frozen CodeFormer V3.4 and Completion R2 weights bit-exact): `100%` uniform whole-crop Gaussian smoothing across all `10` Step 2 pixelation/mosaic routes plus `face_gaussian` while preserving full-frame localization masks, surround-matched exteriors around bit-exact conditioned degraded face patches, single-pass 8x8-aligned FBCNN reuse in `mixed_jpeg_mosaic`, hardened `blur_match.py` on narrow sharp exterior strips without re-blurring already-matched tiles, updated Step 4 UI summary copy (`implementation.js?v=50`), and `0`-FP guards on clean portraits and non-blur JPEG/noise/cast/scanline inputs.
+
 ## 25 November 2026 — Version 0.3.2 release (Dual Auto Mode Overhaul)
 
 | Component | Verified revision or version |

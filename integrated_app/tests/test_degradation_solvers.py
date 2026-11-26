@@ -1420,7 +1420,10 @@ class RealTestImagesE2ETests(_E2ERouteTestBase):
     def test_wild3_routes_unified_picture_region_gaussian_radius_3(self):
         body = self._restore_picture(self._read_fixture('wild3.png'), filename='wild3.png')
         meta = body['metadata']
-        self.assertEqual(meta['automatic_preparation']['route'], 'picture_region_gaussian')
+        auto = meta['automatic_preparation']
+        self.assertEqual(auto['route'], 'picture_region_gaussian')
+        self.assertTrue(auto['uniform_crop_smoothing'])
+        self.assertGreater(auto['crop_Gaussian_radius_native'], 2.0)
         pic_pix = meta['picture_pixelation']
         self.assertGreaterEqual(pic_pix['masked_native_pixels'], 88000)
         self.assertEqual(pic_pix['Gaussian_radius_at256'], 3.0)
@@ -1428,24 +1431,42 @@ class RealTestImagesE2ETests(_E2ERouteTestBase):
 
         zip_entries = _decode_zip_from_data_url(body['bundle'])
         mask = _decode_mask_bytes(zip_entries['full-image-pixelation-mask.png'])
+        full_smoothed = _decode_png_bytes(zip_entries['full-image-smoothed.png'])
         orig = _decode_png_bytes(zip_entries['original-native.png'])
         derived = _decode_png_bytes(zip_entries['derived-native.png'])
+        processing = json.loads(zip_entries['processing.json'].decode('utf-8'))
+        self.assertTrue(processing['uniform_crop_smoothing'])
+        self.assertEqual(processing['crop_Gaussian_radius_native'], auto['crop_Gaussian_radius_native'])
+        # Full-frame forensic provenance remains intact (localized mask & exterior exact on full-image-smoothed.png)
         self.assertEqual(label(mask)[1], 1)
-        self.assertTrue(np.array_equal(derived[~mask], orig[~mask]))
+        self.assertTrue(np.array_equal(full_smoothed[~mask], orig[~mask]))
+        # Crop sent to V3.4 (derived-native.png) is 100% uniformly smoothed across both face & exterior hair
+        from implementation.automatic_preparation import apply_uniform_crop_gaussian
+        expected_uniform = apply_uniform_crop_gaussian(orig, auto['crop_Gaussian_radius_native'])
+        np.testing.assert_array_equal(derived, expected_uniform)
+        self.assertGreater(float(np.any(derived[~mask] != orig[~mask], axis=1).mean()), 0.70)
 
-    def test_wild4_routes_picture_region_gaussian_radius_3_5_outside_exact(self):
+    def test_wild4_routes_picture_region_gaussian_radius_3_5_uniform_crop(self):
         body = self._restore_picture(self._read_fixture('wild4.png'), filename='wild4.png')
         meta = body['metadata']
-        self.assertEqual(meta['automatic_preparation']['route'], 'picture_region_gaussian')
+        auto = meta['automatic_preparation']
+        self.assertEqual(auto['route'], 'picture_region_gaussian')
+        self.assertTrue(auto['uniform_crop_smoothing'])
+        self.assertGreater(auto['crop_Gaussian_radius_native'], 2.5)
         pic_pix = meta['picture_pixelation']
         self.assertEqual(pic_pix['Gaussian_radius_at256'], 3.5)
 
         zip_entries = _decode_zip_from_data_url(body['bundle'])
         mask = _decode_mask_bytes(zip_entries['full-image-pixelation-mask.png'])
+        full_smoothed = _decode_png_bytes(zip_entries['full-image-smoothed.png'])
         orig = _decode_png_bytes(zip_entries['original-native.png'])
         derived = _decode_png_bytes(zip_entries['derived-native.png'])
         self.assertTrue(mask.any())
-        self.assertTrue(np.array_equal(derived[~mask], orig[~mask]))
+        self.assertTrue(np.array_equal(full_smoothed[~mask], orig[~mask]))
+        from implementation.automatic_preparation import apply_uniform_crop_gaussian
+        expected_uniform = apply_uniform_crop_gaussian(orig, auto['crop_Gaussian_radius_native'])
+        np.testing.assert_array_equal(derived, expected_uniform)
+        self.assertGreater(float(np.any(derived[~mask] != orig[~mask], axis=1).mean()), 0.70)
 
     def test_wild1_wild2_and_synthetic_data_6_routes(self):
         expected = (

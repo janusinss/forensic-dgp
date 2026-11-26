@@ -1409,5 +1409,37 @@ test('preparationSummary renders explicit copy for degraded_patch_conditioning s
       },
     });
     assert.equal(out, expected);
+    const outSurr = preparationSummary({
+      automatic_preparation: {
+        route: 'picture_region_gaussian',
+        Gaussian_radius_at256: 3.0,
+        strength_basis: basis,
+        surround_matched_after_conditioning: true,
+      },
+    });
+    assert.match(outSurr, /surround-matched sharp surroundings/i);
+  }
+
+  for (const route of [
+    'picture_region_gaussian',
+    'frame_region_gaussian',
+    'face_gaussian',
+    'irregular_mosaic_gaussian',
+    'perspective_mosaic_gaussian',
+    'rotated_mosaic_gaussian',
+    'tiny_mosaic_gaussian',
+    'mosaic_regions_coordinated',
+    'scanline_mosaic_coordinated',
+    'jpeg_mosaic_coordinated',
+  ]) {
+    const outUnif = preparationSummary({
+      automatic_preparation: {
+        route,
+        Gaussian_radius_at256: 3.0,
+        uniform_crop_smoothing: true,
+        crop_Gaussian_radius_native: 3.6,
+      },
+    });
+    assert.match(outUnif, /uniform whole-crop/i, `Expected uniform whole-crop copy for ${route}, got: ${outUnif}`);
   }
 });

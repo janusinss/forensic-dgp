@@ -884,6 +884,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             from .capture_worker import _box_iou, _padded_face_crop
             from .automatic_preparation import (
                 _is_genuine_dct_macroblocking,
+                apply_uniform_crop_gaussian,
+                compute_uniform_crop_gaussian_radius,
                 detect_blur_island_face_box,
                 is_background_grid_with_blurred_face,
                 prepare as prepare_automatically,
@@ -894,8 +896,10 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 prepare_photometric,
                 prepare_source,
                 pixelation_signal,
+                scanline_cleaned_base,
                 tiny_crop_pixelation,
             )
+            from .blur_match import match_surroundings
             selected_rectangle = rectangle
             detection_method = 'original_image'
             if capture_id:
@@ -1158,48 +1162,121 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             if is_privacy_mosaic_region:
                 extra_stages = []
                 extra_reports = {}
-                mosaic_out = region_input.copy()
-                if (
+
+                def _crop_mask_from_png(mask_bytes):
+                    if not mask_bytes:
+                        return None
+                    with Image.open(io.BytesIO(mask_bytes)) as cm_im:
+                        full_m = np.asarray(cm_im) > 0
+                    if selected_rectangle is not None and full_m.shape == source_rgb.shape[:2]:
+                        rx, ry, rw, rh = selected_rectangle
+                        return full_m[ry:ry + rh, rx:rx + rw]
+                    if full_m.shape == native.shape[:2]:
+                        return full_m
+                    return None
+
+                mask_bytes = (
+                    region_evidence.get('full-image-pixelation-mask.png')
+                    or region_evidence.get('scanline-mosaic-mask.png')
+                    or payloads.get('tiny-crop-pixelation-mask.png')
+                )
+                crop_mosaic_mask = _crop_mask_from_png(mask_bytes)
+                crop_irregular_mask = _crop_mask_from_png(region_evidence.get('irregular-region-mask.png'))
+
+                is_degraded_patch = bool(
                     tiny_report is None
                     and scanline_report is None
                     and regional_report is not None
-                    and not regional_report.get('degraded_patch_conditioning')
-                    and not regional_report.get('mixed_jpeg_mosaic')
-                ):
-                    # Allow noise/cast cleanup to compose after privacy mosaic smoothing
-                    # while keeping smoothed mosaic pixels protected from luma noise blur.
-                    crop_mosaic_mask = None
-                    if 'full-image-pixelation-mask.png' in region_evidence:
-                        with Image.open(io.BytesIO(region_evidence['full-image-pixelation-mask.png'])) as cm_im:
-                            full_m = np.asarray(cm_im) > 0
-                        if selected_rectangle is not None:
-                            rx, ry, rw, rh = selected_rectangle
-                            crop_mosaic_mask = full_m[ry:ry + rh, rx:rx + rw]
-                        elif full_m.shape == mosaic_out.shape[:2]:
-                            crop_mosaic_mask = full_m
+                    and regional_report.get('degraded_patch_conditioning')
+                )
+                uniform_crop_smoothing = False
+                crop_radius_native = None
+                surround_matched = False
+                surround_match_summary = None
+
+                if is_degraded_patch:
+                    # Keep _condition_degraded_face_patch output bit-exact inside crop_mosaic_mask
+                    # and surround-match sharp exterior hair/background around the conditioned face.
+                    mosaic_out = region_input.copy()
                     if crop_mosaic_mask is not None and int((~crop_mosaic_mask).sum()) >= 64:
-                        n_out, n_rep, n_ev = prepare_noise(mosaic_out)
-                        if n_out is not None and n_rep is not None:
-                            # Preserve the smoothed mosaic region exact; denoise exterior noise only.
-                            merged_n = n_out.copy()
-                            merged_n[crop_mosaic_mask] = mosaic_out[crop_mosaic_mask]
-                            if not np.array_equal(merged_n, mosaic_out):
-                                mosaic_out = merged_n
-                                extra_stages.append('noise_denoise')
-                                extra_reports['noise_denoise'] = n_rep
-                                payloads.update(n_ev)
-                    cd_out, cd_route, cd_rep, cd_ev = prepare_photometric(mosaic_out)
-                    if cd_out is not None and cd_route == 'color_cast_balance' and cd_rep is not None:
-                        mosaic_out = cd_out
-                        extra_stages.append(cd_route)
-                        extra_reports[cd_route] = cd_rep
-                        payloads.update(cd_ev)
+                        matched_out, _, bm_summary = match_surroundings(
+                            mosaic_out, mosaic_out, None, ~crop_mosaic_mask
+                        )
+                        matched_out[crop_mosaic_mask] = mosaic_out[crop_mosaic_mask]
+                        if np.any(matched_out[~crop_mosaic_mask] != mosaic_out[~crop_mosaic_mask]):
+                            mosaic_out = matched_out
+                            surround_matched = True
+                            surround_match_summary = bm_summary
+                else:
+                    # Policy A1: Uniform whole-crop Gaussian smoothing for all pixelation/mosaic routes
+                    # so V3.4 receives a 100% consistent blur input with zero missed eye/brow blocks
+                    # and zero sharp hair/background halo. Full-frame localization masks remain intact.
+                    if scanline_report is not None:
+                        sl_base = scanline_cleaned_base(source_rgb)
+                        if sl_base is not None:
+                            if selected_rectangle is not None:
+                                rx, ry, rw, rh = selected_rectangle
+                                base_crop = sl_base[ry:ry + rh, rx:rx + rw]
+                            else:
+                                base_crop = sl_base
+                        else:
+                            base_crop = region_input
+                    elif regional_report is not None and regional_report.get('mixed_jpeg_mosaic'):
+                        # Reuse the single 8x8-aligned blended FBCNN output already computed by
+                        # prepare_mixed_jpeg outside the mosaic mask, restoring unblurred native
+                        # pixels inside crop_mosaic_mask so uniform smoothing avoids double-blur
+                        # and never triggers a second FBCNN forward pass.
+                        base_crop = region_input.copy()
+                        if crop_mosaic_mask is not None and crop_mosaic_mask.shape == native.shape[:2]:
+                            base_crop[crop_mosaic_mask] = native[crop_mosaic_mask]
+                    else:
+                        base_crop = native
+
+                    active_report = tiny_report or scanline_report or regional_report
+                    crop_radius_native = compute_uniform_crop_gaussian_radius(
+                        base_crop,
+                        crop_mosaic_mask,
+                        active_report,
+                        source_size=(source_rgb.shape[1], source_rgb.shape[0]) if tiny_report is None else None,
+                        irregular_mask=crop_irregular_mask,
+                    )
+                    geom_pattern = (
+                        regional_report.get('geometric_mosaic_pattern')
+                        if (tiny_report is None and scanline_report is None and regional_report is not None)
+                        else None
+                    )
+                    mosaic_out = apply_uniform_crop_gaussian(
+                        base_crop, crop_radius_native, geometric_pattern=geom_pattern
+                    )
+                    uniform_crop_smoothing = True
+
+                    # Allow color_cast_balance to compose after uniform smoothing when needed;
+                    # skip redundant exterior-only noise_denoise since the entire crop is blurred.
+                    if (
+                        tiny_report is None
+                        and scanline_report is None
+                        and regional_report is not None
+                        and not regional_report.get('mixed_jpeg_mosaic')
+                    ):
+                        cd_out, cd_route, cd_rep, cd_ev = prepare_photometric(mosaic_out)
+                        if cd_out is not None and cd_route == 'color_cast_balance' and cd_rep is not None:
+                            mosaic_out = cd_out
+                            extra_stages.append(cd_route)
+                            extra_reports[cd_route] = cd_rep
+                            payloads.update(cd_ev)
 
                 selected = png(mosaic_out)
                 prepared, _, _, _ = prepare_crop(mosaic_out)
                 preparation = {**(tiny_report or regional_report),
                                'crop_changed_native_pixels': int(np.any(mosaic_out != native, axis=2).sum()),
                                'derived_native_sha256': digest(selected)}
+                if uniform_crop_smoothing:
+                    preparation['uniform_crop_smoothing'] = True
+                    preparation['crop_Gaussian_radius_native'] = crop_radius_native
+                if surround_matched:
+                    preparation['surround_matched_after_conditioning'] = True
+                    if surround_match_summary is not None:
+                        preparation['surround_match'] = surround_match_summary
                 if scanline_report is not None:
                     auto_decision = {'route': 'scanline_mosaic_coordinated',
                                      'reason': 'strong_horizontal_scanline_pattern',
@@ -1226,6 +1303,11 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                                      'reason': 'suspected_pixelation_in_model_input',
                                      'Gaussian_radius_at256': regional_report['Gaussian_radius_at256'],
                                      'strength_basis': regional_report.get('strength_selection', {}).get('basis')}
+                if uniform_crop_smoothing:
+                    auto_decision['uniform_crop_smoothing'] = True
+                    auto_decision['crop_Gaussian_radius_native'] = crop_radius_native
+                if surround_matched:
+                    auto_decision['surround_matched_after_conditioning'] = True
                 if extra_stages:
                     preparation['applied_stages'] = [auto_decision['route']] + extra_stages
                     preparation['stage_reports'] = extra_reports

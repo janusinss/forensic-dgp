@@ -1298,11 +1298,94 @@ def prepare_mosaics(source, *, _is_dct=None):
     mask_png = png(mask.astype(np.uint8) * 255)
     report = {**regular[1], 'policy': 'coordinated-mosaic-regions-v1', 'coordinated_mosaic_regions': True,
               'region_bounds': regular[1]['region_bounds'] + extra_report['region_bounds'],
+              'regular_native_Gaussian_radius': regular[1].get('native_Gaussian_radius'),
+              'irregular_native_Gaussian_radius': extra_report.get('native_Gaussian_radius'),
               'irregular_mask_sha256': extra_report['mask_sha256'], 'masked_native_pixels': int(mask.sum()),
               'changed_native_pixels': int(np.any(prepared != source, axis=2).sum()),
               'full_image_sha256': sha(image_png), 'mask_sha256': sha(mask_png)}
     return prepared, report, {'full-image-smoothed.png': image_png, 'full-image-pixelation-mask.png': mask_png,
                               'irregular-region-mask.png': extra_evidence['full-image-pixelation-mask.png']}
+
+
+def scanline_cleaned_base(source):
+    """Return unblurred row-offset-cleaned frame for scanline+mosaic uniform crop smoothing."""
+    cleaned, _ = prepare_scanlines(source)
+    if cleaned is None:
+        return None
+    height, width = source.shape[:2]
+    if min(height, width) < 96 or max(height, width) > 640:
+        return None
+    residual = source.astype(np.float32) - cleaned
+    row_offset = np.median(residual, axis=1, keepdims=True)
+    removed_energy = float(np.mean(residual ** 2))
+    if removed_energy < 4:
+        return None
+    explained = 1 - float(np.mean((residual - row_offset) ** 2)) / removed_energy
+    if explained < .72:
+        return None
+    corrected = np.clip(np.rint(source - row_offset), 0, 255).astype(np.uint8)
+    if detect_scanlines(corrected) is not None:
+        return None
+    return corrected
+
+
+def compute_uniform_crop_gaussian_radius(crop_rgb, crop_mask, report, *, source_size=None, irregular_mask=None):
+    """Compute calibrated native-pixel Gaussian sigma for 100% uniform whole-crop mosaic smoothing."""
+    crop_side = max(crop_rgb.shape[:2])
+    full_side = max(source_size) if source_size is not None else crop_side
+    rep = report or {}
+
+    if isinstance(rep.get('mosaic'), dict) and 'radius_at256' in rep['mosaic']:
+        r_at256 = float(rep['mosaic']['radius_at256'])
+        radius = r_at256 * full_side / 256.0
+        if source_size is not None and full_side > crop_side:
+            radius = min(radius, max(1.5, 4.0 * crop_side / 256.0))
+        return round(float(max(0.5, radius)), 4)
+
+    if rep.get('mixed_jpeg_mosaic'):
+        return round(float(max(0.5, rep.get('native_Gaussian_radius', 1.0))), 4)
+
+    if rep.get('coordinated_mosaic_regions'):
+        has_irr = bool(irregular_mask is not None and irregular_mask.any())
+        if irregular_mask is not None and crop_mask is not None:
+            has_reg = bool((crop_mask & ~irregular_mask).any())
+        else:
+            has_reg = True
+        reg_r = rep.get('regular_native_Gaussian_radius', rep.get('native_Gaussian_radius'))
+        irr_r = rep.get('irregular_native_Gaussian_radius')
+        candidates = [float(v) for flag, v in ((has_reg, reg_r), (has_irr, irr_r)) if flag and v is not None]
+        if candidates:
+            radius = max(candidates)
+            if source_size is not None and full_side > crop_side:
+                radius = min(radius, max(1.5, 4.5 * crop_side / 256.0))
+            return round(float(max(0.5, radius)), 4)
+
+    r_at256 = float(rep.get('Gaussian_radius_at256', PIXELATION_RADIUS_AT256))
+    r_nat = rep.get('native_Gaussian_radius')
+    if r_nat is None:
+        radius = r_at256 * crop_side / 256.0
+    else:
+        radius = float(r_nat)
+        if source_size is not None and full_side > crop_side and rep.get('tiny_grid_period_native') is None:
+            period = rep.get('detected_period_native')
+            if period is not None:
+                per = float(period)
+                radius = float(np.clip(radius, max(1.2, 0.36 * per), min(11.0, max(0.45 * per, 4.5 * crop_side / 256.0))))
+            else:
+                radius = float(min(radius, max(1.5, 4.0 * crop_side / 256.0)))
+    return round(float(max(0.5, radius)), 4)
+
+
+def apply_uniform_crop_gaussian(crop_rgb, radius_native, *, geometric_pattern=None):
+    """Apply a single uniform native-pixel Gaussian blur across 100% of the selected crop."""
+    sigma = float(max(0.1, radius_native))
+    if geometric_pattern:
+        return np.clip(
+            np.rint(gaussian_filter(crop_rgb.astype(np.float32), sigma=(sigma, sigma, 0.0))),
+            0,
+            255,
+        ).astype(np.uint8)
+    return np.asarray(Image.fromarray(crop_rgb).filter(ImageFilter.GaussianBlur(sigma)))
 
 
 def prepare_scanline_mosaic(source, notched):
@@ -1544,22 +1627,39 @@ def prepare(native, source, face, rectangle):
     x, y, width, height = face
     offset_x, offset_y = rectangle[:2] if rectangle is not None else (0, 0)
     if decision['route'] == 'face_gaussian':
-        # Only the detected face is written. Keep original crop geometry and
-        # all surrounding pixels exact; never treat smoothing as ground truth.
-        apply = np.zeros(native.shape[:2], np.uint8)
+        # Measure strength on the detected face box, then apply uniform whole-crop
+        # Gaussian smoothing across 100% of native so V3.4 sees zero missed blocks
+        # and zero sharp hair/background halo.
+        face_mask = np.zeros(native.shape[:2], np.uint8)
         left, top = max(0, x - offset_x), max(0, y - offset_y)
         right = min(native.shape[1], x + width - offset_x)
         bottom = min(native.shape[0], y + height - offset_y)
         if right <= left or bottom <= top:
             decision.update(route='direct', reason='face_outside_selected_crop')
             return None, None, {}, decision
-        apply[top:bottom, left:right] = 255
-        strength = choose_pixelation_radius(Image.fromarray(native), apply > 0)
+        face_mask[top:bottom, left:right] = 255
+        strength = choose_pixelation_radius(Image.fromarray(native), face_mask > 0)
         radius = strength['selected_radius_at256']
-        response, evidence = build_preview(png(native), png(np.zeros_like(apply)), png(apply),
-                                          nominal_radius=radius, exact_marks=True, match_blur=False)
-        decision.update(Gaussian_radius_at256=radius, strength_selection=strength,
-                        strength_basis=strength['basis'], smoothing_is_experimental=True)
+        radius_native = round(float(radius * max(native.shape[:2]) / 256.0), 4)
+        uniform_apply = np.full(native.shape[:2], 255, np.uint8)
+        response, evidence = build_preview(
+            png(native),
+            png(np.zeros_like(uniform_apply)),
+            png(uniform_apply),
+            nominal_radius=radius,
+            exact_marks=True,
+            match_blur=False,
+        )
+        response['metadata']['uniform_crop_smoothing'] = True
+        response['metadata']['crop_Gaussian_radius_native'] = radius_native
+        decision.update(
+            Gaussian_radius_at256=radius,
+            crop_Gaussian_radius_native=radius_native,
+            uniform_crop_smoothing=True,
+            strength_selection=strength,
+            strength_basis=strength['basis'],
+            smoothing_is_experimental=True,
+        )
         return finish(response, evidence, decision, automatic_protection=False)
     # A detector box is a search region, not a protection mask. Within an
     # expanded head/blur-zone ROI, retain the adaptive low-detail components
