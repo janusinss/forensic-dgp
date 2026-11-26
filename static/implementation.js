@@ -23,14 +23,42 @@
     const progress = message => { byId('brush-progress').textContent = message; };
     const preparationSummary = metadata => {
         const decision = metadata.automatic_preparation;
-        if (decision?.route === 'jpeg_mosaic_coordinated') return 'Auto lightly smoothed the detected mosaic and reduced JPEG seams in the surrounding image before face restoration.';
-        if (decision?.route === 'mosaic_regions_coordinated') return 'Auto applied separate preparation to distinct mosaic regions before face restoration.';
-        if (decision?.route === 'scanline_mosaic_coordinated') return 'Auto reduced horizontal scanlines and smoothed a separately detected mosaic before face restoration.';
-        if (decision?.route === 'perspective_mosaic_gaussian') return 'Auto smoothed a suspected perspective-warped mosaic before face restoration.';
-        if (decision?.route === 'irregular_mosaic_gaussian') return 'Auto smoothed a suspected irregular mosaic before face restoration.';
+        if (decision?.route === 'jpeg_mosaic_coordinated') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto reduced JPEG seams and applied uniform whole-crop smoothing for the detected mosaic before face restoration.'
+                : 'Auto lightly smoothed the detected mosaic and reduced JPEG seams in the surrounding image before face restoration.';
+        }
+        if (decision?.route === 'mosaic_regions_coordinated') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto detected multiple mosaic regions and applied uniform whole-crop smoothing before face restoration.'
+                : 'Auto applied separate preparation to distinct mosaic regions before face restoration.';
+        }
+        if (decision?.route === 'scanline_mosaic_coordinated') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto reduced horizontal scanlines and applied uniform whole-crop smoothing for the detected mosaic before face restoration.'
+                : 'Auto reduced horizontal scanlines and smoothed a separately detected mosaic before face restoration.';
+        }
+        if (decision?.route === 'perspective_mosaic_gaussian') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto applied uniform whole-crop smoothing for a suspected perspective-warped mosaic before face restoration.'
+                : 'Auto smoothed a suspected perspective-warped mosaic before face restoration.';
+        }
+        if (decision?.route === 'irregular_mosaic_gaussian') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto applied uniform whole-crop smoothing for a suspected irregular mosaic before face restoration.'
+                : 'Auto smoothed a suspected irregular mosaic before face restoration.';
+        }
         if (decision?.route === 'jpeg_deblocking') return 'Auto reduced strong JPEG block seams with FBCNN before face restoration.';
-        if (decision?.route === 'rotated_mosaic_gaussian') return 'Auto found a tilted mosaic and smoothed the detected region before restoration.';
-        if (decision?.route === 'tiny_mosaic_gaussian') return 'Auto smoothed a strong block grid in this small crop before face restoration.';
+        if (decision?.route === 'rotated_mosaic_gaussian') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto found a tilted mosaic and applied uniform whole-crop smoothing before restoration.'
+                : 'Auto found a tilted mosaic and smoothed the detected region before restoration.';
+        }
+        if (decision?.route === 'tiny_mosaic_gaussian') {
+            return decision.uniform_crop_smoothing
+                ? 'Auto applied uniform whole-crop smoothing for a strong block grid in this small crop before face restoration.'
+                : 'Auto smoothed a strong block grid in this small crop before face restoration.';
+        }
         if (decision?.route === 'direct' && metadata.softened_mosaic_detection?.crop_intersects) {
             return 'Auto flagged a possible softened mosaic and used direct restoration.';
         }
@@ -74,20 +102,32 @@
         if (['picture_region_gaussian', 'frame_region_gaussian', 'face_gaussian'].includes(decision?.route)) {
             const area = decision.route === 'face_gaussian' ? 'the detected face' : 'flagged regions';
             const radius = decision.Gaussian_radius_at256.toFixed(1);
+            const surroundSuffix = decision.surround_matched_after_conditioning
+                ? ' and surround-matched sharp surroundings'
+                : '';
+            if (decision.strength_basis === 'multipixel_block_noise') {
+                return `Auto smoothed suspected multi-pixel block noise${surroundSuffix} before restoration.`;
+            }
+            if (decision.strength_basis === 'posterized_block_patch') {
+                return `Auto conditioned a suspected posterized or blocked face region${surroundSuffix} before restoration.`;
+            }
+            if (decision.strength_basis === 'pasted_fine_grain') {
+                return `Auto smoothed a suspected fine-grain degraded face patch${surroundSuffix} before restoration.`;
+            }
+            if (decision.uniform_crop_smoothing) {
+                if (decision.strength_basis === 'measured_artifact_detail_tradeoff') {
+                    return `Auto applied ${radius} px uniform whole-crop smoothing after detecting pixelation in ${area} based on remaining block edges and retained detail.`;
+                }
+                if (decision.strength_basis === 'default_weak_evidence') {
+                    return `Auto applied ${radius} px uniform whole-crop default smoothing after detecting pixelation in ${area}.`;
+                }
+                return `Auto applied ${radius} px uniform whole-crop smoothing after detecting pixelation in ${area} before restoration.`;
+            }
             if (decision.strength_basis === 'measured_artifact_detail_tradeoff') {
                 return `Auto chose ${radius} px smoothing for ${area} based on remaining block edges and retained detail.`;
             }
             if (decision.strength_basis === 'default_weak_evidence') {
                 return `Auto used the ${radius} px default for ${area} because the signal was too weak to estimate a different strength.`;
-            }
-            if (decision.strength_basis === 'multipixel_block_noise') {
-                return 'Auto smoothed suspected multi-pixel block noise before restoration.';
-            }
-            if (decision.strength_basis === 'posterized_block_patch') {
-                return 'Auto conditioned a suspected posterized or blocked face region before restoration.';
-            }
-            if (decision.strength_basis === 'pasted_fine_grain') {
-                return 'Auto smoothed a suspected fine-grain degraded face patch before restoration.';
             }
             return `Auto applied ${radius} px smoothing to ${area} before restoration.`;
         }

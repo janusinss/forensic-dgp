@@ -601,8 +601,14 @@ class ControllerTests(unittest.TestCase):
         ):
             status, result = self.video_restore(self.capture_owner, restoration='auto', preparation_mode='automatic')
         self.assertEqual(status, 200)
-        self.assertEqual(result['metadata']['automatic_preparation']['route'], 'scanline_mosaic_coordinated')
-        worker.assert_called_once_with(png(prepared[5:37, 4:44]), 'v3')
+        auto = result['metadata']['automatic_preparation']
+        self.assertEqual(auto['route'], 'scanline_mosaic_coordinated')
+        self.assertTrue(auto['uniform_crop_smoothing'])
+        expected_radius = automatic_preparation.compute_uniform_crop_gaussian_radius(
+            prepared[5:37, 4:44], None, report, source_size=(self.rgb.shape[1], self.rgb.shape[0])
+        )
+        expected_crop = automatic_preparation.apply_uniform_crop_gaussian(prepared[5:37, 4:44], expected_radius)
+        worker.assert_called_once_with(png(expected_crop), 'v3')
         with zipfile.ZipFile(io.BytesIO(base64.b64decode(result['bundle'].split(',', 1)[1]))) as archive:
             self.assertEqual(archive.read('capture/frame-scanline-mosaic-mask.png'), mask)
 
@@ -630,9 +636,16 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual((status, second_status), (200, 200))
         scan.assert_called_once()
         np.testing.assert_array_equal(scan.call_args.args[0], self.rgb)
+        crop1 = self.rgb[5:37, 4:44]
+        crop2 = self.rgb[18:50, 50:80]
+        r1 = automatic_preparation.compute_uniform_crop_gaussian_radius(crop1, None, report, source_size=(128, 96))
+        r2 = automatic_preparation.compute_uniform_crop_gaussian_radius(crop2, None, report, source_size=(128, 96))
         self.assertEqual([call.args for call in worker.call_args_list],
-                         [(png(smoothed[5:37, 4:44]), 'v3'), (png(smoothed[18:50, 50:80]), 'v3')])
+                         [(png(automatic_preparation.apply_uniform_crop_gaussian(crop1, r1)), 'v3'),
+                          (png(automatic_preparation.apply_uniform_crop_gaussian(crop2, r2)), 'v3')])
         self.assertEqual(first_result['metadata']['automatic_preparation']['route'], 'frame_region_gaussian')
+        self.assertTrue(first_result['metadata']['automatic_preparation']['uniform_crop_smoothing'])
+        self.assertTrue(second_result['metadata']['automatic_preparation']['uniform_crop_smoothing'])
         self.assertEqual(first_result['metadata']['frame_pixelation'], second_result['metadata']['frame_pixelation'])
         self.assertEqual(base64.b64decode(first_result['smoothed_full_frame'].split(',', 1)[1]), full_png)
         self.assertNotIn('smoothed_full_frame', second_result)
@@ -679,19 +692,39 @@ class ControllerTests(unittest.TestCase):
 
         combined = self.rgb // 3
         combined_png = png(combined)
-        report = {'mixed_jpeg_mosaic': True, 'mosaic_grid_period_native': 4, 'outside_deblock_fraction': .35}
-        evidence = {'full-image-smoothed.png': combined_png}
+        mosaic_mask = np.zeros(self.rgb.shape[:2], dtype=bool)
+        mosaic_mask[16:80, 24:104] = True
+        mask_png = png(mosaic_mask.astype(np.uint8) * 255)
+        report = {
+            'mixed_jpeg_mosaic': True,
+            'mosaic_grid_period_native': 4,
+            'outside_deblock_fraction': .35,
+            'native_Gaussian_radius': 1.0,
+            'preparation_forward_returns': 1,
+        }
+        evidence = {
+            'full-image-smoothed.png': combined_png,
+            'full-image-pixelation-mask.png': mask_png,
+        }
         restored = png(np.zeros((256, 256, 3), np.uint8))
         with (
             patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
             patch.object(mixed_jpeg, 'prepare_mixed_jpeg', return_value=(combined, report, evidence)),
             patch.object(jpeg_deblocking, 'prepare_jpeg') as standalone,
+            patch.object(jpeg_deblocking, 'run_deblock', side_effect=AssertionError('duplicate FBCNN call forbidden')) as dup_deblock,
             patch.object(controller, 'one_forward', return_value=(None, restored, {})) as worker,
         ):
             result = self.restore(restoration='auto', preparation_mode='automatic', input_review='picture_upload')
         standalone.assert_not_called()
-        worker.assert_called_once_with(combined_png, 'v3')
+        dup_deblock.assert_not_called()
+        expected_base = combined.copy()
+        expected_base[mosaic_mask] = self.rgb[mosaic_mask]
+        expected_uniform = automatic_preparation.apply_uniform_crop_gaussian(expected_base, 1.0)
+        worker.assert_called_once_with(png(expected_uniform), 'v3')
         self.assertEqual(result['metadata']['automatic_preparation']['route'], 'jpeg_mosaic_coordinated')
+        self.assertTrue(result['metadata']['automatic_preparation']['uniform_crop_smoothing'])
+        self.assertAlmostEqual(result['metadata']['automatic_preparation']['crop_Gaussian_radius_native'], 1.0, places=4)
+        self.assertEqual(result['metadata']['preparation']['preparation_forward_returns'], 1)
         self.assertEqual(base64.b64decode(result['smoothed_full_picture'].split(',', 1)[1]), combined_png)
 
     def test_softened_mosaic_uses_direct_v2_and_retains_the_diagnostic_mask(self):
@@ -745,7 +778,13 @@ class ControllerTests(unittest.TestCase):
             self.assertTrue(mask[50:178, 42:185].any())
             self.assertTrue(mask[196:346, 249:394].any())
             np.testing.assert_array_equal(prepared[~mask], source[~mask])
-            worker.assert_called_once_with(png(prepared[40:200, 40:200]), 'v3')
+            auto_dec = result['metadata']['automatic_preparation']
+            self.assertTrue(auto_dec['uniform_crop_smoothing'])
+            crop_radius = auto_dec['crop_Gaussian_radius_native']
+            expected_uniform_crop = automatic_preparation.apply_uniform_crop_gaussian(source[40:200, 40:200], crop_radius)
+            worker.assert_called_once_with(png(expected_uniform_crop), 'v3')
+            derived_crop = np.asarray(Image.open(io.BytesIO(archive.read('derived-native.png'))))
+            np.testing.assert_array_equal(derived_crop, expected_uniform_crop)
         self.assertEqual(result['metadata']['picture_pixelation']['Gaussian_radius_at256'],
                          automatic_preparation.PIXELATION_RADIUS_AT256)
 
@@ -1476,6 +1515,163 @@ class ControllerTests(unittest.TestCase):
                 self.assertEqual(derived_sha, processing['derived_native_sha256'])
                 if isinstance(processing.get('payload_pins'), dict) and 'derived-native.png' in processing['payload_pins']:
                     self.assertEqual(processing['payload_pins']['derived-native.png']['sha256'], derived_sha)
+
+    def test_policy_a1_localized_face_mosaic_in_sharp_hair_delivers_uniform_crop_blur(self):
+        """Localized face mosaic surrounded by sharp hair must deliver 100% uniform crop blur (zero mask holes)."""
+        from implementation import automatic_preparation
+
+        rng = np.random.default_rng(909)
+        h, w = 256, 256
+        yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+        # Sharp high-frequency hair/background texture everywhere outside center face
+        hair = np.stack([
+            155.0 + 48.0 * np.sin(0.55 * xx + 0.12 * yy) + rng.normal(0.0, 12.0, (h, w)),
+            120.0 + 40.0 * np.sin(0.55 * xx + 0.12 * yy + 0.4) + rng.normal(0.0, 10.0, (h, w)),
+            75.0 + 30.0 * np.sin(0.55 * xx + 0.12 * yy + 0.8) + rng.normal(0.0, 8.0, (h, w)),
+        ], axis=-1)
+        scene = np.clip(np.rint(hair), 0, 255).astype(np.uint8)
+        # Localized 10px mosaic inside center face only
+        blk = rng.integers(30, 230, (12, 12, 3), dtype=np.uint8)
+        mosaic_face = np.asarray(Image.fromarray(blk).resize((120, 120), Image.Resampling.NEAREST))
+        scene[68:188, 68:188] = mosaic_face
+
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        with patch.object(controller, 'one_forward', return_value=dummy_out):
+            res = self.restore(
+                file=self.upload(png(scene)),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        meta = res['metadata']
+        auto = meta['automatic_preparation']
+        self.assertEqual(auto['route'], 'picture_region_gaussian')
+        self.assertTrue(auto['uniform_crop_smoothing'])
+        self.assertGreater(auto['crop_Gaussian_radius_native'], 1.5)
+        self.assertNotIn('noise_denoise', auto.get('applied_stages', []))
+
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(res['bundle'].split(',', 1)[1]))) as archive:
+            mask = np.asarray(Image.open(io.BytesIO(archive.read('full-image-pixelation-mask.png')))) > 0
+            full_sm = np.asarray(Image.open(io.BytesIO(archive.read('full-image-smoothed.png'))))
+            derived = np.asarray(Image.open(io.BytesIO(archive.read('derived-native.png'))))
+            processing = json.loads(archive.read('processing.json'))
+        self.assertTrue(processing['uniform_crop_smoothing'])
+        self.assertEqual(processing['crop_Gaussian_radius_native'], auto['crop_Gaussian_radius_native'])
+        # Full-frame localization provenance keeps ~mask exact on full-image-smoothed.png
+        self.assertTrue(mask.any() and (~mask).any())
+        np.testing.assert_array_equal(full_sm[~mask], scene[~mask])
+        # Selected crop sent to V3.4 (derived-native.png) is 100% uniformly smoothed (including exterior hair!)
+        expected_uniform = automatic_preparation.apply_uniform_crop_gaussian(scene, auto['crop_Gaussian_radius_native'])
+        np.testing.assert_array_equal(derived, expected_uniform)
+        self.assertGreater(float(np.any(derived[~mask] != scene[~mask], axis=1).mean()), 0.95)
+
+    def test_policy_a1_degraded_patch_conditioning_surround_matches_sharp_exterior_protecting_face(self):
+        """degraded_patch_conditioning keeps conditioned face bit-exact while surround-matching sharp exterior hair."""
+        from implementation import automatic_preparation
+
+        rng = np.random.default_rng(919)
+        h, w = 320, 320
+        yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+        # Sharp high-frequency hair/background outside patch
+        exterior = np.stack([
+            150.0 + 55.0 * np.sin(0.65 * xx + 0.15 * yy) + rng.normal(0.0, 14.0, (h, w)),
+            120.0 + 45.0 * np.cos(0.60 * xx - 0.18 * yy) + rng.normal(0.0, 12.0, (h, w)),
+            85.0 + 35.0 * np.sin(0.50 * xx + 0.22 * yy) + rng.normal(0.0, 10.0, (h, w)),
+        ], axis=-1)
+        scene = np.clip(np.rint(exterior), 0, 255).astype(np.uint8)
+        # Degraded multi-pixel block noise face patch inside [32:288, 32:288] (256x256, 8px blocks)
+        blk = rng.integers(35, 220, (32, 32, 3), dtype=np.uint8)
+        scene[32:288, 32:288] = np.asarray(Image.fromarray(blk).resize((256, 256), Image.Resampling.NEAREST))
+
+        raw_mask = np.zeros((h, w), dtype=bool)
+        raw_mask[32:288, 32:288] = True
+        prepared_full, report_full, ev_full = automatic_preparation.apply_pixelation_mask(
+            scene, raw_mask, (w, h), 0
+        )
+        self.assertIsNotNone(prepared_full)
+        self.assertIsNotNone(report_full.get('degraded_patch_conditioning'))
+        full_mask = np.asarray(Image.open(io.BytesIO(ev_full['full-image-pixelation-mask.png']))) > 0
+
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        with (
+            patch.object(automatic_preparation, 'prepare_source', return_value=(prepared_full, report_full, ev_full)),
+            patch.object(controller, 'one_forward', return_value=dummy_out),
+        ):
+            res = self.restore(
+                file=self.upload(png(scene)),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        auto = res['metadata']['automatic_preparation']
+        self.assertEqual(auto['route'], 'picture_region_gaussian')
+        self.assertFalse(auto.get('uniform_crop_smoothing', False))
+        self.assertTrue(auto['surround_matched_after_conditioning'])
+
+        with zipfile.ZipFile(io.BytesIO(base64.b64decode(res['bundle'].split(',', 1)[1]))) as archive:
+            derived = np.asarray(Image.open(io.BytesIO(archive.read('derived-native.png'))))
+            processing = json.loads(archive.read('processing.json'))
+        self.assertTrue(processing['surround_matched_after_conditioning'])
+        # Conditioned face interior is 100% bit-exact (never double-blurred)
+        np.testing.assert_array_equal(derived[full_mask], prepared_full[full_mask])
+        # Sharp exterior hair/background is softened to match the conditioned face
+        self.assertGreater(float(np.any(derived[~full_mask] != scene[~full_mask], axis=1).mean()), 0.80)
+
+    def test_negative_controls_clean_portraits_highres_jpeg_and_coarse_mosaic_non_degraded(self):
+        """Clean sharp portraits and >=512px JPEG Q=8..15 never trigger false blur; coarse 24/32px mosaics stay non-conditioned."""
+        from PIL import ImageOps
+        from implementation import automatic_preparation
+
+        test_dir = Path(__file__).resolve().parents[2] / 'test_images'
+        clean_path = test_dir / 'face 1 - default.jpg'
+        if not clean_path.exists():
+            self.skipTest('face 1 - default.jpg fixture missing')
+        clean_bytes = clean_path.read_bytes()
+        clean_im = ImageOps.exif_transpose(Image.open(io.BytesIO(clean_bytes))).convert('RGB')
+        clean_rgb = np.asarray(clean_im)
+
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        # 1) Clean sharp portrait -> direct (zero false blur)
+        with patch.object(controller, 'one_forward', return_value=dummy_out):
+            res_clean = self.restore(
+                file=self.upload(clean_bytes, filename='face1.jpg'),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        self.assertEqual(res_clean['metadata']['automatic_preparation']['route'], 'direct')
+        self.assertFalse(res_clean['metadata']['preparation_applied'])
+
+        # 2) >=512px real portrait JPEG Q=8 & Q=12 -> JPEG/macroblock deblocking (never Gaussian blur / protect_auto)
+        im512 = clean_im.resize((512, 512), Image.Resampling.LANCZOS)
+        for q in (8, 12):
+            buf = io.BytesIO()
+            im512.save(buf, format='JPEG', quality=q, subsampling=2)
+            with patch.object(controller, 'one_forward', return_value=dummy_out):
+                res_j = self.restore(
+                    file=self.upload(buf.getvalue(), filename=f'q{q}.jpg'),
+                    restoration='auto',
+                    preparation_mode='automatic',
+                    input_review='picture_upload',
+                )
+            route_j = res_j['metadata']['automatic_preparation']['route']
+            self.assertNotIn('gaussian', route_j)
+            self.assertNotEqual(route_j, 'protect_auto')
+            self.assertFalse(res_j['metadata']['automatic_preparation'].get('uniform_crop_smoothing', False))
+
+        # 3) Coarse 24x24 & 32x32 clean-color mosaics -> uniform Gaussian blur, NEVER degraded_patch_conditioning
+        import cv2
+        h, w = clean_rgb.shape[:2]
+        y0, y1, x0, x1 = int(h * 0.12), int(h * 0.88), int(w * 0.12), int(w * 0.88)
+        for blk_sz in (24, 32):
+            rgb_mos = clean_rgb.copy()
+            sub = rgb_mos[y0:y1, x0:x1]
+            sh, sw = sub.shape[:2]
+            sm = cv2.resize(sub, (max(4, sw // blk_sz), max(4, sh // blk_sz)), interpolation=cv2.INTER_AREA)
+            rgb_mos[y0:y1, x0:x1] = cv2.resize(sm, (sw, sh), interpolation=cv2.INTER_NEAREST)
+            m = np.zeros((h, w), dtype=bool)
+            m[y0:y1, x0:x1] = True
+            self.assertIsNone(automatic_preparation._condition_degraded_face_patch(rgb_mos, m))
 
 
 if __name__ == '__main__':

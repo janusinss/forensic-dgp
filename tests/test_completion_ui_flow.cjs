@@ -191,7 +191,7 @@ function buildCompletionHarness({ fetchImpl, locationObj = undefined }) {
 test('implementation.html exposes Edit removal area and bumps cache-busting query versions', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'templates', 'implementation.html'), 'utf8');
   assert.match(html, /<button id="completion-edit-mask" class="tool-btn" type="button" data-nav="completion-paint" data-wizard-nav>Edit removal area<\/button>/);
-  assert.match(html, /\/static\/implementation\.js\?v=49/);
+  assert.match(html, /\/static\/implementation\.js\?v=50/);
   assert.match(html, /\/static\/completion\.js\?v=15/);
 });
 
