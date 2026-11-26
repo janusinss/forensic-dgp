@@ -1,6 +1,30 @@
 # Cloudflare Pages deployment
 
-## Current 0.3.2 offline preview
+## Current 0.3.3 offline preview
+
+Published November 26, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment 59ce3935](https://59ce3935.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.3)
+references `ForensicDGP_Setup-0.3.3.exe` from build source
+`007ac078e57cc2af8639ccfe1413f6f5d48b8523` (`1,322,986,527` bytes, SHA-256
+`63c18df5017e586450a338f99e8b85c134921f9d93125bb0dd78aa118fde447d`). GitHub confirmed
+`Content-Range: bytes 0-15/1322986527` (`HTTP 206`) and exact `.sha256` match, and
+Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) reported zero threats. This
+release ships the Step 2 Uniform Auto Blur overhaul (Policy A1 + A2: 100% uniform
+whole-crop Gaussian smoothing across all 10 Step 2 pixelation/mosaic routes plus
+`face_gaussian` while preserving full-frame localization provenance, surround-matched
+exteriors around bit-exact conditioned degraded face patches, single-pass 8x8-aligned
+FBCNN reuse on `mixed_jpeg_mosaic`, and hardened `protect_auto` surround matching on
+narrow sharp exterior strips without re-blurring already-matched tiles) paired with
+Pre-Conditioned Frozen CodeFormer V3.4 and Completion R2. All 19 site tests,
+`tsc --noEmit`, Vite production build, and live Playwright audits across 375px,
+768px, and 1280px passed with zero overflow, console, network, or accessibility
+errors. Published versions remain immutable: future updates must use a new version,
+build, and release rather than replacing `0.3.3`.
+
+## Historical 0.3.2 offline preview
 
 Published November 25, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs
