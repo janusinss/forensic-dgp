@@ -44,10 +44,28 @@ def _empirical_surround_sigma_at256(source, protect_full):
         ext_sharp = ext_eval
 
     core_hf = float(np.percentile(log0[core_eval], 75))
+    core_p90 = float(np.percentile(log0[core_eval], 90))
     ext_all_p75 = float(np.percentile(log0[ext_eval], 75))
     ext_hf = float(np.percentile(log0[ext_sharp], 75))
     if ext_all_p75 < max(2.0, core_hf * 1.4) or ext_hf < max(2.5, core_hf * 1.8):
-        return None, None
+        # Handle narrow sharp exterior strips (e.g. mugshot height-chart ticks on a
+        # smooth wall) where 75% of the exterior is plain wall, top 10% is sharp,
+        # AND the protected core itself is genuinely blurred (low 90th percentile).
+        ext_p90 = float(np.percentile(log0[ext_eval], 90))
+        ext_p95 = float(np.percentile(log0[ext_eval], 95))
+        if (
+            core_p90 <= 2.0
+            and ext_p90 >= max(1.8, core_p90 * 1.6)
+            and ext_p95 >= max(3.8, core_p90 * 3.2)
+        ):
+            ext_sharp = ext_eval & (log0 >= ext_p95)
+            if int(ext_sharp.sum()) < 16:
+                ext_sharp = ext_eval & (log0 >= ext_p90)
+            if int(ext_sharp.sum()) < 16:
+                return None, None
+            ext_hf = float(np.percentile(log0[ext_sharp], 75))
+        else:
+            return None, None
 
     norm = max(1e-6, scale * longest / 256.0)
     target_val = max(0.1, core_hf)
@@ -90,7 +108,7 @@ def _tile_log_hf_p75(image, tile_shape, protect_full=None):
                 block = np.ix_(ys, xs)
                 if prot_256 is not None:
                     ext_pts = log_abs[block][~prot_256[block]]
-                    out[r, c] = float(np.percentile(ext_pts, 90)) if ext_pts.size else 0.0
+                    out[r, c] = float(np.percentile(ext_pts, 95)) if ext_pts.size else 0.0
                 else:
                     out[r, c] = float(np.percentile(log_abs[block], 75))
     return out
@@ -236,11 +254,20 @@ def match_surroundings(rgb, source, rectangle, effective):
         nearest = distance_transform_edt(~seed_mask, return_distances=False, return_indices=True)
         filled = np.divide(nearby, weights, out=local[tuple(nearest)], where=weights > 0)
         local = np.where(seed_mask, local, filled)
+        tile_hf = None
+        if empirical_sigma is not None and core_hf is not None and protect_full.any():
+            tile_hf = _tile_log_hf_p75(original, tiles.shape, protect_full=protect_full)
+            # Tiles containing genuinely sharp exterior features (e.g. narrow ruler ticks
+            # beside a blurred head) can have inflated ridge medians from the adjacent blur;
+            # cap their local blur estimate so they receive full surround matching.
+            if core_hf <= 2.0 and target >= 2.0:
+                sharp_ext = tile_hf > max(core_hf * 2.0, 2.5)
+                if sharp_ext.any():
+                    local = np.where(sharp_ext, np.minimum(local, 1.5), local)
         smooth = np.asarray(Image.fromarray(local).resize(original.size, Image.Resampling.BILINEAR))
         matched_tiles = seed_mask & (local >= target - .35)
-        if matched_tiles.any() and core_hf is not None:
+        if matched_tiles.any() and empirical_sigma is not None and tile_hf is not None:
             # Never hold out sharp ruler-tick/chart tiles that fooled estimate_tiles().
-            tile_hf = _tile_log_hf_p75(original, tiles.shape, protect_full=protect_full)
             matched_tiles &= tile_hf <= max(core_hf * 1.6, 2.0)
     else:
         smooth = np.zeros(source.shape[:2], dtype=np.float32)

@@ -2,9 +2,14 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.3.2
+## Windows installer 0.3.3
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.2 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.2)
+Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.3 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.3)
+
+### What changed in 0.3.3
+
+- **Step 2 Uniform Auto Blur overhaul (Policy A1 + A2)**: All 10 Step 2 pixelation/mosaic routes plus `face_gaussian` now apply calibrated uniform whole-crop Gaussian smoothing across `100%` of the selected crop sent to frozen CodeFormer V3.4 (`derived-native.png`, `uniform_crop_smoothing=True`) while retaining full-frame localization provenance (`full-image-pixelation-mask.png`, `full-image-smoothed.png`), eliminating missed eye/brow mosaic holes and sharp hair-surround domain mismatch (`automatic_preparation.py`, `app.py`, `implementation.js?v=50`, `implementation.html`).
+- **Surround-matched degraded face patches & hardened `protect_auto`**: Keeps conditioned degraded face patches bit-exact inside the face mask while surround-matching sharp exteriors (`surround_matched_after_conditioning=True`), reuses the single 8x8-aligned FBCNN output in `mixed_jpeg_mosaic`, and hardens `blur_match.py` to soften narrow sharp exterior ruler-tick strips without re-blurring already-matched tiles, while preserving `0` false-positive blur on clean portraits and non-blur JPEG/noise/cast/scanline inputs.
 
 ### What changed in 0.3.2
 
