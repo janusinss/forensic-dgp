@@ -23,6 +23,8 @@ from . import completion_runtime as runtime
 
 MAX_INPUT_BYTES = 8 * 1024**2
 MAX_SECONDS = 120
+_REQUIRED_REQUEST_KEYS = {"input_path", "mask_path", "output_dir", "prepared_bounds"}
+_ALLOWED_REQUEST_KEYS = _REQUIRED_REQUEST_KEYS | {"max_passes"}
 
 
 def _pin(path):
@@ -77,8 +79,17 @@ def _load_png(path, mode):
 
 
 def run_request(request, *, request_root=None):
-    runtime.need(type(request) is dict and set(request) == {"input_path", "mask_path", "output_dir", "prepared_bounds"},
-                 "Expected input_path, mask_path, output_dir and prepared_bounds only.")
+    runtime.need(
+        type(request) is dict
+        and _REQUIRED_REQUEST_KEYS.issubset(request)
+        and set(request).issubset(_ALLOWED_REQUEST_KEYS),
+        "Expected input_path, mask_path, output_dir, prepared_bounds, and optional max_passes only.",
+    )
+    max_passes = request.get("max_passes", 3)
+    runtime.need(
+        type(max_passes) is int and 1 <= max_passes <= 3,
+        "max_passes must be an integer between 1 and 3.",
+    )
     base = Path(request_root or Path.cwd()).absolute()
     runtime.need(base.is_dir() and not base.is_symlink(), "Ordinary request directory required.")
     output = _path(request["output_dir"], base, directory=True, exists=False)
@@ -115,10 +126,16 @@ def run_request(request, *, request_root=None):
             counters[key] += 1
             if event == "returned":
                 counters["neural_calls"] += 1
-            runtime.need(counters[key] <= 1, "One R2 forward maximum.")
+            runtime.need(counters[key] <= max_passes, f"{max_passes} R2 forwards maximum.")
             status("forward_entered" if event == "entered" else "forward_returned")
 
-        result = runtime.complete(rgb, mask, request["prepared_bounds"], forward_event=forward_event)
+        result = runtime.complete(
+            rgb,
+            mask,
+            request["prepared_bounds"],
+            forward_event=forward_event,
+            max_passes=max_passes,
+        )
         runtime.need(time.monotonic() - started <= MAX_SECONDS, "Completion exceeded its120-second cooperative limit.")
         runtime.need(_pin(image_path) == image_pin and _pin(mask_path) == mask_pin, "Completion request source changed.")
         final, completed = result["output_rgb"], result["completed_rgb"]

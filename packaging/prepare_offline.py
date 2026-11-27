@@ -133,7 +133,10 @@ def wheel_lock(wheelhouse: Path, required: dict[str, str]) -> str:
 
 def source_models() -> list[dict]:
     result = []
-    for group, filename in (('restoration', 'models.json'), ('completion', 'completion_assets.json')):
+    manifests = [('restoration', 'models.json'), ('completion', 'completion_assets.json')]
+    if (ROOT / 'implementation' / 'onnx_assets.json').is_file():
+        manifests.append(('onnx', 'onnx_assets.json'))
+    for group, filename in manifests:
         value = json.loads((ROOT / 'implementation' / filename).read_text(encoding='utf8'))
         for identity, entry in sorted(value['assets'].items()):
             result.append(dict(group=group,id=identity,filename=entry['filename'],size=entry['size'],sha256=entry['sha256']))
@@ -403,7 +406,13 @@ def copy_models(destination: Path, sources: list[Path]) -> list[dict]:
         found = None
         for source in sources:
             ordinary(source,'directory')
-            for candidate in (source / entry['filename'], source / entry['group'] / entry['filename'],source / 'implementation' / entry['filename']):
+            for candidate in (
+                source / entry['filename'],
+                source / entry['group'] / entry['filename'],
+                source / 'implementation' / entry['filename'],
+                source / 'detection' / entry['filename'],
+                source / 'occlusion' / entry['filename'],
+            ):
                 if candidate.exists():
                     ordinary(candidate)
                     if candidate.stat().st_size == entry['size'] and file_sha(candidate) == entry['sha256']:

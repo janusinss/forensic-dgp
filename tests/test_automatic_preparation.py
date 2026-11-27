@@ -605,3 +605,657 @@ class AutoBlurOverhaulTests(unittest.TestCase):
         np.testing.assert_array_equal(prepared, expected)
         # Exterior sharp hair/background outside face box is softened identically to face interior
         self.assertGreater(float(np.any(prepared[:48, :] != native[:48, :], axis=2).mean()), 0.99)
+
+
+class Phase1VNextUnitTests(unittest.TestCase):
+    """Focused unit tests for Phase 1 zero-weight vNext upgrades (v34_probe, motion_blur, low-light/glare, censor bar, blur_04)."""
+
+    def test_v34_probe_clean_veto_reflection_rollback_damping_and_batch_fallback(self):
+        from implementation import v34_probe
+
+        clean_probe = {'exposure': 0.01, 'blur': 0.01, 'noise': 0.01, 'codec_lr': 0.01, 'p_clean': 0.95, 'g_photo': 0.08}
+        noisy_probe = {'exposure': 0.04, 'blur': 0.12, 'noise': 0.45, 'codec_lr': 0.10, 'p_clean': 0.02, 'g_photo': 0.78}
+        blur_spike = {'exposure': 0.04, 'blur': 0.55, 'noise': 0.44, 'codec_lr': 0.10, 'p_clean': 0.01, 'g_photo': 0.20}
+
+        self.assertTrue(v34_probe.is_clean_control_probe(clean_probe))
+        self.assertFalse(v34_probe.is_clean_control_probe(noisy_probe))
+        self.assertFalse(v34_probe.is_clean_control_probe(None))
+
+        # Clean control vetoes marginal chroma_debleeding
+        ok_clean, reason_clean = v34_probe.stage_reflection_accept(clean_probe, clean_probe, 'chroma_debleeding')
+        self.assertFalse(ok_clean)
+        self.assertEqual(reason_clean, 'clean_control_veto')
+
+        # Collateral blur spike (+0.15) rolls back photometric/debleed/motion stages
+        ok_spike, reason_spike = v34_probe.stage_reflection_accept(noisy_probe, blur_spike, 'color_cast_balance')
+        self.assertFalse(ok_spike)
+        self.assertEqual(reason_spike, 'collateral_blur_spike')
+
+        # photo_net double-correction damping activates strictly when g_photo >= 0.65
+        self.assertEqual(v34_probe.photometric_damping_factor(clean_probe), 1.0)
+        self.assertLess(v34_probe.photometric_damping_factor(noisy_probe), 0.72)
+
+        # Missing/unavailable npz degrades cleanly to None without raising
+        with patch.object(v34_probe, '_load_probe_bundle', return_value=None):
+            self.assertIsNone(v34_probe.probe_v34(np.full((64, 64, 3), 120, dtype=np.uint8)))
+            self.assertIsNone(v34_probe.probe_batch([np.full((64, 64, 3), 120, dtype=np.uint8)]))
+
+    def test_v34_closed_loop_mosaic_sigma_avoids_oversmoothing_collapse(self):
+        from implementation import v34_probe
+
+        rng = np.random.default_rng(771)
+        coarse = Image.fromarray(rng.integers(20, 235, (16, 16, 3), dtype=np.uint8)).resize(
+            (192, 192), Image.Resampling.NEAREST
+        )
+        crop = np.asarray(coarse)
+        # Simulate an over-smoothed baseline (sharp_256 < 0.50, exposure=0.74) vs tighter refined candidates
+        def fake_batch(imgs):
+            out = []
+            for img in imgs:
+                sh = v34_probe._sharpness_256(img)
+                if sh < 0.50:
+                    out.append({'exposure': 0.74, 'blur': 0.96, 'noise': 0.01, 'codec_lr': 0.40, 'p_clean': 0.0})
+                else:
+                    out.append({'exposure': 0.22, 'blur': 0.90, 'noise': 0.01, 'codec_lr': 0.14, 'p_clean': 0.0})
+            return out
+
+        best_r, best_img, rep = v34_probe.choose_closed_loop_mosaic_sigma(
+            crop, 8.5, detected_period=12.0, probe_batch_fn=fake_batch
+        )
+        self.assertTrue(rep['refined'])
+        self.assertLess(best_r, 8.5)
+        self.assertGreaterEqual(v34_probe._sharpness_256(best_img), 0.50)
+
+    def test_blur_04_v34_privacy_blur_fallback_catches_localized_blur_and_skips_clean_controls(self):
+        from pathlib import Path
+        from PIL import ImageOps
+        from implementation import v34_probe
+
+        # Synthetic heavy blur with moderate core grain where standard _hf_deficit_stats fails strict core_lap_var cap
+        img, face = AutoBlurOverhaulTests._make_sharp_grid_with_face(face_blur_sigma=10.0)
+        rng = np.random.default_rng(912)
+        fx, fy, fw, fh = face
+        # Inject slight compression texture inside face so raw core_lap_var > 18 but ext/core ratio stays > 3x
+        noisy_face = np.clip(img[fy:fy + fh, fx:fx + fw].astype(np.float32) + rng.normal(0, 6.0, (fh, fw, 3)), 0, 255).astype(np.uint8)
+        img_grain = img.copy()
+        img_grain[fy:fy + fh, fx:fx + fw] = noisy_face
+
+        v34_blur = {'blur': 0.93, 'p_clean': 0.0, 'exposure': 0.25, 'noise': 0.02, 'codec_lr': 0.18}
+        dec = automatic.decide(img_grain, face, v34_probe=v34_blur)
+        self.assertEqual(dec['route'], 'protect_auto')
+
+        # Clean portrait probe must NEVER trigger v34_blur_fallback
+        clean, clean_face = AutoBlurOverhaulTests._make_sharp_grid_with_face(face_blur_sigma=0.0)
+        v34_clean = {'blur': 0.001, 'p_clean': 0.99, 'exposure': 0.001, 'noise': 0.001, 'codec_lr': 0.001}
+        self.assertEqual(automatic.decide(clean, clean_face, v34_probe=v34_clean)['route'], 'direct')
+
+        # Real blur_04 fixture when present
+        b04 = Path(__file__).resolve().parents[2] / 'test_images' / 'internet_samples' / 'restoration' / 'blur_04_oval_head_blur.jpg'
+        if b04.exists():
+            rgb04 = np.asarray(ImageOps.exif_transpose(Image.open(b04)).convert('RGB'))
+            crop04 = rgb04[133:293, 326:471]
+            pr04 = v34_probe.probe_v34(crop04)
+            if pr04 is not None:
+                cand, _, _, rep04 = automatic.prepare(crop04, rgb04, [357, 165, 83, 98], [326, 133, 145, 160], v34_probe=pr04)
+                self.assertEqual(rep04['route'], 'protect_auto')
+                self.assertIsNotNone(cand)
+
+    def test_motion_blur_classifier_and_wiener_positive_and_negative_controls(self):
+        from pathlib import Path
+        import cv2
+        from PIL import ImageOps
+        from implementation import motion_blur, v34_probe
+
+        # Negative controls: stripes & clean portraits must return None
+        yy, xx = np.mgrid[0:256, 0:256]
+        stripes = np.repeat((((yy // 6) % 2) * 200 + 25).astype(np.uint8)[..., None], 3, axis=2)
+        self.assertIsNone(motion_blur.detect_motion_blur(stripes))
+
+        test_dir = Path(__file__).resolve().parents[2] / 'test_images'
+        f1 = test_dir / 'face 1 - default.jpg'
+        if f1.exists():
+            rgb1 = np.asarray(ImageOps.exif_transpose(Image.open(f1)).convert('RGB'))
+            self.assertIsNone(motion_blur.detect_motion_blur(rgb1))
+            # Positive synthetic 13px horizontal motion smear -> detected & conditioned cleanly
+            k13 = np.zeros((13, 13), dtype=np.float32)
+            k13[6, :] = 1.0 / 13.0
+            smeared = cv2.filter2D(rgb1, -1, k13)
+            det = motion_blur.detect_motion_blur(smeared)
+            self.assertIsNotNone(det)
+            self.assertEqual(det['classification'], 'linear_motion')
+            out, mask, rep = motion_blur.prepare_motion_deblur(smeared, probe_fn=v34_probe.probe_v34)
+            self.assertIsNotNone(out)
+            self.assertIsNotNone(mask)
+            self.assertGreaterEqual(rep['blur_axis_hf_gain'], 1.08)
+
+        # Real degraded_09 horizontal motion smear blindspot fixture
+        d09 = test_dir / 'internet_samples' / 'restoration' / 'degraded_09_motion_smear_a.jpg'
+        if d09.exists():
+            rgb09 = np.asarray(ImageOps.exif_transpose(Image.open(d09)).convert('RGB'))
+            crop09 = rgb09[113:707, 250:775]
+            det09 = motion_blur.detect_motion_blur(crop09)
+            self.assertIsNotNone(det09)
+            out09, _, rep09 = motion_blur.prepare_motion_deblur(crop09, probe_fn=v34_probe.probe_v34)
+            self.assertIsNotNone(out09)
+            self.assertEqual(rep09['route'], 'motion_deblur')
+
+    def test_low_light_glare_positive_and_clean_dark_skin_negative_control(self):
+        from implementation.cast_dehaze import detect_low_light_glare, prepare_low_light_glare
+
+        # Positive 1: Crushed dark CCTV face (clipped shadows + compressed dynamic range)
+        yy, xx = np.mgrid[0:256, 0:256].astype(np.float32)
+        oval = ((xx - 128) / 76.0) ** 2 + ((yy - 128) / 92.0) ** 2 <= 1.0
+        dark_cctv = np.full((256, 256, 3), 10, dtype=np.uint8)
+        dark_cctv[oval] = np.array([38, 28, 24], dtype=np.uint8)
+        dark_cctv[95:110, 92:114] = 8
+        dark_cctv[95:110, 142:164] = 8
+        ll_det = detect_low_light_glare(dark_cctv, v34_probe={'exposure': 0.55, 'blur': 0.40, 'noise': 0.10, 'codec_lr': 0.20, 'p_clean': 0.0})
+        self.assertIsNotNone(ll_det)
+        self.assertEqual(ll_det['route'], 'low_light_recovery')
+        ll_out, _, ll_route, ll_rep = prepare_low_light_glare(dark_cctv, v34_probe={'exposure': 0.55, 'blur': 0.40, 'noise': 0.10, 'codec_lr': 0.20, 'p_clean': 0.0})
+        self.assertIsNotNone(ll_out)
+        self.assertEqual(ll_route, 'low_light_recovery')
+        self.assertGreater(ll_rep['after']['p50_core'], ll_rep['before']['p50_core'])
+
+        # Negative control: Well-exposed dark-skin portrait with normal highlight headroom -> 0% FP!
+        dark_skin = np.full((256, 256, 3), [185, 190, 196], dtype=np.uint8)
+        dark_skin[oval] = np.array([78, 52, 40], dtype=np.uint8)
+        # Normal specular eye catchlights / forehead highlight headroom
+        hl = ((xx - 128) / 28.0) ** 2 + ((yy - 82) / 16.0) ** 2 <= 1.0
+        dark_skin[hl] = np.array([138, 108, 92], dtype=np.uint8)
+        dark_skin[104:112, 98:112] = np.array([210, 205, 200], dtype=np.uint8)
+        dark_skin[104:112, 144:158] = np.array([210, 205, 200], dtype=np.uint8)
+        self.assertIsNone(
+            detect_low_light_glare(
+                dark_skin,
+                v34_probe={'exposure': 0.02, 'blur': 0.01, 'noise': 0.01, 'codec_lr': 0.01, 'p_clean': 0.92},
+            )
+        )
+        # Even without v34_probe, normal highlight headroom (p90_core >= 102) keeps clean dark skin 0-FP
+        self.assertIsNone(detect_low_light_glare(dark_skin, v34_probe=None))
+
+    def test_synthetic_censor_bar_detection_and_hf_exclusion(self):
+        # Synthetic face with crisp black rectangular eye censor bar
+        clean, face = AutoBlurOverhaulTests._make_sharp_grid_with_face(face_blur_sigma=0.0)
+        barred = clean.copy()
+        fx, fy, fw, fh = face
+        barred[fy + 34 : fy + 56, fx + 12 : fx + fw - 12] = [2, 2, 2]
+        bar_mask, bar_rep = automatic.detect_synthetic_censor_bar(barred, face_box=face)
+        self.assertIsNotNone(bar_mask)
+        self.assertTrue(bar_rep['synthetic_censor_bar_suspected'])
+        self.assertGreater(bar_rep['bar_pixels'], 500)
+        # Clean unbarred face must not trigger censor-bar detection
+        self.assertEqual(automatic.detect_synthetic_censor_bar(clean, face_box=face), (None, None))
+        # Excluding bar pixels from _hf_deficit_stats works cleanly without error
+        hf_ex = automatic._hf_deficit_stats(barred, face, exclude_mask=bar_mask)
+        self.assertIsNotNone(hf_ex)
+
+    def test_v34_probe_rejects_sha256_mismatch_and_corrupted_npz_bytes(self):
+        import hashlib
+        from pathlib import Path
+        import tempfile
+        import zlib
+        from implementation import v34_probe
+
+        sample = np.full((128, 128, 3), 140, dtype=np.uint8)
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bad_npz = Path(tmpdir) / 'corrupt.npz'
+            bad_bytes = b'not-a-valid-zip-archive'
+            bad_npz.write_bytes(bad_bytes)
+
+            # 1) Path outside ROOT is rejected by ordinary_file -> degrades cleanly to None.
+            v34_probe.reset_probe_cache()
+            with patch.object(v34_probe, '_resolve_v34_npz_path', return_value=bad_npz):
+                self.assertIsNone(v34_probe.probe_v34(sample))
+
+            # 2) SHA-256 / byte-length mismatch -> degrades cleanly to None.
+            v34_probe.reset_probe_cache()
+            with (
+                patch.object(v34_probe, '_resolve_v34_npz_path', return_value=bad_npz),
+                patch.object(v34_probe, 'ordinary_file', return_value=bad_npz),
+            ):
+                self.assertIsNone(v34_probe.probe_v34(sample))
+
+            # 3) Corrupted zip bytes reaching inspect_v34_npz raise real zipfile.BadZipFile -> None.
+            v34_probe.reset_probe_cache()
+            fake_pin = {'bytes': len(bad_bytes), 'sha256': hashlib.sha256(bad_bytes).hexdigest()}
+            with (
+                patch.object(v34_probe, '_resolve_v34_npz_path', return_value=bad_npz),
+                patch.object(v34_probe, 'ordinary_file', return_value=bad_npz),
+                patch.dict(v34_probe.V34_FILE, fake_pin),
+            ):
+                self.assertIsNone(v34_probe.probe_v34(sample))
+
+            # 4) Real zlib.error during archive decompression -> degrades cleanly to None.
+            v34_probe.reset_probe_cache()
+            with (
+                patch.object(v34_probe, '_resolve_v34_npz_path', return_value=bad_npz),
+                patch.object(v34_probe, 'ordinary_file', return_value=bad_npz),
+                patch.dict(v34_probe.V34_FILE, fake_pin),
+                patch('implementation.architecture_v34.inspect_v34_npz', side_effect=zlib.error('corrupt stream')),
+            ):
+                self.assertIsNone(v34_probe.probe_v34(sample))
+
+        v34_probe.reset_probe_cache()
+
+
+class Phase2TinyDarkCctvRetinexTests(unittest.TestCase):
+    """Phase 2 tiny dark CCTV Retinex gate relaxation with strict V3.4 and clean-control guards."""
+
+    def test_tiny_dark_cctv_crop_triggers_only_with_confirmed_v34_exposure(self):
+        from implementation.cast_dehaze import detect_low_light_glare, prepare_low_light_glare
+
+        # 36x32 dark CCTV crop (<48px min side, >=24px, 1152 pixels >= 256).
+        rng = np.random.default_rng(2026)
+        tiny_dark = np.clip(rng.normal(38.0, 9.0, (36, 32, 3)), 4, 95).astype(np.uint8)
+        tiny_dark[10:26, 8:24] = np.clip(rng.normal(28.0, 6.0, (16, 16, 3)), 2, 65).astype(np.uint8)
+
+        confirmed_probe = {'exposure': 0.65, 'blur': 0.40, 'noise': 0.15, 'codec_lr': 0.30, 'p_clean': 0.0}
+        det = detect_low_light_glare(tiny_dark, v34_probe=confirmed_probe)
+        self.assertIsNotNone(det)
+        self.assertEqual(det['route'], 'low_light_recovery')
+        self.assertFalse(det['gates']['glare_veiling'])
+
+        out, mask, route, rep = prepare_low_light_glare(tiny_dark, v34_probe=confirmed_probe)
+        self.assertIsNotNone(out)
+        self.assertEqual(route, 'low_light_recovery')
+        self.assertGreater(rep['after']['p50_core'], rep['before']['p50_core'])
+
+        # End-to-end prepare_photometric must also reach low_light_recovery on 24..47px dark CCTV crops.
+        from implementation.automatic_preparation import prepare_photometric
+        ph_out, ph_route, ph_rep, _ = prepare_photometric(tiny_dark, v34_probe=confirmed_probe)
+        self.assertIsNotNone(ph_out)
+        self.assertEqual(ph_route, 'low_light_recovery')
+        self.assertIsNotNone(ph_rep)
+        self.assertEqual(prepare_photometric(tiny_dark, v34_probe=None)[0], None)
+
+        # Negative controls: missing probe, low exposure, high p_clean, too tiny (<24px), or bright tiny crop.
+        self.assertIsNone(detect_low_light_glare(tiny_dark, v34_probe=None))
+        self.assertIsNone(detect_low_light_glare(tiny_dark, v34_probe={'exposure': 0.45, 'p_clean': 0.0}))
+        self.assertIsNone(detect_low_light_glare(tiny_dark, v34_probe={'exposure': 0.70, 'p_clean': 0.25}))
+        self.assertIsNone(detect_low_light_glare(tiny_dark[:20, :20], v34_probe=confirmed_probe))
+        bright_tiny = np.full((36, 32, 3), 165, dtype=np.uint8)
+        self.assertIsNone(detect_low_light_glare(bright_tiny, v34_probe=confirmed_probe))
+
+    def test_real_cctv01_03_unlock_retinex_while_clean_and_darkskin_remain_zero_fp(self):
+        from pathlib import Path
+        import cv2
+        from implementation import app as app_mod, capture_worker, cast_dehaze, v34_probe
+
+        root = Path(__file__).resolve().parents[2] / 'test_images'
+        rest_dir = root / 'internet_samples' / 'restoration'
+        cov_dir = root / 'internet_samples' / 'covering'
+
+        def _crop_and_detect(path: Path):
+            rgb = app_mod.decode_original(path.read_bytes())
+            recs = capture_worker.scan_face_records(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
+            if recs:
+                sr = sorted(recs, key=lambda r: (r['box'][0], r['box'][1]))
+                idx = app_mod._recommend_face_index(rgb, sr, rgb.shape[1], rgb.shape[0])
+                cx, cy, cw, ch = sr[idx]['crop']
+                crop = rgb[cy:cy + ch, cx:cx + cw]
+            else:
+                crop = rgb
+            vp = v34_probe.probe_v34(crop)
+            return cast_dehaze.detect_low_light_glare(crop, v34_probe=vp)
+
+        for name in ('cctv_01_overhead_lowres.png', 'cctv_02_airport_crop.jpg', 'cctv_03_airport_duo.jpg'):
+            p = rest_dir / name
+            if p.is_file():
+                with self.subTest(positive=name):
+                    det = _crop_and_detect(p)
+                    self.assertIsNotNone(det)
+                    self.assertEqual(det['route'], 'low_light_recovery')
+
+        neg_paths = [
+            rest_dir / 'clean_01_studio_male.jpg',
+            rest_dir / 'clean_02_studio_glasses_female.jpg',
+            rest_dir / 'clean_03_uniform_glasses.jpg',
+            rest_dir / 'clean_04_child_bw.jpg',
+            rest_dir / 'clean_05_elderly_glasses.jpg',
+            cov_dir / 'control_02_darkskin_beard.jpg',
+        ]
+        for p in neg_paths:
+            if p.is_file():
+                with self.subTest(negative=p.name):
+                    self.assertIsNone(_crop_and_detect(p))
+
+    def test_v34_probe_load_bundle_sets_loaded_only_after_bundle_ready(self):
+        import threading
+        from unittest.mock import patch
+        from implementation import v34_probe
+
+        v34_probe.reset_probe_cache()
+        entered = threading.Event()
+        checked = threading.Event()
+        release = threading.Event()
+        orig_resolve = v34_probe._resolve_v34_npz_path
+
+        def _slow_resolve():
+            entered.set()
+            release.wait(timeout=5.0)
+            return orig_resolve()
+
+        results = [None, None]
+        seen_loaded_during_init = []
+
+        def _t1():
+            results[0] = v34_probe._load_probe_bundle()
+
+        def _t2():
+            entered.wait(timeout=5.0)
+            seen_loaded_during_init.append(bool(v34_probe._LOADED))
+            checked.set()
+            results[1] = v34_probe._load_probe_bundle()
+
+        try:
+            with patch.object(v34_probe, '_resolve_v34_npz_path', side_effect=_slow_resolve):
+                th1 = threading.Thread(target=_t1)
+                th2 = threading.Thread(target=_t2)
+                th1.start()
+                th2.start()
+                entered.wait(timeout=5.0)
+                checked.wait(timeout=5.0)
+                release.set()
+                th1.join(timeout=15.0)
+                th2.join(timeout=15.0)
+            self.assertEqual(seen_loaded_during_init, [False])
+            self.assertIsNotNone(results[0])
+            self.assertIs(results[0], results[1])
+            self.assertTrue(v34_probe._LOADED)
+        finally:
+            v34_probe.reset_probe_cache()
+
+
+class Phase3HotPathTests(unittest.TestCase):
+    """Phase 3 P3-R1a hot-path engineering, System 1 fast-path, face_record handoff, and GT parity tests."""
+
+    def test_fast_median_axis1_and_coarse_grid_match_numpy_median_exact(self):
+        rng = np.random.default_rng(31415)
+        for cols in (1, 3, 4, 7, 12, 31, 64):
+            arr = rng.normal(12.0, 4.5, size=(17, cols)).astype(np.float32)
+            np.testing.assert_allclose(
+                automatic._fast_median_axis1(arr),
+                np.median(arr, axis=1),
+                rtol=1e-6,
+                atol=1e-6,
+            )
+
+        # Verify coarse_grid and grid_phase recover exact periodic profile with _fast_median_axis1.
+        profile = np.full(240, 1.0, dtype=np.float32)
+        profile[3::12] = 18.0
+        score, period = automatic.coarse_grid(profile)
+        self.assertGreaterEqual(score, 3.0)
+        self.assertIsNotNone(period)
+        self.assertAlmostEqual(period, 12.0, delta=0.35)
+        phase = automatic.grid_phase(profile, 12.0)
+        self.assertAlmostEqual(phase, 3.0, delta=0.35)
+
+    def test_dct_status_and_macroblock_gate_never_run_throwaway_fbcnn(self):
+        rng = np.random.default_rng(808)
+        patch_rgb = rng.integers(30, 225, (128, 128, 3), dtype=np.uint8)
+        fake_det = {
+            'suspected': True,
+            'period': 8,
+            'periods': [8],
+            'offset_x': 0,
+            'offset_y': 0,
+            'regional': False,
+            'mask_fraction': 1.0,
+            'is_flat_privacy_mosaic': False,
+            'mask': np.ones((128, 128), dtype=bool),
+        }
+        seen_allow_fbcnn = []
+
+        def _spy_mb(src, origin=(0, 0), mask=None, allow_fbcnn=True, dc=None):
+            seen_allow_fbcnn.append(allow_fbcnn)
+            return src.copy(), {'method': 'hevc_8x8'}, {}
+
+        with (
+            patch.object(automatic, 'is_multipixel_block_noise', return_value=False),
+            patch.object(automatic, 'is_posterized_block_patch', return_value=False),
+            patch.object(automatic, 'detect_macroblocking', return_value=fake_det),
+            patch.object(automatic, '_wang_bovik_dct_check', return_value=False),
+            patch.object(automatic, 'is_dct_macroblocking_patch', return_value=False),
+            patch.object(automatic, 'prepare_macroblock_deblocking', side_effect=_spy_mb),
+        ):
+            is_dct, full_v = automatic._full_frame_dct_status(patch_rgb)
+            self.assertTrue(is_dct)
+            self.assertTrue(full_v)
+            self.assertTrue(automatic._det_passes_macroblock_gate(patch_rgb, fake_det))
+
+        self.assertEqual(seen_allow_fbcnn, [False, False])
+
+    def test_rotated_pixelation_gated_by_fast_prescreen_and_detects_genuine_rotations(self):
+        # 1) Smooth non-rotated portrait skips picture_pixelation completely (0 calls).
+        yy, xx = np.mgrid[0:256, 0:256].astype(np.float32)
+        clean = np.stack([
+            np.clip(145 + 35 * np.sin(xx / 36.0) + 20 * np.cos(yy / 42.0), 0, 255),
+            np.clip(120 + 25 * np.cos(xx / 44.0) + 18 * np.sin(yy / 38.0), 0, 255),
+            np.clip(105 + 20 * np.sin((xx + yy) / 52.0), 0, 255),
+        ], axis=-1).astype(np.uint8)
+        self.assertFalse(automatic._suspect_rotated_grid(clean))
+        with patch.object(automatic, 'picture_pixelation', side_effect=AssertionError('should not run')) as mock_pp:
+            res = automatic.rotated_pixelation(clean)
+        self.assertEqual(res, (None, None, {}))
+        mock_pp.assert_not_called()
+
+        # 2) Genuine rotated mosaic (15 deg) passes prescreen and recovers exact correction angle.
+        rng = np.random.default_rng(1515)
+        base = Image.new('RGB', (256, 256), (115, 112, 109))
+        tiles = Image.fromarray(rng.integers(20, 230, (20, 18, 3), dtype=np.uint8))
+        base.paste(tiles.resize((144, 160), Image.Resampling.NEAREST), (56, 48))
+        rot15 = np.asarray(base.rotate(15, resample=Image.Resampling.BICUBIC, fillcolor=(115, 112, 109)))
+        self.assertTrue(automatic._suspect_rotated_grid(rot15))
+        prepared, rep, _ = automatic.rotated_pixelation(rot15)
+        self.assertIsNotNone(prepared)
+        self.assertEqual(rep['rotation_correction_degrees'], -15)
+
+    def test_debanding_irregular_mosaic_guard_caps_scale_at_256px(self):
+        from implementation import debanding
+
+        # Construct a 640x512 quantized banded gradient so _analyze_banding reaches irregular_mosaic_mask.
+        yy, xx = np.mgrid[0:512, 0:640]
+        grad = ((xx // 20) * 8 + 40).clip(0, 255).astype(np.uint8)
+        banded = np.stack([grad, grad, grad], axis=-1)
+
+        seen_shapes = []
+        orig_irr = debanding.irregular_mosaic_mask
+
+        def _spy_irr(arr):
+            seen_shapes.append(arr.shape[:2])
+            return orig_irr(arr)
+
+        with patch.object(debanding, 'irregular_mosaic_mask', side_effect=_spy_irr):
+            debanding.detect_banding(banded)
+
+        self.assertGreaterEqual(len(seen_shapes), 1)
+        for h_s, w_s in seen_shapes:
+            self.assertLessEqual(max(h_s, w_s), 256)
+
+    def test_system1_clean_fast_path_zero_fp_and_face_record_handoff(self):
+        from pathlib import Path
+        from PIL import ImageOps
+        from implementation import v34_probe
+
+        # 1) Direct prepare_automatic / prepare with face_record=dict and clean probe skips decide().
+        rng = np.random.default_rng(123)
+        yy, xx = np.mgrid[0:192, 0:192].astype(np.float32)
+        rad = np.hypot((xx - 96.0) / 70.0, (yy - 96.0) / 84.0)
+        clean_syn = np.stack([
+            np.clip(180.0 - 45.0 * rad + rng.normal(0.0, 2.5, (192, 192)), 0, 255),
+            np.clip(145.0 - 35.0 * rad + rng.normal(0.0, 2.5, (192, 192)), 0, 255),
+            np.clip(122.0 - 28.0 * rad + rng.normal(0.0, 2.5, (192, 192)), 0, 255),
+        ], axis=-1).astype(np.uint8)
+        clean_probe = {'exposure': 0.01, 'blur': 0.02, 'noise': 0.01, 'codec_lr': 0.01, 'p_clean': 0.94}
+        rec = {'box': [32, 24, 120, 140], 'score': 0.95}
+
+        with patch.object(automatic, '_decide_on_canvas', side_effect=AssertionError('fast-path should skip')):
+            cand, meta, ev, dec = automatic.prepare_automatic(
+                clean_syn, clean_syn, None, None, v34_probe=clean_probe, face_record=rec
+            )
+        self.assertIsNone(cand)
+        self.assertIsNone(meta)
+        self.assertEqual(ev, {})
+        self.assertEqual(dec['route'], 'direct')
+        self.assertEqual(dec['reason'], 'clean_control_v34_fast_path')
+        self.assertEqual(dec['detected_face_rectangle'], rec['box'])
+
+        # 2) prepare_source with clean prescreen skips prepare_mosaics completely.
+        pre = automatic.structural_mosaic_prescreen(clean_syn, clean_syn, None, v34_probe=clean_probe)
+        self.assertFalse(pre['need_heavy_mosaic'])
+        with patch.object(automatic, 'prepare_mosaics', side_effect=AssertionError('should skip mosaics')):
+            out, rep, src_ev = automatic.prepare_source(clean_syn, v34_probe=clean_probe, prescreen=pre)
+        self.assertEqual((out, rep, src_ev), (None, None, {}))
+
+        # 3) Real clean studio portraits produce 0 FP on structural_mosaic_prescreen + clean fast-path.
+        rest_dir = Path(__file__).resolve().parents[2] / 'test_images' / 'internet_samples' / 'restoration'
+        for name in (
+            'clean_01_studio_male.jpg',
+            'clean_02_studio_glasses_female.jpg',
+            'clean_03_uniform_glasses.jpg',
+            'clean_05_elderly_glasses.jpg',
+        ):
+            p = rest_dir / name
+            if not p.is_file():
+                continue
+            with self.subTest(clean=name):
+                rgb = np.asarray(ImageOps.exif_transpose(Image.open(p)).convert('RGB'))
+                pr = v34_probe.probe_v34(rgb, include_photo=True)
+                self.assertTrue(v34_probe.is_clean_control_probe(pr))
+                ps = automatic.structural_mosaic_prescreen(rgb, rgb, None, v34_probe=pr)
+                self.assertFalse(ps['need_heavy_mosaic'])
+
+    def test_gt_face_1_4_5_preserve_768_9_scale_and_route_without_drift(self):
+        from pathlib import Path
+        from PIL import ImageOps
+        from implementation.conditioning_v2 import compute_v2_conditioning_numpy
+        from implementation.runtime import prepare_crop
+
+        test_dir = Path(__file__).resolve().parents[2] / 'test_images'
+        checked = 0
+        for name in (
+            'face 1 - full breakdown.png',
+            'face 4 - raw sensor.png',
+            'face 5 - raw sensor.png',
+        ):
+            p = test_dir / name
+            if not p.is_file():
+                continue
+            checked += 1
+            with self.subTest(gt_fixture=name):
+                rgb = np.asarray(ImageOps.exif_transpose(Image.open(p)).convert('RGB'))
+                prepared, report, evidence = automatic.prepare_source(rgb)
+                self.assertIsNotNone(prepared)
+                self.assertIsNotNone(report)
+                self.assertLessEqual(max(report['analysis_size']), 1024)
+                self.assertGreaterEqual(max(report['analysis_size']), 600)
+                mask = np.asarray(Image.open(io.BytesIO(evidence['full-image-pixelation-mask.png']))) > 0
+                np.testing.assert_array_equal(prepared[~mask], rgb[~mask])
+                prep_256, _, _, _ = prepare_crop(prepared)
+                v2c = compute_v2_conditioning_numpy(prep_256.astype(np.float32) / 255.0, np=np)
+                self.assertGreaterEqual(float(v2c['g_blur']), 0.85)
+        if checked == 0:
+            self.skipTest('GT face 1/4/5 fixtures missing')
+
+    def test_app_step1_inspect_hands_off_face_record_to_step2_restore(self):
+        import asyncio
+        from implementation import app as app_mod, capture_api
+
+        # Create a 280x280 synthetic portrait and prime Step 1 inspect cache directly.
+        yy, xx = np.mgrid[0:280, 0:280].astype(np.float32)
+        img = np.stack([
+            np.clip(155 + 25 * np.sin(xx / 28.0), 0, 255),
+            np.clip(125 + 20 * np.cos(yy / 32.0), 0, 255),
+            np.clip(110 + 15 * np.sin((xx + yy) / 36.0), 0, 255),
+        ], axis=-1).astype(np.uint8)
+        raw = automatic.png(img)
+        fake_rec = [{
+            'box': [70, 50, 140, 160],
+            'crop': [25, 0, 230, 260],
+            'score': 0.94,
+            'roll_deg': 0.5,
+            'landmarks': [[110.0, 105.0], [170.0, 105.0], [140.0, 135.0], [116.0, 168.0], [164.0, 168.0]],
+        }]
+        sha_key = app_mod.digest(raw)
+        with app_mod._STEP1_FACE_RECORDS_LOCK:
+            app_mod._STEP1_FACE_RECORDS[sha_key] = fake_rec
+
+        class _FakeUpload:
+            def __init__(self, data):
+                self._data = data
+
+            async def read(self, _limit=-1):
+                return self._data
+
+        dummy_out = (None, automatic.png(np.zeros((256, 256, 3), dtype=np.uint8)), {})
+        try:
+            with (
+                patch.object(app_mod, 'one_forward', return_value=dummy_out),
+                patch.object(
+                    capture_api,
+                    '_run_face_worker',
+                    side_effect=AssertionError('Step 2 must reuse Step 1 cached face_record without worker scan'),
+                ),
+            ):
+                res = asyncio.run(
+                    app_mod.restore(
+                        file=_FakeUpload(raw),
+                        input_review='picture_upload',
+                        restoration='auto',
+                        preparation_mode='automatic',
+                        protect_mask=None,
+                        apply_mask=None,
+                        radius=1.0,
+                        preview_id='',
+                        confirmed=False,
+                        include_bundle=False,
+                        model=app_mod.DEFAULT_MODEL,
+                    )
+                )
+            self.assertEqual(res['metadata']['automatic_preparation']['face_detection'], 'step1_handoff')
+        finally:
+            with app_mod._STEP1_FACE_RECORDS_LOCK:
+                app_mod._STEP1_FACE_RECORDS.pop(sha_key, None)
+
+    def test_audit_hardening_rotated_angles_fast_median_and_deepcopy_cache(self):
+        from implementation import app as app_mod
+
+        # 1) _fast_median_axis1 handles 0-col (NaN) and 1-col (independent float64 copy) cleanly.
+        empty_m = automatic._fast_median_axis1(np.zeros((3, 0), dtype=np.float32))
+        self.assertEqual(empty_m.shape, (3,))
+        self.assertTrue(np.isnan(empty_m).all())
+        one_src = np.array([[4.0], [9.0]], dtype=np.float32)
+        one_m = automatic._fast_median_axis1(one_src)
+        one_m[0] = -1.0
+        self.assertEqual(float(one_src[0, 0]), 4.0)
+
+        # 2) _suspect_rotated_grid & rotated_pixelation recover 21-deg and 27-deg rotated mosaics.
+        rng = np.random.default_rng(2127)
+        base = Image.new('RGB', (256, 256), (115, 112, 109))
+        tiles = Image.fromarray(rng.integers(20, 230, (20, 18, 3), dtype=np.uint8))
+        base.paste(tiles.resize((144, 160), Image.Resampling.NEAREST), (56, 48))
+        for deg in (21, 27):
+            with self.subTest(deg=deg):
+                rot = np.asarray(base.rotate(deg, resample=Image.Resampling.BICUBIC, fillcolor=(115, 112, 109)))
+                self.assertTrue(automatic._suspect_rotated_grid(rot))
+                prep, rep, _ = automatic.rotated_pixelation(rot)
+                self.assertIsNotNone(prep)
+                self.assertEqual(rep['rotation_correction_degrees'], -deg)
+
+        # 3) _STEP1_FACE_RECORDS deep-copies nested lists so mutating caller boxes cannot corrupt cache.
+        import copy
+        orig = [{'box': [10, 20, 80, 90], 'crop': [0, 0, 100, 110], 'score': 0.9}]
+        with app_mod._STEP1_FACE_RECORDS_LOCK:
+            app_mod._STEP1_FACE_RECORDS['audit-key'] = copy.deepcopy(orig)
+        try:
+            orig[0]['box'][0] = 999
+            with app_mod._STEP1_FACE_RECORDS_LOCK:
+                self.assertEqual(app_mod._STEP1_FACE_RECORDS['audit-key'][0]['box'][0], 10)
+        finally:
+            with app_mod._STEP1_FACE_RECORDS_LOCK:
+                app_mod._STEP1_FACE_RECORDS.pop('audit-key', None)
+
+
+
+

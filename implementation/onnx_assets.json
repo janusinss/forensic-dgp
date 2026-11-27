@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "component": "auto-mode-onnx-assets",
+  "assets": {
+    "scrfd_2_5g": {
+      "filename": "det_2.5g.onnx",
+      "subdir": "detection",
+      "size": 3292009,
+      "sha256": "041f73f47371333d1d17a6fee6c8ab4e6aecabefe398ff32cca4e2d5eaee0af9"
+    },
+    "ediffiqa_tiny": {
+      "filename": "ediffiqa_tiny_jun2024.onnx",
+      "subdir": "detection",
+      "size": 7272678,
+      "sha256": "9426c899cc0f01665240cb7d9e7f98e18e24e456c178326c771a43da289bfc6a"
+    },
+    "bisenet_r18_qdq": {
+      "filename": "bisenet_resnet18_qdq_int8.onnx",
+      "subdir": "occlusion",
+      "size": 13414139,
+      "sha256": "2b55214a8867f0f4ea6c843a18ba6ca96f7c37e281f9526edf04d2b130c09e28"
+    },
+    "ofiq_occlusion_qdq": {
+      "filename": "ofiq_face_occlusion_qdq_int8.onnx",
+      "subdir": "occlusion",
+      "size": 14415696,
+      "sha256": "567b851cf73ffb77e4d7d94c6463e9ad995cadf41e9bdd2f269d042949098d66"
+    },
+    "lms_2d106det": {
+      "filename": "2d106det.onnx",
+      "subdir": "occlusion",
+      "size": 5030888,
+      "sha256": "f001b856447c413801ef5c42091ed0cd516fcd21f2d6b79635b1e733a7109dbf"
+    }
+  }
+}

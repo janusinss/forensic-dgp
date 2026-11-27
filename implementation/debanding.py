@@ -110,8 +110,17 @@ def _analyze_banding(source):
     if float(plateau_px.mean()) < 0.08 or float(smooth_base.mean()) < 0.12:
         return None
 
-    # Exclude irregular polygonal/Voronoi privacy mosaics cleanly.
-    if float(irregular_mosaic_mask(arr).mean()) >= 0.04:
+    # Exclude irregular polygonal/Voronoi privacy mosaics cleanly (capped at <=256px for CPU latency).
+    if max(height, width) > 256:
+        irr_scale = 256.0 / float(max(height, width))
+        irr_arr = cv2.resize(
+            arr,
+            (max(16, int(round(width * irr_scale))), max(16, int(round(height * irr_scale)))),
+            interpolation=cv2.INTER_AREA,
+        )
+    else:
+        irr_arr = arr
+    if float(irregular_mosaic_mask(irr_arr).mean()) >= 0.04:
         return None
 
     sm_h = smooth_base[:, :-1] & smooth_base[:, 1:] & (~strong_edge[:, :-1]) & (~strong_edge[:, 1:])

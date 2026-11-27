@@ -20,18 +20,20 @@ from scipy.ndimage import (
 
 from .antialiasing import prepare_antialiasing
 from .blur_match import estimate_tiles, estimate_tiles_normalized
-from .cast_dehaze import prepare_cast_dehaze
+from .cast_dehaze import prepare_cast_dehaze, prepare_low_light_glare
 from .color_bleeding import prepare_color_bleeding
 from .debanding import detect_banding, prepare_debanding
 from .deringing import prepare_deringing
 from .irregular_mosaic import irregular_mosaic_mask
 from .macroblock_deblocking import (
+    _wang_bovik_dct_check,
     detect_macroblocking,
     is_dct_macroblocking_patch,
     is_multipixel_block_noise,
     is_posterized_block_patch,
     prepare_macroblock_deblocking,
 )
+from .motion_blur import prepare_motion_deblur
 from .noise_denoise import prepare_noise_denoise
 from .perspective_mosaic import perspective_mosaic_mask
 from .preparation import build_preview, json_bytes, png, sha
@@ -43,6 +45,7 @@ from .scanline_cleanup import (
 )
 from .softened_grid import softened_mask, softened_mask_with_confidence
 from .tiny_grid import tiny_grid_mask
+from .v34_probe import is_clean_control_probe, photometric_damping_factor, stage_reflection_accept
 
 PIXELATION_RADIUS_AT256 = 3.0
 PIXELATION_CANDIDATES_AT256 = (2.5, 3.0, 3.5)
@@ -56,35 +59,76 @@ COMPOSABLE_STAGE_ORDER = (
 )
 
 
+def _max_phase_mean(profile, period):
+    """Return max phase mean across `range(period)` without inner Python slicing."""
+    n = profile.size
+    q, rem = divmod(n, period)
+    if rem == 0:
+        return float(profile.reshape(q, period).mean(axis=0).max())
+    sums = profile[:q * period].reshape(q, period).sum(axis=0, dtype=np.float64)
+    sums[:rem] += profile[q * period:]
+    counts = np.full(period, q, dtype=np.float64)
+    counts[:rem] += 1.0
+    return float((sums / counts).max())
+
+
+def _fast_median_axis1(arr):
+    """Fast row-wise median using np.partition directly (5-8x faster than np.median wrapper)."""
+    n = arr.shape[1]
+    if n == 0:
+        return np.full((arr.shape[0],), np.nan, dtype=np.float64)
+    if n == 1:
+        return arr[:, 0].astype(np.float64, copy=True)
+    mid = n // 2
+    if n % 2 == 1:
+        return np.partition(arr, mid, axis=1)[:, mid]
+    part = np.partition(arr, (mid - 1, mid), axis=1)
+    return 0.5 * (part[:, mid - 1] + part[:, mid])
+
+
 def coarse_grid(profile):
     """Find repeated boundaries with fractional spacing after image resizing."""
     count = profile.size
-    coordinates = np.arange(count)
-    baseline = max(.35, float(profile.mean()))
-    if float(profile.mean()) < .25:
+    mean_val = float(profile.mean())
+    baseline = max(.35, mean_val)
+    if mean_val < .25:
         return (0., None)
     # Use spectral peaks to propose spacings, then verify the edge strength
     # and the contrast with the middles of blocks in the spatial profile.
     # The median prevents a single prominent facial edge from deciding.
     fft_size = min(4096, 8 * count)
-    spectrum = np.abs(np.fft.rfft((profile - profile.mean()) * np.hanning(count), n=fft_size))
+    spectrum = np.abs(np.fft.rfft((profile - mean_val) * np.hanning(count), n=fft_size))
     peaks = np.flatnonzero((spectrum[1:-1] > spectrum[:-2]) & (spectrum[1:-1] >= spectrum[2:])) + 1
     max_period = min(128, count / 4)
     peaks = peaks[(peaks >= fft_size / max_period) & (peaks <= fft_size / 3)]
+    if not peaks.size:
+        return (0., None)
+    top_peaks = peaks[np.argsort(spectrum[peaks])[::-1][:12]]
+    max_idx = count - 1
     candidates = []
-    for peak in sorted(peaks, key=lambda index: spectrum[index], reverse=True)[:12]:
+    for peak in top_peaks:
         for frequency in (peak - .5, peak, peak + .5):
             period = fft_size / frequency
-            centers = np.arange(0, period, .5)[:, None] + period * np.arange(int(count / period))
-            if centers.shape[1] < 4:
+            n_steps = int(count / period)
+            if n_steps < 4:
                 continue
-            centers = centers[centers[:, -1] <= count - 1]
+            centers = np.arange(0, period, .5)[:, None] + period * np.arange(n_steps)
+            centers = centers[centers[:, -1] <= max_idx]
             if not centers.size:
                 continue
-            edges = np.interp(centers, coordinates, profile)
-            middles = np.interp((centers[:, 1:] + centers[:, :-1]) / 2, coordinates, profile)
-            strength = np.median(edges, axis=1) / baseline
-            contrast = 1 + (np.median(edges, axis=1) - np.median(middles, axis=1)) / baseline
+            idx = centers.astype(np.intp)
+            frac = centers - idx
+            idx1 = np.minimum(idx + 1, max_idx)
+            edges = profile[idx] + frac * (profile[idx1] - profile[idx])
+            mids = (centers[:, 1:] + centers[:, :-1]) * 0.5
+            midx = mids.astype(np.intp)
+            mfrac = mids - midx
+            midx1 = np.minimum(midx + 1, max_idx)
+            middles = profile[midx] + mfrac * (profile[midx1] - profile[midx])
+            med_e = _fast_median_axis1(edges)
+            med_m = _fast_median_axis1(middles)
+            strength = med_e / baseline
+            contrast = 1.0 + (med_e - med_m) / baseline
             score = float(np.minimum(strength, contrast).max())
             candidates.append((score, period))
     best = max((score for score, _ in candidates), default=0.)
@@ -119,11 +163,12 @@ def pixelation_signal(source, face, *, _gray=None):
     if min(gray.shape) < 24 or float(gray.std()) < 5:
         return report
     profiles = [np.abs(np.diff(gray, axis=axis)).mean(axis=1-axis) for axis in (0, 1)]
+    profile_denoms = [max(float(profile.mean()), .01) for profile in profiles]
     candidates = []
     regular_limit = min(33, min(gray.shape) // 6) if min(gray.shape) >= 48 else 0
     for period in range(3, regular_limit + 1):
-        scores = [max(float(profile[phase::period].mean()) for phase in range(period)) /
-                  max(float(profile.mean()), .01) for profile in profiles]
+        scores = [_max_phase_mean(profile, period) / denom
+                  for profile, denom in zip(profiles, profile_denoms)]
         candidates.append((min(scores), period))
     best = max((score for score, _ in candidates), default=0.)
     report['score'] = round(best, 3)
@@ -171,7 +216,7 @@ def grid_phase(profile, period):
     if not valid.any():
         return None
     values = np.interp(seams[valid], np.arange(profile.size), profile)
-    return positions[valid][np.argmax(np.median(values, axis=1))]
+    return positions[valid][np.argmax(_fast_median_axis1(values))]
 
 
 def supported_seams(gradient, period, axis, phase=None):
@@ -208,7 +253,7 @@ def regional_block_support(source, *, native_grid=True):
     rgb = source.astype(np.float32)
     vertical = np.abs(np.diff(rgb, axis=0)).mean(axis=2)
     horizontal = np.abs(np.diff(rgb, axis=1)).mean(axis=2)
-    gray = np.asarray(Image.fromarray(source).convert('L'), dtype=np.float32)
+    gray = cv2.cvtColor(source, cv2.COLOR_RGB2GRAY).astype(np.float32)
     max_grid = 8 if max(height, width) > 960 else 12
     for index, side in enumerate(sides):
         support = fine if index < len(sides) // 2 else coarse
@@ -323,23 +368,33 @@ def _det_passes_macroblock_gate(source, det, origin=(0, 0), region_mask=None):
         return True
     if det.get('regional') and float(det.get('mask_fraction', 0.0)) < 0.25:
         return False
-    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, mask=region_mask, allow_fbcnn=True)
+    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, mask=region_mask, allow_fbcnn=False)
     return cleaned is not None
+
+
+def _full_frame_dct_status(source, origin=(0, 0)):
+    """Return (is_dct, is_full_frame_verified) using a single detect_macroblocking pass."""
+    if not isinstance(source, np.ndarray) or source.ndim != 3 or source.shape[2] != 3 or source.dtype != np.uint8:
+        return False, False
+    if min(source.shape[:2]) < 32:
+        return False, False
+    if is_multipixel_block_noise(source) or is_posterized_block_patch(source):
+        return False, False
+    det = detect_macroblocking(source, origin=origin)
+    if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
+        return False, False
+    eval_mask = det['mask'] if det.get('regional') else None
+    if _wang_bovik_dct_check(source, det, eval_mask):
+        return True, not bool(det.get('regional'))
+    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, allow_fbcnn=False)
+    if cleaned is not None:
+        return True, not bool(det.get('regional'))
+    return False, False
 
 
 def _is_genuine_dct_macroblocking(source, origin=(0, 0)):
     """Return True when source shows non-flat 8x8/16x16 DCT macroblocking."""
-    if min(source.shape[:2]) < 32:
-        return False
-    if is_multipixel_block_noise(source) or is_posterized_block_patch(source):
-        return False
-    det = detect_macroblocking(source, origin=origin)
-    if det is None or not det.get('suspected') or det.get('is_flat_privacy_mosaic'):
-        return False
-    if is_dct_macroblocking_patch(source, origin=origin):
-        return True
-    cleaned, _, _ = prepare_macroblock_deblocking(source, origin=origin, allow_fbcnn=True)
-    return cleaned is not None
+    return _full_frame_dct_status(source, origin=origin)[0]
 
 
 def _component_has_localized_mosaic_contrast(source, comp_mask, comp_bbox):
@@ -384,7 +439,7 @@ def _component_has_localized_mosaic_contrast(source, comp_mask, comp_bbox):
     return in_excess >= max(2.0, 1.8 * max(0.5, ext_excess))
 
 
-def _strip_dct_macroblocking_components(source, mask):
+def _strip_dct_macroblocking_components(source, mask, *, _full_dct_verified=False):
     """Remove genuine DCT macroblocking regions from a privacy-mosaic mask."""
     if min(source.shape[:2]) < 32 or not mask.any():
         return mask
@@ -414,6 +469,9 @@ def _strip_dct_macroblocking_components(source, mask):
                 continue
             if _component_has_localized_mosaic_contrast(source, comp_mask, comp_bbox):
                 continue
+        if _full_dct_verified:
+            cleaned_mask[comp_mask] = False
+            continue
         if is_dct_macroblocking_patch(source, region_mask=comp_mask):
             cleaned_mask[comp_mask] = False
             continue
@@ -498,7 +556,144 @@ def _blur_stats_from_tiles(tiles, image_size, face):
     return int(face_samples.size), int(outside_samples.size), face_blur, background_blur, clear
 
 
-def _hf_deficit_stats(source, face):
+def detect_synthetic_censor_bar(source, face_box=None):
+    """Detect crisp uniform solid-black/colored rectangular eye/face censor bars.
+
+    Returns ``(bar_mask_bool, report)`` when a synthetic rectangular censor bar is confirmed,
+    or ``(None, None)`` otherwise. Designed for zero false positives on dark backgrounds,
+    letterboxing, dark clothing, or natural sunglasses.
+    """
+    if (
+        not isinstance(source, np.ndarray)
+        or source.ndim != 3
+        or source.shape[2] != 3
+        or source.dtype != np.uint8
+    ):
+        return None, None
+    h, w = source.shape[:2]
+    if min(h, w) < 48:
+        return None, None
+
+    arr = source.astype(np.int16)
+    dh = np.abs(np.diff(arr, axis=1)).max(axis=2)
+    dv = np.abs(np.diff(arr, axis=0)).max(axis=2)
+    flat = np.zeros((h, w), dtype=bool)
+    flat[1:-1, 1:-1] = (
+        (dh[1:-1, :-1] <= 3)
+        & (dh[1:-1, 1:] <= 3)
+        & (dv[:-1, 1:-1] <= 3)
+        & (dv[1:, 1:-1] <= 3)
+    )
+    # Candidate 1: near-pure-black solid bars (handles slight rotation & JPEG edge ringing, e.g. mosaic_09).
+    dark_solid = source.max(axis=2) <= 24
+    # Candidate 2: solid uniform flat color patches (excluding pure white studio backgrounds).
+    mid_flat = flat & ~dark_solid & (source.min(axis=2) <= 238)
+
+    total_area = float(h * w)
+    min_px = max(128, int(0.012 * total_area))
+    if face_box is not None:
+        _, _, fw_b, fh_b = [int(v) for v in face_box]
+        min_px = max(min_px, int(0.06 * max(1, fw_b * fh_b)))
+    max_px = int(0.35 * total_area)
+    bar_mask = np.zeros((h, w), dtype=bool)
+    bar_bounds = []
+
+    for cand_kind, cand_map in (('solid_black', dark_solid), ('solid_color', mid_flat)):
+        if int(cand_map.sum()) < min_px:
+            continue
+        comps, num = label(cand_map)
+        if num == 0:
+            continue
+        for cid, sl in enumerate(find_objects(comps), start=1):
+            if sl is None:
+                continue
+            y0, y1 = sl[0].start, sl[0].stop
+            x0, x1 = sl[1].start, sl[1].stop
+            bw, bh = x1 - x0, y1 - y0
+            if bw < 16 or bh < 6:
+                continue
+            # Reject letterboxing / border margins touching opposite sides or >85% of a border.
+            touches_lr = (x0 <= 2) and (x1 >= w - 2)
+            touches_tb = (y0 <= 2) and (y1 >= h - 2)
+            if touches_lr or touches_tb:
+                continue
+            touches_any = int(x0 <= 2) + int(x1 >= w - 2) + int(y0 <= 2) + int(y1 >= h - 2)
+            if touches_any >= 2:
+                continue
+            comp_local = comps[sl] == cid
+            area = int(comp_local.sum())
+            if not (min_px <= area <= max_px):
+                continue
+            fill = area / max(1.0, float(bw * bh))
+            aspect = bw / max(1.0, float(bh))
+            is_bar_shape = (
+                (fill >= 0.72 and aspect >= 1.55 and bh <= 0.45 * h)
+                or (fill >= 0.88 and 0.65 <= aspect <= 8.0 and touches_any == 0)
+            )
+            if not is_bar_shape and cand_kind == 'solid_black' and fill >= 0.45 and aspect >= 1.45 and bh <= 0.40 * h and touches_any == 0:
+                # Check oriented bounding rectangle for slightly rotated eye censor bars.
+                ys_c, xs_c = np.nonzero(comp_local)
+                pts = np.column_stack((xs_c, ys_c)).astype(np.float32)
+                (_, (rw, rh), _) = cv2.minAreaRect(pts)
+                rot_area = max(1.0, float(rw * rh))
+                rot_fill = area / rot_area
+                rot_aspect = max(rw, rh) / max(1.0, min(rw, rh))
+                if rot_fill >= 0.68 and rot_aspect >= 1.55:
+                    is_bar_shape = True
+            if not is_bar_shape:
+                continue
+            patch_rgb = source[sl][comp_local].astype(np.float32)
+            comp_std = float(patch_rgb.std(axis=0).max())
+            comp_mean = patch_rgb.mean(axis=0)
+            if cand_kind == 'solid_black':
+                if comp_mean.max() > 11.0 or comp_std > 6.5:
+                    continue
+                if float((patch_rgb.max(axis=1) <= 14.0).mean()) < 0.75:
+                    continue
+            else:
+                if comp_std > 3.0:
+                    continue
+            # Measure crisp synthetic step contrast along the 2px outer perimeter.
+            py0, py1 = max(0, y0 - 2), min(h, y1 + 2)
+            px0, px1 = max(0, x0 - 2), min(w, x1 + 2)
+            sub_mask = np.zeros((py1 - py0, px1 - px0), dtype=bool)
+            sub_mask[y0 - py0 : y1 - py0, x0 - px0 : x1 - px0] = comp_local
+            ring = binary_dilation(sub_mask, iterations=2) & ~sub_mask
+            if int(ring.sum()) < 16:
+                continue
+            ring_rgb = source[py0:py1, px0:px1][ring].astype(np.float32)
+            border_step = float(np.mean(np.abs(ring_rgb - comp_mean[None, :])))
+            min_step = 28.0 if cand_kind == 'solid_black' else 24.0
+            if border_step < min_step or border_step < 5.0 * max(1.0, comp_std):
+                continue
+            # Require upper/mid-portrait placement when no face box is given, or overlap with face box.
+            if face_box is not None:
+                fx, fy, fw, fh = [int(v) for v in face_box]
+                ix0, iy0 = max(fx, x0), max(fy, y0)
+                ix1, iy1 = min(fx + fw, x1), min(fy + fh, y1)
+                inter = max(0, ix1 - ix0) * max(0, iy1 - iy0)
+                if inter < 0.25 * (bw * bh):
+                    continue
+            else:
+                cy_frac = (y0 + y1) * 0.5 / float(h)
+                cx_frac = (x0 + x1) * 0.5 / float(w)
+                if not (0.12 <= cy_frac <= 0.85 and 0.12 <= cx_frac <= 0.88):
+                    continue
+            bar_mask[y0:y1, x0:x1] |= comp_local
+            bar_bounds.append([int(x0), int(y0), int(bw), int(bh)])
+
+    if not bool(bar_mask.any()):
+        return None, None
+    return bar_mask, {
+        'policy': 'synthetic-censor-bar-v1',
+        'synthetic_censor_bar_suspected': True,
+        'bar_bounds': bar_bounds,
+        'bar_pixels': int(bar_mask.sum()),
+        'bar_fraction': round(float(bar_mask.mean()), 5),
+    }
+
+
+def _hf_deficit_stats(source, face, *, exclude_mask=None):
     """Multi-scale 256px Laplacian/HF-deficit detector for heavy & partial privacy blur."""
     image = source if isinstance(source, Image.Image) else Image.fromarray(source)
     img_w, img_h = image.size
@@ -516,6 +711,11 @@ def _hf_deficit_stats(source, face):
 
     yy, xx = np.indices((h256, w256), dtype=np.float32)
     border = (xx >= 2) & (xx < w256 - 2) & (yy >= 2) & (yy < h256 - 2)
+    if exclude_mask is not None and np.any(exclude_mask):
+        ex_256 = np.asarray(
+            Image.fromarray(exclude_mask.astype(np.uint8) * 255).resize((w256, h256), Image.Resampling.NEAREST)
+        ) > 0
+        border = border & ~binary_dilation(ex_256, iterations=2)
     face_core = (
         (xx >= fx + 0.15 * fw) & (xx < fx + 0.85 * fw) &
         (yy >= fy + 0.15 * fh) & (yy < fy + 0.85 * fh) & border
@@ -694,7 +894,7 @@ def detect_blur_island_face_box(source, selected_rectangle=None):
     return best_box
 
 
-def picture_pixelation(source, check_macroblocking=True):
+def picture_pixelation(source, check_macroblocking=True, *, _full_dct_verified=False):
     """Localize supported block patterns without depending on face boxes."""
     image = Image.fromarray(source)
     analysis = source
@@ -750,7 +950,7 @@ def picture_pixelation(source, check_macroblocking=True):
     if analysis is not source:
         mask = np.asarray(Image.fromarray(mask).resize(image.size, Image.Resampling.NEAREST))
     if check_macroblocking:
-        mask = _strip_dct_macroblocking_components(source, mask)
+        mask = _strip_dct_macroblocking_components(source, mask, _full_dct_verified=_full_dct_verified)
         if not mask.any():
             return None, None, {}
     return apply_pixelation_mask(source, mask, analysis.shape[:2][::-1], recovered_gaps)
@@ -1171,6 +1371,32 @@ def tiny_crop_pixelation(source):
     return apply_pixelation_mask(source, mask, (width, height), 0, tiny_period=periods)
 
 
+def _suspect_rotated_grid(source, *, threshold=1.55):
+    """Fast <=256px rotated periodic-energy prescreen gating expensive rotated_pixelation scans."""
+    image = Image.fromarray(source)
+    if min(image.size) < 128:
+        return False
+    scale = min(1., 256 / max(image.size))
+    size = tuple(round(side * scale) for side in image.size)
+    if min(size) < 96:
+        return False
+    analysis = image.resize(size, Image.Resampling.BOX) if scale < 1 else image
+    left, top = (round(side * .15625) for side in size)
+    core = (left, top, size[0] - left, size[1] - top)
+    valid_image = Image.new('L', size, 255)
+    for angle in range(-33, 34, 3):
+        if angle == 0:
+            continue
+        valid = valid_image.rotate(angle, resample=Image.Resampling.NEAREST).crop(core)
+        if valid.getextrema()[0] == 0:
+            continue
+        window = analysis.rotate(angle, resample=Image.Resampling.BICUBIC).crop(core)
+        signal = pixelation_signal(np.asarray(window), (0, 0, *window.size))
+        if signal['suspected'] or float(signal.get('score', 0.0)) >= threshold:
+            return True
+    return False
+
+
 def rotated_pixelation(source):
     """Rank angle corrections by grid evidence and map a supported mask back."""
     image = Image.fromarray(source)
@@ -1209,7 +1435,11 @@ def rotated_pixelation(source):
     ranked.sort(key=lambda item: (item[0], item[1], -abs(item[2])), reverse=True)
     preferred = [item for item in ranked if item[0]][:3]
     tried = {item[2] for item in preferred}
-    fallback = [item for item in ranked if item[2] in old_angles and item[2] not in tried]
+    fallback = (
+        [item for item in ranked if item[2] in old_angles and item[2] not in tried]
+        if (preferred or (ranked and ranked[0][1] >= 1.55))
+        else []
+    )
     for _, _, angle, window in preferred + fallback:
         _, report, evidence = picture_pixelation(np.asarray(window), check_macroblocking=False)
         if report is None or report['masked_native_pixels'] < max(256, .04 * window.width * window.height):
@@ -1223,9 +1453,13 @@ def rotated_pixelation(source):
     return None, None, {}
 
 
-def prepare_mosaics(source, *, _is_dct=None):
+def prepare_mosaics(source, *, _is_dct=None, _full_dct_verified=False):
     """Select geometric masks and coordinate spatially distinct treatments."""
-    regular = picture_pixelation(source)
+    regular = (
+        picture_pixelation(source, _full_dct_verified=True)
+        if _full_dct_verified
+        else picture_pixelation(source)
+    )
     is_dct = _is_dct
     if regular[0] is None:
         if is_dct is None:
@@ -1245,7 +1479,11 @@ def prepare_mosaics(source, *, _is_dct=None):
     irregular = irregular_mosaic_mask(analysis)
     fallback = regular
     if existing_area < .08 * width * height:
-        candidates = (('perspective', perspective_mosaic_mask(analysis)), ('irregular', irregular))
+        candidates = (
+            (('irregular', irregular),)
+            if _full_dct_verified
+            else (('perspective', perspective_mosaic_mask(analysis)), ('irregular', irregular))
+        )
         pattern, mask = max(candidates, key=lambda item: item[1].sum())
         coverage = float(mask.mean())
         if coverage >= .04 and coverage * width * height > 2 * existing_area:
@@ -1450,12 +1688,135 @@ def prepare_scanline_mosaic(source, notched):
     return None
 
 
-def prepare_source(source):
+def structural_mosaic_prescreen(source_rgb, native_rgb=None, selected_rectangle=None, *, v34_probe=None):
+    """Cheap System 1 spatial prescreen (~15-25ms at <=384px) to skip exhaustive mosaic scans."""
+    if native_rgb is None:
+        native_rgb = source_rgb
+    nh, nw = native_rgb.shape[:2]
+    sh, sw = source_rgb.shape[:2]
+
+    sc_n = min(1.0, 384.0 / max(1, nh, nw))
+    if sc_n < 1.0:
+        n_384 = cv2.resize(
+            native_rgb,
+            (max(16, int(round(nw * sc_n))), max(16, int(round(nh * sc_n)))),
+            interpolation=cv2.INTER_AREA,
+        )
+    else:
+        n_384 = native_rgb
+    if min(n_384.shape[:2]) >= 24:
+        nat_sig = pixelation_signal(n_384, (0, 0, n_384.shape[1], n_384.shape[0]))
+    else:
+        nat_sig = {'suspected': False, 'score': 0.0}
+    max_score = float(nat_sig.get('score', 0.0))
+    any_suspected = bool(nat_sig.get('suspected'))
+
+    clean_v34 = is_clean_control_probe(v34_probe)
+    blk_noise = bool(
+        is_multipixel_block_noise(native_rgb)
+        or ((not clean_v34) and is_posterized_block_patch(native_rgb))
+    )
+
+    sc_256 = min(1.0, 256.0 / max(1, nh, nw))
+    if sc_256 < 1.0:
+        n_256 = cv2.resize(
+            native_rgb,
+            (max(16, int(round(nw * sc_256))), max(16, int(round(nh * sc_256)))),
+            interpolation=cv2.INTER_AREA,
+        )
+    else:
+        n_256 = native_rgb
+    if min(n_256.shape[:2]) >= 8:
+        arr16 = n_256.astype(np.int16)
+        dh = np.abs(np.diff(arr16, axis=1)).max(-1)
+        dv = np.abs(np.diff(arr16, axis=0)).max(-1)
+        flat_n = float(((dh[:-1, :] <= 2) & (dv[:, :-1] <= 2)).mean())
+        step_hi_n = float(((dh[:-1, :] >= 10) | (dv[:, :-1] >= 10)).mean())
+    else:
+        flat_n = 0.0
+        step_hi_n = 0.0
+    flat_mosaic_hint = bool(flat_n >= 0.35 and step_hi_n >= 0.05)
+
+    irr_hint = False
+    if not any_suspected and not blk_noise and flat_n >= 0.05 and min(n_256.shape[:2]) >= 48:
+        if float(irregular_mosaic_mask(n_256).mean()) >= 0.04:
+            irr_hint = True
+
+    if not any_suspected and not blk_noise and not irr_hint and max(sh, sw) > max(nh, nw) * 1.15:
+        scale_s = min(1.0, 384.0 / max(1, sh, sw))
+        s_w = max(32, int(round(sw * scale_s)))
+        s_h = max(32, int(round(sh * scale_s)))
+        s_small = cv2.resize(source_rgb, (s_w, s_h), interpolation=cv2.INTER_AREA) if scale_s < 1.0 else source_rgb
+        s_gray = cv2.cvtColor(s_small, cv2.COLOR_RGB2GRAY).astype(np.float32)
+        for box in ((0, 0, s_w, s_h), (s_w // 4, s_h // 4, s_w // 2, s_h // 2)):
+            if min(box[2], box[3]) >= 32:
+                sg = pixelation_signal(s_small, box, _gray=s_gray)
+                max_score = max(max_score, float(sg.get('score', 0.0)))
+                if sg.get('suspected'):
+                    any_suspected = True
+                    break
+
+    if not any_suspected and not blk_noise and not irr_hint and selected_rectangle is not None and min(nh, nw) >= 24:
+        rx, ry, rw, rh = [int(v) for v in selected_rectangle]
+        pad = int(0.25 * max(rw, rh))
+        ex0, ey0 = max(0, rx - pad), max(0, ry - pad)
+        ex1, ey1 = min(sw, rx + rw + pad), min(sh, ry + rh + pad)
+        if min(ex1 - ex0, ey1 - ey0) >= 24:
+            es = pixelation_signal(source_rgb, (ex0, ey0, ex1 - ex0, ey1 - ey0))
+            max_score = max(max_score, float(es.get('score', 0.0)))
+            if es.get('suspected'):
+                any_suspected = True
+
+    paste_hint = bool(
+        (not clean_v34)
+        and min(sh, sw) >= 256
+        and (detect_pasted_degraded_face_patch(source_rgb) is not None)
+    )
+    rot_hint = False
+    if not any_suspected and not blk_noise and not irr_hint and not paste_hint and not clean_v34 and flat_n >= 0.10:
+        rot_hint = _suspect_rotated_grid(source_rgb)
+
+    v34_codec = float(v34_probe.get('codec_lr', 0.0)) if isinstance(v34_probe, dict) else 0.0
+    need_heavy_mosaic = bool(
+        any_suspected
+        or blk_noise
+        or irr_hint
+        or paste_hint
+        or rot_hint
+        or max_score >= 1.58
+        or ((not clean_v34) and flat_mosaic_hint)
+        or (v34_codec >= 0.45 and flat_n >= 0.20)
+    )
+    return {
+        'need_heavy_mosaic': need_heavy_mosaic,
+        'any_suspected': any_suspected,
+        'blk_noise': blk_noise,
+        'irr_hint': irr_hint,
+        'paste_hint': paste_hint,
+        'rot_hint': rot_hint,
+        'max_grid_score': round(max_score, 3),
+        'flat_n': round(flat_n, 3),
+        'v34_codec': round(v34_codec, 3),
+    }
+
+
+def prepare_source(source, *, v34_probe=None, native=None, selected_rectangle=None, prescreen=None):
     """Choose full-source preparation before falling back to face analysis."""
     cleaned, report = prepare_scanlines(source)
     if cleaned is None:
-        is_dct = _is_genuine_dct_macroblocking(source)
-        mosaics = prepare_mosaics(source, _is_dct=is_dct)
+        if prescreen is None and v34_probe is not None:
+            prescreen = structural_mosaic_prescreen(
+                source, native_rgb=native, selected_rectangle=selected_rectangle, v34_probe=v34_probe
+            )
+        if prescreen is not None and not prescreen.get('need_heavy_mosaic', True):
+            if is_clean_control_probe(v34_probe) or float(prescreen.get('max_grid_score', 0.0)) < 1.45:
+                return None, None, {}
+            is_dct, _ = _full_frame_dct_status(source)
+            if is_dct:
+                return None, None, {}
+            return softened_pixelation_evidence(source)
+        is_dct, full_dct_verified = _full_frame_dct_status(source)
+        mosaics = prepare_mosaics(source, _is_dct=is_dct, _full_dct_verified=full_dct_verified)
         if mosaics[0] is not None:
             return mosaics
         if is_dct:
@@ -1489,14 +1850,17 @@ def softened_pixelation_evidence(source):
     analysis = image.convert('L')
     if scale < 1:
         analysis = analysis.resize(size, Image.Resampling.BOX)
-    mask = softened_mask(np.asarray(analysis, dtype=np.float32))
+    mask, s_period, s_ac = softened_mask_with_confidence(np.asarray(analysis, dtype=np.float32))
     if not mask.any():
         return None, None, {}
     mask_image = Image.fromarray(mask).resize(image.size, Image.Resampling.NEAREST)
     contents = png(np.asarray(mask_image, dtype=np.uint8) * 255)
     report = {'policy': 'softened-mosaic-spectrum-v1', 'classification_is_approximate': True,
               'native_size': list(image.size), 'analysis_size': list(size),
-              'masked_native_pixels': int(np.count_nonzero(mask_image)), 'mask_sha256': sha(contents)}
+              'masked_native_pixels': int(np.count_nonzero(mask_image)), 'mask_sha256': sha(contents),
+              'ac_confidence': round(float(s_ac), 4)}
+    if s_period is not None:
+        report['period_native'] = round(float(s_period) / scale, 2)
     return None, report, {'softened-mosaic-mask.png': contents}
 
 
@@ -1526,7 +1890,7 @@ def is_background_grid_with_blurred_face(source, mosaic_mask, face):
     return decision.get('route') == 'protect_auto'
 
 
-def _decide_on_canvas(source, face):
+def _decide_on_canvas(source, face, *, exclude_mask=None):
     image = Image.fromarray(source)
     longest = max(image.size)
     scale = min(1., 512 / longest)
@@ -1544,14 +1908,14 @@ def _decide_on_canvas(source, face):
         elif not clear and in_256 >= 3 and out_256 >= 3 and in_n < 3:
             in_n, out_n, face_blur, background_blur = in_256, out_256, face_256, bg_256
 
-    hf = _hf_deficit_stats(image, face)
+    hf = _hf_deficit_stats(image, face, exclude_mask=exclude_mask)
     if clear and hf is not None and hf['ext_lap_var'] < 10.0:
         # Uniformly blurry image (exterior is also low-HF) -> never trigger Auto Blur.
         clear = False
     return in_n, out_n, face_blur, background_blur, clear, hf
 
 
-def decide(source, face, rectangle=None):
+def decide(source, face, rectangle=None, *, v34_probe=None, exclude_mask=None):
     block = pixelation_signal(source, face)
     if block['suspected']:
         x, y, width, height = face
@@ -1563,7 +1927,7 @@ def decide(source, face, rectangle=None):
         if not is_dct:
             return {'policy': 'face-versus-surroundings-v1', 'route': 'face_gaussian',
                     'reason': 'suspected_pixelation', 'degradation': block}
-    in_n, out_n, face_blur, background_blur, clear, hf = _decide_on_canvas(source, face)
+    in_n, out_n, face_blur, background_blur, clear, hf = _decide_on_canvas(source, face, exclude_mask=exclude_mask)
 
     # For small faces inside large multi-face/crowd frames, evaluate blur deficit at local crop scale
     # so 5x full-frame downsampling does not erase the face-vs-surroundings blur gap.
@@ -1592,7 +1956,8 @@ def decide(source, face, rectangle=None):
             lx, ly, lw, lh = local_rect
             local_crop = source[ly:ly + lh, lx:lx + lw]
             rel_face = [fx - lx, fy - ly, fw, fh]
-            l_in, l_out, l_fb, l_bg, l_clear, l_hf = _decide_on_canvas(local_crop, rel_face)
+            local_excl = exclude_mask[ly:ly + lh, lx:lx + lw] if (exclude_mask is not None and exclude_mask.shape == source.shape[:2]) else None
+            l_in, l_out, l_fb, l_bg, l_clear, l_hf = _decide_on_canvas(local_crop, rel_face, exclude_mask=local_excl)
             if l_clear or (l_hf is not None and l_hf['clear']):
                 in_n, out_n, face_blur, background_blur, clear, hf = (
                     l_in, l_out, l_fb, l_bg, l_clear, l_hf
@@ -1612,14 +1977,58 @@ def decide(source, face, rectangle=None):
     if hf is not None and hf['clear']:
         report.update(route='protect_auto', reason='face_blur_exceeds_surroundings')
         return report
+    # Closed-loop V3.4 privacy-blur fallback (catches heavy face blur in soft/anime/textured
+    # surroundings such as blur_04_oval_head_blur while staying 0-FP on clean controls & defaults).
+    if isinstance(v34_probe, dict) and float(v34_probe.get('blur', 0.0)) >= 0.85 and float(v34_probe.get('p_clean', 0.0)) < 0.15:
+        if hf is not None:
+            ext_lv = float(hf.get('ext_lap_var', 0.0))
+            ratio_lv = float(hf.get('lap_var_ratio', 0.0))
+            core_p90 = float(hf.get('core_p90_hf', 999.0))
+            ext_p90 = float(hf.get('ext_p90_hf', 0.0))
+            localized_blur = (
+                (ext_lv >= 20.0 and ratio_lv >= 2.2 and core_p90 <= 0.65 * max(1.0, ext_p90))
+                or (in_n <= 2 and out_n >= 6 and ext_lv >= 18.0 and ratio_lv >= 1.8)
+            )
+            if localized_blur:
+                report.update(
+                    route='protect_auto',
+                    reason='v34_confirmed_localized_face_blur',
+                    v34_blur_fallback=True,
+                )
+                return report
     if face_blur is not None and background_blur is not None:
         report['reason'] = 'no_clear_blur_gap'
     return report
 
 
-def prepare(native, source, face, rectangle):
+_DEFAULT_DECIDE = decide
+
+
+def prepare(native, source, face, rectangle, *, v34_probe=None, exclude_mask=None, face_record=None):
     """Return prepared bytes and evidence, or a recorded direct-restore decision."""
-    decision = decide(source, face) if rectangle is None else decide(source, face, rectangle=rectangle)
+    if face is None and isinstance(face_record, dict) and 'box' in face_record:
+        face = face_record['box']
+    if face is None:
+        return None, None, {}, {'policy': 'face-versus-surroundings-v1', 'route': 'direct', 'reason': 'face_detection_uncertain'}
+    # System 1 clean-control fast-path: skip blur-tile & HF scans when V3.4 confirms clean portrait
+    # and quick periodic-edge prescreen confirms no face pixelation.
+    if (
+        decide is _DEFAULT_DECIDE
+        and exclude_mask is None
+        and is_clean_control_probe(v34_probe)
+        and not pixelation_signal(source, face)['suspected']
+    ):
+        return None, None, {}, {
+            'policy': 'face-versus-surroundings-v1',
+            'route': 'direct',
+            'reason': 'clean_control_v34_fast_path',
+            'analysis_RGB_sha256': sha(source.tobytes()),
+            'detected_face_rectangle': list(face),
+        }
+    if v34_probe is None and exclude_mask is None:
+        decision = decide(source, face) if rectangle is None else decide(source, face, rectangle=rectangle)
+    else:
+        decision = decide(source, face, rectangle=rectangle, v34_probe=v34_probe, exclude_mask=exclude_mask)
     decision['analysis_RGB_sha256'] = sha(source.tobytes())
     decision['detected_face_rectangle'] = list(face)
     if decision['route'] == 'direct':
@@ -1695,32 +2104,43 @@ def prepare(native, source, face, rectangle):
     ext_p75 = float(np.percentile(ext_detail, 75)) if ext_detail.size >= 64 else 4.0
     core_p50 = float(np.median(detail[core])) if core.any() else 1.2
     detail_thresh = float(np.clip(max(1.2, min(0.38 * ext_p75, max(2.2, core_p50 * 2.2))), 1.2, 6.0))
+    if decision.get('v34_blur_fallback'):
+        detail_thresh = float(np.clip(max(detail_thresh, min(18.0, max(core_p50 * 1.45, 0.48 * ext_p75))), 1.2, 18.0))
     components, _ = label((detail < detail_thresh) & region)
     counts = np.bincount(components[core].ravel(), minlength=1)
     counts[0] = 0
     if not counts.any():
-        decision.update(route='direct', reason='no_supported_blurred_protection_region')
-        return None, None, {}, decision
-    core_area = max(1, int(core.sum()))
-    min_support = max(16, int(0.08 * core_area))
-    keep_ids = np.flatnonzero(counts >= min_support)
-    if not keep_ids.size:
-        keep_ids = np.array([int(counts.argmax())])
-    protected = np.isin(components, keep_ids)
-    # Fill interior facial-feature holes (eyes/brows/mouth) that are still blurred
-    # relative to the sharp exterior, without swallowing genuinely sharp patches.
-    filled = binary_fill_holes(protected)
-    holes = filled & ~protected
-    if holes.any():
-        hole_labels, _ = label(holes)
-        hole_cap = min(4.5, max(2.5, 0.35 * ext_p75))
-        max_hole_area = max(32, int(0.06 * int(protected.sum())))
-        for hid, sl in enumerate(find_objects(hole_labels), start=1):
-            if sl is None:
-                continue
-            hmask = hole_labels[sl] == hid
-            if int(hmask.sum()) <= max_hole_area and float(np.median(detail[sl][hmask])) < hole_cap:
-                protected[sl] |= hmask
+        if decision.get('v34_blur_fallback'):
+            # Elliptical inner-face protection fallback when V3.4 strongly confirms localized face blur.
+            cx_f, cy_f = fx_s + width * 0.5, fy_s + height * 0.48
+            protected = (
+                ((xx - cx_f) / max(4.0, width * 0.46)) ** 2
+                + ((yy - cy_f) / max(4.0, height * 0.46)) ** 2
+            ) <= 1.0
+        else:
+            decision.update(route='direct', reason='no_supported_blurred_protection_region')
+            return None, None, {}, decision
+    else:
+        core_area = max(1, int(core.sum()))
+        min_support = max(16, int(0.08 * core_area))
+        keep_ids = np.flatnonzero(counts >= min_support)
+        if not keep_ids.size:
+            keep_ids = np.array([int(counts.argmax())])
+        protected = np.isin(components, keep_ids)
+        # Fill interior facial-feature holes (eyes/brows/mouth) that are still blurred
+        # relative to the sharp exterior, without swallowing genuinely sharp patches.
+        filled = binary_fill_holes(protected)
+        holes = filled & ~protected
+        if holes.any():
+            hole_labels, _ = label(holes)
+            hole_cap = min(4.5, max(2.5, 0.35 * ext_p75))
+            max_hole_area = max(32, int(0.06 * int(protected.sum())))
+            for hid, sl in enumerate(find_objects(hole_labels), start=1):
+                if sl is None:
+                    continue
+                hmask = hole_labels[sl] == hid
+                if int(hmask.sum()) <= max_hole_area and float(np.median(detail[sl][hmask])) < hole_cap:
+                    protected[sl] |= hmask
     mask = protected[crop_off_y:crop_off_y + native.shape[0], crop_off_x:crop_off_x + native.shape[1]].astype(np.uint8) * 255
     decision['protection_shape'] = 'blur-supported-component-v1'
     decision['protection_search_bounds'] = [rx0 + (offset_x if use_local_scope else 0),
@@ -1753,7 +2173,22 @@ def prepare(native, source, face, rectangle):
             full_picture=None,
             rectangle=None,
         )
+    if response['metadata']['no_effect'] and decision.get('v34_blur_fallback'):
+        # Soft-surround fallback when V3.4 strongly confirms localized privacy blur (e.g. blur_04).
+        response, evidence = build_preview(
+            png(native),
+            png(mask),
+            png(np.zeros_like(mask)),
+            nominal_radius=2.5,
+            exact_marks=True,
+            match_blur=False,
+            full_picture=None,
+            rectangle=None,
+        )
     return finish(response, evidence, decision, automatic_protection=True)
+
+
+prepare_automatic = prepare
 
 
 def finish(response, evidence, decision, automatic_protection):
@@ -1799,29 +2234,74 @@ def prepare_noise(source):
     return cleaned, report, evidence
 
 
-def prepare_photometric(source):
-    """Run tightened photometric color-cast balancing and haze dehazing."""
-    if min(source.shape[:2]) < 48:
+def prepare_photometric(source, *, v34_probe=None):
+    """Run tightened photometric color-cast balancing, haze dehazing, and low-light/glare conditioning."""
+    min_side = min(source.shape[:2])
+    if min_side < 24:
         return None, None, None, {}
-    cleaned, mask, route, report = prepare_cast_dehaze(source)
-    if cleaned is None or route is None:
+    damp = photometric_damping_factor(v34_probe)
+    if min_side >= 48:
+        if damp < 1.0:
+            cleaned, mask, route, report = prepare_cast_dehaze(source, damping=damp)
+        else:
+            cleaned, mask, route, report = prepare_cast_dehaze(source)
+    else:
+        cleaned = mask = route = report = None
+    if cleaned is not None and route is not None:
+        if route == 'haze_dehaze':
+            luma_mean = float((report or {}).get('before', {}).get('luma_mean', 0.0))
+            if luma_mean < 135.0 or detect_banding(source) is not None:
+                cleaned = mask = route = report = None
+        if cleaned is not None and route is not None:
+            evidence = {f'{route.replace("_", "-")}-cleaned.png': png(cleaned)}
+            if mask is not None and np.any(mask):
+                evidence['cast-dehaze-mask.png'] = png(mask)
+            return cleaned, route, report, evidence
+
+    # Fallback to skin-tone-safe low-light Retinex lift or specular/veiling glare recovery.
+    ll_out, ll_mask, ll_route, ll_report = prepare_low_light_glare(
+        source, v34_probe=v34_probe, damping=damp
+    )
+    if ll_out is None or ll_route is None:
         return None, None, None, {}
-    if route == 'haze_dehaze':
-        luma_mean = float((report or {}).get('before', {}).get('luma_mean', 0.0))
-        if luma_mean < 135.0 or detect_banding(source) is not None:
-            return None, None, None, {}
-    evidence = {f'{route.replace("_", "-")}-cleaned.png': png(cleaned)}
+    ll_ev = {f'{ll_route.replace("_", "-")}-cleaned.png': png(ll_out)}
+    if ll_mask is not None and np.any(ll_mask):
+        ll_ev['cast-dehaze-mask.png'] = png(ll_mask)
+    return ll_out, ll_route, ll_report, ll_ev
+
+
+def prepare_motion(source, *, probe_fn=None):
+    """Run Cepstrum+Radon+ST linear motion-blur classification and conservative Wiener conditioning."""
+    if min(source.shape[:2]) < 64:
+        return None, None, {}
+    cleaned, mask, report = prepare_motion_deblur(source, probe_fn=probe_fn)
+    if cleaned is None or report is None:
+        return None, None, {}
+    evidence = {'motion-deblur-cleaned.png': png(cleaned)}
     if mask is not None and np.any(mask):
-        evidence['cast-dehaze-mask.png'] = png(mask)
-    return cleaned, route, report, evidence
+        evidence['motion-deblur-mask.png'] = png(mask)
+    return cleaned, report, evidence
 
 
-def prepare_composables(source, allow_spatial_comb=True):
-    """Run quantitatively gated refiners in fixed artifact-safe order."""
+def prepare_composables(
+    source,
+    allow_spatial_comb=True,
+    *,
+    exclude_mask=None,
+    v34_probe_fn=None,
+    initial_probe=None,
+):
+    """Run quantitatively gated refiners in fixed artifact-safe order with clean-control & censor-bar guards."""
     current = source
     stages = []
     stage_reports = {}
     evidence = {}
+    cur_probe = initial_probe
+    bar_excl = None
+    bar_dilated = None
+    if exclude_mask is not None and exclude_mask.shape == source.shape[:2] and np.any(exclude_mask):
+        bar_excl = exclude_mask.astype(bool, copy=False)
+        bar_dilated = binary_dilation(bar_excl, iterations=4)
     pipeline = []
     if allow_spatial_comb:
         pipeline.append(('spatial_comb', detect_and_clean_spatial_comb))
@@ -1832,9 +2312,31 @@ def prepare_composables(source, allow_spatial_comb=True):
         ('chroma_debleeding', prepare_color_bleeding),
     ))
     for stage_name, fn in pipeline:
+        # Clean-control V3.4 veto suppresses marginal chroma_debleeding false positives on clean portraits.
+        if stage_name == 'chroma_debleeding' and is_clean_control_probe(cur_probe):
+            continue
         output, report, stage_evidence = fn(current)
         if output is None or report is None:
             continue
+        if bar_excl is not None:
+            changed_px = np.any(output != current, axis=2)
+            total_changed = int(changed_px.sum())
+            if total_changed > 0:
+                near_bar = int((changed_px & bar_dilated).sum())
+                if near_bar / float(total_changed) >= 0.45:
+                    continue
+            output = output.copy()
+            output[bar_excl] = current[bar_excl]
+            if not np.any(output != current):
+                continue
+        if v34_probe_fn is not None and cur_probe is not None and stage_name == 'chroma_debleeding':
+            next_probe = v34_probe_fn(output)
+            ok, _ = stage_reflection_accept(cur_probe, next_probe, stage_name)
+            if not ok:
+                continue
+            cur_probe = next_probe
+        elif v34_probe_fn is not None and cur_probe is not None:
+            cur_probe = v34_probe_fn(output) or cur_probe
         current = output
         stages.append(stage_name)
         stage_reports[stage_name] = report

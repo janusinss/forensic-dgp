@@ -1442,4 +1442,33 @@ test('preparationSummary renders explicit copy for degraded_patch_conditioning s
     });
     assert.match(outUnif, /uniform whole-crop/i, `Expected uniform whole-crop copy for ${route}, got: ${outUnif}`);
   }
+
+  // Phase 1 vNext routes and clean-control fast-path copy
+  assert.match(
+    preparationSummary({ automatic_preparation: { route: 'motion_deblur' } }),
+    /linear motion blur/i
+  );
+  assert.match(
+    preparationSummary({ automatic_preparation: { route: 'low_light_recovery' } }),
+    /dark shadows.*illumination recovery/i
+  );
+  assert.match(
+    preparationSummary({ automatic_preparation: { route: 'glare_recovery' } }),
+    /glare washout/i
+  );
+  assert.match(
+    preparationSummary({
+      automatic_preparation: { route: 'direct', reason: 'clean_control_v34_fast_path' },
+    }),
+    /clean high-resolution face confirmed/i
+  );
+  const compVNext = preparationSummary({
+    automatic_preparation: {
+      route: 'compound_artifact_preparation',
+      stages: ['motion_deblur', 'low_light_recovery', 'glare_recovery'],
+    },
+  });
+  assert.match(compVNext, /motion-blur conditioning/i);
+  assert.match(compVNext, /low-light illumination recovery/i);
+  assert.match(compVNext, /glare and washout recovery/i);
 });

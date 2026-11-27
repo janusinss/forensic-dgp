@@ -294,12 +294,20 @@ def run_install_tasks(tasks: dict) -> int:
 def install_models() -> int:
     # Both downloaders use only the standard library. Separate child processes
     # receive Windows console Ctrl+C, unlike network calls inside worker threads.
-    return run_install_tasks({
+    tasks = {
         'Restoration models': lambda: run_foreground([
             sys.executable, '-B', '-m', 'implementation.setup_models']),
         'Completion models': lambda: run_foreground([
             sys.executable, '-B', '-m', 'implementation.environment', 'completion-assets']),
-    })
+    }
+    payload = load_payload()
+    has_onnx_payload = payload is not None and any(
+        group == 'onnx' for group, _ in getattr(payload, 'models', {})
+    )
+    if (ROOT / 'implementation' / 'onnx_assets.json').is_file() and has_onnx_payload:
+        tasks['ONNX models'] = lambda: run_foreground([
+            sys.executable, '-B', '-m', 'implementation.onnx_install'])
+    return run_install_tasks(tasks)
 
 
 def install_capture() -> int:
@@ -328,17 +336,29 @@ def verify_runtime(python: Path, *, include_models: bool = True) -> int:
     if locked is not None:
         expected_locks = repr(locked)
         probe += "; locked=" + expected_locks + "; assert all(m.version(name)==version for name,version in locked), 'Offline package lock differs'"
+    has_onnx_runtime = any(name.lower() == 'onnxruntime' for name, _ in requirements)
+    import_probe = (
+        'import app,torch,cv2,numpy,onnxruntime; print("Application imports verified.")'
+        if has_onnx_runtime else
+        'import app,torch,cv2,numpy; print("Application imports verified.")'
+    )
     checks = [
         [str(python), '-I', '-B', '-c', probe],
         [str(python), '-I', '-B', '-m', 'pip', '--isolated', 'check'],
         [str(python), '-B', '-m', 'implementation.capture_install', '--verify-only'],
-        [str(python), '-B', '-c', 'import app,torch,cv2,numpy; print("Application imports verified.")'],
+        [str(python), '-B', '-c', import_probe],
     ]
     if include_models:
-        checks[0:0] = [
+        model_checks = [
             [str(python), '-B', '-m', 'implementation.setup_models', '--verify-only'],
             [str(python), '-B', '-m', 'implementation.completion_install', '--verify-only'],
         ]
+        has_onnx_payload = payload is not None and any(
+            group == 'onnx' for group, _ in getattr(payload, 'models', {})
+        )
+        if (ROOT / 'implementation' / 'onnx_assets.json').is_file() and (has_onnx_payload or managed_root() is not None):
+            model_checks.append([str(python), '-B', '-m', 'implementation.onnx_install', '--verify-only'])
+        checks[0:0] = model_checks
     for command in checks:
         result = run_foreground(command)
         if result:

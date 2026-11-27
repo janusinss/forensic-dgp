@@ -312,6 +312,7 @@ try {
     if ($PayloadManifest -and !$versionedModels) {
       $payload=Read-Record $PayloadManifest 16MB
       foreach ($model in $payload.models) {
+        if ($model.group -eq 'onnx') { continue }
         $group=$(if ($model.group -eq 'restoration') {'implementation'} elseif ($model.group -eq 'completion') {'completion'} else { throw 'Invalid model group.' })
         $filename=Relative $model.filename
         if ($filename.Contains('\')) { throw 'A model filename cannot contain directories.' }

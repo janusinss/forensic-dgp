@@ -8,3 +8,4 @@ fastapi==0.141.1
 uvicorn==0.52.4
 python-multipart==0.0.32
 psutil==7.0.0
+onnxruntime==1.29.0

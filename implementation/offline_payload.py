@@ -165,7 +165,7 @@ class OfflinePayload:
             raise OfflinePayloadError('Invalid offline model inventory.')
         for entry in manifest['models']:
             if (type(entry) is not dict or set(entry) != {'group','id','filename','path'}
-                    or entry['group'] not in ('restoration','completion')
+                    or entry['group'] not in ('restoration','completion','onnx')
                     or not isinstance(entry['id'],str) or not re.fullmatch('[a-z0-9_]{1,80}',entry['id'])
                     or _relative(entry['filename']) != PurePosixPath(entry['filename']).name
                     or not _relative(entry['path']).startswith('models/')
