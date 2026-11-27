@@ -761,5 +761,730 @@ class CompletionAPITests(unittest.TestCase):
                     self.assertGreater(int((mask[:145, :] > 0).sum()), 800)
                     self.assertEqual(int((mask[150:, :] > 0).sum()), 0)
 
+    def test_propose_skips_cold_subprocess_when_onnx_ready_and_falls_back_when_unavailable(self):
+        from implementation import automatic_covering as ac
+        base_rgb, observed = self._load_prepared_test_image('face 1 - default.jpg')
+        masked_rgb = base_rgb.copy()
+        masked_rgb[140:205, 86:170] = (135, 195, 225)
+        canvas_raw = api.png(masked_rgb)
+        _, _, _, geometry = api.restoration.prepare_crop(masked_rgb)
+        meta = {
+            'model': 'v3',
+            'selection': 'preconditioned_v34_codeformer',
+            'uploaded_bytes_sha256': api.sha(canvas_raw),
+            'result_file_sha256': api.sha(canvas_raw),
+            'restoration_applied': False,
+            'geometry': geometry,
+        }
+        resp = {
+            'metadata': meta,
+            'original_input': api.restoration.url(canvas_raw),
+            'prepared_input': api.restoration.url(canvas_raw),
+            'result': api.restoration.url(canvas_raw),
+        }
+        api.admit_restoration(api.canonical(resp))
+        sid = api.prepare(canvas_raw, canvas_raw, api.canonical(meta))['session_id']
+
+        # Fast in-process ONNX path must NOT invoke run_worker('detector').
+        with patch.object(api, 'run_worker', side_effect=AssertionError('subprocess must be skipped')) as worker:
+            proposal = api.propose(sid)
+            worker.assert_not_called()
+        self.assertTrue(proposal['metadata'].get('subprocess_skipped'))
+        self.assertEqual(proposal['metadata'].get('detector_backend'), 'onnx_in_process_fast_path')
+        self.assertGreater(proposal['metadata']['proposed_mask_pixels'], 1500)
+
+        # When ONNX sessions are unavailable, propose() falls back cleanly to run_worker('detector').
+        from implementation.covering_detector import proposal_from_probability
+        det_out = Path(self.temp.name) / 'fallback-det-out'
+        det_out.mkdir()
+        prob = np.zeros((256, 256), np.float32)
+        det_raw, det_prop, det_meta = proposal_from_probability(prob, observed)
+        np.save(det_out / 'detector-probability.npy', prob, allow_pickle=False)
+        (det_out / 'detector-raw-mask.png').write_bytes(api.png(det_raw))
+        (det_out / 'detector-proposed-mask.png').write_bytes(api.png(det_prop))
+        (det_out / 'receipt.json').write_bytes(api.canonical(det_meta))
+        det_res = {
+            'probability_path': str(det_out / 'detector-probability.npy'),
+            'raw_mask_path': str(det_out / 'detector-raw-mask.png'),
+            'proposed_mask_path': str(det_out / 'detector-proposed-mask.png'),
+            'metadata': det_meta,
+        }
+        with patch.object(ac, '_load_onnx_sessions', return_value=None), \
+             patch.object(api, 'run_worker', return_value=(det_out, det_res, {'seconds': .01, 'active_owned_processes': 0})) as worker:
+            fb_prop = api.propose(sid)
+            worker.assert_called_once()
+        self.assertFalse(fb_prop['metadata']['auto_covering']['onnx_used'])
+
+    def test_vnext_empirical_covering_fixes_and_quality_gate(self):
+        import cv2
+        from implementation import automatic_covering as ac
+
+        root = self._test_images_dir()
+        covering_dir = root / 'internet_samples' / 'covering'
+        if not covering_dir.is_dir():
+            self.skipTest('internet_samples/covering corpus not present')
+
+        z_p = np.zeros((256, 256), np.float32)
+        z_b = np.zeros((256, 256), np.uint8)
+        crops = {
+            'compound_05_cctv_mask_hood.jpg': (399, 163, 261, 292),
+            'compound_04_cctv_black_mask.jpg': (163, 245, 438, 488),
+            'mask_01_surgical_bw.jpg': (0, 0, 960, 960),
+            'eyewear_06_round_tinted.jpg': (0, 0, 960, 880),
+            'scarf_02_gray_balaclava.jpg': (0, 29, 960, 1171),
+            'mask_02_white_n95_glasses.jpg': (143, 203, 704, 821),
+        }
+
+        def run_img(fn):
+            with Image.open(covering_dir / fn) as im:
+                nat = np.array(im.convert('RGB'))
+            x, y, w, h = crops[fn]
+            rgb, obs, _, _ = api.restoration.prepare_crop(nat[y:y + h, x:x + w])
+            mask, meta = ac.detect_face_covering(rgb, z_p, z_b, obs)
+            return rgb, obs, mask, meta
+
+        # 1. compound_05: no longer 0% FN.
+        _, _, m5, meta5 = run_img('compound_05_cctv_mask_hood.jpg')
+        self.assertGreater(int((m5[116:235, :] > 0).sum()), 2000)
+        self.assertIn('mask_or_scarf', meta5['families_triggered'])
+
+        # 2. compound_04: detects lower black chin mask (clamped to chin_y+10, zero hoodie/forehead spill).
+        _, _, m4, _ = run_img('compound_04_cctv_black_mask.jpg')
+        m4_lower = int((m4[165:240, :] > 0).sum())
+        self.assertGreaterEqual(m4_lower, 1200)
+        self.assertLessEqual(m4_lower, 1700)
+        self.assertEqual(int((m4[:120, :] > 0).sum()), 0)
+
+        # 3. mask_01: visible open eye must NOT trigger eyewear_or_glare.
+        _, _, m1, meta1 = run_img('mask_01_surgical_bw.jpg')
+        self.assertNotIn('eyewear_or_glare', meta1['families_triggered'])
+        self.assertGreater(int((m1[120:, :] > 0).sum()), 10000)
+
+        # 4. eyewear_06: coherent 1-CC eyewear with zero forehead fin above y=55.
+        _, _, m6, _ = run_img('eyewear_06_round_tinted.jpg')
+        self.assertEqual(int((m6[:55, :] > 0).sum()), 0)
+        n_cc6 = cv2.connectedComponentsWithStats((m6 > 0).astype(np.uint8), 8)[0] - 1
+        self.assertEqual(n_cc6, 1)
+
+        # 5. scarf_02: coherent single-component balaclava (eliminated 6-CC Swiss-cheese holes).
+        _, _, ms2, _ = run_img('scarf_02_gray_balaclava.jpg')
+        n_ccs2 = cv2.connectedComponentsWithStats((ms2 > 0).astype(np.uint8), 8)[0] - 1
+        self.assertLessEqual(n_ccs2, 2)
+        self.assertGreater(int((ms2 > 0).sum()), 8000)
+
+        # 6. mask_02: ear-strap hair/bg wings slashed (< 5% hair/bg spill vs 18.7% in v0.3.3).
+        rgb2, _, m2, _ = run_img('mask_02_white_n95_glasses.jpg')
+        bprob2, _ = ac._run_onnx_models(rgb2)
+        seg2 = bprob2.argmax(axis=0)
+        hb_frac = float(((m2 > 0) & np.isin(seg2, (0, 17))).sum()) / float(max(1, int((m2 > 0).sum())))
+        self.assertLess(hb_frac, 0.05)
+
+        # 7. Zero-weight 5-factor post-completion quality gate & /generate integration.
+        base_rgb, base_obs = self._load_prepared_test_image('face 1 - default.jpg')
+        masked_rgb = base_rgb.copy()
+        masked_rgb[140:205, 86:170] = (135, 195, 225)
+        removal = np.zeros((256, 256), dtype=np.uint8)
+        removal[140:205, 86:170] = 255
+        q_good = ac.evaluate_completion_quality(masked_rgb, base_rgb, removal, base_obs)
+        self.assertIsNotNone(q_good)
+        self.assertGreaterEqual(q_good['score_0_100'], 70)
+        self.assertEqual(set(q_good['factors']), {'occluder_clear', 'anatomy', 'symmetry', 'seam', 'texture'})
+        self.assertIn(q_good['grade'], ('high', 'moderate', 'low'))
+        self.assertIsNone(ac.evaluate_completion_quality(masked_rgb, base_rgb, np.zeros_like(removal), base_obs))
+        with patch.object(ac, '_run_onnx_models', return_value=None):
+            self.assertIsNone(ac.evaluate_completion_quality(masked_rgb, base_rgb, removal, base_obs))
+
+        _, generated = self._run_propose_review_generate(masked_rgb, expected_neural_calls=1)
+        cq = generated['metadata'].get('completion_quality')
+        self.assertIsInstance(cq, dict)
+        self.assertIn('score_0_100', cq)
+        self.assertEqual(set(cq['factors']), {'occluder_clear', 'anatomy', 'symmetry', 'seam', 'texture'})
+
+        # 8. Non-uint8 dtype rejected by evaluate_completion_quality, and cv2.error degrades cleanly in generate().
+        self.assertIsNone(
+            ac.evaluate_completion_quality(
+                masked_rgb.astype(np.float32),
+                base_rgb,
+                removal,
+                base_obs,
+            )
+        )
+        self.assertIsNone(
+            ac.evaluate_completion_quality(
+                masked_rgb,
+                base_rgb.astype(np.float32),
+                removal,
+                base_obs,
+            )
+        )
+        with patch.object(ac, 'evaluate_completion_quality', side_effect=cv2.error('simulated opencv error')):
+            _, gen_fallback = self._run_propose_review_generate(masked_rgb, expected_neural_calls=1)
+        self.assertIsNone(gen_fallback['metadata'].get('completion_quality'))
+        self.assertEqual(gen_fallback['neural_calls'], 1)
+
+
+class Phase2CoveringOnnxTests(unittest.TestCase):
+    def _test_images_dir(self):
+        here = Path(__file__).resolve()
+        for parent in (here.parents[1], here.parents[2], *here.parents[3:]):
+            candidate = parent / 'test_images'
+            if candidate.is_dir():
+                return candidate
+        raise unittest.SkipTest('test_images fixture directory is not present in this checkout')
+
+    def test_phase2_qdq_ofiq_and_2d106det_active_nan_sha_and_ort_fallbacks(self):
+        import builtins
+        import stat
+        import types
+        from onnxruntime.capi import onnxruntime_pybind11_state as ort_capi
+        from implementation import automatic_covering as ac
+
+        root = self._test_images_dir()
+        with Image.open(root / 'face 1 - default.jpg') as im:
+            base_rgb, base_obs, _, _ = api.restoration.prepare_crop(np.array(im.convert('RGB')))
+
+        saved_cache = dict(ac._ONNX_CACHE)
+        try:
+            # 1. Verify active staged Phase 2 models (BiSeNet-QDQ + OFIQ-QDQ + 2d106det) load and execute.
+            ac._ONNX_CACHE.clear()
+            model_dir = ac._resolve_occlusion_model_dir()
+            self.assertIsNotNone(model_dir)
+            self.assertEqual(ac._select_parser_file(model_dir).name, ac._BISENET_QDQ_FILENAME)
+            occ_choice = ac._select_occlusion_file(model_dir)
+            self.assertIsNotNone(occ_choice)
+            self.assertEqual(occ_choice[0].name, ac._OFIQ_QDQ_FILENAME)
+            self.assertEqual(occ_choice[1], 'ofiq')
+            lms_path = ac._resolve_landmarks106_path()
+            self.assertIsNotNone(lms_path)
+            self.assertEqual(lms_path.name, ac._LMS106_FILENAME)
+
+            sessions = ac._load_onnx_sessions()
+            self.assertIsNotNone(sessions)
+            self.assertEqual(len(sessions), 7)
+            self.assertEqual(sessions[5], 'ofiq')
+            self.assertEqual(sessions[6], 224)
+
+            lms_entry = ac._load_landmarks106_session()
+            self.assertIsNotNone(lms_entry)
+            self.assertEqual(len(lms_entry), 3)
+
+            bprob, px = ac._run_onnx_models(base_rgb)
+            self.assertEqual(bprob.shape, (19, 256, 256))
+            self.assertEqual(px.shape, (256, 256))
+            self.assertTrue(np.isfinite(bprob).all())
+            self.assertTrue(np.isfinite(px).all())
+            self.assertGreaterEqual(float(px.min()), 0.0)
+            self.assertLessEqual(float(px.max()), 1.0)
+
+            pts106 = ac._run_landmarks_106(base_rgb)
+            self.assertIsNotNone(pts106)
+            self.assertEqual(pts106.shape, (106, 2))
+            self.assertEqual(pts106.dtype, np.float32)
+            self.assertTrue(np.isfinite(pts106).all())
+            pts5 = ac.landmarks_5pt_from_106(pts106)
+            self.assertIsNotNone(pts5)
+            self.assertEqual(pts5.shape, (5, 2))
+            self.assertEqual(pts5.dtype, np.float32)
+            hull = ac.face_hull_from_106(pts106, dilate_px=6, forehead_lift=0.25)
+            self.assertEqual(hull.shape, (256, 256))
+            self.assertEqual(hull.dtype, np.bool_)
+            self.assertGreater(int(hull.sum()), 8000)
+
+            # Evaluate completion quality under BiSeNet-QDQ + OFIQ-QDQ.
+            removal = np.zeros((256, 256), dtype=np.uint8)
+            removal[140:205, 86:170] = 255
+            masked_rgb = base_rgb.copy()
+            masked_rgb[removal > 0] = (135, 195, 225)
+            q = ac.evaluate_completion_quality(masked_rgb, base_rgb, removal, base_obs)
+            self.assertIsNotNone(q)
+            self.assertGreaterEqual(q['score_0_100'], 70)
+
+            # 2. NaN output sanitization for 7-tuple OFIQ session and 2d106det session.
+            class FakeSess:
+                def __init__(self, fn):
+                    self._fn = fn
+                def run(self, *_args):
+                    return self._fn()
+
+            ac._ONNX_CACHE.clear()
+            ac._ONNX_CACHE['sessions'] = (
+                FakeSess(lambda: [np.full((1, 19, 512, 512), np.nan, np.float32)]),
+                'input',
+                'output',
+                FakeSess(lambda: [np.full((1, 1, 224, 224), np.nan, np.float32)]),
+                'input',
+                'ofiq',
+                224,
+            )
+            nan_out = ac._run_onnx_models(base_rgb)
+            self.assertIsNotNone(nan_out)
+            self.assertTrue(np.isfinite(nan_out[0]).all())
+            self.assertTrue(np.isfinite(nan_out[1]).all())
+            self.assertGreaterEqual(float(nan_out[1].min()), 0.0)
+            self.assertLessEqual(float(nan_out[1].max()), 1.0)
+
+            ac._ONNX_CACHE['lms106'] = (
+                FakeSess(lambda: [np.full((1, 212), np.nan, np.float32)]),
+                'data',
+                'fc1',
+            )
+            self.assertIsNone(ac._run_landmarks_106(base_rgb))
+
+            # 3. Real onnxruntime_pybind11_state (NoSuchFile & Fail) fallback for BOTH occlusion and 2d106det.
+            with tempfile.TemporaryDirectory() as tmp:
+                tmp_dir = Path(tmp)
+                ac._ONNX_CACHE.clear()
+                with patch.object(ac, '_resolve_occlusion_model_dir', return_value=tmp_dir), \
+                     patch('onnxruntime.InferenceSession', side_effect=ort_capi.NoSuchFile('missing phase2 occ')):
+                    self.assertIsNone(ac._load_onnx_sessions())
+
+                ac._ONNX_CACHE.clear()
+                with patch.object(ac, '_resolve_landmarks106_path', return_value=tmp_dir / ac._LMS106_FILENAME), \
+                     patch('onnxruntime.InferenceSession', side_effect=ort_capi.NoSuchFile('missing 2d106det')):
+                    self.assertIsNone(ac._load_landmarks106_session())
+
+                def raise_ort_fail():
+                    raise ort_capi.Fail('simulated pybind11 Fail')
+
+                ac._ONNX_CACHE.clear()
+                ac._ONNX_CACHE['sessions'] = (
+                    FakeSess(raise_ort_fail), 'input', 'output', FakeSess(raise_ort_fail), 'input', 'ofiq', 224
+                )
+                self.assertIsNone(ac._run_onnx_models(base_rgb))
+
+                ac._ONNX_CACHE['lms106'] = (FakeSess(raise_ort_fail), 'data', 'fc1')
+                self.assertIsNone(ac._run_landmarks_106(base_rgb))
+
+                import cv2 as _cv2
+                self.assertIn(_cv2.error, ac._onnx_runtime_errors())
+                with patch.object(_cv2, 'resize', side_effect=_cv2.error('resize fail')):
+                    self.assertIsNone(ac._run_landmarks_106(base_rgb))
+
+                # 4. SHA-256 mismatch and ordinary-file (symlink/reparse) refusal for 2d106det and QDQ models.
+                tampered = tmp_dir / ac._LMS106_FILENAME
+                tampered.write_bytes(b'corrupt-2d106det')
+                self.assertFalse(ac._verify_onnx_file(tampered, ac._LMS106_BYTES, ac._LMS106_SHA256))
+                self.assertFalse(ac._verify_onnx_file(tampered, len(b'corrupt-2d106det'), ac._LMS106_SHA256))
+                fake_link = types.SimpleNamespace(st_mode=stat.S_IFLNK | 0o644, st_file_attributes=0)
+                with patch.object(Path, 'lstat', return_value=fake_link):
+                    self.assertIsNone(ac._resolve_landmarks106_path())
+                    self.assertIsNone(ac._resolve_occlusion_model_dir())
+
+                real_import = builtins.__import__
+                def fail_ort(name, *args, **kwargs):
+                    if name == 'onnxruntime':
+                        raise ImportError('ort absent')
+                    return real_import(name, *args, **kwargs)
+                ac._ONNX_CACHE.clear()
+                with patch.object(ac, '_resolve_landmarks106_path', return_value=tampered), \
+                     patch.object(builtins, '__import__', side_effect=fail_ort):
+                    self.assertIsNone(ac._load_landmarks106_session())
+        finally:
+            ac._ONNX_CACHE.clear()
+            ac._ONNX_CACHE.update(saved_cache)
+
+    def test_phase2_49_image_covering_recall_zero_fp_and_visual_gates(self):
+        import cv2
+        from implementation import app as app_mod
+        from implementation import automatic_covering as ac
+        from implementation import capture_worker, runtime
+
+        root = self._test_images_dir()
+        cov_root = root / 'internet_samples' / 'covering'
+        review_dir = root / 'review files'
+        if not cov_root.is_dir() or not review_dir.is_dir():
+            self.skipTest('49-image covering + review corpus not present')
+
+        zp = np.zeros((256, 256), dtype=np.float32)
+        zb = np.zeros((256, 256), dtype=np.uint8)
+
+        cov_files = sorted(
+            p for p in cov_root.iterdir()
+            if p.is_file() and p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp')
+        )
+        pos_files = [p for p in cov_files if not p.name.startswith('control_')]
+        ctrl_files = [p for p in cov_files if p.name.startswith('control_')]
+        self.assertEqual(len(pos_files), 25)
+        self.assertEqual(len(ctrl_files), 4)
+
+        def prepare_covering(path: Path):
+            with Image.open(path) as im:
+                rgb_full = np.asarray(im.convert('RGB'))
+            recs = capture_worker.scan_face_records(cv2.cvtColor(rgb_full, cv2.COLOR_RGB2BGR))
+            if recs:
+                rec_idx = app_mod._recommend_face_index(rgb_full, recs, rgb_full.shape[1], rgb_full.shape[0])
+                cx, cy, cw, ch = recs[rec_idx]['crop']
+                crop_rgb = rgb_full[cy:cy + ch, cx:cx + cw]
+            else:
+                crop_rgb = rgb_full
+            rgb_256, obs_256, _, _ = runtime.prepare_crop(crop_rgb)
+            return rgb_256, obs_256
+
+        # 25/25 positive recall + targeted visual quality gates
+        recall = 0
+        for p in pos_files:
+            rgb256, obs256 = prepare_covering(p)
+            mask, meta = ac.detect_face_covering(rgb256, zp, zb, obs256)
+            self.assertTrue(meta['onnx_used'])
+            self.assertFalse(mask[~obs256].any())
+            px_cnt = int((mask > 0).sum())
+            if px_cnt > 0:
+                recall += 1
+            if p.name == 'compound_02_hand_chin.jpg':
+                self.assertGreaterEqual(px_cnt, 2500)
+            elif p.name == 'compound_03_hand_over_mouth.jpg':
+                bprob, _ = ac._run_onnx_models(rgb256)
+                seg = bprob.argmax(axis=0)
+                hb_pct = float(((mask > 0) & np.isin(seg, (0, 17))).sum()) / float(max(1, px_cnt)) * 100.0
+                self.assertLess(hb_pct, 22.0)
+            elif p.name == 'compound_04_cctv_black_mask.jpg':
+                self.assertGreaterEqual(px_cnt, 1200)
+                self.assertLessEqual(px_cnt, 1700)
+                self.assertEqual(int((mask[:115, :] > 0).sum()), 0)
+            elif p.name == 'compound_05_cctv_mask_hood.jpg':
+                self.assertGreaterEqual(px_cnt, 3000)
+            elif p.name == 'mask_09_mask_and_shield.jpg':
+                self.assertGreaterEqual(px_cnt, 10000)
+                unmasked_ctr = (mask == 0) & obs256 & (ac._YY >= 140) & (ac._YY <= 190) & (ac._XX >= 90) & (ac._XX <= 165)
+                self.assertLess(int(unmasked_ctr.sum()), 50)
+            elif p.name == 'eyewear_05_clear_prescription.jpg':
+                self.assertIn('eyewear_or_glare', meta['families_triggered'])
+                bprob, _ = ac._run_onnx_models(rgb256)
+                seg = bprob.argmax(axis=0)
+                eyes_m = np.isin(seg, (4, 5)) & obs256
+                if eyes_m.any():
+                    eye_cov = float(((mask > 0) & eyes_m).sum()) / float(int(eyes_m.sum()))
+                    self.assertLess(eye_cov, 0.15)
+        self.assertEqual(recall, 25)
+
+        # 0/4 FP on beard/makeup controls
+        ctrl_fp = 0
+        for p in ctrl_files:
+            rgb256, obs256 = prepare_covering(p)
+            mask, meta = ac.detect_face_covering(rgb256, zp, zb, obs256)
+            if int((mask > 0).sum()) > 0:
+                ctrl_fp += 1
+        self.assertEqual(ctrl_fp, 0)
+
+        # 0/20 FP across ALL review files/*.zip
+        zips = sorted(review_dir.glob('*.zip'))
+        self.assertEqual(len(zips), 20)
+        zip_fp = 0
+        for zp_path in zips:
+            with zipfile.ZipFile(zp_path) as zf:
+                with Image.open(io.BytesIO(zf.read('result.png'))) as im:
+                    rgb256 = np.asarray(im.convert('RGB'))
+                with Image.open(io.BytesIO(zf.read('original-native.png'))) as im:
+                    orig_native = np.asarray(im.convert('RGB'))
+            _, obs256, _, _ = runtime.prepare_crop(orig_native)
+            mask, _ = ac.detect_face_covering(rgb256, zp, zb, obs256)
+            if int((mask > 0).sum()) > 0:
+                zip_fp += 1
+        self.assertEqual(zip_fp, 0)
+
+
+class Phase3MaskRefinerAndAdaptiveRerankApiTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.store_patch = patch.object(api, 'STORE', Path(self.temp.name))
+        self.store_patch.start()
+        self.addCleanup(self.store_patch.stop)
+        api.ADMISSIONS.clear()
+        api.SESSIONS.clear()
+        self.saved_state = dict(api.STATE)
+        api.STATE['uncertain'] = False
+        api.STATE['active_worker'] = False
+        self.addCleanup(lambda: api.STATE.update(self.saved_state))
+
+    def _test_images_dir(self):
+        here = Path(__file__).resolve()
+        for parent in (here.parents[1], here.parents[2], *here.parents[3:]):
+            candidate = parent / 'test_images'
+            if candidate.is_dir():
+                return candidate
+        raise unittest.SkipTest('test_images fixture directory is not present in this checkout')
+
+    def test_phase3_49_image_mask_refiner_metrics_and_gates(self):
+        import statistics
+        import cv2
+        from implementation import app as app_mod
+        from implementation import automatic_covering as ac
+        from implementation import capture_worker, runtime
+
+        root = self._test_images_dir()
+        cov_root = root / 'internet_samples' / 'covering'
+        review_dir = root / 'review files'
+        if not cov_root.is_dir() or not review_dir.is_dir():
+            self.skipTest('49-image covering + review corpus not present')
+
+        zp = np.zeros((256, 256), dtype=np.float32)
+        zb = np.zeros((256, 256), dtype=np.uint8)
+        cov_files = sorted(
+            p for p in cov_root.iterdir()
+            if p.is_file() and p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.webp')
+        )
+        pos_files = [p for p in cov_files if not p.name.startswith('control_')]
+        ctrl_files = [p for p in cov_files if p.name.startswith('control_')]
+        self.assertEqual(len(pos_files), 25)
+        self.assertEqual(len(ctrl_files), 4)
+
+        def prepare_covering(path: Path):
+            with Image.open(path) as im:
+                rgb_full = np.asarray(im.convert('RGB'))
+            recs = capture_worker.scan_face_records(cv2.cvtColor(rgb_full, cv2.COLOR_RGB2BGR))
+            if recs:
+                rec_idx = app_mod._recommend_face_index(rgb_full, recs, rgb_full.shape[1], rgb_full.shape[0])
+                cx, cy, cw, ch = recs[rec_idx]['crop']
+                crop_rgb = rgb_full[cy:cy + ch, cx:cx + cw]
+            else:
+                crop_rgb = rgb_full
+            rgb_256, obs_256, _, _ = runtime.prepare_crop(crop_rgb)
+            return rgb_256, obs_256
+
+        recall = 0
+        hb_24: list[float] = []
+        cc_all: list[int] = []
+        for p in pos_files:
+            rgb256, obs256 = prepare_covering(p)
+            mask, meta = ac.detect_face_covering(rgb256, zp, zb, obs256)
+            self.assertTrue(meta['onnx_used'])
+            self.assertIn('p3_refiner_actions', meta)
+            self.assertFalse(mask[~obs256].any())
+            m_bool = mask > 0
+            px_cnt = int(m_bool.sum())
+            if px_cnt > 0:
+                recall += 1
+            n_cc = cv2.connectedComponentsWithStats(m_bool.astype(np.uint8), connectivity=8)[0] - 1
+            cc_all.append(n_cc)
+            bprob, _ = ac._run_onnx_models(rgb256)
+            seg = bprob.argmax(axis=0)
+            hb_pct = 100.0 * float(int((m_bool & np.isin(seg, (0, 17))).sum())) / float(max(1, px_cnt))
+            if 'compound_05' not in p.name:
+                hb_24.append(hb_pct)
+
+            if p.name == 'compound_02_hand_chin.jpg':
+                self.assertEqual(hb_pct, 0.0)
+                self.assertEqual(n_cc, 1)
+                self.assertIn('drop_bg_crescent_cc', meta['p3_refiner_actions'])
+            elif p.name == 'compound_04_cctv_black_mask.jpg':
+                self.assertGreaterEqual(px_cnt, 800)
+                self.assertLessEqual(px_cnt, 1700)
+                self.assertEqual(n_cc, 1)
+                self.assertEqual(hb_pct, 0.0)
+                self.assertTrue(any(a.startswith('clamp_chin_hoodie(') for a in meta['p3_refiner_actions']))
+            elif p.name == 'eyewear_05_clear_prescription.jpg':
+                self.assertEqual(n_cc, 2)
+                self.assertIn('eyewear_or_glare', meta['families_triggered'])
+            elif p.name in ('mask_09_mask_and_shield.jpg', 'scarf_01_gray_gaiter_veil.jpg'):
+                self.assertEqual(n_cc, 1)
+
+        self.assertEqual(recall, 25)
+        self.assertLess(statistics.mean(hb_24), 1.0)
+        self.assertLessEqual(statistics.mean(cc_all), 1.08)
+
+        ctrl_fp = 0
+        for p in ctrl_files:
+            rgb256, obs256 = prepare_covering(p)
+            mask, _ = ac.detect_face_covering(rgb256, zp, zb, obs256)
+            if int((mask > 0).sum()) > 0:
+                ctrl_fp += 1
+        self.assertEqual(ctrl_fp, 0)
+
+        zips = sorted(review_dir.glob('*.zip'))
+        self.assertEqual(len(zips), 20)
+        zip_fp = 0
+        for zp_path in zips:
+            with zipfile.ZipFile(zp_path) as zf:
+                with Image.open(io.BytesIO(zf.read('result.png'))) as im:
+                    rgb256 = np.asarray(im.convert('RGB'))
+                with Image.open(io.BytesIO(zf.read('original-native.png'))) as im:
+                    orig_native = np.asarray(im.convert('RGB'))
+            _, obs256, _, _ = runtime.prepare_crop(orig_native)
+            mask, _ = ac.detect_face_covering(rgb256, zp, zb, obs256)
+            if int((mask > 0).sum()) > 0:
+                zip_fp += 1
+        self.assertEqual(zip_fp, 0)
+
+    def test_run_worker_and_generate_multipass_receipt_propagation_and_validation(self):
+        from implementation.completion_runtime import model_contract
+
+        yy, xx = np.mgrid[:256, :256]
+        rgb = np.stack((xx, yy, (xx + yy) // 2), axis=2).astype(np.uint8)
+        raw_png = api.png(rgb)
+        _, _, _, geometry = api.restoration.prepare_crop(rgb)
+        meta = {
+            'model': 'v3',
+            'selection': 'preconditioned_v34_codeformer',
+            'uploaded_bytes_sha256': api.sha(raw_png),
+            'result_file_sha256': api.sha(raw_png),
+            'restoration_applied': False,
+            'geometry': geometry,
+        }
+        resp = {
+            'metadata': meta,
+            'original_input': api.restoration.url(raw_png),
+            'prepared_input': api.restoration.url(raw_png),
+            'result': api.restoration.url(raw_png),
+        }
+        api.admit_restoration(api.canonical(resp))
+        sid = api.prepare(raw_png, raw_png, api.canonical(meta))['session_id']
+        record = api.session(sid)
+
+        non_empty_mask_arr = np.zeros((256, 256), dtype=np.uint8)
+        non_empty_mask_arr[140:190, 100:156] = 255
+        non_empty_mask = api.png(non_empty_mask_arr)
+        empty_mask = api.png(np.zeros((256, 256), dtype=np.uint8))
+
+        def run_fake_worker(mask_bytes, status_payload, *, result_neural_calls='match'):
+            captured_req = {}
+
+            class FakeOwnedWorker:
+                def __init__(self, cmd, **_kwargs):
+                    req_path = Path(cmd[cmd.index('--request') + 1])
+                    res_path = Path(cmd[cmd.index('--result') + 1])
+                    captured_req.update(json.loads(req_path.read_text(encoding='utf-8')))
+                    out_dir = Path(captured_req['output_dir'])
+                    out_dir.mkdir(parents=True, exist_ok=True)
+                    (out_dir / 'status.json').write_bytes(api.canonical(status_payload))
+                    res_calls = (
+                        status_payload.get('neural_returns', 0)
+                        if result_neural_calls == 'match'
+                        else result_neural_calls
+                    )
+                    res_path.write_bytes(api.canonical({'complete': True, 'metadata': {'neural_calls': res_calls}}))
+
+                def __enter__(self): return self
+                def __exit__(self, *_a): return False
+                def wait_tree(self, timeout=None): return 0
+                def poll(self): return 0
+                def active_processes(self): return 0
+                def memory_usage(self): return {'peak_job_private_bytes': 1024}
+                def kill(self): pass
+
+            import types
+            fake_mem = types.SimpleNamespace(available=8 * 1024**3)
+            with patch.object(api, 'OwnedWorker', FakeOwnedWorker), \
+                 patch.object(api.psutil, 'virtual_memory', return_value=fake_mem):
+                return captured_req, api.run_worker(record, 'completion', mask_bytes)
+
+        # Valid 2-pass and 3-pass receipts succeed and increment STATE['completion_calls'] accurately.
+        before_calls = api.STATE['completion_calls']
+        req2, _ = run_fake_worker(non_empty_mask, {'phase': 'complete', 'neural_attempts': 2, 'neural_returns': 2})
+        self.assertEqual(req2['max_passes'], 3)
+        self.assertEqual(api.STATE['completion_calls'], before_calls + 2)
+
+        req3, _ = run_fake_worker(non_empty_mask, {'phase': 'complete', 'neural_attempts': 3, 'neural_returns': 3})
+        self.assertEqual(req3['max_passes'], 3)
+        self.assertEqual(api.STATE['completion_calls'], before_calls + 5)
+
+        # Invalid receipts must be refused (mismatched attempts!=returns, bool, negative, >3, 0 on non-empty, >0 on empty, desync).
+        for mask_b, bad_status, res_calls in (
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': 2, 'neural_returns': 1}, 'match'),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': 4, 'neural_returns': 4}, 'match'),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': 0, 'neural_returns': 0}, 'match'),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': -1, 'neural_returns': -1}, 'match'),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': True, 'neural_returns': True}, 'match'),
+            (empty_mask, {'phase': 'complete', 'neural_attempts': False, 'neural_returns': False}, 'match'),
+            (empty_mask, {'phase': 'complete', 'neural_attempts': 1, 'neural_returns': 1}, 'match'),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': 1, 'neural_returns': 1, 'neural_calls': 2}, 1),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': 1, 'neural_returns': 1}, 999),
+            (non_empty_mask, {'phase': 'complete', 'neural_attempts': 1, 'neural_returns': 1}, True),
+        ):
+            with self.subTest(bad_status=bad_status, res_calls=res_calls):
+                with self.assertRaisesRegex(ValueError, 'Worker forward receipt differs'):
+                    run_fake_worker(mask_b, bad_status, result_neural_calls=res_calls)
+
+        # generate() propagates multi-pass neural_calls (e.g. 3) into both metadata and top-level response.
+        reviewed = api.review(sid, non_empty_mask)
+        comp_out = Path(self.temp.name) / 'mp-comp-out'
+        comp_out.mkdir()
+        comp_rgb = rgb.copy()
+        comp_rgb[non_empty_mask_arr > 0] = (170, 140, 125)
+        comp_f = comp_rgb.astype(np.float32) / np.float32(255.0)
+        comp_replay = np.rint(comp_f * np.float32(255.0)).clip(0, 255).astype(np.uint8)
+        comp_replay[non_empty_mask_arr == 0] = rgb[non_empty_mask_arr == 0]
+        (comp_out / 'completion.png').write_bytes(api.png(comp_replay))
+        np.save(comp_out / 'raw.npy', comp_f, allow_pickle=False)
+        np.savez_compressed(
+            comp_out / 'stages.npz',
+            input_rgb=rgb,
+            removal_mask=(non_empty_mask_arr // 255).astype(np.uint8),
+            completed_rgb=comp_f,
+            output_rgb=comp_replay,
+        )
+        comp_result = {
+            'png_path': str(comp_out / 'completion.png'),
+            'raw_path': str(comp_out / 'raw.npy'),
+            'stages_path': str(comp_out / 'stages.npz'),
+            'metadata': {
+                **model_contract(),
+                'neural_calls': 3,
+                'adaptive_rerank': {'enabled': True, 'passes': 3, 'early_stopped': False, 'chosen': 'mild_sw07_d3'},
+                'output_pins': {},
+                'source_pins': {
+                    'input': {'sha256': api.sha(raw_png)},
+                    'mask': {'sha256': api.sha(non_empty_mask)},
+                },
+            },
+        }
+        (comp_out / 'receipt.json').write_bytes(api.canonical(comp_result['metadata']))
+        with patch.object(api, 'run_worker', return_value=(comp_out, comp_result, {'seconds': .05, 'active_owned_processes': 0})):
+            generated = api.generate(sid, non_empty_mask, reviewed['review_id'], True, True)
+        self.assertEqual(generated['neural_calls'], 3)
+        self.assertEqual(generated['metadata']['neural_calls'], 3)
+        self.assertEqual(generated['metadata']['adaptive_rerank']['passes'], 3)
+
+        # generate() strictly refuses tampered/missing/bool/OOB receipt['neural_calls'] on non-empty and empty masks.
+        for idx, (mask_b, mask_arr, bad_calls) in enumerate((
+            (non_empty_mask, non_empty_mask_arr, True),
+            (non_empty_mask, non_empty_mask_arr, -5),
+            (non_empty_mask, non_empty_mask_arr, 0),
+            (non_empty_mask, non_empty_mask_arr, 4),
+            (non_empty_mask, non_empty_mask_arr, None),
+            (non_empty_mask, non_empty_mask_arr, '__missing__'),
+            (empty_mask, np.zeros((256, 256), dtype=np.uint8), 1),
+            (empty_mask, np.zeros((256, 256), dtype=np.uint8), True),
+        )):
+            with self.subTest(bad_receipt_calls=bad_calls, empty=not bool(mask_arr.any())):
+                rev_bad = api.review(sid, mask_b)
+                bad_dir = Path(self.temp.name) / f'bad-rc-{idx}'
+                bad_dir.mkdir()
+                out_arr = rgb.copy()
+                if mask_arr.any():
+                    out_arr[mask_arr > 0] = (170, 140, 125)
+                out_f = out_arr.astype(np.float32) / np.float32(255.0)
+                out_rep = np.rint(out_f * np.float32(255.0)).clip(0, 255).astype(np.uint8)
+                out_rep[mask_arr == 0] = rgb[mask_arr == 0]
+                (bad_dir / 'completion.png').write_bytes(api.png(out_rep))
+                np.save(bad_dir / 'raw.npy', out_f, allow_pickle=False)
+                np.savez_compressed(
+                    bad_dir / 'stages.npz',
+                    input_rgb=rgb,
+                    removal_mask=(mask_arr // 255).astype(np.uint8),
+                    completed_rgb=out_f,
+                    output_rgb=out_rep,
+                )
+                bad_meta = {
+                    **model_contract(),
+                    'output_pins': {},
+                    'source_pins': {
+                        'input': {'sha256': api.sha(raw_png)},
+                        'mask': {'sha256': api.sha(mask_b)},
+                    },
+                }
+                if bad_calls != '__missing__':
+                    bad_meta['neural_calls'] = bad_calls
+                bad_res = {
+                    'png_path': str(bad_dir / 'completion.png'),
+                    'raw_path': str(bad_dir / 'raw.npy'),
+                    'stages_path': str(bad_dir / 'stages.npz'),
+                    'metadata': bad_meta,
+                }
+                (bad_dir / 'receipt.json').write_bytes(api.canonical(bad_meta))
+                with patch.object(api, 'run_worker', return_value=(bad_dir, bad_res, {'seconds': .02, 'active_owned_processes': 0})):
+                    with self.assertRaisesRegex(ValueError, 'Invalid completion neural_calls receipt'):
+                        api.generate(sid, mask_b, rev_bad['review_id'], True, True)
+
 
 if __name__=='__main__': unittest.main()

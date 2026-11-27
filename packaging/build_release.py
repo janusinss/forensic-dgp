@@ -98,7 +98,12 @@ def stage_offline_payload(payload: Path, stage: Path, commit: str) -> dict:
     locks = {group:git('show', commit + ':implementation/locks/windows-cp313-' + group + '.txt')
              for group in ('application','capture')}
     model_specs = []
-    for group, name in (('restoration','models.json'),('completion','completion_assets.json')):
+    manifests = [('restoration','models.json'),('completion','completion_assets.json')]
+    has_onnx = subprocess.run(['git', 'cat-file', '-e', commit + ':implementation/onnx_assets.json'],
+                              cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+    if has_onnx:
+        manifests.append(('onnx','onnx_assets.json'))
+    for group, name in manifests:
         manifest = json.loads(git('show', commit + ':implementation/' + name))
         for identity, asset in sorted(manifest['assets'].items()):
             model_specs.append(dict(group=group,id=identity,filename=asset['filename'],size=asset['size'],sha256=asset['sha256']))

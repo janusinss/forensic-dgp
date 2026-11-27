@@ -1,5 +1,21 @@
 # Forensic DGP project handoff
 
+## 27 November 2026 — Version 0.3.4 release (Auto Mode vNext + Offline ONNX Bundle)
+
+| Component | Verified revision or version |
+| --- | --- |
+| Standalone app, `IMPLEMENTATION` | [`6920685`](https://github.com/janusinss/forensic-dgp/commit/69206850a5098c0bb80a5f0b9ee19e61d8a6b4e2) |
+| Offline installer build, `codex/r2-installer-release` | [`91899c4`](https://github.com/janusinss/forensic-dgp/commit/91899c4c8a7432e0a4f8e3cc8775c2d2c12d332d) (site sync [`9682229`](https://github.com/janusinss/forensic-dgp/commit/968222994029e6621ea907966ae2a9efd035fbc3)) |
+| Public download page | [Forensic DGP 0.3.4 preview](https://forensic-dgp.pages.dev/) · [Pages deployment `a742cfd2`](https://a742cfd2.forensic-dgp.pages.dev/) · [deployment record](download-site/DEPLOYMENT.md) |
+| GitHub prerelease | [`v0.3.4`](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.4) |
+
+- Published and verified the Windows offline installer `ForensicDGP_Setup-0.3.4.exe` (`1,370,551,949` bytes, SHA-256 `39dd8c3f3629c830744b3685bea6cb23d94f1d01ac3556e80514a7722ca1fa68`, Inno Setup `7.1.1`, `upx=False`) on GitHub Releases (`v0.3.4`, verified anonymous `HTTP 206` `Content-Range: bytes 0-15/1370551949` and 94-byte `.sha256` exact match) and Cloudflare Pages (`https://forensic-dgp.pages.dev/release.json` and `/downloads/ForensicDGP_Setup-0.3.4.exe.sha256`), with zero detections under Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`), `19/19` download-site tests + `tsc --noEmit` + Vite build passing, and clean live Playwright audits across `375x667`, `768x1024`, and `1280x800` (`0` overflow, `0` console/network errors, `0` a11y violations).
+- Ships **Auto Mode vNext (Phases 1–3) + Full Offline ONNX Packaging** across `integrated_app/`, `IMPLEMENTATION`, and `codex/r2-installer-release` while keeping all 9 frozen CodeFormer V3.4 and Completion R2 files 0-diff and preserving Step 2 upright roll alignment (`_apply_upright_roll_if_needed`):
+  - **Detection, Quality Gate & Video Burst**: SCRFD-2.5GF multi-pass detector (`scrfd_detector.py`, `det_2.5g.onnx`), eDifFIQA-T quality gate (`fiqa_scorer.py`, `ediffiqa_tiny_jun2024.onnx`), upright roll alignment, and multi-frame video temporal burst fusion (`video_burst.py`, `+1.038 dB` mean / `+2.35 dB` noisy CCTV).
+  - **Restoration Prep & V3.4 Fast-Path**: Directional motion-blur Wiener deconvolution (`motion_blur.py`), V3.4 residual fast-path (`v34_probe.py`) cutting median Step 2 latency `4.69×` (`17,663 -> 3,769.4 ms`) and clean-portrait max `11.87×` (`40,547 -> 3,415.2 ms`) with `0/10` clean FP, `0/72` route diffs, and `+0.0000 dB` 20-pair GT V3.4 parity (`18.280 dB`).
+  - **Occlusion Segmentation & Progressive Completion**: BiSeNet-R18 QDQ INT8 (`bisenet_resnet18_qdq_int8.onnx`), OFIQ FaceOcclusion QDQ INT8 (`ofiq_face_occlusion_qdq_int8.onnx`), and 2d106det 106-point face-hull clipping (`2d106det.onnx`) cutting hair/bg spill `2.32% -> 0.67%` (`25/25` recall, `0/20` review-zip FP, `0/4` beard/makeup FP), plus adaptive seam feathering, Lab shading transfer, and 1–3 pass progressive Completion R2 (`Q` `66.25 -> 70.69`, hard-10 `55.0 -> 62.3`, `16/16` bit-exact outside mask).
+  - **Offline ONNX + `onnxruntime` Bundle**: Pins `onnxruntime==1.29.0` (`34` hashed wheels in `windows-cp313-application.txt`) and all `5` verified ONNX models (`onnx_assets.json`, `onnx_install.py`, `10` total models in `offline-payload-v034`, manifest SHA-256 `4ef817e3247320490cc3d1df00ce867c3fe2edc664a73f949074ef24f5d7c383`).
+
 ## 26 November 2026 — Version 0.3.3 release (Step 2 Uniform Auto Blur Overhaul)
 
 | Component | Verified revision or version |

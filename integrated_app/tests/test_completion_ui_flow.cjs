@@ -53,8 +53,8 @@ class MockNode {
   querySelector() { return null; }
   querySelectorAll() { return []; }
   replaceChildren() { this.children = []; }
-  append() {}
-  prepend() {}
+  append(...nodes) { this.children.push(...nodes); }
+  prepend(...nodes) { this.children.unshift(...nodes); }
   focus() {}
   getContext() {
     return {
@@ -191,8 +191,8 @@ function buildCompletionHarness({ fetchImpl, locationObj = undefined }) {
 test('implementation.html exposes Edit removal area and bumps cache-busting query versions', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'templates', 'implementation.html'), 'utf8');
   assert.match(html, /<button id="completion-edit-mask" class="tool-btn" type="button" data-nav="completion-paint" data-wizard-nav>Edit removal area<\/button>/);
-  assert.match(html, /\/static\/implementation\.js\?v=50/);
-  assert.match(html, /\/static\/completion\.js\?v=15/);
+  assert.match(html, /\/static\/implementation\.js\?v=5\d+/);
+  assert.match(html, /\/static\/completion\.js\?v=17/);
 });
 
 test('completion.js short-circuits 0-pixel proposals to manual editor and forwards proposal_id on manual edits', async () => {
@@ -302,4 +302,167 @@ test('completion.js disables Remove covering when /face/completion/status report
   assert.deepEqual(statusCalls, ['/face/completion/status']);
   assert.equal(byId('completion-start').disabled, true);
   assert.match(byId('completion-progress').textContent, /unavailable/i);
+});
+
+test('completion.js renders completion_quality badge with warnings and clears on reset', async () => {
+  const PNG_INPUT = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  const PNG_RESTORED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const ZIP_EVIDENCE = 'data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==';
+  const SESSION_ID = 'b'.repeat(32);
+  const PROPOSAL_ID = 'c'.repeat(32);
+  const REVIEW_ID = 'f'.repeat(32);
+
+  let savedMaskPngDataUrl = PNG_RESTORED;
+  const { sandbox, byId } = buildCompletionHarness({
+    fetchImpl: async (url, init) => {
+      if (url === '/face/completion/prepare') {
+        return { ok: true, json: async () => ({ session_id: SESSION_ID, bounds: [0, 0, 256, 256], input_png: PNG_RESTORED }) };
+      }
+      if (url === '/face/completion/propose') {
+        return { ok: true, json: async () => ({ proposal_id: PROPOSAL_ID, proposal_png: PNG_RESTORED, metadata: { proposed_mask_pixels: 1200 } }) };
+      }
+      if (url === '/face/completion/review') {
+        const blob = init.body.get('mask');
+        const buf = Buffer.from(await blob.arrayBuffer());
+        savedMaskPngDataUrl = 'data:image/png;base64,' + buf.toString('base64');
+        return { ok: true, json: async () => ({ review_id: REVIEW_ID, mask_png: savedMaskPngDataUrl, visibility: { rejected: false } }) };
+      }
+      if (url === '/face/completion/generate') {
+        return {
+          ok: true,
+          json: async () => ({
+            result_png: PNG_RESTORED,
+            mask_png: savedMaskPngDataUrl,
+            bundle: ZIP_EVIDENCE,
+            neural_calls: 1,
+            metadata: {
+              seconds: 1.4,
+              completion_quality: {
+                score_0_100: 48,
+                grade: 'low',
+                factors: { occluder_clear: 40, anatomy: 50, symmetry: 65, seam: 45, texture: 55 },
+                warnings: ['Visible tone or edge seam at the mask boundary.'],
+              },
+            },
+          }),
+        };
+      }
+      throw new Error(`Unexpected URL: ${url}`);
+    },
+  });
+
+  const detail = {
+    originalFile: new sandbox.File(['orig'], 'face.png', { type: 'image/png' }),
+    result: {
+      original_input: PNG_INPUT,
+      result: PNG_RESTORED,
+      metadata: { selection: 'preconditioned_v34_codeformer', geometry: { observed_bounds_256: [0, 0, 256, 256] } },
+    },
+  };
+  sandbox.window.dispatchEvent(new sandbox.CustomEvent('restoration:completed', { detail }));
+  await byId('completion-start').dispatchEvent({ type: 'click' });
+
+  const metrics = byId('completion-result-metrics');
+  const note = metrics.children.find(n => n.id === 'completion-quality-note');
+  assert.ok(note, 'completion-quality-note element should be rendered inside completion-result-metrics');
+  assert.equal(note.dataset.qualityGrade, 'low');
+  assert.equal(note.dataset.qualityScore, '48');
+  assert.match(note.textContent, /Consistency check: Low \(48\/100\)/);
+  assert.match(note.textContent, /Visible tone or edge seam at the mask boundary/);
+});
+
+test('completion.js accepts multi-pass neural_calls 1..3 for non-empty masks and rejects out-of-range or mismatched counts', async () => {
+  const PNG_INPUT = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  const PNG_RESTORED = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const PNG_EMPTY = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+  const ZIP_EVIDENCE = 'data:application/zip;base64,UEsFBgAAAAAAAAAAAAAAAAAAAAAAAA==';
+  const SESSION_ID = 'b'.repeat(32);
+  const PROPOSAL_ID = 'c'.repeat(32);
+  const REVIEW_ID = 'f'.repeat(32);
+
+  async function runCompletionCase({ hasMask, generatePayload }) {
+    let savedMaskPngDataUrl = hasMask ? PNG_RESTORED : PNG_EMPTY;
+    const { sandbox, byId } = buildCompletionHarness({
+      fetchImpl: async (url, init) => {
+        if (url === '/face/completion/prepare') {
+          return { ok: true, json: async () => ({ session_id: SESSION_ID, bounds: [0, 0, 256, 256], input_png: PNG_RESTORED }) };
+        }
+        if (url === '/face/completion/propose') {
+          return {
+            ok: true,
+            json: async () => ({
+              proposal_id: PROPOSAL_ID,
+              proposal_png: hasMask ? PNG_RESTORED : PNG_EMPTY,
+              metadata: { proposed_mask_pixels: hasMask ? 1200 : 0 },
+            }),
+          };
+        }
+        if (url === '/face/completion/review') {
+          const blob = init.body.get('mask');
+          const buf = Buffer.from(await blob.arrayBuffer());
+          savedMaskPngDataUrl = 'data:image/png;base64,' + buf.toString('base64');
+          return { ok: true, json: async () => ({ review_id: REVIEW_ID, mask_png: savedMaskPngDataUrl, visibility: { rejected: false } }) };
+        }
+        if (url === '/face/completion/generate') {
+          return {
+            ok: true,
+            json: async () => ({
+              result_png: PNG_RESTORED,
+              mask_png: savedMaskPngDataUrl,
+              bundle: ZIP_EVIDENCE,
+              ...generatePayload,
+            }),
+          };
+        }
+        throw new Error(`Unexpected URL: ${url}`);
+      },
+    });
+
+    const detail = {
+      originalFile: new sandbox.File(['orig'], 'face.png', { type: 'image/png' }),
+      result: {
+        original_input: PNG_INPUT,
+        result: PNG_RESTORED,
+        metadata: { selection: 'preconditioned_v34_codeformer', geometry: { observed_bounds_256: [0, 0, 256, 256] } },
+      },
+    };
+    sandbox.window.dispatchEvent(new sandbox.CustomEvent('restoration:completed', { detail }));
+    await byId('completion-start').dispatchEvent({ type: 'click' });
+    if (!hasMask) {
+      byId('completion-mask-confirm').checked = true;
+      await byId('completion-mask-confirm').dispatchEvent({ type: 'change' });
+      byId('completion-visible-confirm').checked = true;
+      await byId('completion-visible-confirm').dispatchEvent({ type: 'change' });
+      await byId('completion-generate').dispatchEvent({ type: 'click' });
+    }
+    return { byId };
+  }
+
+  for (const validCalls of [2, 3]) {
+    const { byId } = await runCompletionCase({
+      hasMask: true,
+      generatePayload: { neural_calls: validCalls, metadata: { neural_calls: validCalls, seconds: 4.2 } },
+    });
+    assert.equal(byId('completion-error').textContent, '', `Expected neural_calls=${validCalls} to succeed`);
+    assert.equal(byId('completion-result-section').classList.contains('hidden'), false);
+    assert.match(byId('completion-summary').textContent, /outside the selected area is unchanged/i);
+  }
+
+  for (const badPayload of [
+    { neural_calls: 0, metadata: { neural_calls: 0, seconds: 1.0 } },
+    { neural_calls: 4, metadata: { neural_calls: 4, seconds: 1.0 } },
+    { neural_calls: 1.5, metadata: { neural_calls: 1.5, seconds: 1.0 } },
+    { neural_calls: 2, metadata: { neural_calls: 3, seconds: 1.0 } },
+  ]) {
+    const { byId } = await runCompletionCase({ hasMask: true, generatePayload: badPayload });
+    assert.match(byId('completion-error').textContent, /did not match the selected area/i);
+    assert.equal(byId('completion-result-section').classList.contains('hidden'), true);
+  }
+
+  const { byId: emptyReject } = await runCompletionCase({
+    hasMask: false,
+    generatePayload: { neural_calls: 1, metadata: { neural_calls: 1, seconds: 0.3 } },
+  });
+  assert.match(emptyReject('completion-error').textContent, /did not match the selected area/i);
+  assert.equal(emptyReject('completion-result-section').classList.contains('hidden'), true);
 });

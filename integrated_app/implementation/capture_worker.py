@@ -1,9 +1,11 @@
 """Disposable RTSP reader or frozen-frame face detector."""
 import hashlib
+import importlib.util
 import json
 import math
 import os
 from pathlib import Path
+import stat
 import struct
 import sys
 import time
@@ -12,6 +14,7 @@ YUNET_MODEL = Path(__file__).with_name('assets') / 'face_detection_yunet_2023mar
 YUNET_SHA256 = '8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4'
 MAX_SCAN_SIDE = 1600
 AUTO_CROP_MARGIN_RATIO = 0.32
+_SCRFD_MODULE_CACHE = None
 
 def main():
     os.environ['OPENCV_FFMPEG_CAPTURE_OPTIONS'] = 'rtsp_transport;tcp|protocol_whitelist;rtsp,rtp,tcp|timeout;5000000'
@@ -237,7 +240,125 @@ def _collect_records(
     return records
 
 
-def scan_face_records(image):
+def _load_scrfd_detector():
+    """Load sibling scrfd_detector cleanly under package import, CLI script, or runpy.run_path."""
+    global _SCRFD_MODULE_CACHE
+    if __package__:
+        try:
+            from . import scrfd_detector
+            return scrfd_detector
+        except ImportError:
+            pass
+    for mod_name in ('implementation.scrfd_detector', 'scrfd_detector'):
+        existing = sys.modules.get(mod_name)
+        if existing is not None:
+            return existing
+    if _SCRFD_MODULE_CACHE is not None:
+        return _SCRFD_MODULE_CACHE
+    try:
+        sibling = Path(__file__).with_name('scrfd_detector.py')
+        info = sibling.lstat()
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 1024 or not stat.S_ISREG(info.st_mode):
+            return None
+        spec = importlib.util.spec_from_file_location('scrfd_detector', str(sibling))
+        if spec is None or spec.loader is None:
+            return None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _SCRFD_MODULE_CACHE = module
+        sys.modules.setdefault('scrfd_detector', module)
+        return module
+    except (ImportError, OSError, RuntimeError, ValueError, TypeError):
+        return None
+
+
+def _scan_scrfd_records(image):
+    """Run SCRFD-2.5GF primary detector when available, returning None on backend failure."""
+    mod = _load_scrfd_detector()
+    if mod is None:
+        return None
+    fn = getattr(mod, 'scan_scrfd_face_records', None)
+    if fn is None:
+        return None
+    return fn(image)
+
+
+def _record_has_valid_landmarks(rec):
+    box = rec.get('box')
+    lms = rec.get('landmarks')
+    if not (isinstance(box, (list, tuple)) and len(box) == 4 and isinstance(lms, (list, tuple)) and len(lms) == 5):
+        return False
+    row = [float(box[0]), float(box[1]), float(box[2]), float(box[3])]
+    for pt in lms:
+        if not (isinstance(pt, (list, tuple)) and len(pt) == 2):
+            return False
+        row.extend((float(pt[0]), float(pt[1])))
+    return _valid_face_landmarks(row, float(box[2]), float(box[3]))
+
+
+def _refine_scrfd_roll_jitter(image, scrfd_records):
+    """Guard tiny (<42px), occluded, or coarse-mosaic SCRFD landmark/roll jitter via YuNet cross-check."""
+    if not scrfd_records:
+        return scrfd_records
+    flagged = []
+    for idx, rec in enumerate(scrfd_records):
+        roll = float(rec.get('roll_deg', 0.0))
+        bw, bh = int(rec['box'][2]), int(rec['box'][3])
+        valid_lm = _record_has_valid_landmarks(rec)
+        score = float(rec.get('score', 0.0))
+        high_roll = abs(roll) > 14.0 and (min(bw, bh) < 42 or not valid_lm or score < 0.85)
+        low_conf = score < 0.72
+        if high_roll or low_conf:
+            flagged.append((idx, valid_lm, min(bw, bh), high_roll, low_conf))
+    if not flagged:
+        return scrfd_records
+
+    yunet_errors = [ImportError, OSError, RuntimeError, ValueError]
+    try:
+        import cv2 as _cv2_mod
+        _cv2_err = getattr(_cv2_mod, 'error', None)
+        if isinstance(_cv2_err, type) and issubclass(_cv2_err, Exception) and _cv2_err not in yunet_errors:
+            yunet_errors.append(_cv2_err)
+    except ImportError:
+        pass
+    try:
+        yunet_records = _scan_yunet_face_records(image)
+    except tuple(yunet_errors):
+        yunet_records = []
+    refined = [dict(r) for r in scrfd_records]
+    for idx, valid_lm, min_side, high_roll, low_conf in flagged:
+        rec = refined[idx]
+        roll = float(rec.get('roll_deg', 0.0))
+        sc_score = float(rec.get('score', 0.0))
+        best_yn = None
+        best_iou = 0.0
+        for yn in yunet_records:
+            iou = _box_iou(rec['box'], yn['box'])
+            if iou >= 0.45 and iou > best_iou:
+                best_iou = iou
+                best_yn = yn
+        if best_yn is not None:
+            yn_roll = float(best_yn.get('roll_deg', 0.0))
+            yn_score = float(best_yn.get('score', 0.0))
+            yn_valid_lm = _record_has_valid_landmarks(best_yn)
+            if low_conf and yn_valid_lm and yn_score >= sc_score + 0.15:
+                rec['box'] = best_yn['box']
+                rec['crop'] = best_yn['crop']
+                rec['roll_deg'] = yn_roll
+                rec['landmarks'] = best_yn['landmarks']
+            elif high_roll and abs(roll - yn_roll) >= 8.0 and abs(yn_roll) < abs(roll):
+                rec['roll_deg'] = yn_roll
+                if yn_valid_lm:
+                    rec['landmarks'] = best_yn['landmarks']
+        elif high_roll:
+            if not valid_lm:
+                rec['roll_deg'] = 0.0
+            elif min_side < 42:
+                rec['roll_deg'] = round(max(-12.0, min(12.0, roll)), 2)
+    return refined
+
+
+def _scan_yunet_face_records(image):
     """Multi-pass YuNet face detection returning validated boxes, +32% padded crops, scores, and landmarks."""
     import cv2
     import numpy as np
@@ -322,10 +443,17 @@ def scan_face_records(image):
                     )
                 )
 
-    # Pass 2b: mild gamma lift ONLY when 0 candidates were found on a dark/backlit frame.
-    if not candidates:
+    # Pass 2b: mild gamma lift on dark or backlit frames when no high-confidence face was found.
+    max_raw_score = max((c['score'] for c in candidates), default=0.0)
+    if not candidates or max_raw_score < 0.65:
         gray_scan = cv2.cvtColor(scan_image, cv2.COLOR_BGR2GRAY)
-        if float(np.percentile(gray_scan, 25)) < 45.0:
+        p25, p50, p90 = [float(v) for v in np.percentile(gray_scan, [25, 50, 90])]
+        is_dark_or_backlit = (
+            p25 < 45.0
+            or (p90 >= 180.0 and p25 < 75.0)
+            or (not candidates and p50 < 72.0)
+        )
+        if is_dark_or_backlit:
             lut = np.clip(np.rint(((np.arange(256, dtype=np.float32) / 255.0) ** 0.55) * 255.0), 0, 255).astype(np.uint8)
             lifted = cv2.LUT(scan_image, lut)
             candidates.extend(_collect_records(detector, lifted, original_size, 0.48, pass_bias=-0.05, pass_idx=2))
@@ -383,6 +511,19 @@ def scan_face_records(image):
             if len(filtered) == 100:
                 break
     return filtered
+
+
+def scan_face_records(image):
+    """Hybrid SCRFD-2.5GF primary face scan with YuNet fallback and tiny/occluded roll guard."""
+    if image is None or getattr(image, 'ndim', 0) != 3 or image.shape[2] != 3:
+        return []
+    height, width = image.shape[:2]
+    if min(width, height) < 16:
+        return []
+    scrfd_records = _scan_scrfd_records(image)
+    if scrfd_records:
+        return _refine_scrfd_roll_jitter(image, scrfd_records)
+    return _scan_yunet_face_records(image)
 
 
 def scan_faces(image):
