@@ -66,9 +66,12 @@
         const stageLabels = {
             scanline_cleanup: 'scanline cleanup',
             noise_denoise: 'noise denoising',
+            motion_deblur: 'motion-blur conditioning',
             cast_dehaze: 'color cast and haze correction',
             color_cast_balance: 'color cast balancing',
             haze_dehaze: 'haze dehazing',
+            low_light_recovery: 'low-light illumination recovery',
+            glare_recovery: 'glare and washout recovery',
             spatial_comb: 'spatial comb cleanup',
             jpeg_deblocking: 'JPEG deblocking',
             macroblock_fbcnn: 'FBCNN macroblock deblocking',
@@ -89,9 +92,12 @@
                 : 'Auto applied multi-stage artifact preparation before face restoration.';
         }
         if (decision?.route === 'noise_denoise') return 'Auto reduced additive and chroma noise before face restoration.';
+        if (decision?.route === 'motion_deblur') return 'Auto conditioned linear motion blur before face restoration.';
         if (decision?.route === 'cast_dehaze') return 'Auto balanced color cast and dehazed low-contrast regions before face restoration.';
         if (decision?.route === 'color_cast_balance') return 'Auto balanced residual color cast before face restoration.';
         if (decision?.route === 'haze_dehaze') return 'Auto reduced atmospheric haze and restored local contrast before face restoration.';
+        if (decision?.route === 'low_light_recovery') return 'Auto lifted dark shadows with skin-tone-safe illumination recovery before face restoration.';
+        if (decision?.route === 'glare_recovery') return 'Auto compressed glare washout and anchored dark tones before face restoration.';
         if (decision?.route === 'spatial_comb') return 'Auto cleaned residual spatial interlacing comb artifacts before face restoration.';
         if (decision?.route === 'macroblock_fbcnn') return 'Auto reduced compression macroblocking with FBCNN before face restoration.';
         if (decision?.route === 'macroblock_hevc') return 'Auto smoothed DCT macroblock boundaries with adaptive boundary deblocking before face restoration.';
@@ -144,6 +150,7 @@
         }
         if (decision?.route === 'direct') {
             const directReasons = {
+                clean_control_v34_fast_path: 'clean high-resolution face confirmed',
                 face_detection_uncertain: 'no single face box confirmed',
                 no_clear_blur_gap: 'no localized face blur gap detected',
                 insufficient_edges: 'insufficient edge detail to estimate blur',

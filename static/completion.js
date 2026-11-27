@@ -317,7 +317,10 @@
         byId('completion-result-mask').src = removal; byId('completion-mask-download').href = removal;
         byId('completion-result').src = output; byId('completion-result-download').href = output; byId('completion-bundle').href = evidence;
         const calls = result.neural_calls ?? result.metadata?.neural_calls;
-        if (![0, 1].includes(calls) || calls !== Number(hasRemoval)) throw new Error('The result did not match the selected area. Please review the area and try again.');
+        const metaCalls = result.metadata?.neural_calls;
+        const callsMismatch = result.neural_calls !== undefined && metaCalls !== undefined && result.neural_calls !== metaCalls;
+        const validCalls = !callsMismatch && (hasRemoval ? (Number.isInteger(calls) && calls >= 1 && calls <= 3) : calls === 0);
+        if (!validCalls) throw new Error('The result did not match the selected area. Please review the area and try again.');
         await Promise.all(['completion-original', 'completion-input', 'completion-result-mask', 'completion-result'].map(id => byId(id).decode()));
         if (!current(token, version)) return false;
         const srcMeta = fixed.result.metadata || {};
@@ -337,6 +340,20 @@
                 afterLabel: 'Completed result',
                 autoReferenceFile: window.getLastReferenceFile?.(),
             });
+            const quality = result.metadata?.completion_quality;
+            if (quality && typeof quality === 'object' && Number.isFinite(quality.score_0_100) && typeof quality.grade === 'string') {
+                const gradeLabel = quality.grade === 'high' ? 'High' : quality.grade === 'moderate' ? 'Moderate' : 'Low';
+                const note = document.createElement('p');
+                note.id = 'completion-quality-note';
+                note.className = 'work-note completion-quality-note';
+                note.dataset.qualityGrade = quality.grade;
+                note.dataset.qualityScore = String(Math.round(quality.score_0_100));
+                const firstWarning = Array.isArray(quality.warnings) && typeof quality.warnings[0] === 'string' ? quality.warnings[0].trim() : '';
+                note.textContent = firstWarning
+                    ? `Consistency check: ${gradeLabel} (${Math.round(quality.score_0_100)}/100) — ${firstWarning} Refine the removal area and retry if needed.`
+                    : `Consistency check: ${gradeLabel} (${Math.round(quality.score_0_100)}/100).`;
+                metricsContainer.append(note);
+            }
         }
         const seconds = result.metadata?.seconds;
         const timing = Number.isFinite(seconds) ? `${seconds.toFixed(1)} seconds. ` : '';

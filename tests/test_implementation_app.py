@@ -1617,21 +1617,38 @@ class ControllerTests(unittest.TestCase):
         # Sharp exterior hair/background is softened to match the conditioned face
         self.assertGreater(float(np.any(derived[~full_mask] != scene[~full_mask], axis=1).mean()), 0.80)
 
-    def test_negative_controls_clean_portraits_highres_jpeg_and_coarse_mosaic_non_degraded(self):
-        """Clean sharp portraits and >=512px JPEG Q=8..15 never trigger false blur; coarse 24/32px mosaics stay non-conditioned."""
+    def _assert_highres_jpeg_non_blur(self, quality: int):
         from PIL import ImageOps
-        from implementation import automatic_preparation
 
         test_dir = Path(__file__).resolve().parents[2] / 'test_images'
         clean_path = test_dir / 'face 1 - default.jpg'
         if not clean_path.exists():
             self.skipTest('face 1 - default.jpg fixture missing')
-        clean_bytes = clean_path.read_bytes()
-        clean_im = ImageOps.exif_transpose(Image.open(io.BytesIO(clean_bytes))).convert('RGB')
-        clean_rgb = np.asarray(clean_im)
-
+        clean_im = ImageOps.exif_transpose(Image.open(io.BytesIO(clean_path.read_bytes()))).convert('RGB')
         dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
-        # 1) Clean sharp portrait -> direct (zero false blur)
+        im512 = clean_im.resize((512, 512), Image.Resampling.LANCZOS)
+        buf = io.BytesIO()
+        im512.save(buf, format='JPEG', quality=quality, subsampling=2)
+        with patch.object(controller, 'one_forward', return_value=dummy_out):
+            res_j = self.restore(
+                file=self.upload(buf.getvalue(), filename=f'q{quality}.jpg'),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        route_j = res_j['metadata']['automatic_preparation']['route']
+        self.assertNotIn('gaussian', route_j)
+        self.assertNotEqual(route_j, 'protect_auto')
+        self.assertFalse(res_j['metadata']['automatic_preparation'].get('uniform_crop_smoothing', False))
+
+    def test_negative_controls_clean_portrait_non_degraded(self):
+        """Clean sharp portraits never trigger false blur or preparation."""
+        test_dir = Path(__file__).resolve().parents[2] / 'test_images'
+        clean_path = test_dir / 'face 1 - default.jpg'
+        if not clean_path.exists():
+            self.skipTest('face 1 - default.jpg fixture missing')
+        clean_bytes = clean_path.read_bytes()
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
         with patch.object(controller, 'one_forward', return_value=dummy_out):
             res_clean = self.restore(
                 file=self.upload(clean_bytes, filename='face1.jpg'),
@@ -1642,25 +1659,18 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(res_clean['metadata']['automatic_preparation']['route'], 'direct')
         self.assertFalse(res_clean['metadata']['preparation_applied'])
 
-        # 2) >=512px real portrait JPEG Q=8 & Q=12 -> JPEG/macroblock deblocking (never Gaussian blur / protect_auto)
-        im512 = clean_im.resize((512, 512), Image.Resampling.LANCZOS)
-        for q in (8, 12):
-            buf = io.BytesIO()
-            im512.save(buf, format='JPEG', quality=q, subsampling=2)
-            with patch.object(controller, 'one_forward', return_value=dummy_out):
-                res_j = self.restore(
-                    file=self.upload(buf.getvalue(), filename=f'q{q}.jpg'),
-                    restoration='auto',
-                    preparation_mode='automatic',
-                    input_review='picture_upload',
-                )
-            route_j = res_j['metadata']['automatic_preparation']['route']
-            self.assertNotIn('gaussian', route_j)
-            self.assertNotEqual(route_j, 'protect_auto')
-            self.assertFalse(res_j['metadata']['automatic_preparation'].get('uniform_crop_smoothing', False))
-
-        # 3) Coarse 24x24 & 32x32 clean-color mosaics -> uniform Gaussian blur, NEVER degraded_patch_conditioning
+    def test_negative_controls_coarse_mosaic_non_conditioned(self):
+        """Coarse 24/32px clean-color mosaics stay uniform Gaussian blur, never degraded_patch_conditioning."""
         import cv2
+        from PIL import ImageOps
+        from implementation import automatic_preparation
+
+        test_dir = Path(__file__).resolve().parents[2] / 'test_images'
+        clean_path = test_dir / 'face 1 - default.jpg'
+        if not clean_path.exists():
+            self.skipTest('face 1 - default.jpg fixture missing')
+        clean_im = ImageOps.exif_transpose(Image.open(io.BytesIO(clean_path.read_bytes()))).convert('RGB')
+        clean_rgb = np.asarray(clean_im)
         h, w = clean_rgb.shape[:2]
         y0, y1, x0, x1 = int(h * 0.12), int(h * 0.88), int(w * 0.12), int(w * 0.88)
         for blk_sz in (24, 32):
@@ -1672,6 +1682,237 @@ class ControllerTests(unittest.TestCase):
             m = np.zeros((h, w), dtype=bool)
             m[y0:y1, x0:x1] = True
             self.assertIsNone(automatic_preparation._condition_degraded_face_patch(rgb_mos, m))
+
+    def test_negative_controls_highres_jpeg_q8_non_blur(self):
+        """>=512px real portrait JPEG Q=8 routes to JPEG/macroblock deblocking, never Gaussian blur or protect_auto."""
+        self._assert_highres_jpeg_non_blur(8)
+
+    def test_negative_controls_highres_jpeg_q12_non_blur(self):
+        """>=512px real portrait JPEG Q=12 routes to JPEG/macroblock deblocking, never Gaussian blur or protect_auto."""
+        self._assert_highres_jpeg_non_blur(12)
+
+    def test_recommend_face_index_prefers_foreground_degraded_and_rejects_torso_and_hat_back(self):
+        """Step 1 ranking favors larger degraded foreground subjects over tiny bystanders, loose torsos, and hat backs."""
+        rng = np.random.default_rng(1212)
+        h, w = 440, 640
+        scene = np.full((h, w, 3), 120, dtype=np.uint8)
+        # 1) Tiny sharp bystander vs larger pixelated foreground officer (mosaic_04 geometry)
+        scene[149:180, 150:175] = np.array([175, 138, 118], dtype=np.uint8)
+        blk = Image.fromarray(rng.integers(50, 210, (12, 12, 3), dtype=np.uint8)).resize((97, 103), Image.Resampling.NEAREST)
+        scene[303:406, 182:279] = np.asarray(blk)
+        recs_m04 = [
+            {'box': [150, 149, 25, 31], 'crop': [140, 139, 45, 51], 'score': 0.84},
+            {'box': [182, 303, 97, 103], 'crop': [149, 270, 163, 169], 'score': 0.47},
+        ]
+        self.assertEqual(controller._recommend_face_index(scene, recs_m04, w, h), 1)
+
+        # 2) Giant loose low-confidence torso box vs smaller high-confidence archival B&W face (cctv_06 geometry)
+        bw_scene = np.full((720, 1280, 3), 110, dtype=np.uint8)
+        recs_c06 = [
+            {'box': [284, 190, 413, 363], 'crop': [152, 58, 677, 627], 'score': 0.485},
+            {'box': [1070, 0, 210, 218], 'crop': [1000, 0, 280, 288], 'score': 0.736},
+        ]
+        self.assertEqual(controller._recommend_face_index(bw_scene, recs_c06, 1280, 720), 1)
+
+        # 3) Blurry bokeh FP overlapping a sharper high-confidence real face (mask_03 geometry)
+        bokeh_scene = np.full((600, 600, 3), [135, 118, 102], dtype=np.uint8)
+        bokeh_scene[96:213, 324:416] = rng.integers(30, 230, (117, 92, 3), dtype=np.uint8)
+        recs_m03 = [
+            {'box': [190, 97, 130, 143], 'crop': [144, 51, 222, 235], 'score': 0.686},
+            {'box': [324, 96, 92, 117], 'crop': [289, 61, 162, 187], 'score': 0.910},
+        ]
+        self.assertEqual(controller._recommend_face_index(bokeh_scene, recs_m03, 600, 600), 1)
+
+    def test_upright_roll_five_to_fifteen_degrees_aligns_mosaic_and_pins_hashes(self):
+        """Full-range upright roll (|roll| >= 5 deg) aligns mosaic routes and pins derived-native & processing hashes."""
+        rng = np.random.default_rng(1414)
+        scene = np.full((256, 256, 3), 120, dtype=np.uint8)
+        blk = Image.fromarray(rng.integers(25, 230, (12, 12, 3), dtype=np.uint8)).resize((120, 120), Image.Resampling.NEAREST)
+        scene[68:188, 68:188] = np.asarray(blk)
+        rolled_rec = [{
+            'box': [68, 68, 120, 120],
+            'crop': [30, 30, 196, 196],
+            'score': 0.82,
+            'roll_deg': -8.5,
+            'landmarks': [[102.0, 112.0], [154.0, 104.0], [128.0, 134.0], [108.0, 158.0], [148.0, 152.0]],
+        }]
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        with (
+            patch.object(capture_api, 'detect_face_details', return_value=rolled_rec),
+            patch.object(controller, 'one_forward', return_value=dummy_out),
+        ):
+            res = self.restore(
+                file=self.upload(png(scene)),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+                picture_crop=json.dumps([30, 30, 196, 196]),
+            )
+        meta = res['metadata']
+        self.assertEqual(meta['alignment']['applied'], True)
+        self.assertAlmostEqual(meta['alignment']['roll_deg'], -8.5, places=2)
+        self.assertTrue(meta['alignment']['source_context'])
+        bundle_bytes = base64.b64decode(res['bundle'].split(',', 1)[1])
+        with zipfile.ZipFile(io.BytesIO(bundle_bytes)) as archive:
+            derived_bytes = archive.read('derived-native.png')
+            processing = json.loads(archive.read('processing.json'))
+        derived_sha = controller.digest(derived_bytes)
+        self.assertEqual(derived_sha, meta['selected_input_sha256'])
+        self.assertEqual(derived_sha, processing['derived_native_sha256'])
+
+    def test_upright_roll_transforms_censor_bar_exclude_mask_coordinates(self):
+        """When upright roll runs before prepare_automatically, exclude_mask is warped into the rotated frame."""
+        from implementation import automatic_preparation
+
+        bar_img = np.full((192, 192, 3), [172, 142, 122], dtype=np.uint8)
+        yy, xx = np.mgrid[0:192, 0:192]
+        bar_img[..., 0] = np.clip(172 + (xx // 6) - 16, 0, 255).astype(np.uint8)
+        bar_img[68:90, 44:148] = [2, 2, 2]
+        unrotated_bar = np.zeros((192, 192), dtype=bool)
+        unrotated_bar[68:90, 44:148] = True
+        rolled_rec = [{
+            'box': [28, 28, 136, 136],
+            'crop': [0, 0, 192, 192],
+            'score': 0.90,
+            'roll_deg': -12.0,
+            'landmarks': [[72.0, 82.0], [120.0, 72.0], [96.0, 102.0], [78.0, 128.0], [114.0, 122.0]],
+        }]
+        captured = {}
+        orig_prepare_auto = automatic_preparation.prepare
+
+        def spy_prepare_auto(native_in, source_in, face_box, rect, **kwargs):
+            captured['blur_source'] = source_in.copy()
+            captured['exclude_mask'] = kwargs.get('exclude_mask')
+            return orig_prepare_auto(native_in, source_in, face_box, rect, **kwargs)
+
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        with (
+            patch.object(capture_api, 'detect_face_details', return_value=rolled_rec),
+            patch.object(automatic_preparation, 'prepare_source', return_value=(None, None, {})),
+            patch.object(automatic_preparation, 'prepare', side_effect=spy_prepare_auto),
+            patch.object(controller, 'one_forward', return_value=dummy_out),
+        ):
+            res = self.restore(
+                file=self.upload(png(bar_img), filename='rolled_barred.png'),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        self.assertTrue(res['metadata']['automatic_preparation'].get('synthetic_censor_bar_suspected'))
+        excl = captured.get('exclude_mask')
+        self.assertIsNotNone(excl)
+        self.assertEqual(excl.shape, (192, 192))
+        self.assertGreater(int(excl.sum()), 500)
+        # Rotated exclude_mask must differ from unrotated bar and track the dark rotated bar pixels.
+        self.assertFalse(np.array_equal(excl, unrotated_bar))
+        blur_src = captured['blur_source']
+        self.assertLess(float(blur_src[excl].mean()), 30.0)
+
+    def test_clean_control_v34_veto_and_censor_bar_metadata_in_restore(self):
+        """Clean studio controls route direct with 0% pixel edits; synthetic censor bars surface metadata & suppress debleed."""
+        # 1) Clean studio controls (clean_01, clean_03, clean_05 when present) -> direct & 0% modified
+        rest_dir = Path(__file__).resolve().parents[2] / 'test_images' / 'internet_samples' / 'restoration'
+        dummy_out = (None, png(np.zeros((256, 256, 3), np.uint8)), {})
+        for cname in ('clean_01_studio_male.jpg', 'clean_03_uniform_glasses.jpg', 'clean_05_elderly_glasses.jpg'):
+            cpath = rest_dir / cname
+            if not cpath.exists():
+                continue
+            with self.subTest(clean=cname):
+                raw = cpath.read_bytes()
+                with (
+                    patch.object(capture_api, 'detect_face_details', return_value=[]),
+                    patch.object(controller, 'one_forward', return_value=dummy_out),
+                ):
+                    res = self.restore(
+                        file=self.upload(raw, filename=cname),
+                        restoration='auto',
+                        preparation_mode='automatic',
+                        input_review='picture_upload',
+                    )
+                self.assertEqual(res['metadata']['automatic_preparation']['route'], 'direct')
+                self.assertFalse(res['metadata']['preparation_applied'])
+
+        # 2) Synthetic eye censor bar emits synthetic_censor_bar_suspected=True
+        bar_img = np.full((192, 192, 3), [170, 140, 120], dtype=np.uint8)
+        yy, xx = np.mgrid[0:192, 0:192]
+        bar_img[..., 0] = np.clip(170 + (xx // 6) - 16, 0, 255).astype(np.uint8)
+        bar_img[68:90, 44:148] = [2, 2, 2]
+        with (
+            patch.object(capture_api, 'detect_face_details', return_value=[]),
+            patch.object(controller, 'one_forward', return_value=dummy_out),
+        ):
+            res_bar = self.restore(
+                file=self.upload(png(bar_img), filename='barred.png'),
+                restoration='auto',
+                preparation_mode='automatic',
+                input_review='picture_upload',
+            )
+        self.assertTrue(res_bar['metadata']['automatic_preparation'].get('synthetic_censor_bar_suspected'))
+        self.assertNotIn('chroma_debleeding', res_bar['metadata']['automatic_preparation'].get('applied_stages', []))
+
+
+class Phase2FiqaRankingTests(unittest.TestCase):
+    """Phase 2 eDifFIQA-T plausibility integration and graceful None fallback in _recommend_face_index."""
+
+    def test_recommend_face_index_fiqa_active_and_none_fallback_on_spotlights(self):
+        import cv2
+        from implementation import capture_worker, fiqa_scorer
+
+        root = Path(__file__).resolve().parents[2] / 'test_images' / 'internet_samples'
+        cases = [
+            ('blur_08', root / 'restoration' / 'blur_08_transit_anon.jpg'),
+            ('mosaic_04', root / 'restoration' / 'mosaic_04_police_street.png'),
+            ('cctv_06', root / 'restoration' / 'cctv_06_archival_grainy.jpg'),
+            ('mask_03', root / 'covering' / 'mask_03_kn95_sunglasses.jpg'),
+            ('compound_05', root / 'covering' / 'compound_05_cctv_mask_hood.jpg'),
+        ]
+        for tag, path in cases:
+            if not path.is_file():
+                continue
+            with self.subTest(case=tag):
+                rgb = controller.decode_original(path.read_bytes())
+                h, w = rgb.shape[:2]
+                recs = sorted(
+                    capture_worker.scan_face_records(cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)),
+                    key=lambda r: (r['box'][0], r['box'][1]),
+                )
+                self.assertGreaterEqual(len(recs), 1)
+                idx_active = controller._recommend_face_index(rgb, recs, w, h)
+                self.assertTrue(0 <= idx_active < len(recs))
+                if tag == 'cctv_06':
+                    self.assertLess(recs[idx_active]['box'][0], 900)
+                elif tag == 'mosaic_04':
+                    # Selected box must be a real police face, never the lower bicycle wheel FP (y=303).
+                    self.assertLess(recs[idx_active]['box'][1], 240)
+                elif tag == 'mask_03':
+                    self.assertEqual(len(recs), 1)
+                elif tag == 'compound_05':
+                    self.assertEqual(len(recs), 1)
+
+                with patch.object(fiqa_scorer, 'score_face_crops_fiqa', return_value=[None] * len(recs)):
+                    idx_none = controller._recommend_face_index(rgb, recs, w, h)
+                self.assertTrue(0 <= idx_none < len(recs))
+                if tag == 'mosaic_04':
+                    self.assertLess(recs[idx_none]['box'][1], 240)
+
+    def test_recommend_face_index_calls_fiqa_once_and_prefers_higher_fiqa_plausibility(self):
+        from implementation import fiqa_scorer
+
+        scene = np.full((320, 480, 3), 128, dtype=np.uint8)
+        # Two symmetric candidates with identical geometry/score; FIQA breaks tie cleanly.
+        recs = [
+            {'box': [60, 80, 96, 112], 'crop': [24, 44, 168, 184], 'score': 0.80},
+            {'box': [324, 80, 96, 112], 'crop': [288, 44, 168, 184], 'score': 0.80},
+        ]
+        with patch.object(fiqa_scorer, 'score_face_crops_fiqa', return_value=[0.02, 0.52]) as mock_fiqa:
+            picked = controller._recommend_face_index(scene, recs, 480, 320)
+        self.assertEqual(mock_fiqa.call_count, 1)
+        self.assertEqual(len(mock_fiqa.call_args[0][0]), 2)
+        self.assertEqual(picked, 1)
+
+        with patch.object(fiqa_scorer, 'score_face_crops_fiqa', return_value=[None, None]):
+            picked_fb = controller._recommend_face_index(scene, recs, 480, 320)
+        self.assertEqual(picked_fb, 0)
 
 
 if __name__ == '__main__':

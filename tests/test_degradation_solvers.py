@@ -1440,10 +1440,13 @@ class RealTestImagesE2ETests(_E2ERouteTestBase):
         # Full-frame forensic provenance remains intact (localized mask & exterior exact on full-image-smoothed.png)
         self.assertEqual(label(mask)[1], 1)
         self.assertTrue(np.array_equal(full_smoothed[~mask], orig[~mask]))
-        # Crop sent to V3.4 (derived-native.png) is 100% uniformly smoothed across both face & exterior hair
-        from implementation.automatic_preparation import apply_uniform_crop_gaussian
-        expected_uniform = apply_uniform_crop_gaussian(orig, auto['crop_Gaussian_radius_native'])
-        np.testing.assert_array_equal(derived, expected_uniform)
+        # wild3 has a -5.42 deg head roll -> upright aligned before uniform whole-crop smoothing,
+        # with derived-native.png and processing.json hashes atomically pinned.
+        align = meta.get('alignment') or {}
+        self.assertTrue(align.get('applied'))
+        self.assertAlmostEqual(float(align.get('roll_deg', 0.0)), -5.42, delta=0.5)
+        self.assertEqual(processing['derived_native_sha256'], meta['selected_input_sha256'])
+        self.assertEqual(processing['derived_native_sha256'], _sha256(zip_entries['derived-native.png']))
         self.assertGreater(float(np.any(derived[~mask] != orig[~mask], axis=1).mean()), 0.70)
 
     def test_wild4_routes_picture_region_gaussian_radius_3_5_uniform_crop(self):

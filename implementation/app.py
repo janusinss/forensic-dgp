@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import base64
 import binascii
+from collections import OrderedDict
+import copy
 from functools import lru_cache
 import hashlib
 import io
@@ -44,6 +46,9 @@ from .updater import (
 app = FastAPI(title="Forensic face restoration — IMPLEMENTATION")
 app.mount('/static', StaticFiles(directory=str(ROOT / 'static')), name='static')
 LOCK = threading.Lock()
+_STEP1_FACE_RECORDS_LOCK = threading.Lock()
+_STEP1_FACE_RECORDS: OrderedDict[str, list[dict]] = OrderedDict()
+_STEP1_FACE_RECORDS_MAX = 8
 STATE = {'neural_forward_attempts': 0, 'neural_forward_returns': 0,
          'active_worker': False, 'uncertain': False, 'last_worker_pid': None}
 ARMS = {'v3': 'preconditioned_v34_codeformer'}
@@ -294,9 +299,12 @@ async def app_update_install():
 
 _STAGE_REASONS = {
     'noise_denoise': 'suspected_additive_or_sensor_noise',
+    'motion_deblur': 'suspected_linear_motion_blur',
     'cast_dehaze': 'suspected_color_cast_and_haze',
     'color_cast_balance': 'suspected_color_cast_imbalance',
     'haze_dehaze': 'suspected_atmospheric_haze',
+    'low_light_recovery': 'suspected_low_light_underexposure',
+    'glare_recovery': 'suspected_specular_or_veiling_glare',
     'spatial_comb': 'suspected_spatial_interlacing_comb',
     'macroblock_fbcnn': 'genuine_8x8_macroblocking_fbcnn',
     'macroblock_hevc': 'genuine_macroblocking_hevc_deblocking',
@@ -422,45 +430,128 @@ def status():
 
 
 def _recommend_face_index(image, records, width, height):
-    """Score sorted face records to pick the primary foreground subject (favoring degraded faces on ties)."""
+    """Score sorted face records to pick the primary foreground subject with degradation & non-face guards."""
     if not records:
         return 0
     if len(records) == 1:
         return 0
+    import cv2
     from .automatic_preparation import _hf_deficit_stats, pixelation_signal
+    from .capture_worker import _valid_face_landmarks
+    from .fiqa_scorer import score_face_crops_fiqa
 
     best_idx = 0
     best_val = -1.0
     img_h, img_w = image.shape[:2]
+    img_area = max(1.0, float(img_w * img_h))
+    # Detect monochrome / archival grayscale frames so skin-tone filter never penalizes B&W photos.
+    is_color_scene = float(np.mean(np.abs(image[..., 0].astype(np.float32) - image[..., 2].astype(np.float32)))) >= 6.0
+    max_other_score = max((float(r.get('score', 0.75)) for r in records), default=0.75)
+
+    # Single batched eDifFIQA-T plausibility pass across all candidate face patches (graceful None no-op).
+    fiqa_patches = []
+    for rec in records:
+        bx_f, by_f, bw_f, bh_f = [int(v) for v in rec['box']]
+        if 0 <= bx_f and 0 <= by_f and bx_f + bw_f <= img_w and by_f + bh_f <= img_h and min(bw_f, bh_f) >= 16:
+            fiqa_patches.append(image[by_f:by_f + bh_f, bx_f:bx_f + bw_f])
+        else:
+            fiqa_patches.append(None)
+    fiqa_scores = score_face_crops_fiqa(fiqa_patches)
+    if not isinstance(fiqa_scores, (list, tuple)) or len(fiqa_scores) != len(records):
+        fiqa_scores = [None] * len(records)
+
     for idx, rec in enumerate(records):
         bx, by, bw, bh = [int(v) for v in rec['box']]
         score = max(0.05, float(rec.get('score', 0.75)))
         area = max(1.0, float(bw * bh))
+        area_frac = area / img_area
         cx = (bx + bw * 0.5) / max(1.0, float(width))
         cy = (by + bh * 0.5) / max(1.0, float(height))
         dist = math.hypot(cx - 0.5, cy - 0.45)
-        centrality = max(0.35, 1.15 - 0.95 * dist)
-        val = (score ** 1.5) * (area ** 0.35) * centrality
-        if 0 <= bx and 0 <= by and bx + bw <= img_w and by + bh <= img_h and min(bw, bh) >= 24:
-            crop_box = rec.get('crop')
-            degraded_bonus = False
-            if pixelation_signal(image, (bx, by, bw, bh))['suspected']:
-                degraded_bonus = True
-            elif isinstance(crop_box, (list, tuple)) and len(crop_box) == 4:
-                rx, ry, rw, rh = [int(v) for v in crop_box]
-                if (
-                    0 <= rx <= bx
-                    and 0 <= ry <= by
-                    and bx + bw <= rx + rw <= img_w
-                    and by + bh <= ry + rh <= img_h
-                    and rw >= bw + 12
-                    and rh >= bh + 12
+        centrality = max(0.45, 1.15 - 0.85 * dist)
+        # Balanced confidence^1.05 * area^0.42 weighting so high-confidence real faces
+        # (e.g. mask_03 score=0.91) beat larger low-confidence background FPs (0.686),
+        # while the 1.55x degraded_bonus still lets foreground degraded subjects win.
+        val = (score ** 1.05) * (area ** 0.42) * centrality
+
+        # Reject huge loose low-confidence torso/circle boxes (e.g. cctv_06) when a higher-confidence face exists.
+        if area_frac > 0.10 and score < 0.55 and max_other_score >= 0.62:
+            val *= 0.25
+
+        # Penalize missing/invalid landmark geometry when landmarks are present on the record.
+        lms = rec.get('landmarks')
+        if isinstance(lms, (list, tuple)):
+            if len(lms) == 5:
+                row_chk = [float(bx), float(by), float(bw), float(bh)]
+                for pt in lms:
+                    row_chk.extend((float(pt[0]), float(pt[1])))
+                if not _valid_face_landmarks(row_chk, float(bw), float(bh)):
+                    val *= 0.55
+            elif len(lms) > 0:
+                val *= 0.65
+
+        if 0 <= bx and 0 <= by and bx + bw <= img_w and by + bh <= img_h and min(bw, bh) >= 16:
+            patch = image[by:by + bh, bx:bx + bw]
+            # Reject non-face / hat-back / clothing patches on color scenes via skin-tone & texture checks.
+            if is_color_scene and patch.size > 0:
+                ycrcb = cv2.cvtColor(patch, cv2.COLOR_RGB2YCrCb)
+                skin_frac = float(
+                    ((ycrcb[..., 0] >= 32)
+                     & (ycrcb[..., 1] >= 133) & (ycrcb[..., 1] <= 173)
+                     & (ycrcb[..., 2] >= 77) & (ycrcb[..., 2] <= 127)).mean()
+                )
+                if score < 0.75 and skin_frac < 0.08:
+                    val *= 0.50
+                # Penalize lower-frame woven/high-HF non-face textures (e.g. straw hat back in blur_08)
+                # that lack low-frequency facial shading and sit far below normal eye-line.
+                gray_p = cv2.cvtColor(patch, cv2.COLOR_RGB2GRAY).astype(np.float32)
+                lap_p = float(cv2.Laplacian(gray_p, cv2.CV_32F).var())
+                if score < 0.65 and cy > 0.55 and lap_p > 8500.0:
+                    val *= 0.55
+
+            if min(bw, bh) >= 24:
+                crop_box = rec.get('crop')
+                degraded_bonus = False
+                if pixelation_signal(image, (bx, by, bw, bh))['suspected']:
+                    degraded_bonus = True
+                elif (
+                    isinstance(crop_box, (list, tuple))
+                    and len(crop_box) == 4
+                    and (max_other_score < 0.85 or score >= 0.72)
                 ):
-                    hf = _hf_deficit_stats(image[ry:ry + rh, rx:rx + rw], [bx - rx, by - ry, bw, bh])
-                    if hf is not None and hf.get('clear'):
-                        degraded_bonus = True
-            if degraded_bonus:
-                val *= 1.35
+                    rx, ry, rw, rh = [int(v) for v in crop_box]
+                    # Do not award blur-deficit bonus when the candidate's exterior crop overlaps a
+                    # higher-confidence face (prevents bokeh background FPs adjacent to a real face,
+                    # e.g. mask_03_kn95_sunglasses, from borrowing the real face's sharp exterior HF).
+                    overlaps_stronger = any(
+                        j != idx
+                        and float(other.get('score', 0.75)) > score + 0.08
+                        and max(0, min(rx + rw, int(other['box'][0]) + int(other['box'][2])) - max(rx, int(other['box'][0])))
+                        * max(0, min(ry + rh, int(other['box'][1]) + int(other['box'][3])) - max(ry, int(other['box'][1])))
+                        > 0
+                        for j, other in enumerate(records)
+                    )
+                    if (
+                        not overlaps_stronger
+                        and 0 <= rx <= bx
+                        and 0 <= ry <= by
+                        and bx + bw <= rx + rw <= img_w
+                        and by + bh <= ry + rh <= img_h
+                        and rw >= bw + 12
+                        and rh >= bh + 12
+                    ):
+                        hf = _hf_deficit_stats(image[ry:ry + rh, rx:rx + rw], [bx - rx, by - ry, bw, bh])
+                        if hf is not None and hf.get('clear'):
+                            degraded_bonus = True
+                if degraded_bonus:
+                    val *= 1.55
+
+        # Bounded multiplicative eDifFIQA-T plausibility term [0.78, 1.22]: boosts clear real faces
+        # and penalizes low-FIQA bokeh/hat/bg patches while keeping degraded_bonus priority intact.
+        fiqa_score = fiqa_scores[idx]
+        if fiqa_score is not None and math.isfinite(float(fiqa_score)):
+            val *= max(0.78, min(1.22, 0.80 + 0.85 * float(fiqa_score)))
+
         if val > best_val:
             best_val = val
             best_idx = idx
@@ -523,6 +614,17 @@ async def inspect(file: UploadFile = File(...), scan_faces: Annotated[bool, Form
                             'score': 0.5,
                         }]
                 sorted_recs = sorted(records, key=lambda rec: (rec['box'][0], rec['box'][1]))
+                if (
+                    sorted_recs
+                    and not unavailable
+                    and capture_api.detect_face_details is capture_api._DEFAULT_DETECT_FACE_DETAILS
+                ):
+                    key_sha = digest(contents)
+                    with _STEP1_FACE_RECORDS_LOCK:
+                        _STEP1_FACE_RECORDS[key_sha] = copy.deepcopy(sorted_recs)
+                        _STEP1_FACE_RECORDS.move_to_end(key_sha)
+                        while len(_STEP1_FACE_RECORDS) > _STEP1_FACE_RECORDS_MAX:
+                            _STEP1_FACE_RECORDS.popitem(last=False)
                 result['face_crops'] = [rec['crop'] for rec in sorted_recs]
                 result['face_boxes'] = [rec['box'] for rec in sorted_recs]
                 result['recommended_index'] = _recommend_face_index(image, sorted_recs, width, height)
@@ -880,6 +982,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
         if automatic:
             need(protect is None and apply is None and not preview_id and not confirmed,
                  'Auto selects its own preparation. Remove manual preparation fields.')
+            from . import automatic_preparation as auto_prep_mod
             from . import capture_api
             from .capture_worker import _box_iou, _padded_face_crop
             from .automatic_preparation import (
@@ -887,21 +990,52 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 apply_uniform_crop_gaussian,
                 compute_uniform_crop_gaussian_radius,
                 detect_blur_island_face_box,
+                detect_synthetic_censor_bar,
                 is_background_grid_with_blurred_face,
+                picture_pixelation,
                 prepare as prepare_automatically,
                 prepare_composables,
                 prepare_macroblocking,
                 prepare_mosaics,
+                prepare_motion,
                 prepare_noise,
                 prepare_photometric,
                 prepare_source,
                 pixelation_signal,
                 scanline_cleaned_base,
+                structural_mosaic_prescreen,
                 tiny_crop_pixelation,
             )
             from .blur_match import match_surroundings
+            from .motion_blur import detect_motion_blur
+            from .scanline_cleanup import detect_scanlines
+            from .v34_probe import (
+                choose_closed_loop_mosaic_sigma,
+                is_clean_control_probe,
+                probe_v34,
+                stage_reflection_accept,
+            )
             selected_rectangle = rectangle
             detection_method = 'original_image'
+            raw_v34_probe = probe_v34(native, include_photo=True)
+            nh_cb, nw_cb = native.shape[:2]
+            censor_bar_mask = censor_bar_report = None
+            if max(nh_cb, nw_cb) <= 384:
+                censor_bar_mask, censor_bar_report = detect_synthetic_censor_bar(native)
+            else:
+                import cv2 as _cv2_cb
+                _sc_cb = 384.0 / float(max(nh_cb, nw_cb))
+                _n_cb = _cv2_cb.resize(
+                    native,
+                    (max(48, int(round(nw_cb * _sc_cb))), max(48, int(round(nh_cb * _sc_cb)))),
+                    interpolation=_cv2_cb.INTER_AREA,
+                )
+                if detect_synthetic_censor_bar(_n_cb)[0] is not None:
+                    censor_bar_mask, censor_bar_report = detect_synthetic_censor_bar(native)
+            macroblock_dc = None if capture_id else _jpeg_luma_dc(contents)
+            clean_fast_path = False
+            prescreen = None
+
             if capture_id:
                 source_rgb, (smoothed_image, regional_report, region_evidence) = _frozen_frame_pixelation(payloads['capture/frame.png'])
                 selected_rectangle = json.loads(payloads['capture/metadata.json'])['rectangle']
@@ -909,16 +1043,55 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     regional_report = {**regional_report, 'frame_sha256': digest(payloads['capture/frame.png'])}
             else:
                 source_rgb = decode_original(contents)
-                smoothed_image, regional_report, region_evidence = prepare_source(source_rgb)
-                if 'scanline-cleaned.png' not in region_evidence:
-                    from .jpeg_deblocking import prepare_jpeg
-                    from .mixed_jpeg import prepare_mixed_jpeg
-                    mixed = prepare_mixed_jpeg(contents, source_rgb, rectangle)
-                    if mixed is not None:
-                        smoothed_image, regional_report, region_evidence = mixed
+                # System 1 Fast-Path: run cheap <=384px structural prescreen (~15-25ms) so clean portraits
+                # exit fast with 0 FP and non-mosaic degraded frames skip exhaustive full-frame mosaic scans.
+                unpatched_scans = (
+                    getattr(prepare_source, '__module__', '') == auto_prep_mod.__name__
+                    and getattr(prepare_source, '__name__', '') == 'prepare_source'
+                    and getattr(picture_pixelation, '__module__', '') == auto_prep_mod.__name__
+                    and getattr(picture_pixelation, '__name__', '') == 'picture_pixelation'
+                )
+                if unpatched_scans:
+                    prescreen = structural_mosaic_prescreen(
+                        source_rgb, native, selected_rectangle, v34_probe=raw_v34_probe
+                    )
+                if (
+                    unpatched_scans
+                    and prescreen is not None
+                    and max(source_rgb.shape[:2]) >= 256
+                    and censor_bar_mask is None
+                    and is_clean_control_probe(raw_v34_probe)
+                    and (macroblock_dc is None or macroblock_dc < 30)
+                    and not prescreen['need_heavy_mosaic']
+                    and not prescreen['any_suspected']
+                    and not prescreen['blk_noise']
+                    and not prescreen['irr_hint']
+                    and not prescreen['paste_hint']
+                    and detect_scanlines(native) is None
+                    and detect_motion_blur(native) is None
+                ):
+                    clean_fast_path = True
+                    smoothed_image, regional_report, region_evidence = None, None, {}
+                else:
+                    if unpatched_scans:
+                        smoothed_image, regional_report, region_evidence = prepare_source(
+                            source_rgb,
+                            v34_probe=raw_v34_probe,
+                            native=native,
+                            selected_rectangle=selected_rectangle,
+                            prescreen=prescreen,
+                        )
                     else:
-                        deblocked, jpeg_report = prepare_jpeg(contents, native, rectangle)
-                payloads.update(region_evidence)
+                        smoothed_image, regional_report, region_evidence = prepare_source(source_rgb)
+                    if 'scanline-cleaned.png' not in region_evidence:
+                        from .jpeg_deblocking import prepare_jpeg
+                        from .mixed_jpeg import prepare_mixed_jpeg
+                        mixed = prepare_mixed_jpeg(contents, source_rgb, rectangle)
+                        if mixed is not None:
+                            smoothed_image, regional_report, region_evidence = mixed
+                        else:
+                            deblocked, jpeg_report = prepare_jpeg(contents, native, rectangle)
+                    payloads.update(region_evidence)
 
             def _in_selection(items):
                 if selected_rectangle is None:
@@ -975,9 +1148,33 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             def _detect_single_face():
                 if _face_cache['done']:
                     return _face_cache['face'], _face_cache['method']
+                use_details = capture_api.detect_faces is capture_api._DEFAULT_DETECT_FACES
+                if (
+                    not capture_id
+                    and use_details
+                    and capture_api.detect_face_details is capture_api._DEFAULT_DETECT_FACE_DETAILS
+                ):
+                    key_sha = digest(contents)
+                    with _STEP1_FACE_RECORDS_LOCK:
+                        entry = _STEP1_FACE_RECORDS.get(key_sha)
+                        if entry is not None:
+                            _STEP1_FACE_RECORDS.move_to_end(key_sha)
+                            cached_recs = copy.deepcopy(entry)
+                        else:
+                            cached_recs = None
+                    if cached_recs:
+                        matched = _in_selection(cached_recs)
+                        chosen_cached = _pick_target_face(matched)
+                        if isinstance(chosen_cached, dict) and 'box' in chosen_cached:
+                            _face_cache.update(
+                                done=True,
+                                face=chosen_cached['box'],
+                                method='step1_handoff',
+                                record=chosen_cached,
+                            )
+                            return chosen_cached['box'], 'step1_handoff'
                 scan_image = Image.fromarray(source_rgb)
                 method = 'original_image'
-                use_details = capture_api.detect_faces is capture_api._DEFAULT_DETECT_FACES
                 picked_rec = None
                 try:
                     with capture_api.DETECTION_LOCK:
@@ -1020,21 +1217,96 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 _face_cache.update(done=True, face=detected, method=method, record=picked_rec)
                 return detected, method
 
-            def _apply_upright_roll_if_needed(rgb_arr):
-                nonlocal alignment_info
+            def _upright_roll_params():
                 rec = _face_cache.get('record')
-                if not isinstance(rec, dict) or float(rec.get('score', 0.0)) < 0.65:
-                    return rgb_arr
+                if not isinstance(rec, dict) or float(rec.get('score', 0.0)) < 0.55:
+                    return None
                 roll_deg = rec.get('roll_deg')
                 if roll_deg is None or not math.isfinite(float(roll_deg)):
-                    return rgb_arr
+                    return None
                 roll_val = float(roll_deg)
-                if abs(roll_val) < 15.0 or abs(roll_val) > 165.0:
+                if abs(roll_val) < 5.0 or abs(roll_val) > 45.0:
+                    return None
+                return rec, roll_val
+
+            _last_roll_warp = None
+
+            def _apply_upright_roll_if_needed(rgb_arr, *, allow_source_context=False):
+                nonlocal alignment_info, _last_roll_warp
+                params = _upright_roll_params()
+                if params is None:
+                    _last_roll_warp = None
                     return rgb_arr
+                rec, roll_val = params
                 import cv2
 
                 h_a, w_a = rgb_arr.shape[:2]
-                mat = cv2.getRotationMatrix2D((w_a * 0.5, h_a * 0.5), roll_val, 1.0)
+                lms = rec.get('landmarks')
+                has_eyes = isinstance(lms, (list, tuple)) and len(lms) >= 2
+                if has_eyes:
+                    emx_src = 0.5 * (float(lms[0][0]) + float(lms[1][0]))
+                    emy_src = 0.5 * (float(lms[0][1]) + float(lms[1][1]))
+                else:
+                    emx_src = emy_src = None
+
+                # When selected_rectangle sits inside a larger source_rgb, rotate the expanded
+                # source patch around the eye midpoint and slice the target rectangle so corners
+                # contain real pixels instead of BORDER_REPLICATE streaks.
+                if (
+                    allow_source_context
+                    and selected_rectangle is not None
+                    and source_rgb is not None
+                    and tuple(rgb_arr.shape[:2]) == (int(selected_rectangle[3]), int(selected_rectangle[2]))
+                ):
+                    rx, ry, rw, rh = [int(v) for v in selected_rectangle]
+                    src_h, src_w = source_rgb.shape[:2]
+                    if src_w > rw or src_h > rh:
+                        pad = int(math.ceil(0.35 * max(rw, rh)))
+                        px0 = max(0, rx - pad)
+                        py0 = max(0, ry - pad)
+                        px1 = min(src_w, rx + rw + pad)
+                        py1 = min(src_h, ry + rh + pad)
+                        patch = source_rgb[py0:py1, px0:px1]
+                        ph, pw = patch.shape[:2]
+                        if emx_src is not None and px0 <= emx_src < px1 and py0 <= emy_src < py1:
+                            piv_x, piv_y = emx_src - px0, emy_src - py0
+                        else:
+                            piv_x, piv_y = (rx - px0) + rw * 0.5, (ry - py0) + rh * 0.5
+                        mat = cv2.getRotationMatrix2D((piv_x, piv_y), roll_val, 1.0)
+                        rot_patch = cv2.warpAffine(
+                            patch,
+                            mat,
+                            (pw, ph),
+                            flags=cv2.INTER_CUBIC,
+                            borderMode=cv2.BORDER_REPLICATE,
+                        )
+                        # Shift slice so rotated eye/crop center stays aligned inside [rw, rh].
+                        ox, oy = rx - px0, ry - py0
+                        rotated = rot_patch[oy : oy + rh, ox : ox + rw]
+                        if rotated.shape[:2] == (rh, rw):
+                            alignment_info = {
+                                'applied': True,
+                                'roll_deg': round(roll_val, 2),
+                                'pivot': 'eye_midpoint' if has_eyes else 'crop_center',
+                                'source_context': True,
+                                'interpolation': 'INTER_CUBIC',
+                                'border_mode': 'source_context',
+                            }
+                            _last_roll_warp = {
+                                'mat': mat,
+                                'pad_shape': (ph, pw),
+                                'offset': (ox, oy),
+                                'crop_shape': (rh, rw),
+                            }
+                            return rotated.copy()
+
+                if emx_src is not None:
+                    ox_c, oy_c = (int(selected_rectangle[0]), int(selected_rectangle[1])) if selected_rectangle is not None else (0, 0)
+                    piv_x = float(np.clip(emx_src - ox_c, 0.15 * w_a, 0.85 * w_a))
+                    piv_y = float(np.clip(emy_src - oy_c, 0.15 * h_a, 0.85 * h_a))
+                else:
+                    piv_x, piv_y = w_a * 0.5, h_a * 0.5
+                mat = cv2.getRotationMatrix2D((piv_x, piv_y), roll_val, 1.0)
                 rotated = cv2.warpAffine(
                     rgb_arr,
                     mat,
@@ -1045,10 +1317,40 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 alignment_info = {
                     'applied': True,
                     'roll_deg': round(roll_val, 2),
+                    'pivot': 'eye_midpoint' if has_eyes else 'crop_center',
+                    'source_context': False,
                     'interpolation': 'INTER_CUBIC',
                     'border_mode': 'BORDER_REPLICATE',
                 }
+                _last_roll_warp = {
+                    'mat': mat,
+                    'pad_shape': (h_a, w_a),
+                    'offset': (0, 0),
+                    'crop_shape': (h_a, w_a),
+                }
                 return rotated
+
+            def _warp_mask_with_last_roll(mask_bool):
+                if mask_bool is None or _last_roll_warp is None:
+                    return mask_bool
+                import cv2
+
+                rh, rw = _last_roll_warp['crop_shape']
+                if mask_bool.shape != (rh, rw):
+                    return mask_bool
+                ph, pw = _last_roll_warp['pad_shape']
+                ox, oy = _last_roll_warp['offset']
+                canvas_m = np.zeros((ph, pw), dtype=np.uint8)
+                canvas_m[oy : oy + rh, ox : ox + rw] = mask_bool.astype(np.uint8) * 255
+                warped = cv2.warpAffine(
+                    canvas_m,
+                    _last_roll_warp['mat'],
+                    (pw, ph),
+                    flags=cv2.INTER_NEAREST,
+                    borderMode=cv2.BORDER_CONSTANT,
+                    borderValue=0,
+                )
+                return warped[oy : oy + rh, ox : ox + rw] > 0
 
             if 'scanline-cleaned.png' in region_evidence:
                 scanline_report = regional_report
@@ -1087,7 +1389,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
             # (e.g. Voronoi/low-poly or compact face blocks) was below full-frame scale.
             if (
                 region_input is None
+                and not clean_fast_path
                 and not capture_id
+                and (prescreen is None or prescreen['need_heavy_mosaic'])
                 and selected_rectangle is not None
                 and scanline_report is None
                 and softened_detection is None
@@ -1119,7 +1423,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     }
                     payloads.update(region_evidence)
 
-            if region_input is None and scanline_report is None:
+            if region_input is None and scanline_report is None and not clean_fast_path:
                 region_input, tiny_report, tiny_evidence = tiny_crop_pixelation(native)
                 if tiny_report is not None:
                     payloads['tiny-crop-pixelation-mask.png'] = tiny_evidence['full-image-pixelation-mask.png']
@@ -1211,6 +1515,12 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     # Policy A1: Uniform whole-crop Gaussian smoothing for all pixelation/mosaic routes
                     # so V3.4 receives a 100% consistent blur input with zero missed eye/brow blocks
                     # and zero sharp hair/background halo. Full-frame localization masks remain intact.
+                    is_standard_mosaic = (
+                        tiny_report is None
+                        and scanline_report is None
+                        and regional_report is not None
+                        and not regional_report.get('mixed_jpeg_mosaic')
+                    )
                     if scanline_report is not None:
                         sl_base = scanline_cleaned_base(source_rgb)
                         if sl_base is not None:
@@ -1231,6 +1541,11 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                             base_crop[crop_mosaic_mask] = native[crop_mosaic_mask]
                     else:
                         base_crop = native
+                        # Full-range upright roll alignment on mosaic routes (using source context
+                        # when available so corners have zero BORDER_REPLICATE streaks).
+                        if min(base_crop.shape[:2]) >= 64:
+                            _detect_single_face()
+                            base_crop = _apply_upright_roll_if_needed(base_crop, allow_source_context=True)
 
                     active_report = tiny_report or scanline_report or regional_report
                     crop_radius_native = compute_uniform_crop_gaussian_radius(
@@ -1242,28 +1557,41 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     )
                     geom_pattern = (
                         regional_report.get('geometric_mosaic_pattern')
-                        if (tiny_report is None and scanline_report is None and regional_report is not None)
+                        if is_standard_mosaic
                         else None
                     )
-                    mosaic_out = apply_uniform_crop_gaussian(
-                        base_crop, crop_radius_native, geometric_pattern=geom_pattern
-                    )
+                    sigma_sweep_report = None
+                    if is_standard_mosaic and min(base_crop.shape[:2]) >= 64:
+                        crop_radius_native, mosaic_out, sigma_sweep_report = choose_closed_loop_mosaic_sigma(
+                            base_crop,
+                            crop_radius_native,
+                            geometric_pattern=geom_pattern,
+                            detected_period=regional_report.get('detected_period_native'),
+                        )
+                    else:
+                        mosaic_out = apply_uniform_crop_gaussian(
+                            base_crop, crop_radius_native, geometric_pattern=geom_pattern
+                        )
                     uniform_crop_smoothing = True
 
-                    # Allow color_cast_balance to compose after uniform smoothing when needed;
-                    # skip redundant exterior-only noise_denoise since the entire crop is blurred.
-                    if (
-                        tiny_report is None
-                        and scanline_report is None
-                        and regional_report is not None
-                        and not regional_report.get('mixed_jpeg_mosaic')
-                    ):
-                        cd_out, cd_route, cd_rep, cd_ev = prepare_photometric(mosaic_out)
-                        if cd_out is not None and cd_route == 'color_cast_balance' and cd_rep is not None:
-                            mosaic_out = cd_out
-                            extra_stages.append(cd_route)
-                            extra_reports[cd_route] = cd_rep
-                            payloads.update(cd_ev)
+                    # Allow photometric cast/haze/low-light conditioning to compose on mosaic routes
+                    # with V34PhotoCorrectNet g_photo damping and reflection rollback guard.
+                    if is_standard_mosaic:
+                        m_probe = probe_v34(mosaic_out, include_photo=True)
+                        cd_out, cd_route, cd_rep, cd_ev = prepare_photometric(mosaic_out, v34_probe=m_probe)
+                        if cd_out is not None and cd_route is not None and cd_rep is not None:
+                            cd_after = probe_v34(cd_out)
+                            ok_cd, _ = stage_reflection_accept(m_probe, cd_after, cd_route)
+                            if ok_cd:
+                                mosaic_out = cd_out
+                                extra_stages.append(cd_route)
+                                extra_reports[cd_route] = cd_rep
+                                payloads.update(cd_ev)
+
+                # Also apply upright roll on degraded_patch_conditioning mosaic routes when needed.
+                if is_degraded_patch and min(mosaic_out.shape[:2]) >= 64:
+                    _detect_single_face()
+                    mosaic_out = _apply_upright_roll_if_needed(mosaic_out, allow_source_context=False)
 
                 selected = png(mosaic_out)
                 prepared, _, _, _ = prepare_crop(mosaic_out)
@@ -1273,6 +1601,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                 if uniform_crop_smoothing:
                     preparation['uniform_crop_smoothing'] = True
                     preparation['crop_Gaussian_radius_native'] = crop_radius_native
+                    if sigma_sweep_report is not None and sigma_sweep_report.get('refined'):
+                        preparation['closed_loop_sigma_refinement'] = sigma_sweep_report
                 if surround_matched:
                     preparation['surround_matched_after_conditioning'] = True
                     if surround_match_summary is not None:
@@ -1314,13 +1644,29 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     auto_decision['applied_stages'] = [auto_decision['route']] + extra_stages
                     auto_decision['stage_reports'] = extra_reports
                 payloads.update({'derived-native.png': selected, 'processing.json': canonical(preparation)})
-            elif softened_detection is not None and softened_detection['crop_intersects']:
+            elif clean_fast_path:
+                face, detection_method = _detect_single_face()
+                aligned_rgb = _apply_upright_roll_if_needed(native, allow_source_context=True)
+                if alignment_info is not None:
+                    selected = png(aligned_rgb)
+                    prepared, _, _, _ = prepare_crop(aligned_rgb)
+                auto_decision = {
+                    'route': 'direct',
+                    'reason': 'clean_control_v34_fast_path',
+                    'face_detection': detection_method,
+                }
+            elif (
+                softened_detection is not None
+                and softened_detection['crop_intersects']
+                and ('ac_confidence' not in softened_detection or float(softened_detection.get('ac_confidence', 0.0)) >= 0.36)
+            ):
                 auto_decision = {'route': 'direct', 'reason': 'suspected_softened_mosaic'}
             else:
                 applied_stages = []
                 stage_reports = {}
                 stage_evidence = {}
                 current_rgb = region_input.copy() if region_input is not None else native.copy()
+                cur_probe = raw_v34_probe if region_input is None else probe_v34(current_rgb, include_photo=True)
                 if jpeg_report is not None:
                     applied_stages.append('jpeg_deblocking')
                     stage_reports['jpeg_deblocking'] = jpeg_report
@@ -1328,22 +1674,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     applied_stages.append('scanline_cleanup')
                     stage_reports['scanline_cleanup'] = scanline_report
 
-                noise_out, noise_report, noise_evidence = prepare_noise(current_rgb)
-                if noise_out is not None and noise_report is not None:
-                    current_rgb = noise_out
-                    applied_stages.append('noise_denoise')
-                    stage_reports['noise_denoise'] = noise_report
-                    stage_evidence.update(noise_evidence)
-
-                cd_out, cd_route, cd_report, cd_evidence = prepare_photometric(current_rgb)
-                if cd_out is not None and cd_route is not None and cd_report is not None:
-                    current_rgb = cd_out
-                    applied_stages.append(cd_route)
-                    stage_reports[cd_route] = cd_report
-                    stage_evidence.update(cd_evidence)
-
+                # Non-commutative DAG order:
+                # 1) Macroblock deblocking BEFORE noise_denoise so NLM never erases 8x8 DCT seams.
                 crop_origin = (int(selected_rectangle[0]), int(selected_rectangle[1])) if selected_rectangle is not None else (0, 0)
-                macroblock_dc = None if capture_id else _jpeg_luma_dc(contents)
                 if jpeg_report is None:
                     mb_out, mb_stage, mb_report, mb_evidence = prepare_macroblocking(
                         current_rgb, origin=crop_origin, allow_fbcnn=True, dc=macroblock_dc
@@ -1353,15 +1686,57 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         applied_stages.append(mb_stage)
                         stage_reports[mb_stage] = mb_report
                         stage_evidence.update(mb_evidence)
+                        cur_probe = probe_v34(current_rgb, include_photo=True) or cur_probe
 
+                # 2) Noise denoising (with V3.4 reflection rollback guard).
+                noise_out, noise_report, noise_evidence = prepare_noise(current_rgb)
+                if noise_out is not None and noise_report is not None:
+                    noise_after = probe_v34(noise_out, include_photo=True)
+                    ok_n, _ = stage_reflection_accept(cur_probe, noise_after, 'noise_denoise')
+                    if ok_n:
+                        current_rgb = noise_out
+                        applied_stages.append('noise_denoise')
+                        stage_reports['noise_denoise'] = noise_report
+                        stage_evidence.update(noise_evidence)
+                        cur_probe = noise_after or cur_probe
+
+                # 3) Linear motion-blur conditioning (closes V3.4's motion-smear p_clean blindspot).
+                if not applied_stages and censor_bar_mask is None:
+                    mot_out, mot_report, mot_evidence = prepare_motion(current_rgb, probe_fn=probe_v34)
+                    if mot_out is not None and mot_report is not None:
+                        current_rgb = mot_out
+                        applied_stages.append('motion_deblur')
+                        stage_reports['motion_deblur'] = mot_report
+                        stage_evidence.update(mot_evidence)
+                        cur_probe = probe_v34(current_rgb, include_photo=True) or cur_probe
+
+                # 4) Photometric conditioning (color cast, haze, low-light Retinex, glare shoulder)
+                # damped by V34PhotoCorrectNet g_photo and verified by V3.4 reflection rollback.
+                cd_out, cd_route, cd_report, cd_evidence = prepare_photometric(current_rgb, v34_probe=cur_probe)
+                if cd_out is not None and cd_route is not None and cd_report is not None:
+                    cd_after = probe_v34(cd_out, include_photo=True)
+                    ok_cd, _ = stage_reflection_accept(cur_probe, cd_after, cd_route)
+                    if ok_cd:
+                        current_rgb = cd_out
+                        applied_stages.append(cd_route)
+                        stage_reports[cd_route] = cd_report
+                        stage_evidence.update(cd_evidence)
+                        cur_probe = cd_after or cur_probe
+
+                # 5) Fine edge composables with clean-control V3.4 veto & censor-bar exclusion.
                 comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(
-                    current_rgb, allow_spatial_comb=(scanline_report is None)
+                    current_rgb,
+                    allow_spatial_comb=(scanline_report is None),
+                    exclude_mask=censor_bar_mask,
+                    v34_probe_fn=probe_v34,
+                    initial_probe=cur_probe,
                 )
                 if comp_out is not None and comp_stages:
                     current_rgb = comp_out
                     applied_stages.extend(comp_stages)
                     stage_reports.update(comp_reports)
                     stage_evidence.update(comp_evidence)
+                    cur_probe = probe_v34(current_rgb, include_photo=True) or cur_probe
 
                 if scanline_report is None and 'spatial_comb' in stage_reports:
                     scanline_report = stage_reports['spatial_comb']
@@ -1381,8 +1756,13 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         applied_stages = [mb_stage]
                         stage_reports = {mb_stage: mb_report}
                         stage_evidence = dict(mb_evidence)
+                        cur_probe = probe_v34(current_rgb, include_photo=True) or cur_probe
                         comp_out, comp_stages, comp_reports, comp_evidence = prepare_composables(
-                            current_rgb, allow_spatial_comb=(scanline_report is None)
+                            current_rgb,
+                            allow_spatial_comb=(scanline_report is None),
+                            exclude_mask=censor_bar_mask,
+                            v34_probe_fn=probe_v34,
+                            initial_probe=cur_probe,
                         )
                         if comp_out is not None and comp_stages:
                             current_rgb = comp_out
@@ -1398,7 +1778,29 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                     or selected_rectangle is not None
                 )
                 if allow_auto_blur:
-                    if applied_stages:
+                    # Apply full-range upright roll BEFORE prepare_automatically when needed so
+                    # effective-Protect-native.png and original-decoded-rgb.png stay 100% aligned
+                    # and derived-native.png[protect_mask] stays bit-exact (e.g. wild5 +8.91 deg).
+                    roll_before_blur = _upright_roll_params() is not None
+                    blur_native_in = current_rgb
+                    blur_face = list(face)
+                    blur_rect = selected_rectangle
+                    if roll_before_blur:
+                        blur_native_in = _apply_upright_roll_if_needed(
+                            current_rgb,
+                            allow_source_context=(not applied_stages),
+                        )
+                        blur_source = blur_native_in
+                        if selected_rectangle is not None:
+                            bx_r, by_r, _, _ = selected_rectangle
+                            blur_face = [
+                                max(0, int(face[0]) - bx_r),
+                                max(0, int(face[1]) - by_r),
+                                int(face[2]),
+                                int(face[3]),
+                            ]
+                            blur_rect = None
+                    elif applied_stages:
                         if selected_rectangle is None:
                             blur_source = current_rgb
                         else:
@@ -1407,8 +1809,27 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                             blur_source[by:by + bh, bx:bx + bw] = current_rgb
                     else:
                         blur_source = source_rgb
+                    full_excl = None
+                    if censor_bar_mask is not None:
+                        effective_censor_mask = (
+                            _warp_mask_with_last_roll(censor_bar_mask)
+                            if roll_before_blur
+                            else censor_bar_mask
+                        )
+                        if blur_rect is None and effective_censor_mask.shape == blur_source.shape[:2]:
+                            full_excl = effective_censor_mask
+                        elif blur_rect is not None:
+                            rx_e, ry_e, rw_e, rh_e = blur_rect
+                            full_excl = np.zeros(blur_source.shape[:2], dtype=bool)
+                            full_excl[ry_e : ry_e + rh_e, rx_e : rx_e + rw_e] = effective_censor_mask
                     candidate, blur_prep, auto_evidence, blur_decision = prepare_automatically(
-                        current_rgb, blur_source, face, selected_rectangle
+                        blur_native_in,
+                        blur_source,
+                        blur_face,
+                        blur_rect,
+                        v34_probe=cur_probe,
+                        exclude_mask=full_excl,
+                        face_record=_face_cache.get('record'),
                     )
                     blur_route = blur_decision.get('route')
                     if candidate is not None and (not applied_stages or blur_route in ('protect_auto', 'face_gaussian')):
@@ -1418,8 +1839,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                             payloads.update(stage_evidence)
                             payloads.update(auto_evidence)
                             cand_rgb = decode_original(candidate)
-                            aligned_rgb = _apply_upright_roll_if_needed(cand_rgb)
-                            selected = png(aligned_rgb) if alignment_info is not None else candidate
+                            aligned_rgb = cand_rgb if roll_before_blur else _apply_upright_roll_if_needed(cand_rgb)
+                            selected = png(aligned_rgb) if (alignment_info is not None and not roll_before_blur) else candidate
                             selected_sha = digest(selected)
                             if alignment_info is not None:
                                 payloads['derived-native.png'] = selected
@@ -1452,8 +1873,8 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                             preparation = dict(blur_prep) if isinstance(blur_prep, dict) else blur_prep
                             payloads.update(auto_evidence)
                             cand_rgb = decode_original(candidate)
-                            aligned_rgb = _apply_upright_roll_if_needed(cand_rgb)
-                            selected = png(aligned_rgb) if alignment_info is not None else candidate
+                            aligned_rgb = cand_rgb if roll_before_blur else _apply_upright_roll_if_needed(cand_rgb)
+                            selected = png(aligned_rgb) if (alignment_info is not None and not roll_before_blur) else candidate
                             if alignment_info is not None:
                                 selected_sha = digest(selected)
                                 payloads['derived-native.png'] = selected
@@ -1468,7 +1889,7 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                                     payloads['processing.json'] = canonical(preparation)
                             prepared, _, _, _ = prepare_crop(aligned_rgb)
                     elif applied_stages:
-                        aligned_rgb = _apply_upright_roll_if_needed(current_rgb)
+                        aligned_rgb = blur_native_in if roll_before_blur else _apply_upright_roll_if_needed(current_rgb)
                         selected, prepared, preparation, auto_decision, macroblock_report = _package_artifact_stages(
                             aligned_rgb, native, applied_stages, stage_reports, stage_evidence, payloads
                         )
@@ -1476,7 +1897,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         blur_decision['face_detection'] = detection_method
                         auto_decision = blur_decision
                         payloads.update(auto_evidence)
-                        aligned_rgb = _apply_upright_roll_if_needed(current_rgb)
+                        aligned_rgb = blur_native_in if roll_before_blur else _apply_upright_roll_if_needed(
+                            current_rgb, allow_source_context=True
+                        )
                         if alignment_info is not None:
                             selected = png(aligned_rgb)
                             prepared, _, _, _ = prepare_crop(aligned_rgb)
@@ -1509,6 +1932,9 @@ async def restore(file: UploadFile = File(...), input_review: str = Form(''),
                         auto_decision = {'route': 'direct', 'reason': 'face_detection_uncertain'}
             if alignment_info is not None and auto_decision is not None:
                 auto_decision['alignment'] = alignment_info
+            if censor_bar_report is not None and auto_decision is not None:
+                auto_decision['synthetic_censor_bar_suspected'] = True
+                auto_decision['censor_bar_bounds'] = censor_bar_report['bar_bounds']
             payloads['automatic-decision.json'] = canonical(auto_decision)
         elif preparation_mode == 'bypass':
             need(protect is None and apply is None and not preview_id and not confirmed,

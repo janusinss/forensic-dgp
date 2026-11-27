@@ -277,7 +277,7 @@ def run_worker(record, kind, mask=None):
     else:
         mask_path = request_root/'mask.png'
         save(mask_path, mask)
-        request.update(mask_path=str(mask_path), prepared_bounds=record['bounds'])
+        request.update(mask_path=str(mask_path), prepared_bounds=record['bounds'], max_passes=3)
         module = 'implementation.completion_worker'
     request_path, response_path = request_root/'request.json', request_root/'result.json'
     save(request_path, canonical(request))
@@ -316,12 +316,31 @@ def run_worker(record, kind, mask=None):
         need(response_path.stat().st_size <= 65536, 'Worker response is too large.')
         result = json.loads(response_path.read_bytes())
         status = json.loads((request_root/'output/status.json').read_bytes())
-        expected = 1 if kind == 'detector' else int(bool(read_png(mask, 'L').any()))
-        attempts_key, returns_key = (('forward_attempts', 'forward_returns') if kind == 'detector'
-                                     else ('neural_attempts', 'neural_returns'))
-        need(status.get('phase') == 'complete' and status.get(attempts_key) == expected
-             and status.get(returns_key) == expected, 'Worker forward receipt differs.')
-        STATE['detector_calls' if kind == 'detector' else 'completion_calls'] += expected
+        if kind == 'detector':
+            expected = 1
+            need(status.get('phase') == 'complete' and status.get('forward_attempts') == expected
+                 and status.get('forward_returns') == expected, 'Worker forward receipt differs.')
+            STATE['detector_calls'] += expected
+        else:
+            has_mask = bool(read_png(mask, 'L').any())
+            attempts = status.get('neural_attempts')
+            returns = status.get('neural_returns')
+            status_calls_ok = (
+                'neural_calls' not in status
+                or (type(status['neural_calls']) is int and status['neural_calls'] == returns)
+            )
+            result_calls = result.get('metadata', {}).get('neural_calls') if (isinstance(result, dict) and isinstance(result.get('metadata'), dict)) else None
+            valid_counts = (
+                type(attempts) is int
+                and type(returns) is int
+                and attempts == returns
+                and (returns == 0 if not has_mask else 1 <= returns <= 3)
+                and status_calls_ok
+                and type(result_calls) is int
+                and result_calls == returns
+            )
+            need(status.get('phase') == 'complete' and valid_counts, 'Worker forward receipt differs.')
+            STATE['completion_calls'] += returns
         return request_root/'output', result, supervisor
     except BaseException as exc:
         if supervisor is None or supervisor.get('active_owned_processes') != 0:
@@ -338,27 +357,55 @@ def propose(ident):
     observed = read_png((record['path']/'observed.png').read_bytes(), 'L') > 0
     empty_visibility = visibility_check256(np.where(observed, 0, 255).astype(np.uint8), observed=observed)
     need(not empty_visibility['rejected'], 'Too little visible face remains. Upload a clearer or less-covered crop.')
-    output, result, supervisor = run_worker(record, 'detector')
-    names = {'probability_path': 'detector-probability.npy', 'raw_mask_path': 'detector-raw-mask.png',
-             'proposed_mask_path': 'detector-proposed-mask.png'}
-    for key, name in names.items():
-        need(Path(result[key]).resolve() == (output/name).resolve(), 'Detector output path differs.')
-    probability = np.load(io.BytesIO((output/names['probability_path']).read_bytes()), allow_pickle=False)
-    raw = read_png((output/names['raw_mask_path']).read_bytes(), 'L')
-    proposed_raw = (output/names['proposed_mask_path']).read_bytes()
-    proposed = read_png(proposed_raw, 'L')
     from .covering_detector import proposal_from_probability
-    expected = proposal_from_probability(probability, observed)
-    need(np.array_equal(raw, expected[0]) and np.array_equal(proposed, expected[1]), 'Detector proposal replay differs.')
-    from .automatic_covering import detect_face_covering
+    from .automatic_covering import _load_onnx_sessions, detect_face_covering
     rgb = read_png((record['path'] / 'input.png').read_bytes(), 'RGB')
-    proposed, auto_meta = detect_face_covering(rgb, probability, proposed, observed)
-    proposed_raw = png(proposed)
-    auto_mask_path = output / 'auto-proposed-mask.png'
-    if not auto_mask_path.exists():
-        save(auto_mask_path, proposed_raw)
+
+    if _load_onnx_sessions() is not None:
+        # Fast in-process ONNX path skips cold epoch-2 PyTorch subprocess (saves ~1.5-4.0s CPU).
+        started = time.monotonic()
+        output = record['path'] / ('detector-' + uuid.uuid4().hex) / 'output'
+        output.mkdir(parents=True)
+        probability = np.zeros((256, 256), dtype=np.float32)
+        raw, base_proposed, det_meta = proposal_from_probability(probability, observed)
+        det_meta = {**det_meta, 'detector_backend': 'onnx_in_process_fast_path', 'subprocess_skipped': True}
+        with (output / 'detector-probability.npy').open('xb') as stream:
+            np.save(stream, probability, allow_pickle=False)
+        save(output / 'detector-raw-mask.png', png(raw))
+        save(output / 'detector-proposed-mask.png', png(base_proposed))
+        save(output / 'receipt.json', canonical(det_meta))
+        proposed, auto_meta = detect_face_covering(rgb, probability, base_proposed, observed)
+        proposed_raw = png(proposed)
+        save(output / 'auto-proposed-mask.png', proposed_raw)
+        result_meta = det_meta
+        supervisor = {
+            'seconds': time.monotonic() - started,
+            'returncode': 0,
+            'active_owned_processes': 0,
+            'subprocess_skipped': True,
+            'backend': 'onnx_in_process',
+        }
+    else:
+        output, result, supervisor = run_worker(record, 'detector')
+        names = {'probability_path': 'detector-probability.npy', 'raw_mask_path': 'detector-raw-mask.png',
+                 'proposed_mask_path': 'detector-proposed-mask.png'}
+        for key, name in names.items():
+            need(Path(result[key]).resolve() == (output/name).resolve(), 'Detector output path differs.')
+        probability = np.load(io.BytesIO((output/names['probability_path']).read_bytes()), allow_pickle=False)
+        raw = read_png((output/names['raw_mask_path']).read_bytes(), 'L')
+        proposed_raw = (output/names['proposed_mask_path']).read_bytes()
+        base_proposed = read_png(proposed_raw, 'L')
+        expected = proposal_from_probability(probability, observed)
+        need(np.array_equal(raw, expected[0]) and np.array_equal(base_proposed, expected[1]), 'Detector proposal replay differs.')
+        proposed, auto_meta = detect_face_covering(rgb, probability, base_proposed, observed)
+        proposed_raw = png(proposed)
+        auto_mask_path = output / 'auto-proposed-mask.png'
+        if not auto_mask_path.exists():
+            save(auto_mask_path, proposed_raw)
+        result_meta = result['metadata']
+
     metadata = {
-        **result['metadata'],
+        **result_meta,
         'auto_covering': auto_meta,
         'proposed_mask_pixels': int((proposed > 0).sum()),
         'proposal_empty': not bool(proposed.any()),
@@ -428,19 +475,41 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
         need(len(value) == item['bytes'] and sha(value) == item['sha256'], 'Completion evidence fingerprint differs.')
     need(receipt['source_pins']['input']['sha256'] == record['pins']['input.png'] and
          receipt['source_pins']['mask']['sha256'] == sha(mask_raw), 'Worker input bindings differ.')
-    mask_u8 = (~read_png((record['path'] / 'observed.png').read_bytes(), 'L').astype(bool)).astype(np.uint8)
+    observed_bool = read_png((record['path'] / 'observed.png').read_bytes(), 'L').astype(bool)
+    mask_u8 = (~observed_bool).astype(np.uint8)
     before_signals = restoration.quality_signals(original, mask_u8)
     after_signals = restoration.quality_signals(final, mask_u8)
     diagnostics = {
         'before': {name: before_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
         'after': {name: after_signals[name] for name in ('blur_variance', 'noise_sigma_255')},
     }
+    completion_quality = None
+    if mask.any():
+        try:
+            import cv2 as _cv2
+            _quality_errors = (ImportError, OSError, RuntimeError, ValueError, _cv2.error)
+        except ImportError:
+            _quality_errors = (ImportError, OSError, RuntimeError, ValueError)
+        try:
+            from .automatic_covering import evaluate_completion_quality
+            completion_quality = evaluate_completion_quality(original, final, mask, observed_bool)
+        except _quality_errors:
+            completion_quality = None
+    raw_neural_calls = receipt.get('neural_calls')
+    has_mask = bool(mask.any())
+    need(
+        type(raw_neural_calls) is int
+        and (raw_neural_calls == 0 if not has_mask else 1 <= raw_neural_calls <= 3),
+        'Invalid completion neural_calls receipt.',
+    )
+    neural_calls = raw_neural_calls
     metadata = {**result['metadata'], 'source': source, 'proposal_id': proposal_id or None,
                 'auto_covering': proposal['metadata'].get('auto_covering') if proposal else None,
                 'review_id': review_id, 'restoration': record['restoration'], 'supervisor': supervisor,
-                'seconds': supervisor['seconds'], 'neural_calls': int(bool(mask.any())),
+                'seconds': supervisor['seconds'], 'neural_calls': neural_calls,
                 'outside_reviewed_support_exact_to': 'restoration-result.png',
                 'output_diagnostics': diagnostics,
+                'completion_quality': completion_quality,
                 'exact_hidden_identity_claimed': False, 'model_qualified': False}
     save(output/'combined-workflow.json', canonical(metadata))
     payloads = {name: (record['path']/name).read_bytes() for name in record['pins']}
@@ -463,7 +532,7 @@ def generate(ident, mask_raw, review_id, mask_confirmed, visible_confirmed, prop
     save(output/'evidence.zip', bundle)
     record['review'] = None
     return {'result_png': restoration.url(output_raw), 'mask_png': restoration.url(mask_raw),
-            'bundle': restoration.url(bundle, 'application/zip'), 'metadata': metadata, 'neural_calls': int(bool(mask.any()))}
+            'bundle': restoration.url(bundle, 'application/zip'), 'metadata': metadata, 'neural_calls': neural_calls}
 
 
 def register(app):

@@ -251,6 +251,7 @@ def prepare_cast_dehaze(
     rgb: np.ndarray,
     mask: np.ndarray | None = None,
     force_mode: str | None = None,
+    damping: float = 1.0,
 ) -> tuple[np.ndarray | None, np.ndarray | None, str | None, dict]:
     """Run D1-Tight color-cast white balance and/or face-safe dark-channel dehazing.
 
@@ -258,6 +259,7 @@ def prepare_cast_dehaze(
         rgb: Native uint8 RGB image of shape (H, W, 3).
         mask: Optional boolean/uint8 active-ROI mask; pixels outside stay bit-exact.
         force_mode: Optional diagnostic override (``"cast"``, ``"haze"``, or ``"both"``).
+        damping: Optional strength scale in ``(0, 1]`` (e.g. from ``V34PhotoCorrectNet`` ``g_photo`` guard).
 
     Returns:
         ``(prepared_rgb, binary_mask_u8, route, metrics)`` where ``route`` is one of
@@ -265,6 +267,7 @@ def prepare_cast_dehaze(
         not triggered) and ``metrics`` is strictly finite and JSON-safe.
     """
     t0 = time.perf_counter()
+    damp = float(np.clip(damping, 0.25, 1.0)) if math.isfinite(float(damping)) else 1.0
     src = _validate_rgb(rgb)
     if src is None:
         return (
@@ -328,9 +331,9 @@ def prepare_cast_dehaze(
 
     img_f = src.astype(np.float32) / 255.0
     if cast_fire:
-        img_f = _damped_shades_of_gray(img_f, alpha=0.55, mask=active if mask is not None else None)
+        img_f = _damped_shades_of_gray(img_f, alpha=0.55 * damp, mask=active if mask is not None else None)
     if haze_fire:
-        img_f = _face_safe_dcp(img_f, omega=0.68, t0=0.28)
+        img_f = _face_safe_dcp(img_f, omega=0.68 * damp, t0=0.28 + 0.14 * (1.0 - damp))
 
     out = np.clip(np.rint(img_f * 255.0), 0, 255).astype(np.uint8)
     if mask is not None:
@@ -361,6 +364,7 @@ def prepare_cast_dehaze(
         "triggered": True,
         "route": route,
         "gates": {"cast": cast_fire, "haze": haze_fire},
+        "damping": round(damp, 3),
         "before": pm_before,
         "after": pm_after,
         "changed_native_pixels": changed,
@@ -370,3 +374,278 @@ def prepare_cast_dehaze(
     }
     mask_u8 = edited.astype(np.uint8) * 255
     return out, mask_u8, route, metrics
+
+
+LOW_LIGHT_GLARE_POLICY = "retinex-illumination-glare-shoulder-v1"
+
+
+def _core_exposure_stats(rgb: np.ndarray, active: np.ndarray) -> dict[str, float]:
+    """Compute inner-face and full-active luminance quantiles for skin-tone-safe gating."""
+    h, w = rgb.shape[:2]
+    f = rgb.astype(np.float32)
+    y = 0.299 * f[..., 0] + 0.587 * f[..., 1] + 0.114 * f[..., 2]
+    inner = np.zeros((h, w), dtype=bool)
+    inner[int(h * 0.18):int(h * 0.82), int(w * 0.18):int(w * 0.82)] = True
+    core = active & inner
+    if int(core.sum()) < 64:
+        core = active
+    y_core = y[core]
+    y_all = y[active]
+    p5_c, p10_c, p15_c, p50_c, p90_c, p95_c = [float(v) for v in np.percentile(y_core, [5, 10, 15, 50, 90, 95])]
+    p5_a, p10_a, p50_a, p90_a, p95_a = [float(v) for v in np.percentile(y_all, [5, 10, 50, 90, 95])]
+    clip_shadow_core = float((rgb.min(axis=2)[core] <= 8).mean() * 100.0)
+    clip_high_all = float((rgb.max(axis=2)[active] >= 250).mean() * 100.0)
+    return {
+        "p5_core": round(p5_c, 2),
+        "p10_core": round(p10_c, 2),
+        "p15_core": round(p15_c, 2),
+        "p50_core": round(p50_c, 2),
+        "p90_core": round(p90_c, 2),
+        "p95_core": round(p95_c, 2),
+        "dr_core": round(p95_c - p5_c, 2),
+        "p5_all": round(p5_a, 2),
+        "p10_all": round(p10_a, 2),
+        "p50_all": round(p50_a, 2),
+        "p90_all": round(p90_a, 2),
+        "p95_all": round(p95_a, 2),
+        "luma_std_core": round(float(y_core.std()), 2),
+        "clip_shadow_core_pct": round(clip_shadow_core, 2),
+        "clip_high_pct": round(clip_high_all, 2),
+    }
+
+
+def detect_low_light_glare(
+    rgb: np.ndarray,
+    mask: np.ndarray | None = None,
+    *,
+    v34_probe: dict | None = None,
+) -> dict | None:
+    """Skin-tone-safe detector for severely underexposed/backlit faces and veiling glare washout.
+
+    Never gates on raw mean luminance alone: requires clipped shadows + low dynamic range
+    (or backlit bright surround + dark face core) and respects clean-control V3.4 vetoes so
+    well-exposed dark-skin portraits have 0% false positives.
+    """
+    src = _validate_rgb(rgb)
+    tiny_dark_v34 = (
+        isinstance(v34_probe, dict)
+        and float(v34_probe.get("exposure", 0.0)) >= 0.50
+        and float(v34_probe.get("p_clean", 0.0)) < 0.20
+    )
+    min_allowed_side = 24 if tiny_dark_v34 else 48
+    if src is None or min(src.shape[:2]) < min_allowed_side:
+        return None
+    active = _resolve_active_mask(src.shape[:2], mask)
+    if active is None or int(active.sum()) < 256:
+        return None
+
+    # Clean-control V3.4 veto guarantees 0% FP on clean studio / dark-skin portraits.
+    if isinstance(v34_probe, dict):
+        p_clean = float(v34_probe.get("p_clean", 0.0))
+        max_deg = max(
+            float(v34_probe.get("exposure", 0.0)),
+            float(v34_probe.get("blur", 0.0)),
+            float(v34_probe.get("noise", 0.0)),
+            float(v34_probe.get("codec_lr", 0.0)),
+        )
+        if p_clean >= 0.82 and max_deg < 0.20:
+            return None
+
+    st = _core_exposure_stats(src, active)
+    v34_exp = float(v34_probe.get("exposure", 0.0)) if isinstance(v34_probe, dict) else None
+    v34_blur = float(v34_probe.get("blur", 0.0)) if isinstance(v34_probe, dict) else None
+    v34_codec = float(v34_probe.get("codec_lr", 0.0)) if isinstance(v34_probe, dict) else None
+    v34_clean = float(v34_probe.get("p_clean", 0.0)) if isinstance(v34_probe, dict) else None
+
+    # Gate 1: Crushed dark CCTV / underexposed face (clipped shadows + compressed dynamic range).
+    # Dark skin under proper studio exposure has normal highlight headroom (p90_core >= 105)
+    # and clean V3.4 exposure score (< 0.25), so it will NOT trigger this gate.
+    crushed_dark = (
+        st["p50_core"] < 58.0
+        and st["p90_core"] < 102.0
+        and (st["clip_shadow_core_pct"] >= 2.0 or st["dr_core"] < 82.0)
+        and (v34_exp is None or v34_exp >= 0.28 or st["p90_core"] < 82.0)
+    )
+    # Gate 2: Harsh backlit silhouette (dark face core surrounded by bright window/background).
+    backlit_dark = (
+        st["p50_core"] < 54.0
+        and st["p15_core"] < 24.0
+        and st["p90_all"] >= 175.0
+        and (v34_clean is None or v34_clean < 0.35)
+    )
+    # Gate 2b: Tiny dark CCTV face crop confirmed by strong V3.4 exposure score (>=0.50, p_clean<0.20).
+    tiny_dark_cctv = (
+        tiny_dark_v34
+        and min(src.shape[:2]) <= 72
+        and st["p50_all"] < 78.0
+        and st["p90_all"] < 185.0
+    )
+    low_light_fire = bool(crushed_dark or backlit_dark or tiny_dark_cctv)
+
+    # Gate 3: Specular glare / CCTV veiling washout (elevated-but-bounded dark floor
+    # 28..54 + real face contrast + bright veil, confirmed by V3.4 blur/exposure/codec).
+    glare_veiling = (
+        not low_light_fire
+        and min(src.shape[:2]) >= 224
+        and 28.0 <= st["p5_all"] <= 54.0
+        and 38.0 <= st["p10_all"] <= 68.0
+        and st["p95_all"] >= 188.0
+        and st["p90_all"] <= 208.0
+        and st["luma_std_core"] >= 32.0
+        and (st["p90_core"] - st["p10_core"]) <= 145.0
+        and (
+            (
+                v34_probe is not None
+                and v34_clean is not None
+                and v34_clean < 0.10
+                and v34_blur is not None
+                and v34_blur >= 0.58
+                and v34_exp is not None
+                and v34_exp >= 0.05
+                and v34_codec is not None
+                and v34_codec >= 0.22
+            )
+            or (
+                v34_probe is None
+                and st["p5_core"] >= 30.0
+                and st["clip_high_pct"] >= 3.0
+            )
+        )
+    )
+    specular_clip = (
+        not low_light_fire
+        and st["clip_high_pct"] >= 7.0
+        and 24.0 <= st["p5_all"] <= 65.0
+        and st["dr_core"] < 175.0
+        and (v34_clean is None or v34_clean < 0.25)
+    )
+    glare_fire = bool(glare_veiling or specular_clip)
+
+    if not (low_light_fire or glare_fire):
+        return None
+    route = "low_light_recovery" if low_light_fire else "glare_recovery"
+    return {
+        "policy": LOW_LIGHT_GLARE_POLICY,
+        "triggered": True,
+        "route": route,
+        "gates": {
+            "crushed_dark": bool(crushed_dark),
+            "backlit_dark": bool(backlit_dark),
+            "tiny_dark_cctv": bool(tiny_dark_cctv),
+            "glare_veiling": bool(glare_veiling),
+            "specular_clip": bool(specular_clip),
+        },
+        "before": st,
+    }
+
+
+def _apply_retinex_low_light(img_f: np.ndarray, damping: float = 1.0) -> np.ndarray:
+    """Downscaled illumination-map Retinex shadow lift with highlight roll-off and shadow chroma smoothing."""
+    h, w = img_f.shape[:2]
+    illum_raw = img_f.max(axis=2).astype(np.float32)
+    gray = (0.299 * img_f[..., 0] + 0.587 * img_f[..., 1] + 0.114 * img_f[..., 2]).astype(np.float32)
+    sub = max(2, min(4, min(h, w) // 48)) if min(h, w) >= 96 else 1
+    r_gf = max(8, min(28, min(h, w) // 6))
+    illum = _fast_guided_filter(gray, illum_raw, r=r_gf, eps=0.02, sub=sub)
+    illum_safe = np.clip(illum, 0.14, 1.0)
+
+    # Adaptive gamma: stronger lift for darker median illumination, smoothly damped by g_photo.
+    med_t = float(np.median(illum_safe))
+    gamma = float(np.clip(0.32 + 0.36 * max(0.0, 0.45 - med_t) / 0.35, 0.28, 0.58)) * damping
+    gain = np.power(illum_safe, -gamma)
+    # Soft highlight shoulder prevents bright windows/glints from blowing out.
+    hi_w = np.clip((gray - 0.65) / 0.30, 0.0, 1.0)
+    hi_w = hi_w * hi_w * (3.0 - 2.0 * hi_w)
+    gain = 1.0 + (gain - 1.0) * (1.0 - hi_w)
+    gain = np.clip(gain, 1.0, 2.45)
+
+    lifted = np.clip(img_f * gain[..., None], 0.0, 1.0)
+    # Shadow-adaptive chroma smoothing suppresses lifted dark-sensor chromatic speckle.
+    lifted_u8 = np.clip(np.rint(lifted * 255.0), 0, 255).astype(np.uint8)
+    ycrcb = cv2.cvtColor(lifted_u8, cv2.COLOR_RGB2YCrCb).astype(np.float32)
+    boost_w = np.clip((gain - 1.0) / 1.2, 0.0, 0.75)
+    cr_sm = cv2.GaussianBlur(ycrcb[..., 1], (5, 5), 1.2)
+    cb_sm = cv2.GaussianBlur(ycrcb[..., 2], (5, 5), 1.2)
+    ycrcb[..., 1] = ycrcb[..., 1] * (1.0 - boost_w) + cr_sm * boost_w
+    ycrcb[..., 2] = ycrcb[..., 2] * (1.0 - boost_w) + cb_sm * boost_w
+    out_u8 = cv2.cvtColor(np.clip(np.rint(ycrcb), 0, 255).astype(np.uint8), cv2.COLOR_YCrCb2RGB)
+    return out_u8.astype(np.float32) / 255.0
+
+
+def _apply_glare_shoulder_recovery(img_f: np.ndarray, stats: dict[str, float], damping: float = 1.0) -> np.ndarray:
+    """LAB L* soft-knee highlight compression and gentle veiling-glare black-floor anchoring."""
+    u8 = np.clip(np.rint(img_f * 255.0), 0, 255).astype(np.uint8)
+    lab = cv2.cvtColor(u8, cv2.COLOR_RGB2LAB).astype(np.float32)
+    L = lab[..., 0]
+
+    # Gentle black-floor anchoring removes milky veiling glare without clipping shadows.
+    p5 = float(stats.get("p5_all", 0.0))
+    veil_shift = float(np.clip((p5 - 16.0) * 0.45, 0.0, 22.0)) * damping
+    if veil_shift >= 2.0:
+        t_hi = np.clip((L - p5) / max(40.0, 235.0 - p5), 0.0, 1.0)
+        L = np.clip(L - veil_shift * (1.0 - 0.65 * t_hi), 0.0, 255.0)
+
+    # Soft-knee highlight compression above L > 215 preserves natural hue in a*, b*.
+    knee = 215.0
+    over = np.maximum(0.0, L - knee)
+    if float(over.max()) > 1.0:
+        compressed = knee + (40.0 * over) / (40.0 + over * (0.45 * damping))
+        L = np.where(L > knee, compressed, L)
+
+    # Mild local contrast recovery on washed midtones (bounded CLAHE blend).
+    l_u8 = np.clip(np.rint(L), 0, 255).astype(np.uint8)
+    clahe = cv2.createCLAHE(clipLimit=1.5, tileGridSize=(4, 4))
+    l_clahe = clahe.apply(l_u8).astype(np.float32)
+    blend = 0.28 * damping
+    lab[..., 0] = np.clip(L * (1.0 - blend) + l_clahe * blend, 0.0, 255.0)
+
+    out_u8 = cv2.cvtColor(np.clip(np.rint(lab), 0, 255).astype(np.uint8), cv2.COLOR_LAB2RGB)
+    return out_u8.astype(np.float32) / 255.0
+
+
+def prepare_low_light_glare(
+    rgb: np.ndarray,
+    mask: np.ndarray | None = None,
+    *,
+    v34_probe: dict | None = None,
+    damping: float = 1.0,
+) -> tuple[np.ndarray | None, np.ndarray | None, str | None, dict]:
+    """Run skin-tone-safe low-light Retinex lift or specular/veiling glare conditioning."""
+    t0 = time.perf_counter()
+    damp = float(np.clip(damping, 0.25, 1.0)) if math.isfinite(float(damping)) else 1.0
+    det = detect_low_light_glare(rgb, mask=mask, v34_probe=v34_probe)
+    if det is None:
+        return None, None, None, {}
+
+    src = rgb
+    active = _resolve_active_mask(src.shape[:2], mask)
+    if active is None or not bool(active.any()):
+        return None, None, None, {}
+
+    route = det["route"]
+    img_f = src.astype(np.float32) / 255.0
+    if route == "low_light_recovery":
+        out_f = _apply_retinex_low_light(img_f, damping=damp)
+    else:
+        out_f = _apply_glare_shoulder_recovery(img_f, det["before"], damping=damp)
+
+    out = np.clip(np.rint(out_f * 255.0), 0, 255).astype(np.uint8)
+    if mask is not None:
+        out[~active] = src[~active]
+
+    edited = active & np.any(out != src, axis=2)
+    changed = int(edited.sum())
+    if changed == 0:
+        return None, None, None, {}
+
+    after_st = _core_exposure_stats(out, active)
+    report = {
+        **det,
+        "damping": round(damp, 3),
+        "after": after_st,
+        "changed_native_pixels": changed,
+        "masked": bool(mask is not None),
+        "mask_fraction": round(_finite_float(float(edited.mean())), 6),
+        "ms": round(_finite_float((time.perf_counter() - t0) * 1000.0), 2),
+    }
+    return out, edited.astype(np.uint8) * 255, route, report

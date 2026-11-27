@@ -2,9 +2,16 @@
 
 Local experimental face restoration, reviewed input preparation, video face capture, and optional covering removal. Generated facial detail is an estimate; these models are not qualified for identifying people.
 
-## Windows installer 0.3.3
+## Windows installer 0.3.4
 
-Download the offline Windows installer. It includes Python, packages and the models, including Completion R2. Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.3 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.3)
+Download the offline Windows installer. It includes Python, packages (`onnxruntime` included) and all 10 verified models (restoration V3.4, Completion R2, and the 5 Auto Mode ONNX models). Choose the folder for the full app during setup. Updates preserve saved records and prior model files. [Download page](https://forensic-dgp.pages.dev/) · [v0.3.4 release and checksum](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.4)
+
+### What changed in 0.3.4
+
+- **Auto Mode vNext — Detection, Quality Gate & Video Burst**: SCRFD-2.5GF multi-pass face detector (`det_2.5g.onnx`), eDifFIQA-T face quality scorer (`ediffiqa_tiny_jun2024.onnx`), Step 2 upright roll alignment, and multi-frame video temporal burst fusion (`video_burst.py`).
+- **Auto Mode vNext — Restoration Prep & V3.4 Fast-Path**: Directional motion-blur Wiener deconvolution (`motion_blur.py`), V3.4 residual fast-path (`v34_probe.py`) skipping redundant branches for `4.69x` median Step 2 speedup (`0` clean-portrait FP), and calibrated blur/cast/debanding refinements.
+- **Auto Mode vNext — Occlusion Segmentation & Progressive Completion**: BiSeNet-R18 QDQ INT8 (`bisenet_resnet18_qdq_int8.onnx`), OFIQ FaceOcclusion QDQ INT8 (`ofiq_face_occlusion_qdq_int8.onnx`), and 2d106det 106-point face-hull clipping (`2d106det.onnx`) with adaptive seam feathering, Lab shading transfer, and 1–3 pass progressive Completion R2.
+- **Full Offline ONNX + `onnxruntime` Packaging**: Pins `onnxruntime==1.29.0` and all 5 Auto Mode ONNX models (`onnx_assets.json`, `onnx_install.py`) directly inside the offline Windows installer payload with exact SHA-256 verification.
 
 ### What changed in 0.3.3
 

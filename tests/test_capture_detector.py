@@ -230,3 +230,332 @@ class MultiPassFaceScanTests(unittest.TestCase):
             self.assertAlmostEqual(cli_rec['score'], py_rec['score'], places=5)
             self.assertEqual(len(cli_rec['landmarks']), 5)
             self.assertIsInstance(cli_rec['roll_deg'], float)
+
+    @unittest.skipUnless((TEST_IMAGES_DIR / 'wild5.png').exists(), 'wild5.png missing')
+    def test_pass2b_backlit_dark_face_lift_recovers_face_without_fp_on_dark_noise(self):
+        """Pass 2b gamma lift recovers backlit/darkened faces while staying 0-FP on dark noise."""
+        base = cv2.imread(str(TEST_IMAGES_DIR / 'wild5.png'))
+        # Create a backlit scene: bright 235 border around a darkened 0.22x foreground face.
+        h, w = base.shape[:2]
+        canvas = np.full((h + 120, w + 180, 3), 235, dtype=np.uint8)
+        dark_face = np.clip(np.rint(base.astype(np.float32) * 0.22), 0, 255).astype(np.uint8)
+        canvas[60 : 60 + h, 90 : 90 + w] = dark_face
+        recs = scan_face_records(canvas)
+        self.assertGreaterEqual(len(recs), 1)
+        # Ensure the detected face center lies inside the darkened portrait region.
+        bx, by, bw, bh = recs[0]['box']
+        self.assertTrue(90 <= bx + bw * 0.5 <= 90 + w)
+        self.assertTrue(60 <= by + bh * 0.5 <= 60 + h)
+
+        # Dark random noise + bright border must still yield 0 false positives.
+        rng = np.random.default_rng(4040)
+        dark_noise = np.full((320, 320, 3), 235, dtype=np.uint8)
+        dark_noise[40:280, 40:280] = rng.integers(0, 35, (240, 240, 3), dtype=np.uint8)
+        self.assertEqual(scan_face_records(dark_noise), [])
+
+
+class Phase2ScrfdAndFiqaTests(unittest.TestCase):
+    """Phase 2 runtime-safety, dual-backend, spotlight regression, and FIQA scorer tests."""
+
+    def tearDown(self):
+        from implementation import fiqa_scorer, scrfd_detector
+
+        scrfd_detector.reset_scrfd_cache()
+        fiqa_scorer.reset_fiqa_cache()
+
+    def test_ordinary_file_rejects_symlink_and_windows_reparse_attributes(self):
+        import stat
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        from implementation import fiqa_scorer, scrfd_detector
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dummy = Path(tmpdir) / 'model.onnx'
+            dummy.write_bytes(b'abc')
+
+            # 1) Symlink mode on file -> rejected by both verifiers.
+            fake_link = SimpleNamespace(st_mode=stat.S_IFLNK | 0o777, st_file_attributes=0)
+            with patch.object(Path, 'lstat', return_value=fake_link):
+                self.assertFalse(scrfd_detector._is_ordinary_entry(dummy, directory=False))
+                self.assertFalse(fiqa_scorer._is_ordinary_entry(dummy, directory=False))
+                self.assertFalse(scrfd_detector._verify_onnx_file(dummy, 3, '0' * 64))
+                self.assertFalse(fiqa_scorer._verify_onnx_file(dummy, 3, '0' * 64))
+
+            # 2) Windows reparse point attribute (1024) on ancestor dir -> rejected.
+            orig_lstat = Path.lstat
+            parent_norm = str(dummy.parent.resolve()).lower()
+
+            def _reparse_parent_lstat(path_self):
+                if str(path_self.resolve()).lower() == parent_norm:
+                    return SimpleNamespace(st_mode=stat.S_IFDIR | 0o755, st_file_attributes=1024)
+                return orig_lstat(path_self)
+
+            with patch.object(Path, 'lstat', _reparse_parent_lstat):
+                self.assertFalse(scrfd_detector._is_ordinary_entry(dummy.parent, directory=True))
+                self.assertFalse(fiqa_scorer._is_ordinary_entry(dummy.parent, directory=True))
+                self.assertFalse(scrfd_detector._verify_onnx_file(dummy, 3, '0' * 64))
+                self.assertFalse(fiqa_scorer._verify_onnx_file(dummy, 3, '0' * 64))
+
+    def test_sha256_mismatch_degrades_to_none_and_falls_back_to_yunet(self):
+        import tempfile
+        from unittest.mock import patch
+        from implementation import fiqa_scorer, scrfd_detector
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            bad_scrfd = Path(tmpdir) / scrfd_detector.SCRFD_FILENAME
+            bad_scrfd.write_bytes(b'corrupted-scrfd-weights')
+            bad_fiqa = Path(tmpdir) / fiqa_scorer.FIQA_FILENAME
+            bad_fiqa.write_bytes(b'corrupted-fiqa-weights')
+
+            self.assertFalse(
+                scrfd_detector._verify_onnx_file(bad_scrfd, scrfd_detector.SCRFD_BYTES, scrfd_detector.SCRFD_SHA256)
+            )
+            self.assertFalse(
+                fiqa_scorer._verify_onnx_file(bad_fiqa, fiqa_scorer.FIQA_BYTES, fiqa_scorer.FIQA_SHA256)
+            )
+
+            scrfd_detector.reset_scrfd_cache()
+            with patch.object(scrfd_detector, '_resolve_scrfd_model_path', return_value=None):
+                img = np.zeros((128, 128, 3), dtype=np.uint8)
+                self.assertIsNone(scrfd_detector.scan_scrfd_face_records(img))
+                if (TEST_IMAGES_DIR / 'wild5.png').exists():
+                    w5 = cv2.imread(str(TEST_IMAGES_DIR / 'wild5.png'))
+                    recs = scan_face_records(w5)
+                    self.assertEqual(len(recs), 1)
+                    self.assertNotEqual(recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+
+            fiqa_scorer.reset_fiqa_cache()
+            with patch.object(fiqa_scorer, '_resolve_fiqa_model_path', return_value=None):
+                self.assertIsNone(fiqa_scorer.score_face_crop_fiqa(np.full((64, 64, 3), 120, dtype=np.uint8)))
+
+    def test_real_ort_pybind11_and_cv2_error_fallbacks_are_bounded(self):
+        from unittest.mock import patch
+        import onnxruntime as ort
+        from onnxruntime.capi import onnxruntime_pybind11_state as ort_state
+        from implementation import fiqa_scorer, scrfd_detector
+
+        sample_bgr = (
+            cv2.imread(str(TEST_IMAGES_DIR / 'wild5.png'))
+            if (TEST_IMAGES_DIR / 'wild5.png').exists()
+            else np.full((128, 128, 3), 120, dtype=np.uint8)
+        )
+        sample_rgb = cv2.cvtColor(sample_bgr, cv2.COLOR_BGR2RGB)
+
+        exc_cases = [
+            ('NoSuchFile', ort_state.NoSuchFile('missing model')),
+            ('Fail', ort_state.Fail('ort execution failed')),
+            ('cv2.error', cv2.error('dnn forward failed')),
+        ]
+        for label, exc in exc_cases:
+            with self.subTest(exc=label):
+                scrfd_detector.reset_scrfd_cache()
+                with patch.object(ort, 'InferenceSession', side_effect=exc):
+                    self.assertIsNone(scrfd_detector.scan_scrfd_face_records(sample_bgr))
+                    if (TEST_IMAGES_DIR / 'wild5.png').exists():
+                        fallback_recs = scan_face_records(sample_bgr)
+                        self.assertEqual(len(fallback_recs), 1)
+                        self.assertNotEqual(fallback_recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+
+                fiqa_scorer.reset_fiqa_cache()
+                with patch.object(ort, 'InferenceSession', side_effect=exc):
+                    self.assertIsNone(fiqa_scorer.score_face_crop_fiqa(sample_rgb))
+
+    @unittest.skipUnless((TEST_IMAGES_DIR / 'wild5.png').exists(), 'wild5.png missing')
+    def test_cv2_dnn_backend_fallback_when_onnxruntime_import_fails(self):
+        import builtins
+        from unittest.mock import patch
+        from implementation import scrfd_detector
+
+        w5 = cv2.imread(str(TEST_IMAGES_DIR / 'wild5.png'))
+        scrfd_detector.reset_scrfd_cache()
+        ort_recs = scrfd_detector.scan_scrfd_face_records(w5)
+        self.assertIsNotNone(ort_recs)
+        self.assertEqual(len(ort_recs), 1)
+
+        real_import = builtins.__import__
+
+        def _block_ort(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == 'onnxruntime' or name.startswith('onnxruntime.'):
+                raise ImportError('simulated missing onnxruntime in isolated capture venv')
+            return real_import(name, globals, locals, fromlist, level)
+
+        scrfd_detector.reset_scrfd_cache()
+        with patch.object(builtins, '__import__', side_effect=_block_ort):
+            backend = scrfd_detector._load_backend()
+            self.assertIsNotNone(backend)
+            self.assertEqual(backend[0], 'cv2_dnn')
+            cv_recs = scrfd_detector.scan_scrfd_face_records(w5)
+        self.assertIsNotNone(cv_recs)
+        self.assertEqual(len(cv_recs), 1)
+        self.assertGreaterEqual(MultiPassFaceScanTests._box_iou(ort_recs[0]['box'], cv_recs[0]['box']), 0.98)
+
+    def test_nan_and_inf_outputs_are_sanitized_cleanly(self):
+        from unittest.mock import MagicMock, patch
+        from implementation import fiqa_scorer, scrfd_detector
+
+        # SCRFD NaN/Inf raw outputs -> sanitized to 0.0 -> empty list (no crash / no NaN).
+        nan_outs = [
+            np.full((12800, 1), np.nan, dtype=np.float32),
+            np.full((3200, 1), np.inf, dtype=np.float32),
+            np.full((800, 1), -np.inf, dtype=np.float32),
+            np.full((12800, 4), np.nan, dtype=np.float32),
+            np.full((3200, 4), np.nan, dtype=np.float32),
+            np.full((800, 4), np.nan, dtype=np.float32),
+            np.full((12800, 10), np.nan, dtype=np.float32),
+            np.full((3200, 10), np.nan, dtype=np.float32),
+            np.full((800, 10), np.nan, dtype=np.float32),
+        ]
+        fake_sess = MagicMock()
+        fake_sess.run.return_value = nan_outs
+        fake_backend = ('ort', fake_sess, 'input.1', scrfd_detector.SCRFD_OUT_NAMES)
+        with patch.object(scrfd_detector, '_load_backend', return_value=fake_backend):
+            recs = scrfd_detector.scan_scrfd_face_records(np.full((128, 128, 3), 100, dtype=np.uint8))
+        self.assertEqual(recs, [])
+
+        # FIQA NaN/Inf raw outputs -> sanitized finite floats.
+        fake_fiqa = MagicMock()
+        fake_fiqa.run.return_value = [np.array([[np.nan], [np.inf], [-np.inf]], dtype=np.float32)]
+        with patch.object(fiqa_scorer, '_load_fiqa_session', return_value=(fake_fiqa, 'input', 'output')):
+            patches = [np.full((64, 64, 3), 120, dtype=np.uint8) for _ in range(3)]
+            scores = fiqa_scorer.score_face_crops_fiqa(patches)
+        self.assertEqual(len(scores), 3)
+        self.assertTrue(all(isinstance(s, float) and np.isfinite(s) for s in scores))
+
+    def test_capture_install_probe_runs_under_runpy(self):
+        import runpy
+        from implementation import capture_install
+
+        worker = APP_ROOT / 'implementation' / 'capture_worker.py'
+        ns = runpy.run_path(str(worker))
+        self.assertEqual(ns['scan_faces'](np.zeros((64, 64, 3), dtype=np.uint8)), [])
+        py = capture_install.capture_python()
+        if py.is_file():
+            self.assertTrue(capture_install.verified(py))
+
+    def test_real_image_spotlight_regressions_and_mosaic08_yunet_fallback(self):
+        from implementation import scrfd_detector
+
+        rest_dir = TEST_IMAGES_DIR / 'internet_samples' / 'restoration'
+        cov_dir = TEST_IMAGES_DIR / 'internet_samples' / 'covering'
+
+        c06 = rest_dir / 'cctv_06_archival_grainy.jpg'
+        if c06.is_file():
+            recs = scan_face_records(cv2.imread(str(c06)))
+            self.assertEqual(len(recs), 1)
+            self.assertEqual(recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+            # Locks onto red-circled suspect (around x=432), not top-right corner face (x>=1000).
+            self.assertLess(recs[0]['box'][0], 900)
+
+        m04 = rest_dir / 'mosaic_04_police_street.png'
+        if m04.is_file():
+            recs = scan_face_records(cv2.imread(str(m04)))
+            self.assertGreaterEqual(len(recs), 1)
+            self.assertEqual(recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+            wheel_fp = [182, 303, 97, 103]
+            for r in recs:
+                self.assertLess(MultiPassFaceScanTests._box_iou(r['box'], wheel_fp), 0.25)
+
+        m03 = cov_dir / 'mask_03_kn95_sunglasses.jpg'
+        if m03.is_file():
+            recs = scan_face_records(cv2.imread(str(m03)))
+            self.assertEqual(len(recs), 1)
+            self.assertEqual(recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+            self.assertLess(abs(recs[0]['roll_deg']), 8.0)
+
+        c05 = cov_dir / 'compound_05_cctv_mask_hood.jpg'
+        if c05.is_file():
+            recs = scan_face_records(cv2.imread(str(c05)))
+            self.assertEqual(len(recs), 1)
+            self.assertEqual(recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+
+        m08 = rest_dir / 'mosaic_08_indoor_coarse.png'
+        if m08.is_file():
+            recs = scan_face_records(cv2.imread(str(m08)))
+            self.assertGreaterEqual(len(recs), 1)
+            self.assertNotEqual(recs[0].get('detector'), scrfd_detector.DETECTOR_TAG)
+
+    @unittest.skipUnless((TEST_IMAGES_DIR / 'wild5.png').exists(), 'wild5.png missing')
+    def test_fiqa_blur_monotonicity_single_batch_and_video_lucky_frame_ranking(self):
+        from unittest.mock import patch
+        from implementation import fiqa_scorer
+
+        bgr = cv2.imread(str(TEST_IMAGES_DIR / 'wild5.png'))
+        rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        recs = scan_face_records(bgr)
+        self.assertGreaterEqual(len(recs), 1)
+        bx, by, bw, bh = recs[0]['box']
+        sharp = rgb[by:by + bh, bx:bx + bw]
+        blur_mid = cv2.GaussianBlur(sharp, (0, 0), sigmaX=3.5)
+        blur_heavy = cv2.GaussianBlur(sharp, (0, 0), sigmaX=8.0)
+
+        # Single batched ORT call scores all 3 crops monotonically.
+        sess_tuple = fiqa_scorer._load_fiqa_session()
+        self.assertIsNotNone(sess_tuple)
+        sess, in_name, out_name = sess_tuple
+        orig_run = sess.run
+        call_count = {'n': 0}
+
+        def _counting_run(*args, **kwargs):
+            call_count['n'] += 1
+            return orig_run(*args, **kwargs)
+
+        with patch.object(sess, 'run', side_effect=_counting_run):
+            scores = fiqa_scorer.score_face_crops_fiqa([sharp, blur_mid, blur_heavy])
+        self.assertEqual(call_count['n'], 1)
+        self.assertTrue(all(s is not None for s in scores))
+        self.assertGreater(scores[0], scores[1])
+        self.assertGreater(scores[1], scores[2])
+
+        # Video Lucky-Frame ranking with eDifFIQA-T primary and Laplacian fallback.
+        frames = [
+            {'frame_id': 'heavy', 'frame': cv2.GaussianBlur(rgb, (0, 0), sigmaX=8.0), 'box': [bx, by, bw, bh]},
+            {'frame_id': 'sharp', 'frame': rgb, 'box': [bx, by, bw, bh]},
+            {'frame_id': 'mid', 'frame': cv2.GaussianBlur(rgb, (0, 0), sigmaX=3.5), 'box': [bx, by, bw, bh]},
+        ]
+        ranked = fiqa_scorer.rank_video_frames_fiqa(frames)
+        self.assertEqual([r['frame_id'] for r in ranked], ['sharp', 'mid', 'heavy'])
+        self.assertEqual(ranked[0]['scorer'], 'ediffiqa_tiny')
+
+        with patch.object(fiqa_scorer, '_load_fiqa_session', return_value=None):
+            ranked_fb = fiqa_scorer.rank_video_frames_fiqa(frames)
+        self.assertEqual(ranked_fb[0]['frame_id'], 'sharp')
+        self.assertEqual(ranked_fb[0]['scorer'], 'laplacian_fallback')
+        self.assertIsNone(ranked_fb[0]['fiqa_score'])
+
+        # Malformed box (NaN) and cv2.error inside Laplacian fallback degrade cleanly to 0.0.
+        malformed = [{'frame_id': 'bad', 'frame': rgb, 'box': [float('nan'), 0, 10, 10]}]
+        with patch.object(fiqa_scorer, '_load_fiqa_session', return_value=None):
+            ranked_bad = fiqa_scorer.rank_video_frames_fiqa(malformed)
+        self.assertEqual(len(ranked_bad), 1)
+        self.assertEqual(ranked_bad[0]['laplacian_var'], 0.0)
+        with patch.object(fiqa_scorer, '_load_fiqa_session', return_value=None), \
+             patch.object(cv2, 'Laplacian', side_effect=cv2.error('laplacian fail')):
+            ranked_err = fiqa_scorer.rank_video_frames_fiqa(frames[:1])
+        self.assertEqual(ranked_err[0]['laplacian_var'], 0.0)
+
+    def test_scrfd_roll_refinement_survives_yunet_fallback_runtime_error(self):
+        from unittest.mock import patch
+        from implementation import capture_worker
+
+        dummy = np.zeros((120, 120, 3), dtype=np.uint8)
+        scrfd_recs = [{
+            'box': [40, 40, 32, 32],
+            'crop': [29, 29, 54, 54],
+            'score': 0.65,
+            'landmarks': [[48.0, 50.0], [64.0, 56.0], [56.0, 58.0], [50.0, 64.0], [62.0, 66.0]],
+            'roll_deg': 20.5,
+            'detector': 'scrfd_2.5g',
+        }]
+        for label, exc in (
+            ('RuntimeError', RuntimeError('missing yunet')),
+            ('cv2.error', cv2.error('yunet dnn failure')),
+        ):
+            with self.subTest(exc=label):
+                with patch.object(capture_worker, '_scan_yunet_face_records', side_effect=exc):
+                    refined = capture_worker._refine_scrfd_roll_jitter(dummy, scrfd_recs)
+                self.assertEqual(len(refined), 1)
+                self.assertEqual(refined[0]['box'], [40, 40, 32, 32])
+                self.assertLessEqual(abs(refined[0]['roll_deg']), 12.0)
+
+

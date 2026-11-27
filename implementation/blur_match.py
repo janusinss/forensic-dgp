@@ -226,6 +226,11 @@ def match_surroundings(rgb, source, rectangle, effective):
     else:
         summary['estimation_method'] = 'ridge_tiles'
 
+    # Prevent severe over-smoothing (sharp_prep < 0.5) on tiny cropped faces (< 96 px)
+    # where empirical surround sigma can saturate against tiny noisy exterior patches.
+    crop_longest_native = max(rgb.shape[:2])
+    if crop_longest_native < 96 and target > 5.0:
+        target = 5.0
     summary.update(status='estimated', target_radius_at256=round(target, 2))
     if empirical_sigma is not None:
         summary['empirical_surround_sigma_at256'] = round(empirical_sigma, 2)

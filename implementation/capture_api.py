@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+from collections import deque
 import hashlib
 import io
 import ipaddress
@@ -16,6 +17,7 @@ import subprocess
 import sys
 import threading
 import time
+from typing import Annotated
 from urllib.parse import quote, urlsplit, urlunsplit
 import uuid
 
@@ -130,12 +132,44 @@ def detect_face_details(image):
     return _run_face_worker(image, 'detect-details', 65536)
 
 
-def _freeze_inner(raw, source_kind, source_time, owner):
+_DEFAULT_DETECT_FACE_DETAILS = detect_face_details
+
+
+def _freeze_inner(raw, source_kind, source_time, owner, burst_raws=None, stream_id=None):
     if source_kind not in ('webcam', 'video', 'rtsp'):
         raise ValueError('Choose a valid source type.')
     if source_time is not None and (not math.isfinite(source_time) or source_time < 0 or source_time > 86400):
         raise ValueError('Invalid source time.')
     im = _image(raw)
+    primary_sha = _sha(raw)
+    valid_bursts = []
+    if burst_raws:
+        if len(burst_raws) > 4:
+            raise ValueError('At most 4 extra burst frames are supported.')
+        for braw in burst_raws:
+            bim = _image(braw)
+            if bim.size != im.size:
+                raise ValueError('Burst frames must match the primary frame dimensions.')
+            valid_bursts.append(braw)
+    if stream_id and len(valid_bursts) < 4:
+        with LOCK:
+            srec = STREAMS.get(stream_id)
+            recent_snap = list(srec.get('recent_frames') or ()) if (srec and srec['owner'] == owner) else []
+        seen_shas = {primary_sha, *(_sha(b) for b in valid_bursts)}
+        for braw in reversed(recent_snap):
+            if len(valid_bursts) >= 4:
+                break
+            bsha = _sha(braw)
+            if bsha in seen_shas:
+                continue
+            try:
+                bim = _image(braw)
+            except ValueError:
+                continue
+            if bim.size != im.size:
+                continue
+            seen_shas.add(bsha)
+            valid_bursts.append(braw)
     warning = None
     use_details = detect_faces is _DEFAULT_DETECT_FACES
     face_crops = None
@@ -153,25 +187,33 @@ def _freeze_inner(raw, source_kind, source_time, owner):
     with LOCK:
         if len(FRAMES) >= 64:
             raise ValueError('Capture session is full; restart the app to begin another session.')
-        _reserve(len(raw))
+        _reserve(len(raw) + sum(len(b) for b in valid_bursts))
         ident = uuid.uuid4().hex
         path = STORE / ident
         path.mkdir(parents=True, exist_ok=False)
         (path / 'frame.png').write_bytes(raw)
-        FRAMES[ident] = {'path': path, 'sha': _sha(raw), 'size': im.size,
-                         'source_kind': source_kind, 'source_time': source_time, 'owner': owner}
+        burst_entries = []
+        for idx, braw in enumerate(valid_bursts, start=1):
+            fname = f'burst_{idx}.png'
+            (path / fname).write_bytes(braw)
+            burst_entries.append({'name': fname, 'sha': _sha(braw)})
+        FRAMES[ident] = {'path': path, 'sha': primary_sha, 'size': im.size,
+                         'source_kind': source_kind, 'source_time': source_time, 'owner': owner,
+                         'burst_frames': burst_entries}
     payload = {'frame_id': ident, 'width': im.width, 'height': im.height,
                'faces': faces, 'detection_warning': warning, 'frame_url': '/capture/frames/' + ident + '/image'}
     if face_crops is not None:
         payload['face_crops'] = face_crops
+    if burst_entries:
+        payload['burst_frame_count'] = 1 + len(burst_entries)
     return payload
 
 
-def _freeze(raw, source_kind, source_time, owner):
+def _freeze(raw, source_kind, source_time, owner, burst_raws=None, stream_id=None):
     if not DETECTION_LOCK.acquire(blocking=False):
         raise HTTPException(409, 'Another frame is being inspected.')
     try:
-        return _freeze_inner(raw, source_kind, source_time, owner)
+        return _freeze_inner(raw, source_kind, source_time, owner, burst_raws=burst_raws, stream_id=stream_id)
     finally:
         DETECTION_LOCK.release()
 
@@ -209,20 +251,67 @@ def _crop(ident, rect, owner):
             raise ValueError('Choose an in-bounds crop between 16 and 1600 pixels per side.')
         if len(CROPS) >= 64:
             raise ValueError('Capture session is full; restart the app to begin another session.')
-        image = _image(raw).crop((x, y, x + w, y + h))
-        out = io.BytesIO()
-        image.save(out, format='PNG')
-        crop = out.getvalue()
-        capture_id = uuid.uuid4().hex
-        metadata = {'capture_id': capture_id, 'source_kind': record['source_kind'],
-                    'source_time': record['source_time'], 'rectangle': [x, y, w, h],
-                    'frame_sha256': record['sha'], 'crop_sha256': _sha(crop),
-                    'provenance': 'Unaligned native-pixel crop of the frozen source frame.'}
+        burst_entries = list(record.get('burst_frames') or ())
+        burst_raws = []
+        for entry in burst_entries:
+            try:
+                braw = (record['path'] / entry['name']).read_bytes()
+            except OSError:
+                raise HTTPException(409, 'Burst frame evidence changed; capture again.')
+            if _sha(braw) != entry['sha']:
+                raise HTTPException(409, 'Burst frame evidence changed; capture again.')
+            burst_raws.append(braw)
+        primary_sha = record['sha']
+        source_kind = record['source_kind']
+        source_time = record['source_time']
+        frame_path = record['path']
+
+    primary_image = _image(raw).crop((x, y, x + w, y + h))
+    burst_meta = None
+    image = primary_image
+    if burst_raws:
+        try:
+            import cv2 as _cv2_burst
+            _burst_errors = (ValueError, RuntimeError, OSError, ImportError, _cv2_burst.error)
+        except ImportError:
+            _burst_errors = (ValueError, RuntimeError, OSError, ImportError)
+        try:
+            import numpy as np
+            from .video_burst import select_and_fuse_burst
+
+            crops_rgb = [np.asarray(primary_image, dtype=np.uint8)]
+            for braw in burst_raws:
+                crops_rgb.append(np.asarray(_image(braw).crop((x, y, x + w, y + h)), dtype=np.uint8))
+            fused_rgb, burst_meta = select_and_fuse_burst(crops_rgb)
+            image = Image.fromarray(fused_rgb, 'RGB')
+        except _burst_errors:
+            image = primary_image
+            burst_meta = {'burst_used': False, 'fallback_reason': 'burst_fusion_error'}
+
+    out = io.BytesIO()
+    image.save(out, format='PNG')
+    crop = out.getvalue()
+    capture_id = uuid.uuid4().hex
+    provenance = (
+        'ECC Huber-trimmed temporal burst fusion inside the native-pixel crop of the frozen source frames.'
+        if (burst_meta is not None and burst_meta.get('burst_used'))
+        else 'Unaligned native-pixel crop of the frozen source frame.'
+    )
+    metadata = {'capture_id': capture_id, 'source_kind': source_kind,
+                'source_time': source_time, 'rectangle': [x, y, w, h],
+                'frame_sha256': primary_sha, 'crop_sha256': _sha(crop),
+                'provenance': provenance}
+    if burst_meta is not None:
+        metadata['burst_fusion'] = burst_meta
+
+    with LOCK:
+        if len(CROPS) >= 64:
+            raise ValueError('Capture session is full; restart the app to begin another session.')
         _reserve(len(crop) + 4096)
-        target = record['path'] / capture_id
+        target = frame_path / capture_id
         target.mkdir()
         (target / 'crop.png').write_bytes(crop)
-        (target / 'metadata.json').write_text(json.dumps(metadata, sort_keys=True), encoding='utf8')
+        (target / 'metadata.json').write_text(json.dumps(metadata, sort_keys=True, allow_nan=False), encoding='utf8')
         CROPS[capture_id] = {'frame': ident, 'path': target, 'metadata': metadata}
     return {'capture_id': capture_id, 'image': 'data:image/png;base64,' + base64.b64encode(crop).decode('ascii'), 'metadata': metadata}
 
@@ -293,6 +382,11 @@ def _read_stream(record):
             _image(data)
             with LOCK:
                 record['latest'] = data
+                recent = record.get('recent_frames')
+                if recent is None:
+                    recent = deque(maxlen=5)
+                    record['recent_frames'] = recent
+                recent.append(data)
     except (OSError, ValueError):
         pass
     finally:
@@ -334,7 +428,8 @@ def _start_stream(value, owner):
             _stop({'process': proc})
             raise
         ident = uuid.uuid4().hex
-        record = {'process': proc, 'latest': None, 'started': time.monotonic(), 'last_poll': time.monotonic(), 'failed': False, 'owner': owner}
+        record = {'process': proc, 'latest': None, 'recent_frames': deque(maxlen=5),
+                  'started': time.monotonic(), 'last_poll': time.monotonic(), 'failed': False, 'owner': owner}
         STREAMS[ident] = record
         threading.Thread(target=_read_stream, args=(record,), daemon=True).start()
         threading.Thread(target=_watch_stream, args=(ident, record), daemon=True).start()
@@ -365,11 +460,24 @@ def register(app):
         return JSONResponse({'token': token, 'available': True, 'rtsp_available': True}, headers={'Cache-Control': 'no-store'})
 
     @app.post('/capture/frames')
-    async def frame(request: Request, file: UploadFile = File(...), source_kind: str = Form('video'), source_time: float | None = Form(None)):
+    async def frame(
+        request: Request,
+        file: UploadFile = File(...),
+        source_kind: str = Form('video'),
+        source_time: float | None = Form(None),
+        burst_files: Annotated[list[UploadFile] | None, File()] = None,
+        stream_id: Annotated[str | None, Form()] = None,
+    ):
         owner = _guard(request)
         raw = await file.read(MAX_BYTES + 1)
+        burst_raws = None
+        if isinstance(burst_files, list) and burst_files:
+            if len(burst_files) > 4:
+                raise HTTPException(422, 'At most 4 extra burst frames are supported.')
+            burst_raws = [await bf.read(MAX_BYTES + 1) for bf in burst_files]
+        safe_stream_id = stream_id if isinstance(stream_id, str) and stream_id else None
         try:
-            return await run_in_threadpool(_freeze, raw, source_kind, source_time, owner)
+            return await run_in_threadpool(_freeze, raw, source_kind, source_time, owner, burst_raws, safe_stream_id)
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
         except (RuntimeError, OSError) as exc:
