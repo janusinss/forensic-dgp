@@ -1,6 +1,29 @@
 # Cloudflare Pages deployment
 
-## Current 0.3.3 offline preview
+## Current 0.3.4 offline preview
+
+Published November 27, 2026 in Asia/Manila. The
+[live download page](https://forensic-dgp.pages.dev/) runs
+[Pages deployment a742cfd2](https://a742cfd2.forensic-dgp.pages.dev/).
+
+The [GitHub prerelease](https://github.com/janusinss/forensic-dgp-downloads/releases/tag/v0.3.4)
+references `ForensicDGP_Setup-0.3.4.exe` from build source
+`91899c4c8a7432e0a4f8e3cc8775c2d2c12d332d` (`1,370,551,949` bytes, SHA-256
+`39dd8c3f3629c830744b3685bea6cb23d94f1d01ac3556e80514a7722ca1fa68`). GitHub confirmed
+`Content-Range: bytes 0-15/1370551949` (`HTTP 206`) and exact `.sha256` match, and
+Windows Defender (`MpCmdRun.exe -Scan -ScanType 3`) reported zero threats. This
+release ships Auto Mode vNext (SCRFD-2.5GF multi-pass face detection, eDifFIQA-T
+quality gating, upright roll alignment, video temporal burst fusion, directional
+motion-blur Wiener deconvolution, V3.4 residual fast-path for 4.69× median Step 2
+speedup with 0 clean-portrait false positives, plus offline-bundled BiSeNet-R18 QDQ
+INT8 + OFIQ FaceOcclusion QDQ INT8 + 2d106det 106-point face-hull clipping and
+progressive 1–3 pass Completion R2) paired with Pre-Conditioned Frozen CodeFormer
+V3.4. All 19 site tests, `tsc --noEmit`, Vite production build, and live Playwright
+audits across 375px, 768px, and 1280px passed with zero overflow, console, network,
+or accessibility errors. Published versions remain immutable: future updates must
+use a new version, build, and release rather than replacing `0.3.4`.
+
+## Historical 0.3.3 offline preview
 
 Published November 26, 2026 in Asia/Manila. The
 [live download page](https://forensic-dgp.pages.dev/) runs

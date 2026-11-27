@@ -29,6 +29,7 @@ const v030Features = major > 0 || minor >= 3
 const v031Features = major > 0 || minor > 3 || (minor === 3 && patch >= 1)
 const v032Features = major > 0 || minor > 3 || (minor === 3 && patch >= 2)
 const v033Features = major > 0 || minor > 3 || (minor === 3 && patch >= 3)
+const v034Features = major > 0 || minor > 3 || (minor === 3 && patch >= 4)
 
 function DownloadIcon() {
   return (
@@ -156,8 +157,10 @@ export default function App() {
                   <span className="step-number" aria-hidden="true">02</span>
                   <div>
                     <h3>Restore with Auto</h3>
-                    <p>{v033Features
-                      ? 'Pre-Conditioned Frozen CodeFormer V3.4 (2.9× faster on CPU, zero post-decoder blur, confetti, or glare) paired with Step 2 Uniform Auto Blur (100% uniform whole-crop smoothing across all 10 mosaic/pixelation routes with zero missed eye/brow blocks, surround-matched degraded face patches, hardened protect_auto surround matching, and 0-FP clean-portrait guards) alongside Step 1 smart foreground face selection and Steps 4–5 one-click BiSeNet + XSeg covering removal.'
+                    <p>{v034Features
+                      ? 'Pre-Conditioned Frozen CodeFormer V3.4 paired with Auto Mode vNext (SCRFD-2.5GF multi-pass face detection, eDifFIQA-T quality gating, upright roll alignment, video temporal burst fusion, directional motion-blur Wiener deconvolution, V3.4 residual fast-path for 4.69× median Step 2 speedup with 0 clean-portrait false positives, plus offline-bundled BiSeNet-R18 QDQ INT8 + OFIQ FaceOcclusion QDQ INT8 + 2d106det 106-point face-hull clipping and progressive 1–3 pass Completion R2).'
+                      : v033Features
+                        ? 'Pre-Conditioned Frozen CodeFormer V3.4 (2.9× faster on CPU, zero post-decoder blur, confetti, or glare) paired with Step 2 Uniform Auto Blur (100% uniform whole-crop smoothing across all 10 mosaic/pixelation routes with zero missed eye/brow blocks, surround-matched degraded face patches, hardened protect_auto surround matching, and 0-FP clean-portrait guards) alongside Step 1 smart foreground face selection and Steps 4–5 one-click BiSeNet + XSeg covering removal.'
                       : v032Features
                         ? 'Pre-Conditioned Frozen CodeFormer V3.4 (2.9× faster on CPU, zero post-decoder blur, confetti, or glare) paired with the Dual Auto Mode Overhaul: Step 1 smart foreground face selection & ghost-crop elimination, Step 2 Voronoi/coarse mosaic & crowd privacy-blur matching with clean-portrait do-no-harm guards and faster CPU execution, and Steps 4–5 one-click BiSeNet + XSeg covering removal with zero unoccluded/beard false positives and seamless Lab skin-tone blending.'
                       : v031Features
